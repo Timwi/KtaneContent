@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>シリアルワイヤ — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+        
+        svg text {
+            text-anchor: middle;
+            dominant-baseline: mathematical;
+        }
+        svg .red { fill: #e62222; }
+        svg .white { fill: #d9d8d2; }
+        svg .blue { fill: #4080ff; }
+        
+        .dark svg .red { fill: #c62222; }
+        .dark svg .white { fill: #ddd; }
+        .dark svg .blue { fill: #4070cc; }
+        
+        div.letter-grid {
+            width: 300px;
+            float: right;
+            --blob-colour: #666;
+            --text-colour: #fff;
+            font-family:'Special Elite';
+        }
+        .dark div.letter-grid {
+            --blob-colour: #ccc;
+            --text-colour: #222;
+        }
+        div.letter-grid .border {
+            stroke: #9995;
+            stroke-width: 10px;
+            fill: none;
+        }
+        div.letter-grid .connector {
+            stroke: var(--blob-colour);
+            stroke-width: 20px;
+        }
+        div.letter-grid .blob { fill: var(--blob-colour); }
+        div.letter-grid text {
+            fill: var(--text-colour);
+            font-size: 64px;
+        }
+
+        svg :not(.highlightable, g) {
+            user-select: none;
+            pointer-events: none;
+        }
+        svg .highlightable { fill: transparent; }
+
+        .left { 
+            float: left; 
+            max-width: 45%;
+        }
+        .clear { clear:both; }
+
+        svg.wire-color-diagram { margin-bottom: -70px }
+
+        .page-footer::before { content: 'ページ '; }
+        .page-footer::after { content: '/2'; }
+    </style>
+    <script>
+        const gridCharacters = [
+            " V468ZX ",
+            "Y7OFLUY7",
+            "WM1KIGWM",
+            "93SAEQ93",
+            "TBØ2HJTB",
+            "5DPCRN5D",
+            "XV468ZXV",
+            " 7OFLUY "
+        ];
+
+        $(() => {
+            const svg = MakeSvgTag(800, 800).appendTo($(".letter-grid"));
+            const defs = MakeSvgElem("defs");
+            const blobs = MakeSvgElem("g", { mask: "url(#grid-mask)" });
+            svg.append(defs);
+            svg.append(blobs);
+            
+            const mask = MakeSvgElem("mask", { id: "grid-mask", maskUnits: "userSpaceOnUse" });
+            mask.append(MakeSvgElem("image", { href: "img/Serial Wires/Grid Mask.svg", x: 0, y: 0, width: 800, height: 800 }));
+            defs.append(mask);
+
+            for (let row = 0; row < 8; row++) {
+                if (row > 0 && row < 7)
+                    blobs.prepend(MakeSvgElem("path", { class: "connector", d: `M50 ${50 + row * 100}h700M${50 + row * 100} 50v700` }));
+                for (let col = 0; col < 8; col++) {
+                    if (gridCharacters[row].charAt(col) !== " ") {
+                        blobs.append(MakeSvgElem("circle", { class: "blob", cx: 50 + col * 100, cy: 50 + row * 100, r: 40 }));
+                        blobs.append(MakeSvgElem("circle", { class: "highlightable", cx: 50 + col * 100, cy: 50 + row * 100, r: 40 }));
+                        blobs.append(MakeSvgElem("text", { x: 50 + col * 100, y: 50 + row * 100 }, gridCharacters[row].charAt(col)));
+                    }
+                }
+            }
+            svg.prepend(MakeSvgElem("rect", { class: "border", x: 100, y: 100, width: 600, height: 600 }));
+        });
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">シリアルワイヤ</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Serial Wires.svg" class="diagram">
+                <h2>モジュール詳細：シリアルワイヤ</h2>
+                <p class="flavour-text">シリアルNo.？シリアルYes.！</p>
+                <p><u><i><b>注:</b>紙に英数字の代わりに星が書かれている場合、別のモジュールを見ている。</i></u></p>
+                <p>「シリアルワイヤ」モジュールには、単色または縞模様のワイヤが最大6本ある。ワイヤは英数字から各LEDに接続されている。ただし、常にそうとは限らない。</p>
+                <p>シリアルナンバー、書かれている文字、ワイヤの色を使用し、各LEDの光を黄、青、黒(消灯)のどれに設定する必要があるかを特定する必要がある。</p>
+                <p>シリアルナンバーの1文字目と左端のLEDと左端の紙に書かれた文字をグループ化する。シリアルナンバーの他の文字、その他5つのLED、紙に書かれた他の文字も同様に左から順にグループ化する。各グループに対して以下のすべての手順を実行し、それに応じてLEDを設定する。</p>
+                <h3>ステップ1:両方の文字の最短距離</h3>
+                <div class="left">
+                    <p>直行する動き(上、下、左、右)のみを使用して、両方の文字の最短距離を特定する。</p>
+                    <p>このグリッドは4方向にループしており、縁に接続された文字が示している。</p>                    
+                    <ul>
+                        <li>ペアの両方の文字の最小距離が1または2の場合、「<u>黄</u>」である。</li>
+                        <li>ペアの両方の文字の最小距離が4または5の場合、「<u>青</u>」である。</li>
+                        <li>それ以外の場合、「<u>黒</u>」である。</li>
+                    </ul>
+                </div>
+                <div class="letter-grid">
+                    <p style="font-family: Noto Serif JP;"><i>この図およびモジュールにおいて、0(ゼロ)はスラッシュ付き(Ø)で記されている。</i></p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">シリアルワイヤ</span>
+            </div>
+            <div class="page-content">
+                <h3 class="clear">ステップ2:ワイヤの色とパターン</h3>
+                <p>次に、文字とLEDを繋ぐワイヤに注目する。ワイヤの色は赤、白、青の3色がある。ワイヤの色は単色または2色の縞模様である可能性がある。</p>
+                <p>下の図からワイヤの色と同じパターンが含まれる列を特定する。列の中央にある色の名前を取得する。</p>
+                <svg class="wire-color-diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 243 120">
+                    <defs><linearGradient id="a"><stop offset="0"/><stop offset=".2" stop-color="#fff"/><stop offset=".8" stop-color="#fff"/><stop offset="1"/></linearGradient><linearGradient href="#a" id="b" x1="11.7" x2="11.7" y1="64.2" y2="37.4" gradientTransform="translate(-2)" gradientUnits="userSpaceOnUse"/><linearGradient href="#a" id="c" x1="11.7" x2="11.7" y1="64.2" y2="37.4" gradientTransform="translate(-2 55)" gradientUnits="userSpaceOnUse"/><mask id="d" maskUnits="userSpaceOnUse"><path fill="url(#b)" d="M10 37h243v27H10z"/><path fill="url(#c)" d="M10 92h243v27H10z"/><path stroke="#fff" stroke-width="3.2" d="M92 46v64m80-64v64m79-64v64M12 46v64"/></mask></defs><g mask="url(#d)" transform="translate(-10 -37)"><path class="white" d="M92 119H12V92h80z"/><path class="blue" d="M172 119H92V92h80z"/><path class="red" d="M251 119h-79V92h79zM12 37h80v27H12z"/><path class="white" d="M92 37h80v27H92z"/><path class="blue" d="M172 37h80v27h-80z"/><g class="blue"><path id="e" stroke-width="2" d="m92 110-6 9h6zm-5-18-16 27h8l13-22v-5zm-15 0-16 27h8l15-27zm-16 0-15 27h8l15-27zm-15 0-15 27h7l16-27zm-15 0-14 25v2h6l16-27zm-7 0h-7v12z"/></g><use href="#e" class="white" transform="translate(160)"/><use href="#e" class="red" transform="translate(80)"/><path class="invertible" stroke="#000" stroke-width="3.2" d="M12 29v98m80-98v98m80-98v98m79-98v98"/></g>
+                    <text class="invertible" x="42" y="40">黄</text>
+                    <text class="invertible" x="121.5" y="40">青</text>
+                    <text class="invertible" x="200" y="40">黒</text>
+                </svg>
+                <p><i>画像の上側の色は、順番に赤、白、青である。</i></p>            
+                <p><b>注:</b>文字とLEDを接続するワイヤがない場合、ステップ2と3を無視し、LEDをステップ1で取得した色に設定する。</p>
+                <h3>ステップ3:取得した色を合体</h3>
+                <p>取得した2つの色を比べる。2つの色が同じ色の場合、LEDをその色に設定する。2つの色が異なる場合、LEDを3色のうち<i>存在しない色</i>に設定する。全てのLEDは黄、青、黒(消灯)の3つの状態があることに注意する必要がある。</p>
+                <p>LEDを押すと、これら3つの色が順番に表示される。6つのLED全てが正しい色に切り替わってから3秒経つと、モジュールが解除される。</p>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+    </div>
+</body>
+</html>
