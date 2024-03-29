@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>2ファクタ認証 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        .area {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 300px;
+            margin: 60px auto;
+            max-width: 100%;
+        }
+
+        .print {
+            margin: 60px 0;
+            display: none;
+        }
+
+        @media print {
+            .area {
+                display: none;
+            }
+
+            .print {
+                display: block;
+            }
+        }
+
+        .timer {
+            flex-shrink: 0;
+            position: relative;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .timer>canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: scaleX(-1);
+        }
+
+        .dark .timer>canvas {
+            filter: invert(0.8);
+            -webkit-filter: invert(0.8);
+        }
+
+        .timer>.label {
+            position: relative;
+            text-align: center;
+            font-weight: 700;
+            font-size: 20px;
+            transform: translateY(3px);
+        }
+
+        .passcode {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 36px;
+        }
+    </style>
+    <script>
+        window.addEventListener("load", () => {
+            const Timer = new class {
+                constructor() {
+                    this.LINE_WIDTH = 6;
+                    this.CANVAS_SIZE = 50;
+
+                    this.label = document.querySelector(".timer>.label");
+                    this.canvas = document.querySelector(".timer>canvas");
+                    this.ctx = this.canvas.getContext("2d");
+                    this.ctx.lineWidth = this.LINE_WIDTH;
+                    this.ctx.strokeStyle = "#000";
+                }
+
+                setTime(time, limit) {
+                    this.label.innerText = Math.ceil(time / 1000);
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.ctx.beginPath();
+                    const start = -Math.PI / 2;
+                    this.ctx.arc(this.canvas.width / 2, this.canvas.height / 2, this.CANVAS_SIZE / 2 - this.LINE_WIDTH / 2, start, start + 2 * Math.PI * (time / limit));
+                    this.ctx.stroke();
+                }
+            };
+
+            const PasscodeManager = new class {
+                constructor() {
+                    this.PASSCODE_LENGTH = 6;
+                    this.RESET_TIME = 15 * 1000;
+
+                    this.NUMBER_MAP = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+
+                    this.update();
+                }
+
+                get time() {
+                    return Date.now();
+                }
+
+                get timeSinceReset() {
+                    return this.time % this.RESET_TIME;
+                }
+
+                get timeUntilReset() {
+                    return this.RESET_TIME - this.timeSinceReset;
+                }
+
+                get currentSeed() {
+                    return Math.floor(this.time / this.RESET_TIME);
+                }
+
+                createPasscode(rnd) {
+                    let code = "";
+                    for (let i = 0; i < this.PASSCODE_LENGTH; i++) code += rnd.nextMax(10);
+                    return code;
+                }
+
+                randomFakeNumber(code, rnd) {
+                    const list = [];
+                    for (let i = 0; i < 10; i++) if (!code.includes(i)) list.push(i);
+                    return list[rnd.nextMax(list.length)];
+                }
+
+                regenerate() {
+                    const rnd = new MonoRandom(this.currentSeed);
+                    const code = this.createPasscode(rnd);
+                    document.querySelector(".passcode").innerText = code;
+                    const chosen = code.charAt(rnd.nextMax(code.length));
+                    document.querySelector(".flavour-text").innerHTML = `確か、${code}だっけ？え、${this.NUMBER_MAP[chosen]}？確か、「${this.NUMBER_MAP[this.randomFakeNumber(code, rnd)]}」って言ってたよ！`;
+                }
+
+                update() {
+                    const seed = this.currentSeed;
+                    if (seed != this.lastSeed) {
+                        this.lastSeed = seed;
+                        this.regenerate();
+                    }
+                    Timer.setTime(this.timeUntilReset, this.RESET_TIME);
+                    requestAnimationFrame(this.update.bind(this));
+                }
+            };
+        });
+
+        // we’re only using ruleseed.js for MonoRandom, but it’s still expecting these functions
+        window.setDefaultRules = window.setRules = () => {};
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">2ファクタ認証</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Two-Factor Authentication.svg" class="diagram">
+                <h2>モジュール詳細：2ファクタ認証</h2>
+                <p class="flavour-text">確か、696348だっけ？え、 四？確か、「二」って言ってたよ！</p>
+
+                <p>モジュールには6つの数字スクローラーがある。起動したら以下に示す現在の6つのコードを入力してモジュールを無効化する。</p>
+                <p>コードは15秒ごとに変更されるため、モジュールのタイマーが切れる前に注意してコードが正しいことを確認する必要がある。</p>
+                <p>矢印ボタンを使用して数値を上下に増やすか、キーボードを使用して数値を入力する。</p>
+
+                <div class="area">
+                    <div class="timer">
+                        <canvas width="50" height="50"></canvas>
+                        <div class="label"></div>
+                    </div>
+                    <div class="passcode"></div>
+                </div>
+                <div class="print"><a href="https://ktane.timwi.de/HTML/Two-Factor Authentication translated (日本語 — 2ファクタ認証) (alpha8404).html">ktane.timwi.de/HTML/Two-Factor%20Authentication%20translated%20(日本語%20—%202ファクタ認証)%20(alpha8404).html</a>にアクセスし、2ファクタコードを取得する。</div>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
