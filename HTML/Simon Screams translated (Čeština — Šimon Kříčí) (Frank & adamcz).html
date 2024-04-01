@@ -3,80 +3,271 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Šimon Kříčí — Keep Talking and Nobody Explodes Module</title>
+    <title>Šimon kříčí — Keep Talking and Nobody Explodes modul</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="stylesheet" type="text/css" href="css/Modules/Simon Screams.css">
     <script src="js/ktane-utils.js"></script>
-    <style>
-      table.simon-screams tr.rotated > th > span.text {
-        transform-origin: middle center;
-      }
-      table.simon-screams-small td, table.simon-screams-small th {
-        white-space: normal;
-      }
-      ul.list {
-        margin-bottom: 0px;
-        padding-bottom: 0px;
-      }
-      th, td { padding: .2em .6em .1em; }
-    </style>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var _rules = [
+            { prob:  50, name: "blikly všechny barvy naráz" },
+            { prob: 120, name: "blikly tři barvy, každá o dva vedle po směru hodinových ručiček" },
+            { prob: 220, name: "blikla barva, následně její sousedící a následně zase ta první" },
+            { prob: 121, name: "blikly tři sousedící barvy proti směru hodinových ručiček" },
+            { prob: 122, name: "blikly tři sousedící barvy po směru hodinových ručiček" },
+            { prob: 123, name: "blikla barva, následně její protější a následně zase ta první" },
+            { prob: 100, name: "neblikly tři sousedící barvy" },
+            { prob: 170, name: "blikly první a poslední barvy, které jsou stejné" },
+            { prob: 124, name: "blikly tři barvy, každá dvě od sebe proti směru hodinových ručiček" },
+            { prob: 230, name: "blikla barva, následně barva o dva vedle a následně zase ta první" },
+            { prob: 260, name: "blikla barva, následně její sousedící a následně protější té druhé" },
+            { prob: 261, name: "blikla barva, následně její sousedící a následně protější té první" },
+            { prob: 262, name: "blikla barva, následně barva o dva vedle a následně protějŠí té druhé" },
+            { prob: 263, name: "blikla barva, následně barva o dva vedle a následně protější té první" },
+            { prob: 231, name: c => `blikla maximálně jedna barva z následujících: ${c[0]}, ${c[1]} a ${c[2]}` },
+            { prob: 264, name: "blikla barva, následně její protější a následně sousedící té první" },
+            { prob: 221, name: "žádná barva neblikla více než jednou" },
+            { prob: 265, name: "blikla barva, následně barva o dva vedle a následně protější té první" },
+            { prob: 240, name: "přešně dvě barvy blikly přesně dvakrát" },
+            { prob: 420, name: "jsou dvě sousedící barvy, které neblikly" },
+            { prob: 270, name: "je přesně jedna barva, která neblikla" },
+            { prob: 280, name: "žádná barva neblikla dvakrát" },
+            { prob: 290, name: "jsou alespoň tři barvy, které neblikly" },
+            { prob: 300, name: "přesně dvě barvy blikly více než jednou" },
+            { prob: 330, name: "je první barva, která blikla sousedící s poslední barvou, která blikla" },
+            { prob: 380, name: "přesně jedna barva blikla více než jednou" },
+            { prob: 440, name: "jsou dvě barvy o dva vedle, které neblikly" },
+            { prob: 266, name: "jsou dvě barvy naproti sobě, které neblikly" },
+            { prob: 400, name: "jsou přesně dvě barvy, které neblikly" },
+            { prob: 410, name: "blikla přesně jedna barva přesně dvakrát" },
+            { prob: 480, name: "je počet různých barev, které blikly sudý" },
+            { prob: 390, name: "žádné dvě sousedící barvy neblikly po směru hodinových ručiček" },
+            { prob: 391, name: "žádné dvě sousedící barvy neblikly proti směru hodinových ručiček" },
+            { prob: 610, name: "dvě sousedící barvy blikly po směru hodinových ručiček" },
+            { prob: 392, name: "žádné dvě barvy o dva vedle neblikly proti směru hodinových ručiček" },
+            { prob: 500, name: "jsou první a poslední barvy, které zablikly různé a nesousedící" },
+            { prob: 520, name: "blikla barva, následně jiná a následně zase ta první" },
+            { prob: 393, name: "žádné dvě barvy o dva vedle neblikly po směru hodinových ručiček" },
+            { prob: 611, name: "blikly dvě sousedící barvy proti směru hodinových ručiček" },
+            { prob: 612, name: "blikly dvě barvy o dva vedle po směru hodinových ručiček" },
+            { prob: 613, name: "blikly dvě barvy o dva vedle proti směru hodinových ručiček" },
+            { prob: 521, name: "je počet různých barev, které blikly lichý" },
+            { prob: 770, name: c => `blikly alespoň dvě barvy z následujících: ${c[0]}, ${c[1]} a ${c[2]}` }];
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var steps = rnd.next(0, 25);
+            for (var i = 0; i < steps; i++)
+                rnd.nextDouble();
+
+            var rules = _rules.slice(0);
+            rnd.shuffleFisherYates(rules);
+            var ths = document.getElementsByClassName('row-rule');
+            rules = rules.slice(0, ths.length);
+            rules.sort((a, b) => a.prob < b.prob ? -1 : a.prob > b.prob ? 1 : 0);
+            for (var i = 0; i < ths.length; i++)
+            {
+                var name = rules[i].name;
+                if (typeof rules[i].name === 'function')
+                {
+                    var colors = 'oranžová,žlutá,červená,zelená,modrá,purpurová'.split(',');
+                    rnd.shuffleFisherYates(colors);
+                    name = rules[i].name(colors);
+                }
+                ths[i].innerText = name;
+            }
+
+            var gt = rnd.next(0, 2);
+
+            var condThs = document.getElementsByClassName('little');
+            var conds = ['portů', 'indikátorů', 'baterií', 'cifer v #', 'písmen v #', 'držáků na baterie'];
+            rnd.shuffleFisherYates(conds);
+            for (var i = 0; i < 6; i++)
+                condThs[i].innerText = `${gt ? '≥' : '≤'} 3 ${conds[i]}`;
+
+            var sts = [0, 1, 2];
+            var grid = [
+                "FFC,CEH,HAF,ECD,DDE,AHA".split(','),
+                "AHF,DFC,ECH,CDE,FEA,HAD".split(','),
+                "DED,ECF,FHE,HAA,AFH,CDC".split(','),
+                "HCE,ADA,CFD,DHH,EAC,FEF".split(','),
+                "CAH,FHD,DDA,AEC,HCF,EFE".split(','),
+                "EDA,HAE,AEC,FFF,CHD,DCH".split(',')];
+            var smallGrid = [
+                "YOGRBP",
+                "PYRBOG",
+                "OGBPRY",
+                "GBOYPR",
+                "RPYOGB",
+                "BRPGYO"];
+
+            if (rnd.seed != 1)
+            {
+                sts[0] = rnd.next(0, 3);
+                sts[1] = rnd.next(sts[0] + 1, 4);
+                sts[2] = rnd.next(sts[1] + 1, 5);
+
+                var numbers = [];
+                for (var i = 0; i < 6; i++)
+                    numbers.push(i);
+
+                var columnShuffle1 = rnd.shuffleFisherYates(numbers.slice(0));
+                var columnShuffle2 = rnd.shuffleFisherYates(numbers.slice(0));
+                var columnShuffle3 = rnd.shuffleFisherYates(numbers.slice(0));
+                var columnShuffle = [columnShuffle1, columnShuffle2, columnShuffle3];
+
+                var rowShuffle1 = rnd.shuffleFisherYates(numbers.slice(0));
+                var rowShuffle2 = rnd.shuffleFisherYates(numbers.slice(0));
+                var rowShuffle3 = rnd.shuffleFisherYates(numbers);
+                var rowShuffle = [rowShuffle1, rowShuffle2, rowShuffle3];
+
+                var newGrid = grid.map(arr => arr.slice(0));
+                for (var r = 0; r < 6; r++)
+                    for (var c = 0; c < 6; c++)
+                        newGrid[r][c] = [0, 1, 2].map(ix => grid[rowShuffle[ix][r]][columnShuffle[ix][c]].substr(ix, 1)).join('');
+                grid = newGrid;
+
+                rnd.shuffleFisherYates(columnShuffle1);
+                rnd.shuffleFisherYates(rowShuffle1);
+
+                var newSmallGrid = [];
+                for (var r = 0; r < 6; r++)
+                    newSmallGrid.push([0, 1, 2, 3, 4, 5].map(c => smallGrid[rowShuffle1[r]].substr(columnShuffle1[c], 1)).join(''));
+                smallGrid = newSmallGrid;
+            }
+
+            var ords = ["první", "druhá", "třetí", "čtvrtá", "pátá"];
+            var colSpans = document.getElementsByClassName('column-rule');
+            for (var i = 0; i < 3; i++)
+                colSpans[i].innerText = ords[sts[i]];
+
+            var cellRules = document.getElementsByClassName('cell-rule');
+            for (var r = 0; r < 6; r++)
+                for (var c = 0; c < 6; c++)
+                    cellRules[r * 6 + c].innerText = grid[r][c];
+
+            var smallRules = document.getElementsByClassName('small-rule');
+            for (var r = 0; r < 6; r++)
+                for (var c = 0; c < 6; c++)
+                    smallRules[r * 6 + c].innerText = smallGrid[r].substr(c, 1);
+        }
+    </script>
 </head>
 <body>
     <div class="section">
         <div class="page page-bg-01">
             <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Šimon Kříčí (čeština) v1.4</span>
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes mod</span>
+                <span class="page-header-section-title">Šimon kříčí</span>
             </div>
             <div class="page-content">
                 <img src="img/Component/Simon Screams.svg" class="diagram">
-                <h2>Na téma Šimon Kříčí (čeština)</h2>
+                <h2>Na téma Šimon kříčí</h2>
                 <p class="flavour-text">
-                    Je rozzlobený! Je rozzuřený! Má to mít!
+                    Je rozzlobený!  Je vzteklý!  Je rozzuřený!  Má to mít!
                 </p>
-                <ul class="list">
-                    <li> Tento modul obsahuje šest barevných světel (červené, oranžové, žluté, zelené, modré a fialové). </li>
-                    <li> Světla budou blikat v sekvenci, která se po každé fázi zvětší. Jsou tu 3 fáze. </li>
-                    <li> V každé fázi zvažte celou sekvenci bliknutí. </li>
-                    <li> Ve velké tabulce najděte první pravidlo, které platí a správný sloupec. </li>
-                    <li> Z tohoto výsledku vezměte písmeno na takové pozici jako je vaše aktuální fáze a podívejte se na malou tabulku. </li>
-                    <li> V malé tabulce znak “≥ 3...” znamená “Pokud je na bombě 3 anebo více...” a znak “#” znamená “v sériovém čísle”. </li>
-                    <li> V malé tabulce si najděte správný řádek (což jsou všechna pravidla, která platí) a správný sloupec (což je to jedno písmeno z velké tabulky). </li>
-                    <li> Zmáčkněte všechny výsledky, které vám vyšly. </li>
-                    <li> Barvy jsou (Č)ervená, (O)ranžová, (Ž)lutá, (Z)elená, (M)odrá a (F)ialová. </li>
-                    <li> Pokaždé co sekvence znovu zabliká, váš vstup aktuální fáze je zresetován. </li>
+                <ul>
+                    <li>
+                        Tento modul obsahuje šest barevných světel (červené, oranžové, žluté, zelené, modré a purpurové).
+                        Ty budou blikat v posloupnosti, která nabírá velikosti každou fázi. Modul má 3 fáze.
+                    </li>
+                    <li>
+                        V každé fázi počítejte s celou posloupností. Ve velké tabulce níže
+                        najděte první platný řádek a správný sloupec. V průniku vyberte
+                        písmeno v pozici momentální fáze a v menší tabulce
+                        se podívejte na korespondující sloupec.
+                    </li>
+                    <li>
+                        Projděte tento sloupec shora dolů a stishněte každou barvu, jejíž pravidlo platí.
+                        Platné barvy jsou (Č)ervená, (O)ranžová, (Ž)lutá, (Z)elená, (M)odrá, (P)urpurová a „#“ znamená
+                        „sériové číslo.“
+                    </li>
+                    <li>
+                        Po každé, co znovu posloupnost probliká se resetuje vstup.
+                    </li>
                 </ul>
+
                 <table class='simon-screams'>
                     <tr class='top'>
-                        <td class='corner' rowspan='2' style="min-width:355px">
+                        <td class='corner' rowspan='2'>
                             <table class='simon-screams-small'>
                                 <tr><td class='corner'></td><th>A</th><th>C</th><th>D</th><th>E</th><th>F</th><th>H</th></tr>
-                                <tr><th class='little'>≥ 3 indikátorů</th><td>Ž</td><td>O</td><td>Z</td><td>Č</td><td>M</td><td>F</td></tr>
-                                <tr><th class='little'>≥ 3 portů</th><td>F</td><td>Ž</td><td>Č</td><td>M</td><td>O</td><td>Z</td></tr>
-                                <tr><th class='little'>≥ 3 cifer v #</th><td>O</td><td>Z</td><td>M</td><td>F</td><td>Č</td><td>Ž</td></tr>
-                                <tr><th class='little'>≥ 3 písmen v #</th><td>Z</td><td>M</td><td>O</td><td>Ž</td><td>F</td><td>Č</td></tr>
-                                <tr><th class='little'>≥ 3 baterií</th><td>Č</td><td>F</td><td>Ž</td><td>O</td><td>Z</td><td>M</td></tr>
-                                <tr><th class='little'>≥ 3 držáků na baterie</th><td>M</td><td>Č</td><td>F</td><td>Z</td><td>Ž</td><td>O</td></tr>
+                                <tr>
+                                    <th class='little'>≥ 3 indikátory</th>
+                                    <td class='small-rule'>Ž</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>Z</td>
+                                    <td class='small-rule'>Č</td>
+                                    <td class='small-rule'>M</td>
+                                    <td class='small-rule'>P</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 porty</th>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Ž</td>
+                                    <td class='small-rule'>Č</td>
+                                    <td class='small-rule'>M</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>Z</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 cifry v #</th>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>Z</td>
+                                    <td class='small-rule'>M</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Č</td>
+                                    <td class='small-rule'>Ž</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 písmen v #</th>
+                                    <td class='small-rule'>Z</td>
+                                    <td class='small-rule'>M</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>Ž</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Č</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 baterií</th>
+                                    <td class='small-rule'>Č</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Ž</td>
+                                    <td class='small-rule'>O</td>
+                                    <td class='small-rule'>Z</td>
+                                    <td class='small-rule'>M</td>
+                                </tr>
+                                <tr>
+                                    <th class='little'>≥ 3 držáky na baterie</th>
+                                    <td class='small-rule'>M</td>
+                                    <td class='small-rule'>Č</td>
+                                    <td class='small-rule'>P</td>
+                                    <td class='small-rule'>Z</td>
+                                    <td class='small-rule'>Ž</td>
+                                    <td class='small-rule'>O</td>
+                                </tr>
                             </table>
                         </td>
                         <th colspan='6' class='corner'>
-                            <p>1. Fáze: <span class='column-rule'>První</span> blikající barva</p>
-                            <p>2. Fáze: <span class='column-rule'>Druhá</span> blikající barva</p>
-                            <p>3. Fáze: <span class='column-rule'>Třetí</span> blikající barva</p>
+                            <p>1. Fáze: <span class='column-rule'>první</span> blikající barva</p>
+                            <p>2. Fáze: <span class='column-rule'>druhá</span> blikající barva</p>
+                            <p>3. Fáze: <span class='column-rule'>třetí</span> blikající barva</p>
                         </th>
                     </tr>
                     <tr class='rotated'>
-                        <th><span class='text'>Červená</span></th>
-                        <th><span class='text'>Oranžová</span></th>
-                        <th><span class='text'>Žlutá</span></th>
-                        <th><span class='text'>Zelená</span></th>
-                        <th><span class='text'>Modrá</span></th>
-                        <th><span class='text'>Fialová</span></th>
+                        <th><span class='text'>červená</span></th>
+                        <th><span class='text'>oranžová</span></th>
+                        <th><span class='text'>žlutá</span></th>
+                        <th><span class='text'>zelená</span></th>
+                        <th><span class='text'>modrá</span></th>
+                        <th><span class='text'>fialová</span></th>
                     </tr>
                     <tr>
-                        <th>Pokud <span class='row-rule'>tři sousedící barvy zablikaly ve směru hodinových ručiček</span></th>
+                        <th>Pokud <span class='row-rule'>tři sousedící barvy zablikaly po směru hodinových ručiček</span></th>
                         <td class='cell-rule'>FFC</td>
                         <td class='cell-rule'>CEH</td>
                         <td class='cell-rule'>HAF</td>
@@ -85,7 +276,7 @@
                         <td class='cell-rule'>AHA</td>
                     </tr>
                     <tr>
-                        <th>Jinak pokud <span class='row-rule'>blikla barva, následně její sousedící, a následně zase ta první</span></th>
+                        <th>Jinak, pokud <span class='row-rule'>blikla barva, následně její sousedící a následně zase ta první</span></th>
                         <td class='cell-rule'>AHF</td>
                         <td class='cell-rule'>DFC</td>
                         <td class='cell-rule'>ECH</td>
@@ -94,7 +285,7 @@
                         <td class='cell-rule'>HAD</td>
                     </tr>
                     <tr>
-                        <th>Jinak pokud <span class='row-rule'>blikla maximálně jedna barva z následujících: Červená, Žlutá, Modrá</span></th>
+                        <th>Jinak, pokud <span class='row-rule'>blikla maximálně jedna barva z následujících: červená, žlutá, modrá</span></th>
                         <td class='cell-rule'>DED</td>
                         <td class='cell-rule'>ECF</td>
                         <td class='cell-rule'>FHE</td>
@@ -103,7 +294,7 @@
                         <td class='cell-rule'>CDC</td>
                     </tr>
                     <tr>
-                        <th>Jinak pokud <span class='row-rule'>tu jsou dvě barvy ležící naproti sobě, které nezablikaly</span></th>
+                        <th>Jinak, pokud <span class='row-rule'>jsou dvě barvy ležící naproti sobě, které nezablikaly</span></th>
                         <td class='cell-rule'>HCE</td>
                         <td class='cell-rule'>ADA</td>
                         <td class='cell-rule'>CFD</td>
@@ -112,7 +303,7 @@
                         <td class='cell-rule'>FEF</td>
                     </tr>
                     <tr>
-                        <th>Jinak pokud <span class='row-rule'>dvě sousedící barvy zablikaly ve směru hodinových ručiček</span></th>
+                        <th>Jinak, pokud <span class='row-rule'>dvě sousedící barvy zablikaly po směru hodinových ručiček</span></th>
                         <td class='cell-rule'>CAH</td>
                         <td class='cell-rule'>FHD</td>
                         <td class='cell-rule'>DDA</td>
