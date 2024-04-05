@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Cryptid — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 4'; }
+
+        .sym { stroke: black; stroke-width: 0.05; }
+        .sym.c0 { fill: red; }
+        .sym.c1 { fill: yellow; }
+        .sym.c2 { fill: blue; }
+        .sym.c3 { fill: white; }
+        #map-code { width: 10cm; }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function()
+        {
+            document.getElementById('map-code').onkeyup = function()
+            {
+                let code = document.getElementById('map-code').value.toUpperCase();
+                if (!/^[23456789ABCD]{6}([A-L][1-9]){8}$/.test(code))
+                {
+                    for (let col = 0; col < 12; col++)
+                        for (let row = 0; row < 9; row++)
+                        {
+                            document.getElementById(`cell-${String.fromCharCode(65 + col)}${row+1}`)
+                                .setAttribute('fill', 'none');
+                            document.getElementById(`terr-${String.fromCharCode(65 + col)}${row+1}`)
+                                .setAttribute('stroke', 'none');
+                        }
+
+                    for (let ix = 0; ix < 8; ix++)
+                        document.getElementById('parking').appendChild(document.getElementById(`sym${ix}`));
+                    return;
+                }
+
+                let info =
+                [
+                    [
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Desert', territory: 'Bear' },
+                        { space: 'Desert', territory: 'Bear' },
+                        { space: 'Forest', territory: 'None' }
+                    ], [
+                        { space: 'Swamp', territory: 'Cougar' },
+                        { space: 'Forest', territory: 'Cougar' },
+                        { space: 'Forest', territory: 'Cougar' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Desert', territory: 'None' }
+                    ], [
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Swamp', territory: 'Cougar' },
+                        { space: 'Swamp', territory: 'Cougar' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Mountain', territory: 'Cougar' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'None' }
+                    ], [
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'Cougar' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Forest', territory: 'Cougar' }
+                    ], [
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Mountain', territory: 'Bear' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'Bear' },
+                        { space: 'Water', territory: 'Bear' }
+                    ], [
+                        { space: 'Desert', territory: 'Bear' },
+                        { space: 'Desert', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Mountain', territory: 'Bear' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Swamp', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Forest', territory: 'None' },
+                        { space: 'Mountain', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Water', territory: 'None' },
+                        { space: 'Forest', territory: 'None' }
+                    ]
+                ];
+
+                let spaces = {
+                    'Forest':   '#199239',
+                    'Swamp':    '#6700C5',
+                    'Desert':   '#FFFF00',
+                    'Water':    '#0098FF',
+                    'Mountain': '#808080'
+                };
+                let territoryColors = {
+                    'None':     'transparent',
+                    'Bear':     'black',
+                    'Cougar':   'red'
+                };
+                let territoryStrokeArrays = {
+                    'None':     '',
+                    'Bear':     '.25, .05',
+                    'Cougar':   ''
+                };
+
+                for (let col = 0; col < 12; col++)
+                    for (let row = 0; row < 9; row++)
+                    {
+                        let x = (col / 6) | 0;
+                        let y = (row / 3) | 0;
+                        let tileNumber = parseInt(code[x + 2*y], 16) - 2;
+                        let tileArr = info[tileNumber >> 1];
+                        if (tileNumber & 1) {
+                            tileArr = [...tileArr];
+                            tileArr.reverse();
+                        }
+                        let tx = col % 6;
+                        let ty = row % 3;
+                        let tix = tx + 6*ty;
+
+                        document.getElementById(`cell-${String.fromCharCode(65 + col)}${row+1}`)
+                            .setAttribute('fill', spaces[tileArr[tix].space]);
+                        let terr = document.getElementById(`terr-${String.fromCharCode(65 + col)}${row+1}`);
+                        terr.setAttribute('stroke', territoryColors[tileArr[tix].territory]);
+                        terr.setAttribute('stroke-dasharray', territoryStrokeArrays[tileArr[tix].territory]);
+                    }
+
+                for (let ix = 0; ix < 8; ix++)
+                {
+                    let coords = code.substring(6 + 2*ix, 8 + 2*ix);
+                    let sym = document.getElementById(`sym${ix}`);
+                    let g = document.getElementById(`cell-${coords}`).parentNode;
+                    g.appendChild(sym);
+                }
+            };
+        });
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Cryptid</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Cryptid.svg" class="diagram">
+                <h2>On the Subject of Cryptid</h2>
+                <p class="flavour-text">A creature whose existence is disputed or unsubstantiated.</p>
+
+                <p>To disarm the module, submit the space that contains the creature's habitat. The location of the habitat is determined by the rules generated by the module.</p>
+                <p>The 22 character string at the top of the module is the map seed. Enter the 22 character string on the next page to generate the layout of the terrain.</p>
+                <h3>Topography</h3>
+                <table>
+                <tr><th>Water</th><th>Mountain</th><th>Forest</th><th>Swamp</th><th>Desert</th></tr>
+                <tr><td><img style='width: 100%' src="img/Cryptid/Water.png"/></td><td><img style='width: 100%' src="img/Cryptid/Mountain.png"/></td><td><img style='width: 100%' src="img/Cryptid/Forest.png"/></td><td><img style='width: 100%' src="img/Cryptid/Swamp.png"/></td><td><img style='width: 100%' src="img/Cryptid/Desert.png"/></td></tr>
+                <tr><th>Cougar Territory</th><th>Bear Territory</th><th>Standing Stone</th><th>Abandoned Shack</th></tr>
+                <tr><td><img style='width: 100%' src="img/Cryptid/Cougar.png"/></td><td><img style='width: 100%' src="img/Cryptid/Bear.png"/></td><td><img style='width: 100%' src="img/Cryptid/Standing Stone.png"/></td><td><img style='width: 100%' src="img/Cryptid/Abandoned Shack.png"/></td></tr>
+                </table>
+                <p>At the bottom of the module is a coordinate selector. You can change the current coordinate via the arrows above/below each letter/number. The columns of the map is labeled A - L, left to right and each space in that column is labeled 1 - 9, top to bottom.</p>
+                <p>The squares below the map seed represent the rules that determine the location of the creature's habitat. Changing the current coordinate can cause the squares to switch between colored and black. While the squares are colored, you can query the current coordinate to see which rules are satisfied. O means the rule is satisfied and X means the opposite. While the squares are black, you can submit that coordinate if you think the habitat is at that coordinate. You can't query while the squares are black and you can't submit the coordinate while the squares are colored.</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Cryptid</span>
+            </div>
+            <div class="page-content">
+                <p><input type='text' id='map-code' /></p>
+                <svg id='output' viewBox='-.6 -.6 9.5 8.5' stroke-width='.05' fill='none'>
+                    <!--#-->
+                    <g transform='translate(0 0)'><path id='cell-A1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-A1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0.75 0.433012701892219)'><path id='cell-B1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-B1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(1.5 0)'><path id='cell-C1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-C1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(2.25 0.433012701892219)'><path id='cell-D1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-D1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3 0)'><path id='cell-E1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-E1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3.75 0.433012701892219)'><path id='cell-F1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-F1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(4.5 0)'><path id='cell-G1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-G1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(5.25 0.433012701892219)'><path id='cell-H1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-H1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6 0)'><path id='cell-I1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-I1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6.75 0.433012701892219)'><path id='cell-J1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-J1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(7.5 0)'><path id='cell-K1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-K1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(8.25 0.433012701892219)'><path id='cell-L1' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-L1' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0 0.866025403784439)'><path id='cell-A2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-A2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0.75 1.29903810567666)'><path id='cell-B2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-B2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(1.5 0.866025403784439)'><path id='cell-C2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-C2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(2.25 1.29903810567666)'><path id='cell-D2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-D2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3 0.866025403784439)'><path id='cell-E2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-E2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3.75 1.29903810567666)'><path id='cell-F2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-F2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(4.5 0.866025403784439)'><path id='cell-G2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-G2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(5.25 1.29903810567666)'><path id='cell-H2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-H2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6 0.866025403784439)'><path id='cell-I2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-I2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6.75 1.29903810567666)'><path id='cell-J2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-J2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(7.5 0.866025403784439)'><path id='cell-K2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-K2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(8.25 1.29903810567666)'><path id='cell-L2' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-L2' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0 1.73205080756888)'><path id='cell-A3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-A3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0.75 2.1650635094611)'><path id='cell-B3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-B3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(1.5 1.73205080756888)'><path id='cell-C3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-C3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(2.25 2.1650635094611)'><path id='cell-D3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-D3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3 1.73205080756888)'><path id='cell-E3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-E3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3.75 2.1650635094611)'><path id='cell-F3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-F3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(4.5 1.73205080756888)'><path id='cell-G3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-G3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(5.25 2.1650635094611)'><path id='cell-H3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-H3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6 1.73205080756888)'><path id='cell-I3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-I3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6.75 2.1650635094611)'><path id='cell-J3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-J3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(7.5 1.73205080756888)'><path id='cell-K3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-K3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(8.25 2.1650635094611)'><path id='cell-L3' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-L3' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0 2.59807621135332)'><path id='cell-A4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-A4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0.75 3.03108891324554)'><path id='cell-B4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-B4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(1.5 2.59807621135332)'><path id='cell-C4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-C4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(2.25 3.03108891324554)'><path id='cell-D4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-D4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3 2.59807621135332)'><path id='cell-E4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-E4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3.75 3.03108891324554)'><path id='cell-F4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-F4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(4.5 2.59807621135332)'><path id='cell-G4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-G4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(5.25 3.03108891324554)'><path id='cell-H4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-H4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6 2.59807621135332)'><path id='cell-I4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-I4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6.75 3.03108891324554)'><path id='cell-J4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-J4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(7.5 2.59807621135332)'><path id='cell-K4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-K4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(8.25 3.03108891324554)'><path id='cell-L4' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-L4' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0 3.46410161513775)'><path id='cell-A5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-A5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0.75 3.89711431702997)'><path id='cell-B5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-B5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(1.5 3.46410161513775)'><path id='cell-C5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-C5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(2.25 3.89711431702997)'><path id='cell-D5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-D5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3 3.46410161513775)'><path id='cell-E5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-E5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3.75 3.89711431702997)'><path id='cell-F5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-F5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(4.5 3.46410161513775)'><path id='cell-G5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-G5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(5.25 3.89711431702997)'><path id='cell-H5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-H5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6 3.46410161513775)'><path id='cell-I5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-I5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6.75 3.89711431702997)'><path id='cell-J5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-J5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(7.5 3.46410161513775)'><path id='cell-K5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-K5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(8.25 3.89711431702997)'><path id='cell-L5' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-L5' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0 4.33012701892219)'><path id='cell-A6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-A6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0.75 4.76313972081441)'><path id='cell-B6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-B6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(1.5 4.33012701892219)'><path id='cell-C6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-C6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(2.25 4.76313972081441)'><path id='cell-D6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-D6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3 4.33012701892219)'><path id='cell-E6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-E6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3.75 4.76313972081441)'><path id='cell-F6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-F6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(4.5 4.33012701892219)'><path id='cell-G6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-G6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(5.25 4.76313972081441)'><path id='cell-H6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-H6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6 4.33012701892219)'><path id='cell-I6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-I6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6.75 4.76313972081441)'><path id='cell-J6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-J6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(7.5 4.33012701892219)'><path id='cell-K6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-K6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(8.25 4.76313972081441)'><path id='cell-L6' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-L6' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0 5.19615242270663)'><path id='cell-A7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-A7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0.75 5.62916512459885)'><path id='cell-B7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-B7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(1.5 5.19615242270663)'><path id='cell-C7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-C7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(2.25 5.62916512459885)'><path id='cell-D7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-D7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3 5.19615242270663)'><path id='cell-E7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-E7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3.75 5.62916512459885)'><path id='cell-F7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-F7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(4.5 5.19615242270663)'><path id='cell-G7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-G7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(5.25 5.62916512459885)'><path id='cell-H7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-H7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6 5.19615242270663)'><path id='cell-I7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-I7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6.75 5.62916512459885)'><path id='cell-J7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-J7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(7.5 5.19615242270663)'><path id='cell-K7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-K7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(8.25 5.62916512459885)'><path id='cell-L7' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-L7' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0 6.06217782649107)'><path id='cell-A8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-A8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0.75 6.49519052838329)'><path id='cell-B8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-B8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(1.5 6.06217782649107)'><path id='cell-C8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-C8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(2.25 6.49519052838329)'><path id='cell-D8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-D8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3 6.06217782649107)'><path id='cell-E8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-E8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3.75 6.49519052838329)'><path id='cell-F8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-F8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(4.5 6.06217782649107)'><path id='cell-G8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-G8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(5.25 6.49519052838329)'><path id='cell-H8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-H8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6 6.06217782649107)'><path id='cell-I8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-I8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6.75 6.49519052838329)'><path id='cell-J8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-J8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(7.5 6.06217782649107)'><path id='cell-K8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-K8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(8.25 6.49519052838329)'><path id='cell-L8' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-L8' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0 6.92820323027551)'><path id='cell-A9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-A9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(0.75 7.36121593216773)'><path id='cell-B9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-B9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(1.5 6.92820323027551)'><path id='cell-C9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-C9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(2.25 7.36121593216773)'><path id='cell-D9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-D9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3 6.92820323027551)'><path id='cell-E9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-E9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(3.75 7.36121593216773)'><path id='cell-F9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-F9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(4.5 6.92820323027551)'><path id='cell-G9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-G9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(5.25 7.36121593216773)'><path id='cell-H9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-H9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6 6.92820323027551)'><path id='cell-I9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-I9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(6.75 7.36121593216773)'><path id='cell-J9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-J9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(7.5 6.92820323027551)'><path id='cell-K9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-K9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><g transform='translate(8.25 7.36121593216773)'><path id='cell-L9' d='M-0.5 0 -0.25 -0.433012701892219 0.25 -0.433012701892219 0.5 0 0.25 0.433012701892219 -0.25 0.433012701892219z' /><path id='terr-L9' d='M-0.4 0 -0.2 -0.346410161513775 0.2 -0.346410161513775 0.4 0 0.2 0.346410161513775 -0.2 0.346410161513775z' /></g><path d='M0.5 0L0.25 0.433012701892219L-0.25 0.433012701892219M1 0L1.25 0.433012701892219L1 0.866025403784439L0.5 0.866025403784439L0.25 0.433012701892219M2 0L1.75 0.433012701892219L1.25 0.433012701892219M2.5 0L2.75 0.433012701892219L2.5 0.866025403784439L2 0.866025403784439L1.75 0.433012701892219M3.5 0L3.25 0.433012701892219L2.75 0.433012701892219M4 0L4.25 0.433012701892219L4 0.866025403784439L3.5 0.866025403784439L3.25 0.433012701892219M5 0L4.75 0.433012701892219L4.25 0.433012701892219M5.5 0L5.75 0.433012701892219L5.5 0.866025403784439L5 0.866025403784439L4.75 0.433012701892219M6.5 0L6.25 0.433012701892219L5.75 0.433012701892219M7 0L7.25 0.433012701892219L7 0.866025403784439L6.5 0.866025403784439L6.25 0.433012701892219M8 0L7.75 0.433012701892219L7.25 0.433012701892219M8.5 0.866025403784439L8 0.866025403784439L7.75 0.433012701892219M0.5 0.866025403784439L0.25 1.29903810567666L-0.25 1.29903810567666M1 0.866025403784439L1.25 1.29903810567666L1 1.73205080756888L0.5 1.73205080756888L0.25 1.29903810567666M2 0.866025403784439L1.75 1.29903810567666L1.25 1.29903810567666M2.5 0.866025403784439L2.75 1.29903810567666L2.5 1.73205080756888L2 1.73205080756888L1.75 1.29903810567666M3.5 0.866025403784439L3.25 1.29903810567666L2.75 1.29903810567666M4 0.866025403784439L4.25 1.29903810567666L4 1.73205080756888L3.5 1.73205080756888L3.25 1.29903810567666M5 0.866025403784439L4.75 1.29903810567666L4.25 1.29903810567666M5.5 0.866025403784439L5.75 1.29903810567666L5.5 1.73205080756888L5 1.73205080756888L4.75 1.29903810567666M6.5 0.866025403784439L6.25 1.29903810567666L5.75 1.29903810567666M7 0.866025403784439L7.25 1.29903810567666L7 1.73205080756888L6.5 1.73205080756888L6.25 1.29903810567666M8 0.866025403784439L7.75 1.29903810567666L7.25 1.29903810567666M8.5 1.73205080756888L8 1.73205080756888L7.75 1.29903810567666M0.5 1.73205080756888L0.25 2.1650635094611L-0.25 2.1650635094611M1 1.73205080756888L1.25 2.1650635094611L1 2.59807621135332L0.5 2.59807621135332L0.25 2.1650635094611M2 1.73205080756888L1.75 2.1650635094611L1.25 2.1650635094611M2.5 1.73205080756888L2.75 2.1650635094611L2.5 2.59807621135332L2 2.59807621135332L1.75 2.1650635094611M3.5 1.73205080756888L3.25 2.1650635094611L2.75 2.1650635094611M4 1.73205080756888L4.25 2.1650635094611L4 2.59807621135332L3.5 2.59807621135332L3.25 2.1650635094611M5 1.73205080756888L4.75 2.1650635094611L4.25 2.1650635094611M5.5 1.73205080756888L5.75 2.1650635094611L5.5 2.59807621135332L5 2.59807621135332L4.75 2.1650635094611M6.5 1.73205080756888L6.25 2.1650635094611L5.75 2.1650635094611M7 1.73205080756888L7.25 2.1650635094611L7 2.59807621135332L6.5 2.59807621135332L6.25 2.1650635094611M8 1.73205080756888L7.75 2.1650635094611L7.25 2.1650635094611M8.5 2.59807621135332L8 2.59807621135332L7.75 2.1650635094611M0.5 2.59807621135332L0.25 3.03108891324554L-0.25 3.03108891324554M1 2.59807621135332L1.25 3.03108891324554L1 3.46410161513775L0.5 3.46410161513775L0.25 3.03108891324554M2 2.59807621135332L1.75 3.03108891324554L1.25 3.03108891324554M2.5 2.59807621135332L2.75 3.03108891324554L2.5 3.46410161513775L2 3.46410161513775L1.75 3.03108891324554M3.5 2.59807621135332L3.25 3.03108891324554L2.75 3.03108891324554M4 2.59807621135332L4.25 3.03108891324554L4 3.46410161513775L3.5 3.46410161513775L3.25 3.03108891324554M5 2.59807621135332L4.75 3.03108891324554L4.25 3.03108891324554M5.5 2.59807621135332L5.75 3.03108891324554L5.5 3.46410161513775L5 3.46410161513775L4.75 3.03108891324554M6.5 2.59807621135332L6.25 3.03108891324554L5.75 3.03108891324554M7 2.59807621135332L7.25 3.03108891324554L7 3.46410161513775L6.5 3.46410161513775L6.25 3.03108891324554M8 2.59807621135332L7.75 3.03108891324554L7.25 3.03108891324554M8.5 3.46410161513775L8 3.46410161513775L7.75 3.03108891324554M0.5 3.46410161513775L0.25 3.89711431702997L-0.25 3.89711431702997M1 3.46410161513775L1.25 3.89711431702997L1 4.33012701892219L0.5 4.33012701892219L0.25 3.89711431702997M2 3.46410161513775L1.75 3.89711431702997L1.25 3.89711431702997M2.5 3.46410161513775L2.75 3.89711431702997L2.5 4.33012701892219L2 4.33012701892219L1.75 3.89711431702997M3.5 3.46410161513775L3.25 3.89711431702997L2.75 3.89711431702997M4 3.46410161513775L4.25 3.89711431702997L4 4.33012701892219L3.5 4.33012701892219L3.25 3.89711431702997M5 3.46410161513775L4.75 3.89711431702997L4.25 3.89711431702997M5.5 3.46410161513775L5.75 3.89711431702997L5.5 4.33012701892219L5 4.33012701892219L4.75 3.89711431702997M6.5 3.46410161513775L6.25 3.89711431702997L5.75 3.89711431702997M7 3.46410161513775L7.25 3.89711431702997L7 4.33012701892219L6.5 4.33012701892219L6.25 3.89711431702997M8 3.46410161513775L7.75 3.89711431702997L7.25 3.89711431702997M8.5 4.33012701892219L8 4.33012701892219L7.75 3.89711431702997M0.5 4.33012701892219L0.25 4.76313972081441L-0.25 4.76313972081441M1 4.33012701892219L1.25 4.76313972081441L1 5.19615242270663L0.5 5.19615242270663L0.25 4.76313972081441M2 4.33012701892219L1.75 4.76313972081441L1.25 4.76313972081441M2.5 4.33012701892219L2.75 4.76313972081441L2.5 5.19615242270663L2 5.19615242270663L1.75 4.76313972081441M3.5 4.33012701892219L3.25 4.76313972081441L2.75 4.76313972081441M4 4.33012701892219L4.25 4.76313972081441L4 5.19615242270663L3.5 5.19615242270663L3.25 4.76313972081441M5 4.33012701892219L4.75 4.76313972081441L4.25 4.76313972081441M5.5 4.33012701892219L5.75 4.76313972081441L5.5 5.19615242270663L5 5.19615242270663L4.75 4.76313972081441M6.5 4.33012701892219L6.25 4.76313972081441L5.75 4.76313972081441M7 4.33012701892219L7.25 4.76313972081441L7 5.19615242270663L6.5 5.19615242270663L6.25 4.76313972081441M8 4.33012701892219L7.75 4.76313972081441L7.25 4.76313972081441M8.5 5.19615242270663L8 5.19615242270663L7.75 4.76313972081441M0.5 5.19615242270663L0.25 5.62916512459885L-0.25 5.62916512459885M1 5.19615242270663L1.25 5.62916512459885L1 6.06217782649107L0.5 6.06217782649107L0.25 5.62916512459885M2 5.19615242270663L1.75 5.62916512459885L1.25 5.62916512459885M2.5 5.19615242270663L2.75 5.62916512459885L2.5 6.06217782649107L2 6.06217782649107L1.75 5.62916512459885M3.5 5.19615242270663L3.25 5.62916512459885L2.75 5.62916512459885M4 5.19615242270663L4.25 5.62916512459885L4 6.06217782649107L3.5 6.06217782649107L3.25 5.62916512459885M5 5.19615242270663L4.75 5.62916512459885L4.25 5.62916512459885M5.5 5.19615242270663L5.75 5.62916512459885L5.5 6.06217782649107L5 6.06217782649107L4.75 5.62916512459885M6.5 5.19615242270663L6.25 5.62916512459885L5.75 5.62916512459885M7 5.19615242270663L7.25 5.62916512459885L7 6.06217782649107L6.5 6.06217782649107L6.25 5.62916512459885M8 5.19615242270663L7.75 5.62916512459885L7.25 5.62916512459885M8.5 6.06217782649107L8 6.06217782649107L7.75 5.62916512459885M0.5 6.06217782649107L0.25 6.49519052838329L-0.25 6.49519052838329M1 6.06217782649107L1.25 6.49519052838329L1 6.92820323027551L0.5 6.92820323027551L0.25 6.49519052838329M2 6.06217782649107L1.75 6.49519052838329L1.25 6.49519052838329M2.5 6.06217782649107L2.75 6.49519052838329L2.5 6.92820323027551L2 6.92820323027551L1.75 6.49519052838329M3.5 6.06217782649107L3.25 6.49519052838329L2.75 6.49519052838329M4 6.06217782649107L4.25 6.49519052838329L4 6.92820323027551L3.5 6.92820323027551L3.25 6.49519052838329M5 6.06217782649107L4.75 6.49519052838329L4.25 6.49519052838329M5.5 6.06217782649107L5.75 6.49519052838329L5.5 6.92820323027551L5 6.92820323027551L4.75 6.49519052838329M6.5 6.06217782649107L6.25 6.49519052838329L5.75 6.49519052838329M7 6.06217782649107L7.25 6.49519052838329L7 6.92820323027551L6.5 6.92820323027551L6.25 6.49519052838329M8 6.06217782649107L7.75 6.49519052838329L7.25 6.49519052838329M8.5 6.92820323027551L8 6.92820323027551L7.75 6.49519052838329M0.5 6.92820323027551L0.25 7.36121593216773M1 6.92820323027551L1.25 7.36121593216773M2 6.92820323027551L1.75 7.36121593216773M2.5 6.92820323027551L2.75 7.36121593216773M3.5 6.92820323027551L3.25 7.36121593216773M4 6.92820323027551L4.25 7.36121593216773M5 6.92820323027551L4.75 7.36121593216773M5.5 6.92820323027551L5.75 7.36121593216773M6.5 6.92820323027551L6.25 7.36121593216773M7 6.92820323027551L7.25 7.36121593216773M8 6.92820323027551L7.75 7.36121593216773' fill='none' stroke-width='.02' stroke='black' /><path d='M7.75 7.36121593216773L7.25 7.36121593216773L7 7.79422863405995L6.5 7.79422863405995L6.25 7.36121593216773L5.75 7.36121593216773L5.5 7.79422863405995L5 7.79422863405995L4.75 7.36121593216773L4.25 7.36121593216773L4 7.79422863405995L3.5 7.79422863405995L3.25 7.36121593216773L2.75 7.36121593216773L2.5 7.79422863405995L2 7.79422863405995L1.75 7.36121593216773L1.25 7.36121593216773L1 7.79422863405995L0.5 7.79422863405995L0.25 7.36121593216773L-0.25 7.36121593216773L-0.5 6.92820323027551L-0.25 6.49519052838329L-0.5 6.06217782649107L-0.25 5.62916512459885L-0.5 5.19615242270663L-0.25 4.76313972081441L-0.5 4.33012701892219L-0.25 3.89711431702997L-0.5 3.46410161513775L-0.25 3.03108891324554L-0.5 2.59807621135332L-0.25 2.1650635094611L-0.5 1.73205080756888L-0.25 1.29903810567666L-0.5 0.866025403784439L-0.25 0.433012701892219L-0.5 0L-0.25 -0.433012701892219L0.25 -0.433012701892219L0.5 0L1 0L1.25 -0.433012701892219L1.75 -0.433012701892219L2 0L2.5 0L2.75 -0.433012701892219L3.25 -0.433012701892219L3.5 0L4 0L4.25 -0.433012701892219L4.75 -0.433012701892219L5 0L5.5 0L5.75 -0.433012701892219L6.25 -0.433012701892219L6.5 0L7 0L7.25 -0.433012701892219L7.75 -0.433012701892219L8 0L8.5 0L8.75 0.433012701892219L8.5 0.866025403784439L8.75 1.29903810567666L8.5 1.73205080756888L8.75 2.1650635094611L8.5 2.59807621135332L8.75 3.03108891324554L8.5 3.46410161513775L8.75 3.89711431702997L8.5 4.33012701892219L8.75 4.76313972081441L8.5 5.19615242270663L8.75 5.62916512459885L8.5 6.06217782649107L8.75 6.49519052838329L8.5 6.92820323027551L8.75 7.36121593216773L8.5 7.79422863405995L8 7.79422863405995z' fill='none' stroke-width='.04' stroke='black' /><!--##-->
+                    <g opacity='0' id='parking'>
+                        <path class='sym c0' id='sym0' d='M0 -0.25 0.21650635094610968 0.125 -0.21650635094610962 0.125z' />
+                        <path class='sym c1' id='sym1' d='M0 -0.25 0.21650635094610968 0.125 -0.21650635094610962 0.125z' />
+                        <path class='sym c2' id='sym2' d='M0 -0.25 0.21650635094610968 0.125 -0.21650635094610962 0.125z' />
+                        <path class='sym c3' id='sym3' d='M0 -0.25 0.21650635094610968 0.125 -0.21650635094610962 0.125z' />
+                        <path class='sym c0' id='sym4' d='M0.23096988312782168 -0.09567085809127245 0.23096988312782168 0.09567085809127245 0.09567085809127246 0.23096988312782168 -0.09567085809127243 0.23096988312782168 -0.23096988312782168 0.09567085809127247 -0.2309698831278217 -0.09567085809127242 -0.09567085809127258 -0.23096988312782163 0.0956708580912725 -0.23096988312782166z' />
+                        <path class='sym c1' id='sym5' d='M0.23096988312782168 -0.09567085809127245 0.23096988312782168 0.09567085809127245 0.09567085809127246 0.23096988312782168 -0.09567085809127243 0.23096988312782168 -0.23096988312782168 0.09567085809127247 -0.2309698831278217 -0.09567085809127242 -0.09567085809127258 -0.23096988312782163 0.0956708580912725 -0.23096988312782166z' />
+                        <path class='sym c2' id='sym6' d='M0.23096988312782168 -0.09567085809127245 0.23096988312782168 0.09567085809127245 0.09567085809127246 0.23096988312782168 -0.09567085809127243 0.23096988312782168 -0.23096988312782168 0.09567085809127247 -0.2309698831278217 -0.09567085809127242 -0.09567085809127258 -0.23096988312782163 0.0956708580912725 -0.23096988312782166z' />
+                        <path class='sym c3' id='sym7' d='M0.23096988312782168 -0.09567085809127245 0.23096988312782168 0.09567085809127245 0.09567085809127246 0.23096988312782168 -0.09567085809127243 0.23096988312782168 -0.23096988312782168 0.09567085809127247 -0.2309698831278217 -0.09567085809127242 -0.09567085809127258 -0.23096988312782163 0.0956708580912725 -0.23096988312782166z' />
+                    </g>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Cryptid</span>
+            </div>
+            <div class="page-content">
+                <p><b>Note: No rule is superfluous.</b></p>
+                <h3>All Possible Rules</h3>
+                <h4>Habitat is (not) on [BLANK] or [BLANK]</h4>
+                <ul>
+                <li>The habitat is on Forest or Desert</li>
+                <li>The habitat is on Forest or Water</li>
+                <li>The habitat is on Forest or Swamp</li>
+                <li>The habitat is on Forest or Mountain</li>
+                <li>The habitat is on Desert or Water</li>
+                <li>The habitat is on Desert or Swamp</li>
+                <li>The habitat is on Desert or Mountain</li>
+                <li>The habitat is on Water or Swamp</li>
+                <li>The habitat is on Water or Mountain</li>
+                <li>The habitat is on Swamp or Mountain</li>
+                <li>The habitat is NOT on Forest or Desert</li>
+                <li>The habitat is NOT on Forest or Water</li>
+                <li>The habitat is NOT on Forest or Swamp</li>
+                <li>The habitat is NOT on Forest or Mountain</li>
+                <li>The habitat is NOT on Desert or Water</li>
+                <li>The habitat is NOT on Desert or Swamp</li>
+                <li>The habitat is NOT on Desert or Mountain</li>
+                <li>The habitat is NOT on Water or Swamp</li>
+                <li>The habitat is NOT on Water or Mountain</li>
+                <li>The habitat is NOT on Swamp or Mountain</li>
+                </ul>
+                <h4>Habitat is (not) within one space of [BLANK]</h4>
+                <ul>
+                <li>The habitat is within one space of Forest</li>
+                <li>The habitat is within one space of Desert</li>
+                <li>The habitat is within one space of Water</li>
+                <li>The habitat is within one space of Swamp</li>
+                <li>The habitat is within one space of Mountain</li>
+                <li>The habitat is within one space of either Animal Territory</li>
+                <li>The habitat is NOT within one space of Forest</li>
+                <li>The habitat is NOT within one space of Desert</li>
+                <li>The habitat is NOT within one space of Water</li>
+                <li>The habitat is NOT within one space of Swamp</li>
+                <li>The habitat is NOT within one space of Mountain</li>
+                <li>The habitat is NOT within one space of either Animal Territory</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Cryptid</span>
+            </div>
+            <div class="page-content">
+                <h4>Habitat is (not) within two spaces of [BLANK]</h4>
+                <ul>
+                <li>The habitat is within two spaces of an Abandoned Shack</li>
+                <li>The habitat is within two spaces of a Standing Stone</li>
+                <li>The habitat is within two spaces of Bear Territory</li>
+                <li>The habitat is within two spaces of Cougar Territory</li>
+                <li>The habitat is NOT within two spaces of an Abandoned Shack</li>
+                <li>The habitat is NOT within two spaces of a Standing Stone</li>
+                <li>The habitat is NOT within two spaces of Bear Territory</li>
+                <li>The habitat is NOT within two spaces of Cougar Territory</li>
+                </ul>
+                <h4>Habitat is (not) within three spaces of [BLANK]</h4>
+                <ul>
+                <li>The habitat is within three spaces of a Red Structure</li>
+                <li>The habitat is within three spaces of a Yellow Structure</li>
+                <li>The habitat is within three spaces of a Blue Structure</li>
+                <li>The habitat is within three spaces of a White Structure</li>
+                <li>The habitat is NOT within three spaces of a Red Structure</li>
+                <li>The habitat is NOT within three spaces of a Yellow Structure</li>
+                <li>The habitat is NOT within three spaces of a Blue Structure</li>
+                <li>The habitat is NOT within three spaces of a White Structure</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+    </div>
+</body>
+</html>
