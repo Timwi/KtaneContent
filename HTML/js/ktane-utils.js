@@ -407,10 +407,9 @@ e.onload = function()
                     }
                     else
                     {
-                        let table = element.parents("table, .highlightable-parent").first();
+                        let table = element.parents("table, tbody, .highlightable-parent").first();
 
-                        let a;
-                        let b;
+                        let a, b;
                         if (thisMode === 'column' && table.length)
                         {
                             a = element;
