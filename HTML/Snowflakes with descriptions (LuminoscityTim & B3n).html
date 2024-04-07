@@ -13,11 +13,82 @@
     <script src="js/Utilities/ui-utils.js"></script>
     <script>
     $(function() {
-        // let firstDate = new Date(2024, 0, 1);
-        let firstDate = new Date(new Date().getFullYear(), 0, 1);
-        let firstDay = firstDate.getDay();
-        const THURSDAY = 4;
-        const MONDAY = 1;
+        class Day {
+            constructor(yr, mn, dy) {
+                this.y = yr;
+                this.m = mn;
+                this.d = dy;
+            }
+            static get Month30() { return [4,6,9,11]; }
+            static LastDay(y, m) {
+                if (Day.Month30.includes(m)) return 30;
+                if (m == 2) return (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0) ? 29 : 28);
+                return 31;
+            }
+
+            DayOfWeek() {
+                let m = UMod(this.m - 3, 12) + 1;
+                let fullYear = m > 10 ? this.y - 1 : this.y;
+                let c = Math.floor(fullYear / 100);
+                let yr = UMod(fullYear, 100);
+                return UMod(this.d + Math.floor(2.6*m - 0.2) - 2*c + yr + Math.floor(yr/4) + Math.floor(c/4), 7);
+            }
+
+            DayOfYear() {
+                let day = this.d;
+                for (let m = 1; m < this.m; m++) {
+                    day += Day.LastDay(this.y, m);
+                }
+                return day;
+            }
+            SetDayOfYear(d, y = this.y) {
+                this.y = y;
+                let m = 1;
+                let day = 0;
+                while (Day.LastDay(y, m) + day < d) {
+                    day += Day.LastDay(y, m);
+                    m++;
+                }
+                if (m > 12) {
+                    m = 1;
+                    this.y = y + 1;
+                } else if (d - day < 1) {
+                    m = 12;
+                    this.y = y - 1;
+                    d = UMod(d - day - 1, 31) + 1;
+                }
+                this.m = m;
+                this.d = d - day;
+            }
+        }
+        const weekDay = {
+            0: "Sunday",
+            1: "Monday",
+            2: "Tuesday",
+            3: "Wednesday",
+            4: "Thursday",
+            5: "Friday",
+            6: "Saturday",
+            Sunday: 0,
+            Monday: 1,
+            Tuesday: 2,
+            Wednesday: 3,
+            Thursday: 4,
+            Friday: 5,
+            Saturday: 6
+        };
+        const month = {
+            1: "Jan", 2: "Feb",
+            3: "Mar", 4: "Apr",
+            5: "May", 6: "Jun",
+            7: "Jul", 8: "Aug",
+            9: "Sep", 10: "Oct",
+            11: "Nov", 12: "Dec"
+        }
+
+        let year = 2024;//(new Date().getFullYear());
+        let firstDay = new Day(year, 1, 1);
+        let firstDayOfWeek = firstDay.DayOfWeek();
         const TIME_PER_DAY = 1000 * 3600 * 24;
         const TIME_PER_WEEK = TIME_PER_DAY * 7;
         const cols = 13;
@@ -47,28 +118,28 @@
             $(`.snow-maze tr:nth-child(${row}) td:nth-child(${col})`).addClass("selected");
         }
 
-        function nextWeek(date, sub = false) {
-            let d = new Date(date);
-            d.setDate(d.getDate() + (sub ? -1 : 1));
-            while (d.getDay() != MONDAY || dayDiff(date, d) < 4) {
-                d.setDate(d.getDate() + (sub ? -1 : 1));
+        function dayDiff(d1, d2) {
+            return Math.abs(d1.DayOfYear() - d2.DayOfYear());
+        }
+        function nextWeek(day, sub = false) {
+            let d = new Day(day.y, day.m, day.d);
+            d.SetDayOfYear(d.DayOfYear() + (sub ? -1 : 1));
+            while (d.DayOfWeek() != weekDay['Monday'] || dayDiff(day, d) < 4) {
+                d.SetDayOfYear(d.DayOfYear() + (sub ? -1 : 1));
             }
             return d;
         }
-        let currDate = new Date(firstDate);
-        if (firstDate.getDay() > THURSDAY || firstDate.getDay() < MONDAY)
-            while (currDate.getDay() != MONDAY)
-                currDate.setDate(currDate.getDate() + 1);
-        // let firstWeekFirstDate = new Date(currDate);
 
-        function dayDiff(d1, d2) {
-            return Math.abs(Math.floor((d2.getTime() - d1.getTime()) / TIME_PER_DAY));
-        }
-        function whatWeek(date) {
+        let currDate = firstDay;
+        if (firstDayOfWeek > weekDay['Thursday'] || firstDayOfWeek < weekDay['Monday'])
+            while (currDate.d != weekDay['Monday'])
+                currDate.SetDayOfYear(currDate.DayOfYear() + 1);
+
+        function whatWeek(day) {
             let add = 0;
-            if (firstDate.getDay() <= THURSDAY && firstDate.getDay() > MONDAY)
+            if (firstDayOfWeek <= weekDay['Thursday'] && firstDayOfWeek > weekDay['Monday'])
                 add = 1;
-            return UMod(Math.floor((date.getTime() - firstDate.getTime()) / TIME_PER_WEEK) + add, 52) + 1;
+            return UMod(Math.floor((day.DayOfYear() - firstDay.DayOfYear()) / 7) + add, 52) + 1;
         }
 
         function weekDec() {
@@ -84,7 +155,7 @@
             if (weekLim < 53) {
                 weekLim += 1;
                 currDate = nextWeek(currDate);
-                if (currDate.getFullYear() > firstDate.getFullYear()) {
+                if (currDate.y > firstDay.y) {
                     weekLim -= 1;
                     currDate = nextWeek(currDate, true);
                 }
@@ -93,10 +164,13 @@
                 highlightCell(week);
             }
         }
-        function showDateRangeFrom(date, displayFirst = false) {
-            let d = nextWeek(date);
-            d.setDate(d.getDate() - 1);
-            dateText.text(`${date.toDateString()} – ${d.toDateString()}`);
+        function dateString(day) {
+            return `${weekDay[day.DayOfWeek()].slice(0,3)} ${month[day.m]} ${day.d} ${day.y}`;
+        }
+        function showDateRangeFrom(day) {
+            let d = nextWeek(day);
+            d.SetDayOfYear(d.DayOfYear() - 1);
+            dateText.text(`${dateString(day)} – ${dateString(d)}`);
         }
 
         WhenHoldDown($(".weektext.minus")[0], weekDec, 300, 1.07);
