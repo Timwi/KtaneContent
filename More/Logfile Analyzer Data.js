@@ -6262,6 +6262,21 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "ForgetTheColors",
+		loggingTag: "Forget The Colors",
+		matches: [
+			{
+				regex: /(STAGE (?:\d+))/,
+				handler: function(matches, module) {
+					const stageInfo = readLines(15).map((line) => /\[Forget The Colors(?: #\d+)\]: (.+)/.exec(line)[1]);
+					module.push([ matches[0], stageInfo ]);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Forget Them All",
 		moduleID: "forgetThemAll",
 		loggingTag: "Forget Them All",
