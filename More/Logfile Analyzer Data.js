@@ -16285,6 +16285,37 @@ let parseData = [
 		loggingTag: "Simons Squawks"
 	},
 	{
+		moduleID: "simonSwindles",
+		loggingTag: "Simon Swindles",
+		matches: [
+			{
+				regex: /GENERATION PHASE: Intial answer is (.{6}) and the constant is (.{6})/,
+				handler: function(matches, module) {
+					module.push({ nobullet: true, obj: pre(`Initial Answer: ${matches[1]}\nConstant:       ${matches[2]}`) });
+					return true;
+				}
+			},
+			{
+				regex: /GUESS #(\d+) - You guessed (.{6})\. I respond with (.{6}), and make the next answer (.{6})/,
+				handler: function(matches, module) {
+					module.latestAnswer = matches[4];
+					const stage = pre(`Input:      ${matches[2]}\nOutput:     ${matches[3]}\nNew Answer: ${matches[4]}`);
+					module.push([`Guess ${+ matches[1] + 1}`, [{ nobullet: true, obj: stage }]]);
+					return true;
+				}
+			},
+			{
+				regex: /\(You submitted (.{6})\.\)/,
+				handler: function(matches, module) {
+					module.push({ nobullet: true, obj: pre(`Submitted:      ${matches[1]}\nCurrent Answer: ${module.latestAnswer}`) });
+					module.push({ nobullet: true, obj: $("<hr>") });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: [ "Simon’s Stages", "Simon Stages" ],
 		moduleID: [ "simonsStages", "simonStages" ],
 		loggingTag: [ "Simon's Stages", "Simon Stages" ],
