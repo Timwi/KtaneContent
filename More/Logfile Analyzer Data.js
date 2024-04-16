@@ -3009,6 +3009,69 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "chippingTriangles",
+		loggingTag: "Chipping Triangles",
+		matches: [
+			{
+				regex: /The plate is (.).+/,
+				handler: function(matches, module) {
+					module.colourDict = {
+						"R": "#FF4444",
+						"B": "#4080F0",
+						"Y": "#FFFF00",
+						"l": "#DA8DFF",
+						"s": "#BDBDBD",
+						"p": "#65FFB9",
+						"h": "#FFCB97",
+					};
+					module.transforms = [
+						`translate(0 0)`,
+						`translate(-4.1 7.1)`,
+						`matrix(1 0 0 -1 0 16.1)`,
+						`translate(4.1 7.1)`,
+						`translate(-8.2 14.2)`,
+						`matrix(1 0 0 -1 -4.1 23.2)`,
+						`translate(0 14.2)`,
+						`rotate(180 16.36 11.6)`,
+						`translate(8.2 14.2)`,
+					];
+					module.plateColour = module.colourDict[matches[1].charAt(0)];
+					return true;
+				}
+			},
+			{
+				regex: /The colours of the chips on the (.+) of the plate are:/,
+				handler: function(matches, module) {
+					const side = matches[1];
+					const label = `${side.charAt(0).toUpperCase()}${side.slice(1)}:`;
+					const colours = readTaggedLine().split(', ')
+						.map(colour => module.colourDict[colour.charAt(0)]);
+					const falseChipLine = readTaggedLine();
+					const falseChip = falseChipLine.match(/position (\d)/)[1] - 1;
+					let svg = `
+					<svg xmlns="http://www.w3.org/2000/svg" class="chipping-triangles" viewBox="0 -1.5 30 25.98">
+						<path id="a" d="M15.27 2.76h-8.2l4.1-7.1z" transform="translate(3.14 5.3)"/>
+						<path fill="${module.plateColour}" d="M28.3756 23.26078H.2444L14.31-1.10156Z"/>
+					`;
+					const triangles = [];
+					console.log(module.transforms.entries());
+					for (const [colourIx, transform] of module.transforms.entries()) {
+						const isFalseChip = colourIx == falseChip;
+						const triangle = `<use fill="${colours[colourIx]}" href="#a" transform="${transform}"${isFalseChip ? ` stroke="#0D0"` : ``}/>`;
+						if (isFalseChip)
+							triangles.push(triangle);
+						else
+							triangles.unshift(triangle);
+					}
+					module.push({ label: label, obj: svg + triangles.join('') + `</svg>` });
+					module.push(falseChipLine);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "ChordQualities",
 		loggingTag: "ChordQualities"
 	},
@@ -4863,7 +4926,7 @@ let parseData = [
 					module.currentDropdown[1].push({nobullet: true, obj: $(`<p>Stage ${correctOrderMatches[1]}</p>`).addClass("discolored-squares-header")}, {obj: $('<hr>'), nobullet: true});
 					const format = formatArr.find(f => f.original == coordinates[0].tranformation);
 					const arrow = $('<img>').attr('src', `../HTML/img/Bakery/arrow.svg`).addClass("discolored-squares");
-					const div = $('<div>').append(orderSVG).append($('<div>').addClass("discolored-squares-centered").append(arrow).append($(`<p>${format ? format.new : "THIS SHOULD NOT BE HERE"}</p>`).addClass("discolored-squares"))).append(answerSVG).addClass("disolored-squares-parent");
+					const div = $('<div>').append(orderSVG).append($('<div>').addClass("discolored-squares-centered").append(arrow).append($(`<p>${format ? format.new : "THIS SHOULD NOT BE HERE"}</p>`).addClass("discolored-squares"))).append(answerSVG).addClass("discolored-squares-parent");
 					module.currentDropdown[1].push({ nobullet: true, obj: div });
 					return true;
 				}
@@ -6199,6 +6262,21 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "ForgetTheColors",
+		loggingTag: "Forget The Colors",
+		matches: [
+			{
+				regex: /(STAGE (?:\d+))/,
+				handler: function(matches, module) {
+					const stageInfo = readLines(15).map((line) => /\[Forget The Colors(?: #\d+)\]: (.+)/.exec(line)[1]);
+					module.push([ matches[0], stageInfo ]);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Forget Them All",
 		moduleID: "forgetThemAll",
 		loggingTag: "Forget Them All",
@@ -6840,6 +6918,38 @@ let parseData = [
 		moduleID: "giantsDrink",
 		loggingTag: "The Giant's Drink",
 		displayName: "The Giant’s Drink"
+	},
+	{
+		moduleID: "graffitiNumbers",
+		loggingTag: "Graffiti Numbers",
+		matches: [
+			{
+				regex: /The (.+) row is (.+? \d), (.+? \d), (.+? \d)\./,
+				handler: function(matches, module) {
+					if (!module.grid)
+						module.grid = [matches.slice(2,5)];
+					else
+						module.grid.push(matches.slice(2,5));
+					if (matches[1] == "bottom") {
+						const grid = module.grid
+							.map(row => row
+								.map(item => item.split(' ')));
+						let makeGrid = (index) => {
+							return grid
+								.map(row => row
+									.map(item => item[index].padEnd(7, ' ')))
+								.map(row => row.join(' '))
+								.join('\n');
+						}
+						const colourGrid = pre(makeGrid(0));
+						const numberGrid = pre(makeGrid(1));
+						module.push({ label: "Numbers:", obj: numberGrid, nobullet: true }, { label: "Colours:", obj: colourGrid, nobullet: true });
+					}
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
 	},
 	{
 		displayName: "The Grand Prix",
@@ -7975,15 +8085,15 @@ let parseData = [
 				regex: /^Final values for the violet quirk: \[H-wrap=\(([+-])([+-])(\\)?\); V-wrap=\(([+-])([+-])(?:\\)?\)\]\.$/,
 				handler: function (matches, module) {
 					let preText = "";
-					for (let dirIndexPair of [["horizontally", 1], ["vertically", 4]]) {
-						preText += `\nWrapping around ${dirIndexPair[0]} `;
-						if (matches[1] == "-" && matches[2] == "-") {
+					for (let [dir, index] of [["horizontally", 1], ["vertically", 4]]) {
+						preText += `\nWrapping around ${dir} `;
+						if (matches[index] == "-" && matches[index + 1] == "-") {
 							preText += "flips the grid both horizontally and vertically.";
 						}
-						else if (matches[1] == "-") {
+						else if (matches[index] == "-") {
 							preText += "flips the grid horizontally only.";
 						}
-						else if (matches[2] == "-") {
+						else if (matches[index + 1] == "-") {
 							preText += "flips the grid vertically only.";
 						}
 						else {
@@ -13762,6 +13872,20 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "PuzzwordModule",
+		loggingTag: "Puzzword",
+		matches: [
+			{
+				regex: /Solution: (.+)/,
+				handler: function(match, module) {
+					module.push({ label:"Solution: ", obj: `<span class="puzzword">${match[1]}</span><span> (hover to reveal)</span>` });
+					return true;
+				}
+			},
+			{ regex: /.+/ }			
+		]
+	},
+	{
 		displayName: "QR Code",
 		moduleID: "QRCode",
 		loggingTag: "NeedyQRCode",
@@ -14617,18 +14741,48 @@ let parseData = [
 		loggingTag: "Robot Programming",
 		matches: [
 			{
-				regex: /Top of the maze is (\d+)/,
+				regex: /The resulting maze:/,
+				handler: function(match, module) {
+					const colours = {
+						"X": "#FFFA",
+						"r": "#F00A",
+						"y": "#FF0A",
+						"g": "#0F0A",
+						"b": "#00FA",
+						".": "#000"
+					};
+					const mazeData = readLines(9)
+						.map(l => l.split(''));
+					const svg = $SVG(`<svg viewbox="-0.5 -0.5 10 10" class="robot-programming">`);
+					for (const [y, row] of mazeData.entries()) {
+						for (const [x, cell] of row.entries()) {
+							$SVG(`<rect x="${x}" y="${y}" width="1" height="1" fill="${colours[cell]}">`).appendTo(svg);
+						}
+					}
+					module.push({ label: match[0], obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /The robots in the initial order are: (.+)\./,
+				handler: function(matches, module) {
+					module.botAppearances = matches[1].split(", ");
+					return true;
+				}
+			},
+			{
+				regex: /The robot types are: (.+)\./,
 				handler: function (matches, module) {
 					module.push(matches[0]);
-					readTaggedLines(5).forEach(line => module.push(line));
 					module.attemptNum = 1;
+					module.botOrder = matches[1].split(", ");
 					module.currentDropdown = [
 						`Attempt ${module.attemptNum}`,
 						[
-							["R.O.B", []],
-							["HAL", []],
-							["R2D2", []],
-							["Fender", []]
+							[`${module.botOrder[0]} (${module.botAppearances[0]})`, []],
+							[`${module.botOrder[1]} (${module.botAppearances[1]})`, []],
+							[`${module.botOrder[2]} (${module.botAppearances[2]})`, []],
+							[`${module.botOrder[3]} (${module.botAppearances[3]})`, []]
 						]
 					];
 					module.push(module.currentDropdown);
@@ -14636,53 +14790,47 @@ let parseData = [
 				}
 			},
 			{
-				regex: /You pressed (.+)\./,
+				regex: /The (.+) robot, (.+), has received a (.+) press\./,
 				handler: function (matches, module) {
-					const botNameLine = readTaggedLine();
-					const botName = botNameLine.match(/You are controlling (.+)./)[1];
-					const botIndex = ["R.O.B", "HAL", "R2D2", "Fender"].indexOf(botName);
-					let lines = [matches[0],botNameLine];
-					const finalLine = "The robot will move";
-					do {
-						lines.push(readTaggedLine());
-					} while (!lines[lines.length - 1].includes(finalLine));
-					lines = lines.filter(line => !line.includes("You are controlling"));
-					lines.forEach(line => module.currentDropdown[1][botIndex][1].push(line));
+					const botName = matches[2];
+					const isDependent = botName == "R2D2" || botName == "Fender";
+					const botIndex = module.botOrder.indexOf(botName);
+					const thisMovement = [
+						`Pressed ${matches[3]}.`,
+						isDependent ? readTaggedLine() + " " : "",
+						`Resulting movement: ${/The (.+) robot will move (.+)\. Its new coordinates are (\d), (\d)\./
+							.exec(readTaggedLine())[2]}.`
+					];
+					const potentialCrashLine = readTaggedLine();
+
+					if (potentialCrashLine.includes("This move will cause the program to crash!"))
+						thisMovement.push(potentialCrashLine);
+					else
+						linen--;
+
+					module.currentDropdown[1][botIndex][1].push(thisMovement.join('\n'));
 					return true;
 				}
 			},
 			{
-				regex: /(.+) will no longer receive commands\./,
-				handler: function (matches, module) {
-					const botIndex = ["R.O.B", "HAL", "R2D2", "Fender"].indexOf(matches[1]);
+				regex: /(.+) \((.+)\) (?:has been blocked|cannot move! Skipping its turn)\./,
+				handler: function(matches, module) {
+					const botIndex = module.botOrder.indexOf(matches[1]);
 					module.currentDropdown[1][botIndex][1].push(matches[0]);
 					return true;
 				}
 			},
 			{
-				regex: /Command sequence reset|ERROR: Robots' coordinates before strike: (.+)/,
-				handler: function (matches, module) {
-					if(matches[0].includes("ERROR: Robots' coordinates before strike:")) {
-						const indices = matches[1].split(" ");
-						const coordinates = [];
-						for(let i = 0; i < 4; i++) {
-							const number = parseInt(indices[i]);
-							const col = Math.floor(number % 9) - 1;
-							const row = Math.floor(number / 9) + 1;
-							coordinates.push(`${"ABCDEFG"[col]}${row}`);
-						}
-						module.push(`ERROR: Robots' coordinates before strike: ${coordinates.join(" ")}`);
-					} else {
-						module.push(matches[0]);
-					}
+				regex: /Running the program/,
+				handler: function (_, module) {
 					module.attemptNum++;
 					module.currentDropdown = [
 						`Attempt ${module.attemptNum}`,
 						[
-							["R.O.B", []],
-							["HAL", []],
-							["R2D2", []],
-							["Fender", []]
+							[`${module.botOrder[0]} (${module.botAppearances[0]})`, []],
+							[`${module.botOrder[1]} (${module.botAppearances[1]})`, []],
+							[`${module.botOrder[2]} (${module.botAppearances[2]})`, []],
+							[`${module.botOrder[3]} (${module.botAppearances[3]})`, []]
 						]
 					];
 					module.push(module.currentDropdown);
@@ -15800,6 +15948,103 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "simonServes",
+		loggingTag: "Simon Serves",
+		matches: [
+			{
+				regex: /Course (\d): .+/,
+				handler: function (matches, module) {
+					if(!module.getFoodName)
+					{
+						module.getFoodNames = (courseNum, str) =>
+						{
+							const colors = ['Red', 'White', 'Blue', 'Brown', 'Green', 'Yellow', 'Orange', 'Pink'];
+							const food = [
+								['Cruelo Juice', 'Defuse Juice', 'Simon’s Special Mix', 'Boom Lager Beer', 'Forget Cocktail', 'Wire Shake', 'Deto Bull', 'Tasha’s Drink'], 
+								['Caesar Salad', 'Edgework Toast', 'Ticking Timecakes', 'Big Boom Tortellini', 'Status Light Rolls', 'Blast Shrimps', 'Blast Shrimps', 'Boolean Waffles'], 
+								['Forghetti Bombognese', 'NATO Shrimps', 'Wire Spaghetti', 'Indicator Tar Tar', 'Centurion Wings', 'Colored Spare Ribs', 'Omelette au Bombage', 'Veggie Blast Plate'], 
+								['Strike Pie', 'Blastwave Compote', 'Not Ice Cream', 'Defuse au Chocolat', 'Solve Cake', 'Baked Batterys', 'Bamboozling Waffles', 'Bomb Brûlée'], 
+							];
+							for(let i = 0; i < colors.length; i++)
+								str = str.replace(colors[i], food[courseNum][i]);
+							return str;
+						}
+
+						module.getNameColors = (str) =>
+						{
+							const names = ['Riley', 'Brandon', 'Veronica', 'Gabriel', 'Wendy', 'Kayle']
+							const colors = ['Red',    'Blue',   'Violet',  'Green',  'White',  'Black'];
+							for(let i = 0; i < names.length; i++)
+								str = str.replace(names[i], colors[i]);
+							return str;
+						}
+					}
+					module.courseNum = matches[1] - 1;
+					module.currentDropdown = [matches[0], []];
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Food served \(clockwise\): (.+)/,
+				handler: function (matches, module) {
+					const str = module.getFoodNames(module.courseNum, matches[1]);
+					module.currentDropdown[1].push("Food served: " + str);
+					return true;
+				}
+			},
+			{
+				regex: /.+ Strike!/,
+				handler: function (matches, module) {
+					let str = module.getFoodNames(module.courseNum, matches[0]);
+					str = module.getNameColors(str);
+					module.currentDropdown[1].push(str);
+					return true;
+				}
+			},
+			{
+				regex: /(Wrong (Person|Food) current, right on:|Serving Order:) .+/,
+				handler: function (matches, _) {
+					if(matches[0].includes('Wrong'))
+						readTaggedLine()
+					return true;
+				}
+			},
+			{
+				regex: /Answer/,
+				handler: function (_, module) {
+					let answers = readTaggedLines(6);
+					for(let i = 0; i < answers.length; i++)
+						answers[i] = module.getFoodNames(module.courseNum, answers[i]);
+					for(let i = 0; i < answers.length; i++)
+						answers[i] = module.getNameColors(answers[i]);
+					module.currentDropdown[1].push(["Answer", answers, true]);
+					return true;
+				}
+			},
+			{
+				regex: /Serving Order: .+/,
+				handler: function (_, _) {
+					return true;
+				}
+			},
+			{
+				regex: /.+ should pay the bill/,
+				handler: function (matches, module) {
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					module.currentDropdown[1].push(matches[0]);
+					return true;
+				}
+			}	
+		]
+	},
+	{
 		moduleID: "SimonSignalsModule",
 		loggingTag: "Simon Signals",
 		matches: [
@@ -16038,6 +16283,37 @@ let parseData = [
 		displayName: "Simon Squawks",
 		moduleID: "simonSquawks",
 		loggingTag: "Simons Squawks"
+	},
+	{
+		moduleID: "simonSwindles",
+		loggingTag: "Simon Swindles",
+		matches: [
+			{
+				regex: /GENERATION PHASE: Intial answer is (.{6}) and the constant is (.{6})/,
+				handler: function(matches, module) {
+					module.push({ nobullet: true, obj: pre(`Initial Answer: ${matches[1]}\nConstant:       ${matches[2]}`) });
+					return true;
+				}
+			},
+			{
+				regex: /GUESS #(\d+) - You guessed (.{6})\. I respond with (.{6}), and make the next answer (.{6})/,
+				handler: function(matches, module) {
+					module.latestAnswer = matches[4];
+					const stage = pre(`Input:      ${matches[2]}\nOutput:     ${matches[3]}\nNew Answer: ${matches[4]}`);
+					module.push([`Guess ${+ matches[1] + 1}`, [{ nobullet: true, obj: stage }]]);
+					return true;
+				}
+			},
+			{
+				regex: /\(You submitted (.{6})\.\)/,
+				handler: function(matches, module) {
+					module.push({ nobullet: true, obj: pre(`Submitted:      ${matches[1]}\nCurrent Answer: ${module.latestAnswer}`) });
+					module.push({ nobullet: true, obj: $("<hr>") });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
 	},
 	{
 		displayName: [ "Simon’s Stages", "Simon Stages" ],

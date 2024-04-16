@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang='de'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Schiffsignalflaggen — Keep Talking and Nobody Explodes-Modul</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        .all-flags {
+            clear: both;
+        }
+        .flag-box {
+            float: left;
+            margin: .2cm;
+            width: 1.8cm;
+            text-align: center;
+        }
+        .flag {
+            width: 1.7cm;
+            height: 1.7cm;
+            background-repeat: no-repeat;
+            background-position: 0 0;
+            background-size: 100% 100%;
+        }
+            .flag.repeater {
+                height: 1.3cm;
+            }
+        .caption {
+            text-align: center;
+            font-size: 11pt;
+            margin-top: .2em;
+        }
+            .caption.repeater {
+                font-size: 10pt;
+            }
+        .signal-reference {
+            column-count: 7;
+            font-size: 10pt;
+        }
+        .bearing-diagram {
+            float: left;
+            width: 8cm;
+            position: relative;
+            top: -.2cm;
+            left: -.2cm;
+        }
+        .dark .bearing-diagram {
+            filter: invert(90%);
+        }
+        h3 {
+            margin-bottom: 1em;
+            clear: both;
+        }
+        .diagram {
+            margin-bottom: .5em;
+        }
+
+        @media screen and (max-width: 900px) {
+            .flag-box {
+                float: left;
+                margin: .1cm;
+                width: 1.4cm;
+                text-align: center;
+            }
+            .flag {
+                width: 1.4cm;
+                height: 1.4cm;
+            }
+                .flag.repeater {
+                    height: 1cm;
+                }
+            .signal-reference {
+                column-count: 3;
+                font-size: 10pt;
+            }
+        }
+    </style>
+    <script>
+        var flagDesigns = [
+            { name: c => `uni ${c[0]}`, numColors: 1, reverseAllowed: false, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" />` },
+            { name: c => `${c[0]}-${c[1]} vertikal`, numColors: 2, reverseAllowed: false, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.5 0h.5v1h-.5z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[2]} vertikal`, numColors: 3, reverseAllowed: false, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.33 0h.67v1h-.67z" fill="${c[1]}" /><path d="M.67 0h.33v1h-.33z" fill="${c[2]}" />` },
+            { name: c => `${c[1]}-${c[0]}-${c[1]} vertikal`, numColors: 2, reverseAllowed: true, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h.33v1h-.33zM.67 0h.33v1h-.33z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[0]} vertikal ungleich`, numColors: 2, reverseAllowed: true, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.2 0h.6v1h-.6z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} 6 vertikale Streifen`, numColors: 2, reverseAllowed: false, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.167 0h.167v1h-.167zM.5 0h.167v1h-.167zM.833 0h.167v1h-.167z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} horizontal`, numColors: 2, reverseAllowed: false, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[1]}" /><path d="M0 0h1v.5h-1z" fill="${c[0]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[2]} horizontal`, numColors: 3, reverseAllowed: false, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .33h1v.67h-1z" fill="${c[1]}" /><path d="M0 .67h1v.33h-1z" fill="${c[2]}" />` },
+            { name: c => `${c[1]}-${c[0]}-${c[1]} horizontal`, numColors: 2, reverseAllowed: true, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h1v.33h-1zM0 .67h1v.33h-1z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[0]} horizontal ungleich`, numColors: 2, reverseAllowed: true, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .2h1v.6h-1z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[2]}-${c[1]}-${c[0]} horizontal`, numColors: 3, reverseAllowed: true, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .2h1v.6h-1z" fill="${c[1]}" /><path d="M0 .4h1v.2h-1z" fill="${c[2]}" />` },
+            { name: c => `${c[0]}-${c[1]} 6 horizontale Streifen`, reverseAllowed: false, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .167h1v.167h-1zM0 .5h1v.167h-1zM0 .833h1v.167h-1z" fill="${c[1]}" />` },
+            { name: c => `${c[1]}e Raute auf ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.5 0L1 .5 .5 1 0 .5z" fill="${c[1]}" />` },
+            { name: c => `${c[1]}er zentrierter Kreis auf ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.25 .5a.25 .25 0 0 1 .5 0a.25 .25 0 0 1-.5 0z" fill="${c[1]}" />` },
+            { name: c => `${c[2]}er Kreis auf ${c[1]}em Kreis auf ${c[0]}`, reverseAllowed: true, numColors: 3, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.1 .5a.4 .4 0 0 1 .8 0a.4 .4 0 0 1-.8 0z" fill="${c[1]}" /><path d="M.3 .5a.2 .2 0 0 1 .4 0a.2 .2 0 0 1-.4 0z" fill="${c[2]}" />` },
+            { name: c => `${c[1]}-${c[0]} 2×2-Schachbrettmuster`, reverseAllowed: false, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h.5v.5h-.5zM.5 .5h.5v.5h-.5z" fill="${c[1]}" />` },
+            { name: c => `${c[1]}-${c[2]} orthogonale Quadranten auf ${c[0]}`, reverseAllowed: false, numColors: 3, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h1l-.5 .5h-.5z" fill="${c[1]}" /><path d="M.5 0h.5v.5h-.5z" fill="${c[2]}" />` },
+            { name: c => `${c[0]}-${c[2]}-${c[1]}-${c[3]} orthogonale Quadranten`, reverseAllowed: false, numColors: 4, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.5 0h.5v1h-.5z" fill="${c[2]}" /><path d="M.5 .5h.5v.5h-1z" fill="${c[1]}" /><path d="M0 .5h.5v.5h-.5z" fill="${c[3]}" />` },
+            { name: c => `${c[1]}-${c[0]} 4×4-Schachbrettmuster`, reverseAllowed: false, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h.25v.25h-.25zM.5 0h.25v.25h-.25zM0 .5h.25v.25h-.25zM.5 .5h.25v.25h-.25zM.25 .25h.25v.25h-.25zM.75 .25h.25v.25h-.25zM.25 .75h.25v.25h-.25zM.75 .75h.25v.25h-.25z" fill="${c[1]}" />` },
+            { name: c => `${c[1]}es Schrägkreuz auf ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h.125l.375 .375l.375 -.375h.125v.125l-.375 .375l.375 .375v.125h-.125l-.375 -.375l-.375 .375h-.125v-.125l.375 -.375l-.375 -.375z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} diagonal`, reverseAllowed: false, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h1v1z" fill="${c[1]}" />` },
+            { name: c => `${c[1]}es zentriertes Quadrat auf ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.33 .33h.34v.34h-.34z" fill="${c[1]}" />` },
+            { name: c => `${c[2]}es Quadrat auf ${c[1]}em Quadrat auf ${c[0]}`, reverseAllowed: true, numColors: 3, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.2 .2h.6v.6h-.6z" fill="${c[1]}" /><path d="M.4 .4h.2v.2h-.2z" fill="${c[2]}" />` },
+            { name: c => `${c[2]}es Quadrat auf ${c[0]}-${c[1]} diagonal`, reverseAllowed: false, numColors: 3, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h1v1z" fill="${c[1]}" /><path d="M.33 .33h.34v.34h-.34z" fill="${c[2]}" />` },
+            { name: c => `${c[2]}es Quadrat auf ${c[0]}-${c[1]} horizontal`, reverseAllowed: false, numColors: 3, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .5h1v.5h-1z" fill="${c[1]}" /><path d="M.33 .33h.34v.34h-.34z" fill="${c[2]}" />` },
+            { name: c => `${c[1]}es Kreuz auf ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.4 0h.2v.4h.4v.2h-.4v.4h-.2v-.4h-.4v-.2h.4z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} 7 diagonale Streifen`, reverseAllowed: false, numColors: 2, cutoutAllowed: false, svg: c => `<g transform="scale(.142857,.142857)"><path d="M0 0h7v7h-7z" fill="${c[0]}" /><path d="M2 0h2l-4 4v-2zM6 0h1v1l-6 6h-1v-1zM7 3v2l-2 2h-2z" fill="${c[1]}" /></g>` },
+            { name: c => `${c[0]}-${c[1]} 10 diagonale Streifen`, reverseAllowed: false, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.2 0h.2l-.4 .4v-.2zM.6 0h.2l-.8 .8v-.2zM1 0v.2l-.8 .8h-.2zM1 .4v.2l-.4 .4h-.2zM1 .8v.2h-.2z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[3]}-${c[1]}-${c[2]} diagonale Quadranten`, reverseAllowed: false, numColors: 4, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .5h1v.5h-1z" fill="${c[1]}" /><path d="M0 0l.5 .5l-.5 .5z" fill="${c[2]}" /><path d="M1 0v1l-.5 -.5z" fill="${c[3]}" />` },
+            { name: c => `${c[0]}-${c[1]} horizontales Halbkreismuster`, reverseAllowed: false, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.25 .5a.25 .25 0 0 1 .5 0zM1 .5v.5h-1v-.5h.25a.25 .25 0 0 0 .5 0z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} diagonales Halbkreismuster`, reverseAllowed: false, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0h1v1L.6768 .6768A.25 .25 0 0 0 .3232 .3232zM.6768 .6768A.25 .25 0 0 1 .3232 .3232z" fill="${c[1]}" />` },
+            { name: c => `${c[1]}es Dreieck auf ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .2L.75 .5 0 .8z" fill="${c[1]}" />` },
+            { name: c => `2 ${c[1]}e Dreiecke auf ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 0l1 .25l-1 .25zM0 .5l1 .25l-1 .25z" fill="${c[1]}" />` },
+            { name: c => `${c[1]}e Pluszeichen auf ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: false, svg: c => `<g transform="scale(.06667,.06667)"><path d="M0 0h15v15h-15z" fill="${c[0]}" /><path d="M2 1h1v1h1v1h-1v1h-1v-1h-1v-1h1zM12 1h1v1h1v1h-1v1h-1v-1h-1v-1h1zM2 11h1v1h1v1h-1v1h-1v-1h-1v-1h1zM12 11h1v1h1v1h-1v1h-1v-1h-1v-1h1zM7 6h1v1h1v1h-1v1h-1v-1h-1v-1h1z" fill="${c[1]}" /></g>` },
+            { name: c => `${c[1]}es Quadrat am Rand auf ${c[0]}`, reverseAllowed: true, numColors: 2, cutoutAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .3h.5v.4h-.5z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[2]} dreieckige Felder`, reverseAllowed: false, numColors: 3, cutoutAllowed: false, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M1 0v1h-1v-.5z" fill="${c[1]}" /><path d="M1 0v1h-.5z" fill="${c[2]}" />` }
+        ];
+        var repeaterDesigns = [
+            { name: c => `${c[1]}es Dreieck auf ${c[0]}`, numColors: 2, reverseAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .1 .68 .3125 0 .525z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]} vertikal`, numColors: 2, reverseAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M.5 0h1v1h-1z" fill="${c[1]}" />` },
+            { name: c => `${c[0]}-${c[1]}-${c[0]} horizontal`, numColors: 2, reverseAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .2h1v.225h-1z" fill="${c[1]}" />` },
+            { name: c => `${c[1]}es Quadrat auf ${c[0]}`, numColors: 2, reverseAllowed: true, svg: c => `<path d="M0 0h1v1h-1z" fill="${c[0]}" /><path d="M0 .2h.225v.225h-.225z" fill="${c[1]}" />` }
+        ];
+        var colorGroups = [
+            [
+                { name: 'rot', code: '#f00' }
+            ],
+            [
+                { name: 'blau', code: '#00f' },
+                { name: 'schwarz', code: '#000' }
+            ],
+            [
+                { name: 'gelb', code: '#ff0' },
+                { name: 'weiß', code: '#fff' }
+            ]
+        ];
+
+        var seed1Callsigns = "1STMATE=355;2NDMATE=109;3RDMATE=250;ABANDON=308;ADMIRAL=260;ADVANCE=356;AGROUND=236;ALLIDES=28;ANCHORS=346;ATHWART=78;AZIMUTH=265;BAILERS=357;BALLAST=129;BARRACK=23;BEACHED=170;BEACONS=121;BEAMEND=259;BEAMSEA=316;BEARING=12;BEATING=105;BELAYED=297;BERMUDA=107;BOBSTAY=76;BOILERS=190;BOLLARD=258;BONNETS=332;BOOMKIN=29;BOUNDER=99;BOWLINE=73;BRAILED=165;BREADTH=293;BRIDGES=43;BRIGGED=191;BRINGTO=279;BULWARK=202;BUMBOAT=193;BUMPKIN=119;BURTHEN=294;CABOOSE=10;CAPSIZE=194;CAPSTAN=141;CAPTAIN=1;CARAVEL=295;CAREENS=217;CARRACK=241;CARRIER=94;CATBOAT=219;CATHEAD=177;CHAINED=162;CHANNEL=214;CHARLEY=123;CHARTER=228;CITADEL=246;CLEARED=306;CLEATED=290;CLINKER=163;CLIPPER=130;COAMING=198;COASTED=138;CONSORT=324;CONVOYS=301;CORINTH=225;COTCHEL=140;COUNTER=20;CRANZES=229;CREWING=27;CRINGLE=42;CROJACK=13;CRUISER=333;CUTTERS=147;DANDIES=309;DEADRUN=327;DEBUNKS=331;DERRICK=289;DIPPING=134;DISRATE=158;DOGVANE=231;DOLDRUM=238;DOLPHIN=139;DRAUGHT=351;DRIFTER=201;DROGUES=143;DRYDOCK=4;DUNNAGE=137;DUNSELS=287;EARINGS=60;ECHELON=350;EMBAYED=62;ENSIGNS=98;ESCORTS=11;FAIRWAY=86;FALKUSA=243;FANTAIL=178;FARDAGE=133;FATHOMS=49;FENDERS=337;FERRIES=358;FITTING=89;FLANKED=68;FLARING=172;FLATTOP=195;FLEMISH=323;FLOATED=187;FLOORED=262;FLOTSAM=67;FOLDING=15;FOLLOWS=148;FORCING=118;FORWARD=239;FOULIES=145;FOUNDER=330;FRAMING=156;FREIGHT=174;FRIGATE=227;FUNNELS=230;FURLING=204;GALLEON=300;GALLEYS=292;GALLIOT=9;GANGWAY=210;GARBLED=237;GENERAL=354;GEORGES=100;GHOSTED=30;GINPOLE=233;GIVEWAY=74;GONDOLA=85;GRAVING=253;GRIPIES=335;GROUNDS=153;GROWLER=281;GUINEAS=164;GUNDECK=82;GUNPORT=221;GUNWALE=36;HALYARD=325;HAMMOCK=261;HAMPERS=161;HANGARS=343;HARBORS=182;HARBOUR=154;HAULING=65;HAWSERS=51;HEADING=205;HEADSEA=52;HEAVING=298;HERRING=44;HOGGING=189;HOLIDAY=87;HUFFLER=282;INBOARD=53;INIRONS=111;INSHORE=91;INSTAYS=285;INWATER=103;INWAYOF=69;JACKIES=126;JACKTAR=110;JENNIES=61;JETTIES=71;JIGGERS=353;JOGGLES=215;JOLLIES=188;JURYRIG=166;KEELSON=66;KELLETS=41;KICKING=92;KILLICK=277;KITCHEN=235;LANYARD=155;LAYDAYS=122;LAZARET=283;LEEHELM=197;LEESIDE=116;LEEWARD=95;LIBERTY=81;LIGHTER=302;LIZARDS=276;LOADING=169;LOCKERS=180;LOFTING=186;LOLLING=34;LOOKOUT=171;LUBBERS=340;LUFFING=2;LUGGERS=106;LUGSAIL=284;MAEWEST=5;MANOWAR=348;MARCONI=244;MARINER=209;MATELOT=157;MIZZENS=47;MOORING=310;MOUSING=6;NARROWS=97;NIPPERS=179;OFFICER=252;OFFPIER=266;OILSKIN=31;OLDSALT=347;ONBOARD=249;OREBOAT=271;OUTHAUL=77;OUTWARD=125;PAINTER=75;PANTING=254;PARCELS=113;PARLEYS=38;PARRELS=334;PASSAGE=311;PELAGIC=159;PENDANT=274;PENNANT=135;PICKETS=339;PINNACE=149;PINTLES=317;PIRATES=37;PIVOTED=70;PURSERS=108;PURSUED=90;QUARTER=183;QUAYING=257;RABBETS=315;RATLINE=269;REDUCED=329;REEFERS=146;REPAIRS=35;RIGGING=14;RIPRAPS=167;ROMPERS=17;ROWLOCK=26;RUDDERS=286;RUFFLES=39;RUMMAGE=115;SAGGING=33;SAILORS=207;SALTIES=93;SALVORS=345;SAMPANS=79;SAMPSON=319;SCULLED=291;SCUPPER=206;SCUTTLE=58;SEACOCK=117;SEALING=22;SEEKERS=245;SERVING=220;SEXTANT=275;SHELTER=25;SHIPPED=299;SHIPRIG=247;SICKBAY=142;SKIPPER=45;SKYSAIL=84;SLINGED=196;SLIPWAY=83;SNAGGED=50;SNOTTER=199;SPLICED=268;SPLICES=181;SPONSON=19;SPONSOR=234;SPRINGS=273;SQUARES=263;STACKIE=132;STANDON=226;STARTER=59;STATION=359;STEAMER=57;STEERED=213;STEEVES=314;STEWARD=3;STOPPER=242;STOVEIN=185;STOWAGE=203;STRIKES=124;SUNFISH=342;SWIMMIE=307;SYSTEMS=255;TACKING=18;THWARTS=54;TINCLAD=63;TOMPION=270;TONNAGE=175;TOPMAST=305;TOPSAIL=338;TORPEDO=267;TOSSERS=114;TRADING=251;TRAFFIC=102;TRAMPER=150;TRANSOM=313;TRAWLER=127;TRENAIL=21;TRENNEL=173;TRIMMER=322;TROOPER=46;TRUNNEL=349;TUGBOAT=131;TURNTWO=303;UNSHIPS=318;UPBOUND=326;VESSELS=55;VOICING=321;VOYAGER=212;WEATHER=278;WHALERS=7;WHARVES=341;WHELKIE=223;WHISTLE=151;WINCHES=211;WINDAGE=222;WORKING=218;YARDARM=101";
+
+        var allCallsigns = "1STMATE;2NDMATE;3RDMATE;ABANDON;ABOXLAW;ABREAST;ADDENDA;ADJUNCT;ADMIRAL;ADVANCE;ADVECTS;AERODYN;AFTRIGS;AGROUND;AIRTANK;ALADDIN;ALLHAIL;ALLIDES;ALLISON;ALMANAC;ALOWCUT;AMMETER;ANCHORS;ANEMONE;ANGLERS;APOSTLE;APPENDS;APPOINT;AQUATIC;ARTICLE;ATHRUST;ATHWART;ATTACKS;AVASTYE;AVOCADO;AWNINGS;AZIMUTH;BABOONS;BACKING;BAILERS;BALANCE;BALLAST;BARQUES;BARRACK;BARSHOT;BARTAUT;BATTLED;BATTLES;BEACHED;BEACONS;BEAMEND;BEAMSEA;BEARING;BEATING;BECALMS;BECKETS;BELAYED;BENEATH;BERMUDA;BETWIXT;BEWPARS;BEWPERS;BILBOES;BINGING;BISCUIT;BLACKEN;BLANKET;BLOOPER;BLOWING;BLUESEA;BOBSTAY;BOILERS;BOLLARD;BOLSTER;BONNETS;BOOMKIN;BOOTTOP;BOTTOMS;BOUNDER;BOWBEAM;BOWLINE;BOXDECK;BOXMARK;BRACING;BRAILED;BREADTH;BREAKER;BRIDGES;BRIGGED;BRINGTO;BRISTOL;BULKEND;BULWARK;BUMBOAT;BUMPERS;BUMPKIN;BUNKERS;BUNTING;BUOYANT;BURDENS;BURTHEN;BUTTOCK;BYBOARD;BYWINDS;CABOOSE;CALKING;CALVING;CAMBERS;CANBUOY;CAPSIZE;CAPSTAN;CAPTAIN;CARAVEL;CAREENS;CARGOES;CARLINE;CARLING;CARLINS;CARRACK;CARRICK;CARRIER;CATBOAT;CATHEAD;CATSKIN;CATSPAW;CATWALK;CELESTE;CERTIFY;CHAFING;CHAINED;CHANNEL;CHARLEY;CHARLIE;CHARTER;CHEARLY;CHEESED;CHIEFLY;CICADAS;CIRCLED;CIRCLES;CITADEL;CLEANED;CLEARED;CLEATED;CLINKER;CLIPPER;CLOSEST;CLOTHES;CLOVERS;COACHED;COACHES;COAMING;COASTAL;COASTED;COCKPIT;COLLIER;COLORED;COLREGS;COMBINE;COMPANY;CONSORT;CONTAIN;CONVENT;CONVOYS;COPPERS;CORDAGE;CORINTH;CORSAIR;COTCHEL;COUNTER;COVERED;CRACKON;CRADLED;CRADLES;CRAFTED;CRANKED;CRANZES;CREEPER;CRESTED;CREWING;CREWMAN;CREWMEN;CRIBBED;CRIMSON;CRINGLE;CROJACK;CROWNED;CRUISED;CRUISER;CUNNING;CURRENT;CUSTOMS;CUTTERS;CUTTING;DAGGERS;DANDIES;DAYMARK;DEADRUN;DEBARKS;DEBUNKS;DECKLOG;DECLINE;DELAYED;DEPARTS;DERRICK;DEVIATE;DINGBAT;DIPPING;DISABLE;DISMAST;DISRATE;DIURNAL;DIVIDER;DOCKING;DODGERS;DOGVANE;DOLDRUM;DOLPHIN;DONKEYS;DOORING;DORADES;DOUBLED;DOUBLES;DOUSERS;DRAFTED;DRAUGHT;DRAWING;DRIFTER;DRIVING;DROGUES;DRYDOCK;DUNNAGE;DUNSELS;EARINGS;EARRING;EASIEST;EASTERN;EBBTIDE;ECHELON;EFFORTS;EMBARGO;EMBARKS;EMBAYED;ENGINES;ENSIGNS;ENTRIES;EQUATOR;EQUINOX;ERRORED;ESCORTS;EYEBOLT;FAIRWAY;FALKUSA;FALLING;FANTAIL;FARDAGE;FASHION;FASTENS;FASTICE;FATHOMS;FCCRULE;FEATHER;FENDERS;FERRIED;FERRIES;FETCHED;FETCHES;FEVERED;FIDDLED;FIDDLES;FIDDLEY;FIGKNOT;FILLING;FINGERS;FIREMAN;FISHERY;FITTING;FIXMAST;FLAGGED;FLAKING;FLANKED;FLARING;FLASHED;FLASHES;FLATTEN;FLATTOP;FLEMISH;FLOATED;FLOORED;FLOTSAM;FLOWERS;FLUSHED;FLYBOAT;FOGHORN;FOLDING;FOLLOWS;FORCING;FOREAFT;FOREBIT;FOREGUY;FORWARD;FOULIES;FOUNDER;FOXTROT;FRACTAL;FRAMING;FRAZILS;FREEING;FREIGHT;FRESHEN;FRIGATE;FRONTED;FULLSEA;FUNNELS;FURLING;FUTTOCK;FUTZING;GADGETS;GAFFRIG;GAFFTOP;GALLEON;GALLERY;GALLEYS;GALLIOT;GAMMONS;GANGWAY;GARBLED;GARNETS;GARTERS;GASKETS;GEARING;GELCOAT;GENERAL;GENNIES;GEORGES;GHOSTED;GIMBALS;GINEBED;GINGERS;GINPOLE;GIRDLES;GIVEWAY;GMTTIME;GOABOUT;GOALOFT;GOBLINE;GOINGTO;GONDOLA;GOSSIPS;GOUNDER;GRAMPUS;GRAPPLE;GRAVING;GRIPIES;GROGGED;GROMMET;GROUNDS;GROWLER;GUDGEON;GUINEAS;GUNDECK;GUNNELS;GUNPORT;GUNWALE;GUSSETS;HALFSEA;HALYARD;HAMMOCK;HAMPERS;HANGARS;HANGING;HARBORS;HARBOUR;HARDENS;HATCHES;HAULERS;HAULING;HAULOUT;HAWSERS;HAWSING;HAZARDS;HEADERS;HEADING;HEADSEA;HEADSUP;HEADWAY;HEAVEIN;HEAVETO;HEAVING;HEELING;HERRING;HIGHSEA;HITCHED;HITCHES;HOGGING;HOISTED;HOLDING;HOLIDAY;HORIZON;HORSING;HOUSING;HUFFLER;HULLING;ICEBERG;INBOARD;INDEXES;INDICES;INDULGE;INFLATE;INIRONS;INLANDS;INSHORE;INSPECT;INSTAYS;INTEROP;INVERTS;INWATER;INWAYOF;ISOBARS;ISOBATH;ISOGONY;JACKIES;JACKTAR;JENNIES;JERQUES;JETSAMS;JETTIES;JIBBERS;JIBSTAY;JIGGERS;JOGGLES;JOLLIES;JULIETS;JURYRIG;KEELSON;KELLETS;KIBBERS;KICKING;KILLICK;KITCHEN;LADDERS;LANYARD;LATERAL;LAYDAYS;LAZARET;LEADING;LEEHELM;LEESIDE;LEEWARD;LIBERTY;LIGHTER;LIZARDS;LOADING;LOCKERS;LOFTING;LOLLING;LOOKOUT;LUBBERS;LUFFING;LUGGERS;LUGSAIL;MAEWEST;MAGENTA;MANAHOY;MANOWAR;MARCONI;MARINER;MARINES;MATELOT;MERCURY;MIZZENS;MONKEYS;MOORING;MOUSING;NARROWS;NATIONS;NETTING;NIPPERS;OFFCAST;OFFCLAW;OFFDECK;OFFICER;OFFPIER;OILSKIN;OLDSALT;ONBOARD;OREBOAT;OUTEAST;OUTHAUL;OUTLINE;OUTLYER;OUTWARD;OUTWEST;PAGEFIT;PAINTED;PAINTER;PANTING;PARCELS;PARLEYS;PARRELS;PASSAGE;PELAGIC;PENDANT;PENNANT;PEPPERS;PICKETS;PILOTED;PINNACE;PINTLES;PIRATES;PIVOTED;PLATING;POINTED;POINTER;POSITED;PRESENT;PREVENT;PRINTED;PURPLES;PURSERS;PURSUED;PUSSERS;QUARTER;QUAYING;QUEBECS;RABBETS;RADARED;RATLINE;RECKONS;REDUCED;REEFERS;REGALIA;REGENTS;REPAIRS;RETRACT;RIGGING;RIPRAPS;ROMPERS;ROOFING;ROWLOCK;RUDDERS;RUFFLES;RUMMAGE;RUNNING;SAGGING;SAILING;SAILORS;SALTIES;SALUTED;SALUTES;SALVORS;SAMPANS;SAMPSON;SCULLED;SCUPPER;SCUTTLE;SEACOCK;SEALING;SEASICK;SEEKERS;SERVING;SEXTANT;SHAKING;SHEATHS;SHELTER;SHIPPED;SHIPRIG;SHROUDS;SICKBAY;SIERRAS;SIGNALS;SILVERS;SKIPPER;SKYLARK;SKYSAIL;SLINGED;SLIPWAY;SNAGGED;SNOTTER;SOUNDER;SPACING;SPANKER;SPHERES;SPLICED;SPLICES;SPONSON;SPONSOR;SPRAYON;SPRINGS;SQUARES;STACKIE;STANDON;STARTER;STATION;STAYING;STEAMER;STEERED;STEEVES;STEPPED;STEWARD;STOPPER;STOVEIN;STOWAGE;STRIKER;STRIKES;STRIPED;STRIPES;SUMMERS;SUNFISH;SWIMMIE;SYSTEMS;TACKING;TACKLED;TACKLES;TAILEND;TANGOES;THEWIND;THWARTS;TILLERS;TIMBERS;TINCLAD;TOEROPE;TOGGLED;TOGGLES;TOMPION;TONNAGE;TOPMAST;TOPSAIL;TORPEDO;TOSSERS;TRADING;TRAFFIC;TRAMPER;TRANSIT;TRANSOM;TRAWLER;TRENAIL;TRENNEL;TRIMMER;TRIPPED;TRIPPER;TROOPER;TRUNNEL;TUGBOAT;TURNTWO;UNIFORM;UNSHIPS;UPBOUND;UPFRONT;UPNORTH;UPRISEN;UPSOUTH;URGENCY;UTCTIME;VARIATE;VBOTTOM;VESSELS;VICTORS;VICTORY;VOICING;VOYAGER;WATERED;WEATHER;WESTERN;WHALERS;WHARVES;WHELKIE;WHISKEY;WHISTLE;WINCHES;WINDAGE;WINTERS;WORKING;WRINKLE;YARDARM;ZOOMOUT";
+
+        function arraysEqual(a, b)
+        {
+            if (a === b) return true;
+            if (a === null || b === null) return false;
+            if (a.length != b.length) return false;
+
+            for (var i = 0; i < a.length; ++i)
+                if (a[i] !== b[i])
+                    return false;
+            return true;
+        }
+
+        function arraysEqualReverse(a, b)
+        {
+            if (a === null && b === null) return true;
+            if (a === null || b === null) return false;
+            if (a.length != b.length) return false;
+
+            for (var i = 0; i < a.length; ++i)
+                if (a[a.length-i-1] !== b[i])
+                    return false;
+            return true;
+        }
+
+        function generateFlags(count, designs, rnd)
+        {
+            // Each design can be used different numbers of times
+            var designIxsAvailable = [];
+            for (var i = 0; i < designs.length; i++)
+            {
+                var allowed =
+                    designs.length === 4 ? 1 :
+                    designs[i].numColors === 4 ? 1 :
+                    designs[i].numColors === 2 && designs[i].reverseAllowed ? 4 : 3;
+                for (var j = 0; j < allowed; j++)
+                    designIxsAvailable.push(i);
+            }
+
+            // Assign designs at random
+            var flags = [];
+            var colorCombinations = {};
+            var availableColorIxs = [];
+            for (var i = 0; i < colorGroups.length; i++)
+                availableColorIxs.push(i);
+            for (var i = 0; i < count; i++)
+            {
+                var ix = rnd.next(0, designIxsAvailable.length);
+                var designIx = designIxsAvailable[ix];
+                designIxsAvailable.splice(ix, 1);
+
+                var flagColors;
+
+                if (designs[designIx].numColors === 4)
+                {
+                    // 4-color designs are allowed to have blue+black and/or yellow+white, but only in a specific order.
+                    flagColors = [];
+                    rnd.shuffleFisherYates(availableColorIxs);
+                    var ixIx = 0;
+                    while (flagColors.length < 4)
+                    {
+                        for (var j = 0; j < colorGroups[availableColorIxs[ixIx]].length && flagColors.length < 4; j++)
+                        {
+                            flagColors.push(colorGroups[availableColorIxs[ixIx]][j]);
+                            if (flagColors.length % 2 === 0)
+                                break;
+                        }
+                        ixIx++;
+                    }
+                }
+                else
+                {
+                    // Find a random color combination that hasn’t been used yet.
+                    // Use only one color per group so we don’t get black+blue or yellow+white on the same flag.
+                    var colorIxs;
+                    do
+                    {
+                        rnd.shuffleFisherYates(availableColorIxs);
+                        colorIxs = [];
+                        for (var j = 0; j < designs[designIx].numColors; j++)
+                            colorIxs.push(availableColorIxs[j]);
+                    }
+                    while (designIx in colorCombinations && colorCombinations[designIx].filter(cc => arraysEqual(cc, colorIxs) || (!designs[designIx].reverseAllowed && arraysEqualReverse(cc, colorIxs))).length);
+                    if (!(designIx in colorCombinations))
+                        colorCombinations[designIx] = [];
+                    colorCombinations[designIx].push(colorIxs);
+
+                    do
+                    {
+                        flagColors = [];
+                        for (var j = 0; j < colorIxs.length; j++)
+                            flagColors.push(colorGroups[colorIxs[j]][rnd.next(0, colorGroups[colorIxs[j]].length)]);
+                    }
+                    // Special case: don’t allow entirely black-and-white flags
+                    while (designs[designIx].numColors == 2 && ((flagColors[0].name === 'black' && flagColors[1].name === 'white') || (flagColors[0].name === 'white' && flagColors[1].name === 'black')));
+                }
+                flags.push({ design: designs[designIx], colors: flagColors, cutout: designs[designIx].cutoutAllowed && (rnd.next(0, 10) === 0) });
+            }
+            return flags;
+        }
+
+        function setRules(rnd)
+        {
+            if (rnd.seed === 0)
+                setZeroFlags();
+            else
+            {
+                // Flags for letters and digits
+                var flags = generateFlags(36, flagDesigns, rnd);
+
+                // Repeater flags
+                var repFlags = generateFlags(4, repeaterDesigns, rnd);
+
+                showFlags(flags, repFlags);
+            }
+
+            // Randomize callsigns
+            var names = rnd.shuffleFisherYates(allCallsigns.split(';')).slice(0, 315);
+            names.sort();
+            var bearings = [];
+            for (var i = 0; i < 360; i++)
+                bearings.push(i);
+            rnd.shuffleFisherYates(bearings);
+            var callsigns = [];
+            for (var i = 0; i < 315; i++)
+                callsigns.push({ name: names[i], bearing: bearings[i] });
+            setCallsigns(callsigns);
+        }
+
+        function setZeroFlags()
+        {
+            var flagLists = [];
+            for (var k = 0; k < 2; k++)
+            {
+                var flags = [];
+                var designs = k === 0 ? flagDesigns : repeaterDesigns;
+                for (var i = 0; i < designs.length; i++)
+                {
+                    var colors = [];
+                    for (var j = 0; j < designs[i].numColors; j++)
+                    {
+                        var n = Math.round((designs[i].numColors === 1 ? .5 : .8 * j / (designs[i].numColors - 1) + .1) * 255).toString(16);
+                        while (n.length < 2)
+                            n = '0' + n;
+                        colors.push({ code: "#xxx".replace(/x/g, n), name: n });
+                    }
+                    flags.push({ design: designs[i], colors: colors, cutout: designs[i].cutoutAllowed });
+                }
+                flagLists.push(flags);
+            }
+            showFlags(flagLists[0], flagLists[1]);
+        }
+
+        function setDefaultRules()
+        {
+            var red = colorGroups[0][0];
+            var blue = colorGroups[1][0];
+            var black = colorGroups[1][1];
+            var yellow = colorGroups[2][0];
+            var white = colorGroups[2][1];
+
+            showFlags([
+                { design: flagDesigns[1], colors: [white, blue], cutout: true },
+                { design: flagDesigns[0], colors: [red], cutout: true },
+                { design: flagDesigns[10], colors: [blue, white, red] },
+                { design: flagDesigns[9], colors: [yellow, blue] },
+                { design: flagDesigns[6], colors: [blue, red] },
+                { design: flagDesigns[12], colors: [white, red] },
+                { design: flagDesigns[5], colors: [yellow, blue] },
+                { design: flagDesigns[1], colors: [white, red] },
+                { design: flagDesigns[13], colors: [yellow, black] },
+                { design: flagDesigns[8], colors: [white, blue] },
+                { design: flagDesigns[1], colors: [yellow, blue] },
+                { design: flagDesigns[15], colors: [black, yellow] },
+                { design: flagDesigns[19], colors: [blue, white] },
+                { design: flagDesigns[18], colors: [white, blue] },
+                { design: flagDesigns[20], colors: [yellow, red] },
+                { design: flagDesigns[21], colors: [blue, white] },
+                { design: flagDesigns[0], colors: [yellow] },
+                { design: flagDesigns[25], colors: [red, yellow] },
+                { design: flagDesigns[21], colors: [white, blue] },
+                { design: flagDesigns[2], colors: [red, white, blue] },
+                { design: flagDesigns[15], colors: [white, red] },
+                { design: flagDesigns[19], colors: [white, red] },
+                { design: flagDesigns[22], colors: [blue, white, red] },
+                { design: flagDesigns[25], colors: [white, blue] },
+                { design: flagDesigns[27], colors: [yellow, red] },
+                { design: flagDesigns[28], colors: [yellow, red, black, blue] },
+                { design: flagDesigns[33], colors: [white, blue] },
+                { design: flagDesigns[8], colors: [yellow, red] },
+                { design: flagDesigns[8], colors: [red, yellow] },
+                { design: flagDesigns[8], colors: [red, blue] },
+                { design: flagDesigns[19], colors: [red, white] },
+                { design: flagDesigns[19], colors: [yellow, blue] },
+                { design: flagDesigns[26], colors: [white, blue] },
+                { design: flagDesigns[3], colors: [white, red] },
+                { design: flagDesigns[3], colors: [blue, yellow] },
+                { design: flagDesigns[3], colors: [white, blue] }
+            ], [
+                { design: repeaterDesigns[0], colors: [blue, yellow] },
+                { design: repeaterDesigns[1], colors: [blue, white] },
+                { design: repeaterDesigns[2], colors: [white, black] },
+                { design: repeaterDesigns[3], colors: [red, yellow] }
+            ]);
+
+            setCallsigns(seed1Callsigns.split(';').map(str => str.split('=')).map(arr => ({ name: arr[0], bearing: parseInt(arr[1]) })));
+        }
+
+        function showFlags(flags, repFlags)
+        {
+            let flagElems = document.getElementsByClassName('flag');
+            for (let i = 0; i < 36; i++)
+            {
+                let svg, name = flags[i].design.name(flags[i].colors.map(c => c.name));
+                if (i >= flags.length)
+                {
+                    // Pink square!
+                    svg = `<path fill="%23f0f" d="M0 0h1v1h-1z" />`;
+                    name = 'Ungültige Flagge';
+                }
+                else
+                {
+                    svg = flags[i].design.svg(flags[i].colors.map(c => c.code)).replace(/#/g, "%23");
+                    if (flags[i].cutout)
+                    {
+                        var pathD = 'M0 0h1L.75 .5 1 1h-1z';
+                        svg = `<defs><clipPath id="cutout"><path d="${pathD}" /></clipPath></defs><g clip-path="url(%23cutout)">${svg}</g><path fill="none" stroke="black" stroke-width=".015" d="${pathD}" />`;
+                        name = `${name} mit Ausschnitt`;
+                    }
+                    else
+                        svg += '<path fill="none" stroke="black" stroke-width=".015" d="M0 0h1v1h-1z" />';
+                }
+                flagElems[i].style.backgroundImage = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.04 1.04">${svg}</svg>')`;
+                flagElems[i].title = name;
+            }
+
+            var repFlagElems = document.querySelectorAll('.flag.repeater');
+            for (var i = 0; i < 4; i++)
+            {
+                let svg, name = repFlags[i].design.name(repFlags[i].colors.map(c => c.name));
+                if (i >= repFlags.length)
+                {
+                    // Pink square!
+                    svg = `<path fill="%23f0f" d="M0 0h1v1h-1z" />`;
+                    name = 'Ungültige Flagge';
+                }
+                else
+                {
+                    svg = repFlags[i].design.svg(repFlags[i].colors.map(c => c.code)).replace(/#/g, "%23");
+                }
+                var pathD = 'M0 0L1 .3125 0 .625z';
+                svg = `<defs><clipPath id="repflag"><path d="${pathD}" /></clipPath></defs><g clip-path="url(%23repflag)">${svg}</g><path fill="none" stroke="black" stroke-width=".015" d="${pathD}" />`;
+                repFlagElems[i].style.backgroundImage = `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="-.02 -.02 1.05 .665">${svg}</svg>')`;
+                repFlagElems[i].title = name;
+            }
+        }
+
+        function setCallsigns(callsigns)
+        {
+            var list1 = document.getElementsByClassName('callsign');
+            var list2 = document.getElementsByClassName('bearing');
+            for (var i = 0; i < 315; i++)
+            {
+                list1[i].innerText = callsigns[i].name;
+                list2[i].innerText = callsigns[i].bearing;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes-Modul</span>
+                <span class="page-header-section-title">Schiffsignalflaggen</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Maritime Flags(de).svg">
+                <h2>Betrifft: Schiffsignalflaggen</h2>
+                <p class="flavour-text">Wenn Radiokommunikation versagt, sind Signalflaggen der bewährte Ausweg.</p>
+
+                <svg class='bearing-diagram' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 130 130' font-family='Special Elite' font-size='7' text-anchor='middle'>
+                    <g fill='none' stroke='#000'>
+                        <path stroke-width='3' d='M100 65a35 35 0 1 1-70 0 35 35 0 0 1 70 0z'/>
+                        <path stroke-width='1' d='M65 65l7.41-37.27M65 65l21.11-31.6M65 65l31.6-21.11M65 65l37.27-7.41M65 65l37.27 7.41M65 65l31.6 21.11M65 65l21.11 31.6M65 65l7.41 37.27M65 65l-7.41 37.27M65 65L43.89 96.6M65 65L33.4 86.11M65 65l-37.27 7.41M65 65l-37.27-7.41M65 65L33.4 43.89M65 65L43.89 33.4M65 65l-7.41-37.27'/>
+                        <path stroke-width='.3' d='M65 65l9.27-46.59M65 65l26.39-39.5M65 65l39.5-26.39M65 65l46.59-9.27M65 65l46.59 9.27M65 65l39.5 26.39M65 65l26.39 39.5M65 65l9.27 46.59M65 65l-9.27 46.59M65 65l-26.39 39.5M65 65L25.5 91.39M65 65l-46.59 9.27M65 65l-46.59-9.27M65 65L25.5 38.61M65 65L38.61 25.5M65 65l-9.27-46.59'/>
+                    </g>
+                    <text x='65' y='25'>N</text>
+                    <text x='65' y='25' transform='rotate(22.5 65 65)'>NNO</text>
+                    <text x='65' y='25' transform='rotate(45 65 65)'>NO</text>
+                    <text x='65' y='25' transform='rotate(67.5 65 65)'>ONO</text>
+                    <text x='65' y='25' transform='rotate(90 65 65)'>O</text>
+                    <text x='65' y='25' transform='rotate(112.5 65 65)'>OSO</text>
+                    <text x='65' y='25' transform='rotate(135 65 65)'>SO</text>
+                    <text x='65' y='25' transform='rotate(157.5 65 65)'>SSO</text>
+                    <text x='65' y='25' transform='rotate(180 65 65)'>S</text>
+                    <text x='65' y='25' transform='rotate(202.5 65 65)'>SSW</text>
+                    <text x='65' y='25' transform='rotate(225 65 65)'>SW</text>
+                    <text x='65' y='25' transform='rotate(247.5 65 65)'>WSW</text>
+                    <text x='65' y='25' transform='rotate(270 65 65)'>W</text>
+                    <text x='65' y='25' transform='rotate(292.5 65 65)'>WNW</text>
+                    <text x='65' y='25' transform='rotate(315 65 65)'>NW</text>
+                    <text x='65' y='25' transform='rotate(337.5 65 65)'>NNW</text>
+                    <g text-anchor='start' font-size='4.5'>
+                        <text x='115' y='66.5' transform='rotate(-78.75 65 65)'>11,25°</text>
+                        <text x='115' y='66.5' transform='rotate(-56.25 65 65)'>33,75°</text>
+                        <text x='115' y='66.5' transform='rotate(-33.75 65 65)'>56,25°</text>
+                        <text x='115' y='66.5' transform='rotate(-11.25 65 65)'>78,75°</text>
+                        <text x='115' y='66.5' transform='rotate(11.25 65 65)'>101,25°</text>
+                        <text x='115' y='66.5' transform='rotate(33.75 65 65)'>123,75°</text>
+                        <text x='115' y='66.5' transform='rotate(56.25 65 65)'>146,25°</text>
+                        <text x='115' y='66.5' transform='rotate(78.75 65 65)'>168,75°</text>
+                    </g>
+                    <g text-anchor='end' font-size='4.5'>
+                        <text x='15' y='66.5' transform='rotate(78.75 65 65)'>348,75°</text>
+                        <text x='15' y='66.5' transform='rotate(56.25 65 65)'>326,25°</text>
+                        <text x='15' y='66.5' transform='rotate(33.75 65 65)'>303,75°</text>
+                        <text x='15' y='66.5' transform='rotate(11.25 65 65)'>281,25°</text>
+                        <text x='15' y='66.5' transform='rotate(-11.25 65 65)'>258,75°</text>
+                        <text x='15' y='66.5' transform='rotate(-33.75 65 65)'>236,25°</text>
+                        <text x='15' y='66.5' transform='rotate(-56.25 65 65)'>213,75°</text>
+                        <text x='15' y='66.5' transform='rotate(-78.75 65 65)'>191,25°</text>
+                    </g>
+                </svg>
+
+                <p>Das Modul zeigt zwei separate Nachrichten in Signalflaggen: ein 7-Flaggen-Rufzeichen und eine Peilung von bis zu drei Ziffern.</p>
+                <p>Das Rufzeichen entspricht einer zweiten Peilung (Seite 2). Die Peilungen sind zu addieren und bei Bedarf durch Subtraktion von 360 in den Bereich 0–359 zu bringen.</p>
+                <p>Der Modulkompass muss angepasst werden, sodass die <em>rote</em> Nadel in die entsprechende Richtung zeigt (Diagramm links).</p>
+
+                <div class="all-flags">
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><defs><clipPath id=\&quot;cutout\&quot;><path d=\&quot;M0 0h1L.75 .5 1 1h-1z\&quot; /></clipPath></defs><g clip-path=\&quot;url(%23cutout)\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M.5 0h.5v1h-.5z\&quot; fill=\&quot;%2300f\&quot; /></g><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1L.75 .5 1 1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">A</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><defs><clipPath id=\&quot;cutout\&quot;><path d=\&quot;M0 0h1L.75 .5 1 1h-1z\&quot; /></clipPath></defs><g clip-path=\&quot;url(%23cutout)\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23f00\&quot; /></g><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1L.75 .5 1 1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">B</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%2300f\&quot; /><path d=\&quot;M0 .2h1v.6h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M0 .4h1v.2h-1z\&quot; fill=\&quot;%23f00\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">C</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23ff0\&quot; /><path d=\&quot;M0 .2h1v.6h-1z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">D</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23f00\&quot; /><path d=\&quot;M0 0h1v.5h-1z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">E</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M.5 0L1 .5 .5 1 0 .5z\&quot; fill=\&quot;%23f00\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">F</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23ff0\&quot; /><path d=\&quot;M.167 0h.167v1h-.167zM.5 0h.167v1h-.167zM.833 0h.167v1h-.167z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">G</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M.5 0h.5v1h-.5z\&quot; fill=\&quot;%23f00\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">H</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23ff0\&quot; /><path d=\&quot;M.25 .5a.25 .25 0 0 1 .5 0a.25 .25 0 0 1-.5 0z\&quot; fill=\&quot;%23000\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">I</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M0 0h1v.33h-1zM0 .67h1v.33h-1z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">J</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23ff0\&quot; /><path d=\&quot;M.5 0h.5v1h-.5z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">K</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23000\&quot; /><path d=\&quot;M0 0h.5v.5h-.5zM.5 .5h.5v.5h-.5z\&quot; fill=\&quot;%23ff0\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">L</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%2300f\&quot; /><path d=\&quot;M0 0h.125l.375 .375l.375 -.375h.125v.125l-.375 .375l.375 .375v.125h-.125l-.375 -.375l-.375 .375h-.125v-.125l.375 -.375l-.375 -.375z\&quot; fill=\&quot;%23fff\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">M</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M0 0h.25v.25h-.25zM.5 0h.25v.25h-.25zM0 .5h.25v.25h-.25zM.5 .5h.25v.25h-.25zM.25 .25h.25v.25h-.25zM.75 .25h.25v.25h-.25zM.25 .75h.25v.25h-.25zM.75 .75h.25v.25h-.25z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">N</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23ff0\&quot; /><path d=\&quot;M0 0h1v1z\&quot; fill=\&quot;%23f00\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">O</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%2300f\&quot; /><path d=\&quot;M.33 .33h.34v.34h-.34z\&quot; fill=\&quot;%23fff\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">P</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23ff0\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">Q</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23f00\&quot; /><path d=\&quot;M.4 0h.2v.4h.4v.2h-.4v.4h-.2v-.4h-.4v-.2h.4z\&quot; fill=\&quot;%23ff0\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">R</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M.33 .33h.34v.34h-.34z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">S</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23f00\&quot; /><path d=\&quot;M.33 0h.67v1h-.67z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M.67 0h.33v1h-.33z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">T</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M0 0h.5v.5h-.5zM.5 .5h.5v.5h-.5z\&quot; fill=\&quot;%23f00\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">U</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M0 0h.125l.375 .375l.375 -.375h.125v.125l-.375 .375l.375 .375v.125h-.125l-.375 -.375l-.375 .375h-.125v-.125l.375 -.375l-.375 -.375z\&quot; fill=\&quot;%23f00\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">V</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%2300f\&quot; /><path d=\&quot;M.2 .2h.6v.6h-.6z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M.4 .4h.2v.2h-.2z\&quot; fill=\&quot;%23f00\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">W</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M.4 0h.2v.4h.4v.2h-.4v.4h-.2v-.4h-.4v-.2h.4z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">X</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23ff0\&quot; /><path d=\&quot;M.2 0h.2l-.4 .4v-.2zM.6 0h.2l-.8 .8v-.2zM1 0v.2l-.8 .8h-.2zM1 .4v.2l-.4 .4h-.2zM1 .8v.2h-.2z\&quot; fill=\&quot;%23f00\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">Y</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23ff0\&quot; /><path d=\&quot;M0 .5h1v.5h-1z\&quot; fill=\&quot;%23f00\&quot; /><path d=\&quot;M0 0l.5 .5l-.5 .5z\&quot; fill=\&quot;%23000\&quot; /><path d=\&quot;M1 0v1l-.5 -.5z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">Z</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><g transform=\&quot;scale(.06667,.06667)\&quot;><path d=\&quot;M0 0h15v15h-15z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M2 1h1v1h1v1h-1v1h-1v-1h-1v-1h1zM12 1h1v1h1v1h-1v1h-1v-1h-1v-1h1zM2 11h1v1h1v1h-1v1h-1v-1h-1v-1h1zM12 11h1v1h1v1h-1v1h-1v-1h-1v-1h1zM7 6h1v1h1v1h-1v1h-1v-1h-1v-1h1z\&quot; fill=\&quot;%2300f\&quot; /></g><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">0</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23ff0\&quot; /><path d=\&quot;M0 0h1v.33h-1zM0 .67h1v.33h-1z\&quot; fill=\&quot;%23f00\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">1</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23f00\&quot; /><path d=\&quot;M0 0h1v.33h-1zM0 .67h1v.33h-1z\&quot; fill=\&quot;%23ff0\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">2</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23f00\&quot; /><path d=\&quot;M0 0h1v.33h-1zM0 .67h1v.33h-1z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">3</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23f00\&quot; /><path d=\&quot;M0 0h.125l.375 .375l.375 -.375h.125v.125l-.375 .375l.375 .375v.125h-.125l-.375 -.375l-.375 .375h-.125v-.125l.375 -.375l-.375 -.375z\&quot; fill=\&quot;%23fff\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">4</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23ff0\&quot; /><path d=\&quot;M0 0h.125l.375 .375l.375 -.375h.125v.125l-.375 .375l.375 .375v.125h-.125l-.375 -.375l-.375 .375h-.125v-.125l.375 -.375l-.375 -.375z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">5</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><g transform=\&quot;scale(.142857,.142857)\&quot;><path d=\&quot;M0 0h7v7h-7z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M2 0h2l-4 4v-2zM6 0h1v1l-6 6h-1v-1zM7 3v2l-2 2h-2z\&quot; fill=\&quot;%2300f\&quot; /></g><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">6</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M0 0h.33v1h-.33zM.67 0h.33v1h-.33z\&quot; fill=\&quot;%23f00\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">7</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%2300f\&quot; /><path d=\&quot;M0 0h.33v1h-.33zM.67 0h.33v1h-.33z\&quot; fill=\&quot;%23ff0\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">8</div></div>
+                    <div class="flag-box highlightable"><div class="flag" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.04 1.04\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M0 0h.33v1h-.33zM.67 0h.33v1h-.33z\&quot; fill=\&quot;%2300f\&quot; /><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0h1v1h-1z\&quot; /></svg>&quot;);"></div><div class="caption">9</div></div>
+
+                    <div class="flag-box highlightable"><div class="flag repeater" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.05 .665\&quot;><defs><clipPath id=\&quot;repflag\&quot;><path d=\&quot;M0 0L1 .3125 0 .625z\&quot; /></clipPath></defs><g clip-path=\&quot;url(%23repflag)\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%2300f\&quot; /><path d=\&quot;M0 .1 .68 .3125 0 .525z\&quot; fill=\&quot;%23ff0\&quot; /></g><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0L1 .3125 0 .625z\&quot; /></svg>&quot;);"></div><div class="caption repeater">1. Flagge d. Nachr. wiederh.</div></div>
+                    <div class="flag-box highlightable"><div class="flag repeater" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.05 .665\&quot;><defs><clipPath id=\&quot;repflag\&quot;><path d=\&quot;M0 0L1 .3125 0 .625z\&quot; /></clipPath></defs><g clip-path=\&quot;url(%23repflag)\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%2300f\&quot; /><path d=\&quot;M.5 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /></g><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0L1 .3125 0 .625z\&quot; /></svg>&quot;);"></div><div class="caption repeater">2. Flagge d. Nachr. wiederh.</div></div>
+                    <div class="flag-box highlightable"><div class="flag repeater" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.05 .665\&quot;><defs><clipPath id=\&quot;repflag\&quot;><path d=\&quot;M0 0L1 .3125 0 .625z\&quot; /></clipPath></defs><g clip-path=\&quot;url(%23repflag)\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23fff\&quot; /><path d=\&quot;M0 .2h1v.225h-1z\&quot; fill=\&quot;%23000\&quot; /></g><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0L1 .3125 0 .625z\&quot; /></svg>&quot;);"></div><div class="caption repeater">3. Flagge d. Nachr. wiederh.</div></div>
+                    <div class="flag-box highlightable"><div class="flag repeater" style="background-image: url(&quot;data:image/svg+xml,<svg xmlns=\&quot;http://www.w3.org/2000/svg\&quot; viewBox=\&quot;-.02 -.02 1.05 .665\&quot;><defs><clipPath id=\&quot;repflag\&quot;><path d=\&quot;M0 0L1 .3125 0 .625z\&quot; /></clipPath></defs><g clip-path=\&quot;url(%23repflag)\&quot;><path d=\&quot;M0 0h1v1h-1z\&quot; fill=\&quot;%23f00\&quot; /><path d=\&quot;M0 .2h.225v.225h-.225z\&quot; fill=\&quot;%23ff0\&quot; /></g><path fill=\&quot;none\&quot; stroke=\&quot;black\&quot; stroke-width=\&quot;.015\&quot; d=\&quot;M0 0L1 .3125 0 .625z\&quot; /></svg>&quot;);"></div><div class="caption repeater">4. Flagge d. Nachr. wiederh.</div></div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Seite 1 von 2</div>
+        </div>
+        <div class="page page-2 page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes-Modul</span>
+                <span class="page-header-section-title">Schiffsignalflaggen</span>
+            </div>
+            <div class="page-content">
+                <h3>Verzeichnis der Rufzeichen</h3>
+
+                <div class='signal-reference'>
+                    <!-- s-r-s -->
+                    <div><span class='callsign'>1STMATE</span>=<span class='bearing'>355</span></div><div><span class='callsign'>2NDMATE</span>=<span class='bearing'>109</span></div><div><span class='callsign'>3RDMATE</span>=<span class='bearing'>250</span></div><div><span class='callsign'>ABANDON</span>=<span class='bearing'>308</span></div><div><span class='callsign'>ADMIRAL</span>=<span class='bearing'>260</span></div><div><span class='callsign'>ADVANCE</span>=<span class='bearing'>356</span></div><div><span class='callsign'>AGROUND</span>=<span class='bearing'>236</span></div><div><span class='callsign'>ALLIDES</span>=<span class='bearing'>28</span></div><div><span class='callsign'>ANCHORS</span>=<span class='bearing'>346</span></div><div><span class='callsign'>ATHWART</span>=<span class='bearing'>78</span></div><div><span class='callsign'>AZIMUTH</span>=<span class='bearing'>265</span></div><div><span class='callsign'>BAILERS</span>=<span class='bearing'>357</span></div><div><span class='callsign'>BALLAST</span>=<span class='bearing'>129</span></div><div><span class='callsign'>BARRACK</span>=<span class='bearing'>23</span></div><div><span class='callsign'>BEACHED</span>=<span class='bearing'>170</span></div><div><span class='callsign'>BEACONS</span>=<span class='bearing'>121</span></div><div><span class='callsign'>BEAMEND</span>=<span class='bearing'>259</span></div><div><span class='callsign'>BEAMSEA</span>=<span class='bearing'>316</span></div><div><span class='callsign'>BEARING</span>=<span class='bearing'>12</span></div><div><span class='callsign'>BEATING</span>=<span class='bearing'>105</span></div><div><span class='callsign'>BELAYED</span>=<span class='bearing'>297</span></div><div><span class='callsign'>BERMUDA</span>=<span class='bearing'>107</span></div><div><span class='callsign'>BOBSTAY</span>=<span class='bearing'>76</span></div><div><span class='callsign'>BOILERS</span>=<span class='bearing'>190</span></div><div><span class='callsign'>BOLLARD</span>=<span class='bearing'>258</span></div><div><span class='callsign'>BONNETS</span>=<span class='bearing'>332</span></div><div><span class='callsign'>BOOMKIN</span>=<span class='bearing'>29</span></div><div><span class='callsign'>BOUNDER</span>=<span class='bearing'>99</span></div><div><span class='callsign'>BOWLINE</span>=<span class='bearing'>73</span></div><div><span class='callsign'>BRAILED</span>=<span class='bearing'>165</span></div><div><span class='callsign'>BREADTH</span>=<span class='bearing'>293</span></div><div><span class='callsign'>BRIDGES</span>=<span class='bearing'>43</span></div><div><span class='callsign'>BRIGGED</span>=<span class='bearing'>191</span></div><div><span class='callsign'>BRINGTO</span>=<span class='bearing'>279</span></div><div><span class='callsign'>BULWARK</span>=<span class='bearing'>202</span></div><div><span class='callsign'>BUMBOAT</span>=<span class='bearing'>193</span></div><div><span class='callsign'>BUMPKIN</span>=<span class='bearing'>119</span></div><div><span class='callsign'>BURTHEN</span>=<span class='bearing'>294</span></div><div><span class='callsign'>CABOOSE</span>=<span class='bearing'>10</span></div><div><span class='callsign'>CAPSIZE</span>=<span class='bearing'>194</span></div><div><span class='callsign'>CAPSTAN</span>=<span class='bearing'>141</span></div><div><span class='callsign'>CAPTAIN</span>=<span class='bearing'>1</span></div><div><span class='callsign'>CARAVEL</span>=<span class='bearing'>295</span></div><div><span class='callsign'>CAREENS</span>=<span class='bearing'>217</span></div><div><span class='callsign'>CARRACK</span>=<span class='bearing'>241</span></div><div><span class='callsign'>CARRIER</span>=<span class='bearing'>94</span></div><div><span class='callsign'>CATBOAT</span>=<span class='bearing'>219</span></div><div><span class='callsign'>CATHEAD</span>=<span class='bearing'>177</span></div><div><span class='callsign'>CHAINED</span>=<span class='bearing'>162</span></div><div><span class='callsign'>CHANNEL</span>=<span class='bearing'>214</span></div><div><span class='callsign'>CHARLEY</span>=<span class='bearing'>123</span></div><div><span class='callsign'>CHARTER</span>=<span class='bearing'>228</span></div><div><span class='callsign'>CITADEL</span>=<span class='bearing'>246</span></div><div><span class='callsign'>CLEARED</span>=<span class='bearing'>306</span></div><div><span class='callsign'>CLEATED</span>=<span class='bearing'>290</span></div><div><span class='callsign'>CLINKER</span>=<span class='bearing'>163</span></div><div><span class='callsign'>CLIPPER</span>=<span class='bearing'>130</span></div><div><span class='callsign'>COAMING</span>=<span class='bearing'>198</span></div><div><span class='callsign'>COASTED</span>=<span class='bearing'>138</span></div><div><span class='callsign'>CONSORT</span>=<span class='bearing'>324</span></div><div><span class='callsign'>CONVOYS</span>=<span class='bearing'>301</span></div><div><span class='callsign'>CORINTH</span>=<span class='bearing'>225</span></div><div><span class='callsign'>COTCHEL</span>=<span class='bearing'>140</span></div><div><span class='callsign'>COUNTER</span>=<span class='bearing'>20</span></div><div><span class='callsign'>CRANZES</span>=<span class='bearing'>229</span></div><div><span class='callsign'>CREWING</span>=<span class='bearing'>27</span></div><div><span class='callsign'>CRINGLE</span>=<span class='bearing'>42</span></div><div><span class='callsign'>CROJACK</span>=<span class='bearing'>13</span></div><div><span class='callsign'>CRUISER</span>=<span class='bearing'>333</span></div><div><span class='callsign'>CUTTERS</span>=<span class='bearing'>147</span></div><div><span class='callsign'>DANDIES</span>=<span class='bearing'>309</span></div><div><span class='callsign'>DEADRUN</span>=<span class='bearing'>327</span></div><div><span class='callsign'>DEBUNKS</span>=<span class='bearing'>331</span></div><div><span class='callsign'>DERRICK</span>=<span class='bearing'>289</span></div><div><span class='callsign'>DIPPING</span>=<span class='bearing'>134</span></div><div><span class='callsign'>DISRATE</span>=<span class='bearing'>158</span></div><div><span class='callsign'>DOGVANE</span>=<span class='bearing'>231</span></div><div><span class='callsign'>DOLDRUM</span>=<span class='bearing'>238</span></div><div><span class='callsign'>DOLPHIN</span>=<span class='bearing'>139</span></div><div><span class='callsign'>DRAUGHT</span>=<span class='bearing'>351</span></div><div><span class='callsign'>DRIFTER</span>=<span class='bearing'>201</span></div><div><span class='callsign'>DROGUES</span>=<span class='bearing'>143</span></div><div><span class='callsign'>DRYDOCK</span>=<span class='bearing'>4</span></div><div><span class='callsign'>DUNNAGE</span>=<span class='bearing'>137</span></div><div><span class='callsign'>DUNSELS</span>=<span class='bearing'>287</span></div><div><span class='callsign'>EARINGS</span>=<span class='bearing'>60</span></div><div><span class='callsign'>ECHELON</span>=<span class='bearing'>350</span></div><div><span class='callsign'>EMBAYED</span>=<span class='bearing'>62</span></div><div><span class='callsign'>ENSIGNS</span>=<span class='bearing'>98</span></div><div><span class='callsign'>ESCORTS</span>=<span class='bearing'>11</span></div><div><span class='callsign'>FAIRWAY</span>=<span class='bearing'>86</span></div><div><span class='callsign'>FALKUSA</span>=<span class='bearing'>243</span></div><div><span class='callsign'>FANTAIL</span>=<span class='bearing'>178</span></div><div><span class='callsign'>FARDAGE</span>=<span class='bearing'>133</span></div><div><span class='callsign'>FATHOMS</span>=<span class='bearing'>49</span></div><div><span class='callsign'>FENDERS</span>=<span class='bearing'>337</span></div><div><span class='callsign'>FERRIES</span>=<span class='bearing'>358</span></div><div><span class='callsign'>FITTING</span>=<span class='bearing'>89</span></div><div><span class='callsign'>FLANKED</span>=<span class='bearing'>68</span></div><div><span class='callsign'>FLARING</span>=<span class='bearing'>172</span></div><div><span class='callsign'>FLATTOP</span>=<span class='bearing'>195</span></div><div><span class='callsign'>FLEMISH</span>=<span class='bearing'>323</span></div><div><span class='callsign'>FLOATED</span>=<span class='bearing'>187</span></div><div><span class='callsign'>FLOORED</span>=<span class='bearing'>262</span></div><div><span class='callsign'>FLOTSAM</span>=<span class='bearing'>67</span></div><div><span class='callsign'>FOLDING</span>=<span class='bearing'>15</span></div><div><span class='callsign'>FOLLOWS</span>=<span class='bearing'>148</span></div><div><span class='callsign'>FORCING</span>=<span class='bearing'>118</span></div><div><span class='callsign'>FORWARD</span>=<span class='bearing'>239</span></div><div><span class='callsign'>FOULIES</span>=<span class='bearing'>145</span></div><div><span class='callsign'>FOUNDER</span>=<span class='bearing'>330</span></div><div><span class='callsign'>FRAMING</span>=<span class='bearing'>156</span></div><div><span class='callsign'>FREIGHT</span>=<span class='bearing'>174</span></div><div><span class='callsign'>FRIGATE</span>=<span class='bearing'>227</span></div><div><span class='callsign'>FUNNELS</span>=<span class='bearing'>230</span></div><div><span class='callsign'>FURLING</span>=<span class='bearing'>204</span></div><div><span class='callsign'>GALLEON</span>=<span class='bearing'>300</span></div><div><span class='callsign'>GALLEYS</span>=<span class='bearing'>292</span></div><div><span class='callsign'>GALLIOT</span>=<span class='bearing'>9</span></div><div><span class='callsign'>GANGWAY</span>=<span class='bearing'>210</span></div><div><span class='callsign'>GARBLED</span>=<span class='bearing'>237</span></div><div><span class='callsign'>GENERAL</span>=<span class='bearing'>354</span></div><div><span class='callsign'>GEORGES</span>=<span class='bearing'>100</span></div><div><span class='callsign'>GHOSTED</span>=<span class='bearing'>30</span></div><div><span class='callsign'>GINPOLE</span>=<span class='bearing'>233</span></div><div><span class='callsign'>GIVEWAY</span>=<span class='bearing'>74</span></div><div><span class='callsign'>GONDOLA</span>=<span class='bearing'>85</span></div><div><span class='callsign'>GRAVING</span>=<span class='bearing'>253</span></div><div><span class='callsign'>GRIPIES</span>=<span class='bearing'>335</span></div><div><span class='callsign'>GROUNDS</span>=<span class='bearing'>153</span></div><div><span class='callsign'>GROWLER</span>=<span class='bearing'>281</span></div><div><span class='callsign'>GUINEAS</span>=<span class='bearing'>164</span></div><div><span class='callsign'>GUNDECK</span>=<span class='bearing'>82</span></div><div><span class='callsign'>GUNPORT</span>=<span class='bearing'>221</span></div><div><span class='callsign'>GUNWALE</span>=<span class='bearing'>36</span></div><div><span class='callsign'>HALYARD</span>=<span class='bearing'>325</span></div><div><span class='callsign'>HAMMOCK</span>=<span class='bearing'>261</span></div><div><span class='callsign'>HAMPERS</span>=<span class='bearing'>161</span></div><div><span class='callsign'>HANGARS</span>=<span class='bearing'>343</span></div><div><span class='callsign'>HARBORS</span>=<span class='bearing'>182</span></div><div><span class='callsign'>HARBOUR</span>=<span class='bearing'>154</span></div><div><span class='callsign'>HAULING</span>=<span class='bearing'>65</span></div><div><span class='callsign'>HAWSERS</span>=<span class='bearing'>51</span></div><div><span class='callsign'>HEADING</span>=<span class='bearing'>205</span></div><div><span class='callsign'>HEADSEA</span>=<span class='bearing'>52</span></div><div><span class='callsign'>HEAVING</span>=<span class='bearing'>298</span></div><div><span class='callsign'>HERRING</span>=<span class='bearing'>44</span></div><div><span class='callsign'>HOGGING</span>=<span class='bearing'>189</span></div><div><span class='callsign'>HOLIDAY</span>=<span class='bearing'>87</span></div><div><span class='callsign'>HUFFLER</span>=<span class='bearing'>282</span></div><div><span class='callsign'>INBOARD</span>=<span class='bearing'>53</span></div><div><span class='callsign'>INIRONS</span>=<span class='bearing'>111</span></div><div><span class='callsign'>INSHORE</span>=<span class='bearing'>91</span></div><div><span class='callsign'>INSTAYS</span>=<span class='bearing'>285</span></div><div><span class='callsign'>INWATER</span>=<span class='bearing'>103</span></div><div><span class='callsign'>INWAYOF</span>=<span class='bearing'>69</span></div><div><span class='callsign'>JACKIES</span>=<span class='bearing'>126</span></div><div><span class='callsign'>JACKTAR</span>=<span class='bearing'>110</span></div><div><span class='callsign'>JENNIES</span>=<span class='bearing'>61</span></div><div><span class='callsign'>JETTIES</span>=<span class='bearing'>71</span></div><div><span class='callsign'>JIGGERS</span>=<span class='bearing'>353</span></div><div><span class='callsign'>JOGGLES</span>=<span class='bearing'>215</span></div><div><span class='callsign'>JOLLIES</span>=<span class='bearing'>188</span></div><div><span class='callsign'>JURYRIG</span>=<span class='bearing'>166</span></div><div><span class='callsign'>KEELSON</span>=<span class='bearing'>66</span></div><div><span class='callsign'>KELLETS</span>=<span class='bearing'>41</span></div><div><span class='callsign'>KICKING</span>=<span class='bearing'>92</span></div><div><span class='callsign'>KILLICK</span>=<span class='bearing'>277</span></div><div><span class='callsign'>KITCHEN</span>=<span class='bearing'>235</span></div><div><span class='callsign'>LANYARD</span>=<span class='bearing'>155</span></div><div><span class='callsign'>LAYDAYS</span>=<span class='bearing'>122</span></div><div><span class='callsign'>LAZARET</span>=<span class='bearing'>283</span></div><div><span class='callsign'>LEEHELM</span>=<span class='bearing'>197</span></div><div><span class='callsign'>LEESIDE</span>=<span class='bearing'>116</span></div><div><span class='callsign'>LEEWARD</span>=<span class='bearing'>95</span></div><div><span class='callsign'>LIBERTY</span>=<span class='bearing'>81</span></div><div><span class='callsign'>LIGHTER</span>=<span class='bearing'>302</span></div><div><span class='callsign'>LIZARDS</span>=<span class='bearing'>276</span></div><div><span class='callsign'>LOADING</span>=<span class='bearing'>169</span></div><div><span class='callsign'>LOCKERS</span>=<span class='bearing'>180</span></div><div><span class='callsign'>LOFTING</span>=<span class='bearing'>186</span></div><div><span class='callsign'>LOLLING</span>=<span class='bearing'>34</span></div><div><span class='callsign'>LOOKOUT</span>=<span class='bearing'>171</span></div><div><span class='callsign'>LUBBERS</span>=<span class='bearing'>340</span></div><div><span class='callsign'>LUFFING</span>=<span class='bearing'>2</span></div><div><span class='callsign'>LUGGERS</span>=<span class='bearing'>106</span></div><div><span class='callsign'>LUGSAIL</span>=<span class='bearing'>284</span></div><div><span class='callsign'>MAEWEST</span>=<span class='bearing'>5</span></div><div><span class='callsign'>MANOWAR</span>=<span class='bearing'>348</span></div><div><span class='callsign'>MARCONI</span>=<span class='bearing'>244</span></div><div><span class='callsign'>MARINER</span>=<span class='bearing'>209</span></div><div><span class='callsign'>MATELOT</span>=<span class='bearing'>157</span></div><div><span class='callsign'>MIZZENS</span>=<span class='bearing'>47</span></div><div><span class='callsign'>MOORING</span>=<span class='bearing'>310</span></div><div><span class='callsign'>MOUSING</span>=<span class='bearing'>6</span></div><div><span class='callsign'>NARROWS</span>=<span class='bearing'>97</span></div><div><span class='callsign'>NIPPERS</span>=<span class='bearing'>179</span></div><div><span class='callsign'>OFFICER</span>=<span class='bearing'>252</span></div><div><span class='callsign'>OFFPIER</span>=<span class='bearing'>266</span></div><div><span class='callsign'>OILSKIN</span>=<span class='bearing'>31</span></div><div><span class='callsign'>OLDSALT</span>=<span class='bearing'>347</span></div><div><span class='callsign'>ONBOARD</span>=<span class='bearing'>249</span></div><div><span class='callsign'>OREBOAT</span>=<span class='bearing'>271</span></div><div><span class='callsign'>OUTHAUL</span>=<span class='bearing'>77</span></div><div><span class='callsign'>OUTWARD</span>=<span class='bearing'>125</span></div><div><span class='callsign'>PAINTER</span>=<span class='bearing'>75</span></div><div><span class='callsign'>PANTING</span>=<span class='bearing'>254</span></div><div><span class='callsign'>PARCELS</span>=<span class='bearing'>113</span></div><div><span class='callsign'>PARLEYS</span>=<span class='bearing'>38</span></div><div><span class='callsign'>PARRELS</span>=<span class='bearing'>334</span></div><div><span class='callsign'>PASSAGE</span>=<span class='bearing'>311</span></div><div><span class='callsign'>PELAGIC</span>=<span class='bearing'>159</span></div><div><span class='callsign'>PENDANT</span>=<span class='bearing'>274</span></div><div><span class='callsign'>PENNANT</span>=<span class='bearing'>135</span></div><div><span class='callsign'>PICKETS</span>=<span class='bearing'>339</span></div><div><span class='callsign'>PINNACE</span>=<span class='bearing'>149</span></div><div><span class='callsign'>PINTLES</span>=<span class='bearing'>317</span></div><div><span class='callsign'>PIRATES</span>=<span class='bearing'>37</span></div><div><span class='callsign'>PIVOTED</span>=<span class='bearing'>70</span></div><div><span class='callsign'>PURSERS</span>=<span class='bearing'>108</span></div><div><span class='callsign'>PURSUED</span>=<span class='bearing'>90</span></div><div><span class='callsign'>QUARTER</span>=<span class='bearing'>183</span></div><div><span class='callsign'>QUAYING</span>=<span class='bearing'>257</span></div><div><span class='callsign'>RABBETS</span>=<span class='bearing'>315</span></div><div><span class='callsign'>RATLINE</span>=<span class='bearing'>269</span></div><div><span class='callsign'>REDUCED</span>=<span class='bearing'>329</span></div><div><span class='callsign'>REEFERS</span>=<span class='bearing'>146</span></div><div><span class='callsign'>REPAIRS</span>=<span class='bearing'>35</span></div><div><span class='callsign'>RIGGING</span>=<span class='bearing'>14</span></div><div><span class='callsign'>RIPRAPS</span>=<span class='bearing'>167</span></div><div><span class='callsign'>ROMPERS</span>=<span class='bearing'>17</span></div><div><span class='callsign'>ROWLOCK</span>=<span class='bearing'>26</span></div><div><span class='callsign'>RUDDERS</span>=<span class='bearing'>286</span></div><div><span class='callsign'>RUFFLES</span>=<span class='bearing'>39</span></div><div><span class='callsign'>RUMMAGE</span>=<span class='bearing'>115</span></div><div><span class='callsign'>SAGGING</span>=<span class='bearing'>33</span></div><div><span class='callsign'>SAILORS</span>=<span class='bearing'>207</span></div><div><span class='callsign'>SALTIES</span>=<span class='bearing'>93</span></div><div><span class='callsign'>SALVORS</span>=<span class='bearing'>345</span></div><div><span class='callsign'>SAMPANS</span>=<span class='bearing'>79</span></div><div><span class='callsign'>SAMPSON</span>=<span class='bearing'>319</span></div><div><span class='callsign'>SCULLED</span>=<span class='bearing'>291</span></div><div><span class='callsign'>SCUPPER</span>=<span class='bearing'>206</span></div><div><span class='callsign'>SCUTTLE</span>=<span class='bearing'>58</span></div><div><span class='callsign'>SEACOCK</span>=<span class='bearing'>117</span></div><div><span class='callsign'>SEALING</span>=<span class='bearing'>22</span></div><div><span class='callsign'>SEEKERS</span>=<span class='bearing'>245</span></div><div><span class='callsign'>SERVING</span>=<span class='bearing'>220</span></div><div><span class='callsign'>SEXTANT</span>=<span class='bearing'>275</span></div><div><span class='callsign'>SHELTER</span>=<span class='bearing'>25</span></div><div><span class='callsign'>SHIPPED</span>=<span class='bearing'>299</span></div><div><span class='callsign'>SHIPRIG</span>=<span class='bearing'>247</span></div><div><span class='callsign'>SICKBAY</span>=<span class='bearing'>142</span></div><div><span class='callsign'>SKIPPER</span>=<span class='bearing'>45</span></div><div><span class='callsign'>SKYSAIL</span>=<span class='bearing'>84</span></div><div><span class='callsign'>SLINGED</span>=<span class='bearing'>196</span></div><div><span class='callsign'>SLIPWAY</span>=<span class='bearing'>83</span></div><div><span class='callsign'>SNAGGED</span>=<span class='bearing'>50</span></div><div><span class='callsign'>SNOTTER</span>=<span class='bearing'>199</span></div><div><span class='callsign'>SPLICED</span>=<span class='bearing'>268</span></div><div><span class='callsign'>SPLICES</span>=<span class='bearing'>181</span></div><div><span class='callsign'>SPONSON</span>=<span class='bearing'>19</span></div><div><span class='callsign'>SPONSOR</span>=<span class='bearing'>234</span></div><div><span class='callsign'>SPRINGS</span>=<span class='bearing'>273</span></div><div><span class='callsign'>SQUARES</span>=<span class='bearing'>263</span></div><div><span class='callsign'>STACKIE</span>=<span class='bearing'>132</span></div><div><span class='callsign'>STANDON</span>=<span class='bearing'>226</span></div><div><span class='callsign'>STARTER</span>=<span class='bearing'>59</span></div><div><span class='callsign'>STATION</span>=<span class='bearing'>359</span></div><div><span class='callsign'>STEAMER</span>=<span class='bearing'>57</span></div><div><span class='callsign'>STEERED</span>=<span class='bearing'>213</span></div><div><span class='callsign'>STEEVES</span>=<span class='bearing'>314</span></div><div><span class='callsign'>STEWARD</span>=<span class='bearing'>3</span></div><div><span class='callsign'>STOPPER</span>=<span class='bearing'>242</span></div><div><span class='callsign'>STOVEIN</span>=<span class='bearing'>185</span></div><div><span class='callsign'>STOWAGE</span>=<span class='bearing'>203</span></div><div><span class='callsign'>STRIKES</span>=<span class='bearing'>124</span></div><div><span class='callsign'>SUNFISH</span>=<span class='bearing'>342</span></div><div><span class='callsign'>SWIMMIE</span>=<span class='bearing'>307</span></div><div><span class='callsign'>SYSTEMS</span>=<span class='bearing'>255</span></div><div><span class='callsign'>TACKING</span>=<span class='bearing'>18</span></div><div><span class='callsign'>THWARTS</span>=<span class='bearing'>54</span></div><div><span class='callsign'>TINCLAD</span>=<span class='bearing'>63</span></div><div><span class='callsign'>TOMPION</span>=<span class='bearing'>270</span></div><div><span class='callsign'>TONNAGE</span>=<span class='bearing'>175</span></div><div><span class='callsign'>TOPMAST</span>=<span class='bearing'>305</span></div><div><span class='callsign'>TOPSAIL</span>=<span class='bearing'>338</span></div><div><span class='callsign'>TORPEDO</span>=<span class='bearing'>267</span></div><div><span class='callsign'>TOSSERS</span>=<span class='bearing'>114</span></div><div><span class='callsign'>TRADING</span>=<span class='bearing'>251</span></div><div><span class='callsign'>TRAFFIC</span>=<span class='bearing'>102</span></div><div><span class='callsign'>TRAMPER</span>=<span class='bearing'>150</span></div><div><span class='callsign'>TRANSOM</span>=<span class='bearing'>313</span></div><div><span class='callsign'>TRAWLER</span>=<span class='bearing'>127</span></div><div><span class='callsign'>TRENAIL</span>=<span class='bearing'>21</span></div><div><span class='callsign'>TRENNEL</span>=<span class='bearing'>173</span></div><div><span class='callsign'>TRIMMER</span>=<span class='bearing'>322</span></div><div><span class='callsign'>TROOPER</span>=<span class='bearing'>46</span></div><div><span class='callsign'>TRUNNEL</span>=<span class='bearing'>349</span></div><div><span class='callsign'>TUGBOAT</span>=<span class='bearing'>131</span></div><div><span class='callsign'>TURNTWO</span>=<span class='bearing'>303</span></div><div><span class='callsign'>UNSHIPS</span>=<span class='bearing'>318</span></div><div><span class='callsign'>UPBOUND</span>=<span class='bearing'>326</span></div><div><span class='callsign'>VESSELS</span>=<span class='bearing'>55</span></div><div><span class='callsign'>VOICING</span>=<span class='bearing'>321</span></div><div><span class='callsign'>VOYAGER</span>=<span class='bearing'>212</span></div><div><span class='callsign'>WEATHER</span>=<span class='bearing'>278</span></div><div><span class='callsign'>WHALERS</span>=<span class='bearing'>7</span></div><div><span class='callsign'>WHARVES</span>=<span class='bearing'>341</span></div><div><span class='callsign'>WHELKIE</span>=<span class='bearing'>223</span></div><div><span class='callsign'>WHISTLE</span>=<span class='bearing'>151</span></div><div><span class='callsign'>WINCHES</span>=<span class='bearing'>211</span></div><div><span class='callsign'>WINDAGE</span>=<span class='bearing'>222</span></div><div><span class='callsign'>WORKING</span>=<span class='bearing'>218</span></div><div><span class='callsign'>YARDARM</span>=<span class='bearing'>101</span></div>
+                    <!-- s-r-e -->
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Seite 2 von 2</div>
+        </div>
+    </div>
+</body>
+</html>

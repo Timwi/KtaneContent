@@ -78,7 +78,7 @@ e.onload = function()
             if ($('#developer-mode-enabled').prop('checked'))
             {
                 $("body").addClass("developer-mode");
-                const infoDiv = $("<div>").addClass("developer-mode-warning").append($("<h3>").text("DEVELOPER MODE (Alt-P)")).appendTo($("body"));
+                const infoDiv = $("<div>").addClass("developer-mode-warning").append($("<h3>").text("DEVELOPER MODE (Alt-P)")).insertAfter($(".section"));
                 const flavourTextCounts = document.getElementsByClassName("flavour-text").length;
                 if (flavourTextCounts > 1) {
                     $(".flavour-text").addClass("developer-mode-warning");
@@ -407,10 +407,9 @@ e.onload = function()
                     }
                     else
                     {
-                        let table = element.parents("table, .highlightable-parent").first();
+                        let table = element.parents("table, tbody, .highlightable-parent").first();
 
-                        let a;
-                        let b;
+                        let a, b;
                         if (thisMode === 'column' && table.length)
                         {
                             a = element;
@@ -474,11 +473,8 @@ e.onload = function()
                                 return false;
                             });
                             elementHighlights.push({ mode: thisMode, element: highlight, remove: removeHighlight });
-
-                            if (mobileControls)
-                                highlight.insertAfter($('.ktane-highlight-btn').first());
-                            else
-                                highlight.appendTo(document.body);
+                            let sections = $(".section");
+                            highlight.insertAfter(sections[sections.length - 1]);
                         }
                     }
                     window.getSelection().removeAllRanges();

@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Rhythm Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        $(function() {
+            const markingsData = [[
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0],
+            [0, 1, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 1, 1, 0]
+            ],
+            [
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0],
+            [1, 0, 1, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1]
+            ]];
+
+            const wallsData = [[
+            [ "RD", "URDL", "UDL", "UD", "RD", "DL" ],
+            [ "UDL", "UD", "UR", "UDL", "U", "URD" ],
+            [ "U", "URD", "RDL", "URL", "RDL", "UL" ],
+            [ "DL", "URD", "URL", "RDL", "UDL", "RD" ],
+            [ "URD", "UDL", "D", "UD", "URD", "UL" ],
+            [ "UR", "UDL", "UD", "UD", "UR", "L" ]
+            ], [
+            [ "UL", "RD", "UL", "R", "UDL", "UR" ],
+            [ "RDL", "URL", "RDL", "RDL", "URL", "RL" ],
+            [ "URD", "DL", "URD", "UL", "RD", "DL" ],
+            [ "UL", "URD", "URL", "RL", "URL", "URL" ],
+            [ "DL", "URD", "RL", "RDL", "RL", "RL" ],
+            [ "UDL", "U", "RD", "UL", "RD", "RDL" ]
+            ]];
+
+            const wallDict = {
+                "U": "M0 0 h 10",
+                "R": "M10 0 v 10",
+                "L": "M0 0 v 10",
+                "D": "M0 10 h 10"
+            };
+
+            const markings = document.getElementsByClassName("markings");
+            const walls = document.getElementsByClassName("walls");
+
+            for (let i = 0; i < 2; i++) {
+                const maze = markings[i];
+                for (const [y, row] of markingsData[i].entries()) {
+                    for (const [x, cellData] of row.entries()) {
+                        const cell = MakeSvgElem("g", { transform: `translate (${x * 10} ${y * 10})` });
+                        cell.append(MakeSvgElem("rect", { class: "cell"}));
+                        cell.append(MakeSvgElem("circle", { class: "sixtythree", cx: 5, cy: 5, r: 0.8 }));
+                        if (cellData == 1) {
+                            cell.append(MakeSvgElem("circle", {class: "marking", cx: 5, cy: 5, r: 4, stroke: ["#DA00FF", "#0076FF"][i]}))
+                        }
+                        maze.append(cell)
+                        maze.append(MakeSvgElem("rect", {class: "cell highlightable", width: 10, height: 10, x: x * 10, y: y * 10}));
+                    }
+                }
+            }
+
+            for (let i = 0; i < 2; i++) {
+                const maze = walls[i];
+                for (const [y, row] of wallsData[i].entries()) {
+                    for (const [x, cellData] of row.entries()) {
+                        const cell = MakeSvgElem("g", {transform: `translate (${x * 10} ${y * 10})`});
+                        cell.append(MakeSvgElem("circle", { class: "sixtythree", cx: 5, cy: 5, r: 0.8 }));
+                        for (const wall of cellData) {
+                            cell.append(MakeSvgElem("path", { d: wallDict[wall], class: "wall", stroke: ["#DA00FF", "#0076FF"][i]}))
+                        }
+                        maze.append(cell)
+                        maze.append(MakeSvgElem("rect", {class: "cell highlightable", width: 10, height: 10, x: x * 10, y: y * 10}));
+                    }
+                }
+            }
+        });
+    </script>
+    <style>
+        .maze { width: 40%; }
+        .marking {
+            fill: none;
+            stroke-width: 0.8px;
+        }
+        .dark .sixtythree { fill: #DDD; }
+        .wall { stroke-linecap: round; }
+        .cell { fill: transparent; }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 4'; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Rhythm Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Rhythm Maze.svg" class="diagram">
+                <h2>On the Subject of Rhythm Maze</h2>
+                <p class="flavour-text">At least this isn’t Cosmic Cube Hell...</p>
+
+                <p>Initially, this module will have a single button in the center to start it. The button may either be a crown in a yellow circle, or a purple blob.</p>
+                <p>
+                    Normally, the button is going to be a crown in a yellow circle, refer to <b>Section Normal Mode</b> for operating the module in that case.
+                    However, if the bomb contains the module “Snatcher's Map”, this module will enter <b>Death Wish mode</b>, signified by the button in the center turning into the purple blob.
+                    It is recommended that both the defuser and the expert are familiar with normal mode before trying out the Death Wish mode. Refer to <b>Section Collapse</b> for operating the Death Wish mode.
+                </p>
+                <p>If the module enters Death Wish mode via that case, a button in the bottom-left corner of the module will appear. Pressing it will disable Death Wish mode, at a cost of a strike.</p>
+                <p>Death Wish mode may also be forced through Mod Settings, or a command on “Twitch Plays”. If Death Wish mode was forced, the button to disable it will not appear in the bottom left.</p>
+
+                <h2>Section Normal Mode</h2>
+                <p>After starting the module, you will see a display with a 6x6 grid of white squares with one of them being red, and 4 arrows for movement. The module will also play a song, which may be muted/unmuted by pressing the status light.</p>
+                <p>The module will switch between two sides - a <b>P</b>ink and a <b>B</b>lue side. Each side will have two grids - a Markings Grid, and a Maze of walls. On the next page, the two left grids are the Pink Side’s grids, and on the right - Blue Side’s.</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Rhythm Maze</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap gap2">
+                    <svg class="maze markings" viewbox="-5,-5,70,70"></svg>
+                    <svg class="maze markings" viewbox="-5,-5,70,70"></svg>
+                    <svg class="maze walls" viewbox="-5,-5,70,70"></svg>
+                    <svg class="maze walls" viewbox="-5,-5,70,70"></svg>
+                </div>
+
+                <p>To solve the module, you must shift the mazes according to the markings, then navigate the <b>Red Square</b> to 5 pons and then an exit, coordinates of which must also be calculated. In this manual, coordinates are kept in the format of “(Row, Column)”, where top-left is (1, 1).</p>
+
+                <p>To shift the mazes for each side:</p>
+                <ul>
+                    <li>On the module, the top-left 3x3 quadrant of the 6x6 grid will display a pattern of markings, which may be found in that side’s Markings Grid (the grid doesn’t wrap around, which means that each side has 16 3x3 patterns)</li>
+                    <li>Note down the coordinate of the top-left cell of the pattern from the Markings grid. Let variables R be the row of that coordinate, and C - the column.</li>
+                    <li>Shift the side’s Maze to the left by [C - 1], and up by [R - 1]. The coordinate you noted down earlier should become the top-left cell of the Maze.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Rhythm Maze</span>
+            </div>
+            <div class="page-content">
+                <p>Next, determine the pons and the exit. Take the serial number, and for each character:</p>
+                <ul>
+                    <li>If it is a letter: it becomes its alphabetic position (A1Z26).</li>
+                    <li>If it is a “0”: it becomes 1.</li>
+                    <li>If it is a number 1-9: keep it as it is</li>
+                </ul>
+
+                <p>You should end up with 6 numbers, and for each of them:</p>
+                <ul>
+                    <li>Subtract 1 from it.</li>
+                    <li>Take the number modulo 6.</li>
+                    <li>Add 1.</li>
+                </ul>
+                <p>You will get a list of 6 numbers in range 1-6.</p>
+
+                <p>Pair 1st and 2nd number, 2nd and 3rd number, and so on until you pair 5th and 6th number. The 5 pairs refer to the pon coordinates, where the first number is the row, and the second is the column.</p>
+                <p>
+                    If you have any duplicate coordinates, keep moving the duplicate coordinate in reading until it is unique, wrapping around from (6, 6) to (1, 1)
+                    (For example, if your serial number is FF6FF6 your pons should all be pair 66, so we move the duplicates in reading order, getting pairs 66, 11, 12, 13 and 14).
+                </p>
+                <p>Pair the 1st number of the list with 6th to get the pair that refers to the exit coordinate same way as before. If this coordinate is already a pon, keep moving it in reading order until it isn’t.</p>
+
+                <p>
+                    Once you have figured out all the goal coordinates, navigate the <b>red square</b> to 3 out of the 5 pon coordinates to open the exit.
+                    Every time you navigate the red square to one of the pons, you will collect it, and the defuser will hear the collected amount of pons in total being said out loud, with 3 being “Got ’em!” and 5 being “All mine!”.
+                </p>
+                <p>
+                    After collecting 3 pons (the other 2 don’t have to be collected), navigate the defuser to the exit coordinate to solve the module.
+                    If the defuser visits the exit with less than 3 pons, they will hear a voice clip saying “Hmmm...”.
+                </p>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Rhythm Maze</span>
+            </div>
+            <div class="page-content">
+                <h2>Section Collapse</h2>
+                <p>As said before, you may disable the Death Wish mode, if it hasn’t been forced by any means, by pressing the bottom-left defeat button.</p>
+                <p>When the module enters Death Wish mode, it will mostly function like Normal Mode, but it will be changed both visually and in the solve process in the ways described below:</p>
+                <ul>
+                    <li>
+                        The most notable thing is that the module becomes timed. <b>After you start the module, you will have 3 minutes to solve it</b>.
+                        The timer will be visible in the bottom-right corner of the module, with a format of “Seconds Milliseconds”.
+                        Once the 3 minutes run out, the module will strike and fully reset to the start, with a new pattern of markings and a new starting location.
+                    </li>
+                    <li>The module will switch its sides faster, and will play a different faster song, which may still be muted/unmuted by pressing the status light.</li>
+                    <li>
+                        The module will still alternate between a Pink and a Blue side with their respective grids from <b>Section Normal Mode</b>, but they both will be displayed as a purple color.
+                        The only way to differentiate the sides is by using the markings. (Both of the markings grids do not share any patterns, which means that there is a total amount of 32 unique 3x3 patterns, 16 per each grid)
+                    </li>
+                    <li>A change about the solving process is that <b>all 4 of the grids are going to be horizontally flipped.</b> For the mazes, do not forget to horizontally flip the walls (Left wall -> Right Wall and other way around) along with the cells themselves. ((1, 1) flips to (1, 6))</li>
+                    <li>
+                        Once you find the markings pattern in the flipped markings grid, <b>note down the position of the top-right cell of the pattern, instead of the top-left.</b>
+                        After that, shift the flipped mazes [R - 1] up, and <b>[6 - C] to the right, which will make the noted coordinate the top-right position of the 6x6 grid.</b>
+                    </li>
+                    <li>
+                        The module will only have 3 pons now, instead of 5. Pair the 1st number with the 2nd number, 3rd with 4th and 5th with 6th, and move them in case of duplicates.
+                        These are your 3 pon coordinates. The exit is still calculated by pairing the 1st number with the 6th and moving it to a non-pon position.
+                    </li>
+                    <li>If the defuser visits a pon or an exit cell, no sound-effect confirmation will be played.</li>
+                    <li>Collect 3 pons and escape this madness through the exit. Good Luck!</li>
+                </ul>
+                <p>Hint to solve this mode faster: flip your grids and prepare all of the necessary coordinates before starting the module.</p>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+    </div>
+</body>
+</html>
