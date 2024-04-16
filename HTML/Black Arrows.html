@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
@@ -9,19 +8,153 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
-    <style>
-        table.indeed td {
-            text-align: center;
-            width: 1.5cm;
-            height: 1cm;
-        }
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        $(function() {
+            let gridRend = $(".grid");
+            let gridRendALT = $(".gridB");
+            const gridA = [
+                0,3,0,1,2,3,0,2,0,2,
+                2,2,3,0,1,2,3,2,3,3,
+                3,2,0,0,2,0,0,3,1,1,
+                2,0,3,1,1,3,3,0,3,0,
+                1,1,3,2,3,1,1,3,2,2,
+                3,0,0,1,3,0,2,1,2,1,
+                3,0,1,0,2,3,1,1,2,3,
+                2,2,1,3,0,0,2,0,3,2,
+                0,1,1,0,3,2,1,1,3,1,
+                2,0,1,0,0,3,2,1,2,1
+            ];
+            const gridB = [
+                1,2,2,1,2,0,0,3,3,0,
+                3,0,0,2,2,1,0,0,3,3,
+                1,0,0,3,2,0,1,1,3,1,
+                2,1,3,2,3,2,0,1,3,0,
+                2,3,3,2,1,2,1,1,1,2,
+                0,2,1,0,1,3,3,1,2,3,
+                1,0,3,2,3,2,3,2,2,0,
+                0,2,0,0,3,0,1,3,1,0,
+                0,3,2,1,3,3,2,0,1,0,
+                2,1,1,3,1,2,2,0,3,1
+            ];
+            const hexSide = 10;
+            const sidePx = 10;
+            const gOff = -130;
+            const gOff2 = 30;
+            let h = hexSide;
+            let i = 0;
 
-        .dark table, table {
-            border: none;
+            let offPx = Math.round(1000 * sidePx * 0.8660254) / 1000.0;
+            for (let x = 0; x < 10; x++)
+            {
+                let off2 = 6 + offPx * (x - 2);
+                let off = 6 + offPx * (x - 1);
+                let guideTxt = MakeSvgElem("text", {
+                    class:`invert small`, x: (offPx * x + off2 - gOff), y: (2.9), fill: "black"
+                });
+                guideTxt.innerHTML = x.toString();
+                gridRend.append(guideTxt);
+                let guideTxtALT = MakeSvgElem("text", {
+                    class:`invert small`, x: (offPx * x + off + gOff2), y: (2.9), fill: "black"
+                });
+                guideTxtALT.innerHTML = x.toString();
+                gridRendALT.append(guideTxtALT);
+            }
+            for (let r = 0; r < hexSide; r++) {
+                let off = 6 + offPx * (27 - r);
+                let off2 = 6 + offPx * r;
+                let txt = MakeSvgElem("text", {
+                    class:`invert small`, x: (off + offPx * -2 + gOff), y: (r*15.1 + 18), fill: "black",
+                });
+                txt.innerHTML = r;
+                gridRend.append(txt);
+                let txtB = MakeSvgElem("text", {
+                    class:`invert small`, x: (off2 + offPx * -2 + gOff2), y: (r*15.1 + 18), fill: "black"
+                });
+                txtB.innerHTML = r;
+                gridRendALT.append(txtB);
+                for (let c = 0; c < 10; c++) {
+                    gridRend.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable hex invert`, "stroke-width":"1", stroke:"#000", fill: "transparent"
+                    }));
+                    let txt = MakeSvgElem("text", {
+                        class:`invert`, x: (off + offPx * 2 * c + gOff), y: (r*15.1 + 18), fill: "black"
+                    });
+                    txt.innerHTML = gridA[i];
+                    gridRend.append(txt);
+                    gridRend.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable`, fill: "transparent"
+                    }));
+
+                    gridRendALT.append(RegularPolygon(sidePx, off2 + offPx * 2 * c + gOff2, r*15.1 + 14, 6, 0, {
+                        class:`highlightable hex invert`, "stroke-width":"1", stroke:"#000", fill: "transparent"
+                    }));
+                    let txtB = MakeSvgElem("text", {
+                        class:`invert`, x: (off2 + offPx * 2 * c + gOff2), y: (r*15.1 + 18), fill: "black"
+                    });
+                    txtB.innerHTML = gridB[i];
+                    gridRendALT.append(txtB);
+                    gridRendALT.append(RegularPolygon(sidePx, off2 + offPx * 2 * c + gOff2, r*15.1 + 14, 6, 0, {
+                        class:`highlightable`, fill: "transparent"
+                    }));
+                    i++;
+                }
+            }
+            let n = 0;
+            let strAdd = ["UL","UR","L","&bullet;","R","DL","DR"];
+            for (let r = 7; r < 10; r++) {
+                let off = 6 + offPx * (27 - r);
+                let off2 = 6 + offPx * r;
+                for (let c = 11; c < 14; c++) {
+                    if ((r == 7 && c == 13) || r == 9 && c == 11) continue;
+                    gridRend.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable hex invert`, "stroke-width":"1", stroke:"#000", fill: "transparent"
+                    }));
+                    gridRend.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable`, fill: "transparent"
+                    }));
+                    let txt = MakeSvgElem("text", {
+                        class:`invert`, x: (off + offPx * 2 * c + gOff), y: (r*15.1 + 18), fill: "black", fontsize: "10pt",
+                    });
+                    txt.innerHTML = strAdd[n];
+                    gridRend.append(txt);
+                    n++;
+                }
+            }
+            for (let r = 0; r < 3; r++) {
+                let off = 6 + offPx * (21 - r);
+                let off2 = 6 + offPx * r;
+                for (let c = 11; c < 14; c++) {
+                    if ((r == 0 && c == 13) || r == 2 && c == 11) continue;
+                    gridRendALT.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable hex invert`, "stroke-width":"1", stroke:"#000", fill: "transparent"
+                    }));
+                    gridRendALT.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable`, fill: "transparent"
+                    }));
+                    let txt = MakeSvgElem("text", {
+                        class:`invert`, x: (off + offPx * 2 * c + gOff), y: (r*15.1 + 18), fill: "black", fontsize: "10pt",
+                    });
+                    txt.innerHTML = strAdd[n % 7];
+                    gridRendALT.append(txt);
+                    n++;
+                }
+            }
+        });
+    </script>
+    <style>
+        table.indeed td:nth-child(n+2) {
+            text-align: center;
+            width: 10%;
         }
+        .small { font-size: smaller; }
+        .dark .invert { filter: invert(85%);}
+        .hex { fill: none; }
+        .dark table, table { border: none; }
+        svg:not(.diagram) { width: 95%; }
     </style>
 </head>
-
 <body>
     <div class="section">
         <div class="page page-bg-01">
@@ -36,57 +169,28 @@
                 <p>If the arrows are not black, you are looking at a different module.</p>
                 <p>
                     This module contains four black arrows, and a display in the middle. This display shows the stage number the module is on as well as 2 bars that slowly decrease, denoting how much buffered time is left for that stage. Each time a <a href="../More/Ignore Table.html#mod=blackArrowsModule">non-ignored module</a>
-                    is solved and while the buffer is empty, this stage number changes.
+                    is solved and while the buffer is empty, this stage number changes. There will be a series of arrow flashes, including a set of arrows that fade in and out during the flashing sequence.
+                </p>
+                <p><strong>If there are no directions that fade in and out, refer to the <a href="Black Arrows legacy.html">legacy manual</a>.</strong></p>
+                <p>Take the sum of the alphabetic positions of all letters in the serial number and modulo this by 8. If the result is 4, 5, 6, or 7, use Grid B to navigate; otherwise use Grid A. The result is also the offset applied, modulo 4.</p>
+                <p>
+                    Find your starting location on the grid obtained on the next page, using the 3rd character of the serial number as the row, and the 6th as the column.
+                    The column is slanted diagonal of the grid obtained from left to right, labeled in the same fashion as the rows. Obtain the digit on your starting location as stage 0.
+                    At each stage, move in the indicated direction, wrapping around the grid if necessary.
+                    The grid is tiled like a parallelogram, such that the corners would touch each other.
                 </p>
                 <p>
-                    Find your starting location on the grid on the next page. Use the 3rd character of the serial number as the row, and the 6th as the column. Make note of the number on your starting location. At each stage, move in the indicated direction,
-                    wrapping around the grid if necessary. Make note of every number you "visit."
+                    For each stage, the arrows on the module can flash in one of six directions, in addition to flashing all four at once, which represents staying in place. 2 consecutive arrows flashing represent the combined direction to move in the grid.
+                    The direction that fades in and out corresponds to the digit that should be obtained for this stage after moving in that direction.
+                    For each digit obtained, add the offset obtained and the stage number, then take the sum modulo 4 to get a resulting digit.
                 </p>
                 <p>
-                    Add the sum of the alphabetic positions of all letters in the serial number, + n to each "visited" number, where n is the current stage number for when that number was visited. (Consider the number from your initial position on the grid to be stage 0.) If you obtain
-                    a number that is higher than 12, repeatedly subtract 12 until it isn’t.
-                </p>
-                <p>
-                    For each stage, the arrows on the module can flash in eight directions, in addition to flashing all four at once, which represents staying in place. 2 consecutive arrows flashing represent the combined direction to move in the grid. If
-                    a set of arrow flashes multiple times before resting, repeat that movement based on how many times the arrow flashed before the rest and only note after the end of the movement.
-                </p>
-                <p>
-                    When all other non-boss modules have been solved, the display will turn blank, and the module is ready for input. Attempting to interact with the module before this time will incur a strike. Convert every obtained number, including stage
-                    0, to an arrow using the table below, and press those arrows in that order. An incorrect arrow press while the module is ready to submit will reveal the stage you inputted incorrectly as well as reshowing arrow directions up to the
+                    When all other non-boss modules have been solved, the display will turn blank, and the module is ready for input. Attempting to interact with the module before the module is ready will incur a strike. Convert every obtained digit, including stage
+                    0, to an arrow using the directive table on page 3, and press those arrows in that order. An incorrect arrow press while the module is ready to submit will reveal the stage you inputted incorrectly as well as reshowing arrow directions up to the
                     stage that was struck on, if there are any.
                 </p>
-                <table class='indeed'>
-                    <tr>
-                        <td>1</td>
-                        <td>2</td>
-                        <td>3</td>
-                        <td>4</td>
-                        <td>5</td>
-                        <td>6</td>
-                        <td>7</td>
-                        <td>8</td>
-                        <td>9</td>
-                        <td>10</td>
-                        <td>11</td>
-                        <td>12</td>
-                    </tr>
-                    <tr>
-                        <td>Up</td>
-                        <td>Down</td>
-                        <td>Left</td>
-                        <td>Right</td>
-                        <td>Down</td>
-                        <td>Right</td>
-                        <td>Left</td>
-                        <td>Up</td>
-                        <td>Right</td>
-                        <td>Up</td>
-                        <td>Left</td>
-                        <td>Down</td>
-                    </tr>
-                </table>
             </div>
-            <div class="page-footer relative-footer">Page 1 of 2</div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
         </div>
         <div class="page page-bg-02">
             <div class="page-header">
@@ -94,155 +198,44 @@
                 <span class="page-header-section-title">Black Arrows</span>
             </div>
             <div class="page-content">
-                <table class='indeed'>
-                    <tr>
-                        <td class='corner'></td>
-                        <th>1</th>
-                        <th>2</th>
-                        <th>3</th>
-                        <th>4</th>
-                        <th>5</th>
-                        <th>6</th>
-                        <th>7</th>
-                        <th>8</th>
-                        <th>9</th>
-                        <th>0</th>
-                    </tr>
-                    <tr>
-                        <th>1</th>
-                        <td>11</td>
-                        <td>4</td>
-                        <td>9</td>
-                        <td>4</td>
-                        <td>8</td>
-                        <td>6</td>
-                        <td>6</td>
-                        <td>1</td>
-                        <td>10</td>
-                        <td>6</td>
-                    </tr>
-                    <tr>
-                        <th>2</th>
-                        <td>9</td>
-                        <td>9</td>
-                        <td>12</td>
-                        <td>10</td>
-                        <td>10</td>
-                        <td>9</td>
-                        <td>9</td>
-                        <td>6</td>
-                        <td>1</td>
-                        <td>10</td>
-                    </tr>
-                    <tr>
-                        <th>3</th>
-                        <td>6</td>
-                        <td>9</td>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>11</td>
-                        <td>11</td>
-                        <td>3</td>
-                        <td>5</td>
-                        <td>1</td>
-                        <td>2</td>
-                    </tr>
-                    <tr>
-                        <th>4</th>
-                        <td>6</td>
-                        <td>7</td>
-                        <td>1</td>
-                        <td>12</td>
-                        <td>4</td>
-                        <td>1</td>
-                        <td>8</td>
-                        <td>4</td>
-                        <td>5</td>
-                        <td>8</td>
-                    </tr>
-                    <tr>
-                        <th>5</th>
-                        <td>8</td>
-                        <td>1</td>
-                        <td>4</td>
-                        <td>5</td>
-                        <td>9</td>
-                        <td>4</td>
-                        <td>9</td>
-                        <td>7</td>
-                        <td>7</td>
-                        <td>3</td>
-                    </tr>
-                    <tr>
-                        <th>6</th>
-                        <td>11</td>
-                        <td>6</td>
-                        <td>3</td>
-                        <td>2</td>
-                        <td>8</td>
-                        <td>11</td>
-                        <td>5</td>
-                        <td>7</td>
-                        <td>6</td>
-                        <td>2</td>
-                    </tr>
-                    <tr>
-                        <th>7</th>
-                        <td>9</td>
-                        <td>9</td>
-                        <td>10</td>
-                        <td>2</td>
-                        <td>8</td>
-                        <td>9</td>
-                        <td>3</td>
-                        <td>4</td>
-                        <td>2</td>
-                        <td>4</td>
-                    </tr>
-                    <tr>
-                        <th>8</th>
-                        <td>5</td>
-                        <td>9</td>
-                        <td>9</td>
-                        <td>3</td>
-                        <td>8</td>
-                        <td>9</td>
-                        <td>5</td>
-                        <td>3</td>
-                        <td>6</td>
-                        <td>5</td>
-                    </tr>
-                    <tr>
-                        <th>9</th>
-                        <td>9</td>
-                        <td>4</td>
-                        <td>4</td>
-                        <td>2</td>
-                        <td>11</td>
-                        <td>7</td>
-                        <td>10</td>
-                        <td>9</td>
-                        <td>8</td>
-                        <td>9</td>
-                    </tr>
-                    <tr>
-                        <th>0</th>
-                        <td>7</td>
-                        <td>11</td>
-                        <td>8</td>
-                        <td>6</td>
-                        <td>7</td>
-                        <td>10</td>
-                        <td>12</td>
-                        <td>12</td>
-                        <td>1</td>
-                        <td>5</td>
-                    </tr>
-                </table>
+                <h3>Grid A</h3>
+                <svg class="grid" viewbox="0 -10 300 180" xmlns="http://www.w3.org/2000/svg" text-anchor="middle" font-size="12"></svg>
+                <h3>Grid B</h3>
+                <svg class="gridB" viewbox="0 -10 300 185" xmlns="http://www.w3.org/2000/svg" text-anchor="middle" font-size="12"></svg>
             </div>
-            <div class="page-footer relative-footer">Page 2 of 2</div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Black Arrows</span>
+            </div>
+            <div class="page-content">
+                <h3>Directive Table</h3>
+                <p>
+                    When using the directive table, obtain ALL present conditions that apply, and assign these rows to each stage,
+                    <strong>starting on stage 0 with the LAST condition applied</strong>, wrapping around to the first applied condition for stage 1, and so on.
+                </p>
+                <table class="indeed">
+                    <tr><th rowspan="2">Present Condition</th><th colspan="4">Digit Obtained</th></tr>
+                    <tr><th>0</th><th>1</th><th>2</th><th>3</th></tr>
+                    <tr><td>Red, Orange, Yellow, Green, Blue, or Purple Arrows*</td><td>Right</td><td>Down</td><td>Up</td><td>Left</td></tr>
+                    <tr><td>Unlit TRN</td><td>Left</td><td>Up</td><td>Right</td><td>Down</td></tr>
+                    <tr><td>Lit BOB</td><td>Up</td><td>Down</td><td>Left</td><td>Right</td></tr>
+                    <tr><td>Vowel in S.N.</td><td>Left</td><td>Right</td><td>Down</td><td>Up</td></tr>
+                    <tr><td>Plate with exactly 2 ports</td><td>Right</td><td>Up</td><td>Left</td><td>Down</td></tr>
+                    <tr><td>2+ unlit indicators</td><td>Down</td><td>Left</td><td>Right</td><td>Up</td></tr>
+                    <tr><td>Black Arrows*</td><td>Up</td><td>Right</td><td>Down</td><td>Left</td></tr>
+                    <tr><td>4+ Batteries</td><td>Down</td><td>Up</td><td>Left</td><td>Right</td></tr>
+                    <tr><td>2+ lit indicators</td><td>Right</td><td>Left</td><td>Down</td><td>Up</td></tr>
+                    <tr><td>Lit CLR</td><td>Left</td><td>Down</td><td>Up</td><td>Right</td></tr>
+                    <tr><td>Double, Coloured, or Flashing Arrows*</td><td>Up</td><td>Left</td><td>Right</td><td>Down</td></tr>
+                    <tr><td>Unlit FRQ</td><td>Down</td><td>Right</td><td>Up</td><td>Left</td></tr>
+                </table>
+                <p>*Refers to any of the listed modules being present.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
         </div>
     </div>
 </body>
-
 </html>

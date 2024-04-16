@@ -162,7 +162,7 @@ class CircularGrid {
      * @param {Boolean} insideOut - if true, take the first row (0-indexed) to be the one closest to the origin instead of farthest from it.
      * @param {Boolean} goAntiClockwise - if true, columns go anti-clockwise. Otherwise, they go clockwise.
      */
-    constructor(columns, rows, outerRadius = 100, innerRadius = 0, attrs = null, insideOut = false, goAntiClockwise = false) {
+    constructor(columns, rows, outerRadius = 100, innerRadius = 0, attrs = null, insideOut = false, goAntiClockwise = true) {
         this.#columns = columns;
         this.#rows = rows;
         this.#innerRadius = innerRadius;
@@ -198,7 +198,7 @@ class CircularGrid {
      * @param {float} height - height of the rectangle.
      * @param {Dictionary} attrs - Attributes to set in the path element representing the cell. e.g. {class:"highlightable", fill:"#F00"}.
      */
-    drawCell(x = 0, y = 0, width = 0, height = 0, attrs = null) {
+    drawCell(x = 0, y = 0, width = 1, height = 1, attrs = null) {
         const topLeft = this.#transform(x, y);
         const topRight = this.#transform(x + width, y);
         const bottomRight = this.#transform(x + width, y + height);

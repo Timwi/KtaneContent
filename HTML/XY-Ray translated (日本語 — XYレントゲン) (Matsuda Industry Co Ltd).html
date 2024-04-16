@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>XYレントゲン — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        let svgShapes = $("svg.shapes");
+        let svgNums = $("svg.nums");
+        const numbers = [
+            [2,1,3,5,1,4,3,5,4,2,2,4,3,2,3,4,1,2,4,2,3,2,1,5,4],
+            [5,3,5,4,3,1,2,3,1,5,5,3,2,3,2,1,4,5,2,1,4,3,2,1,2],
+            [3,4,3,2,5,5,1,2,3,1,4,5,1,4,5,2,3,2,1,4,1,5,4,5,1],
+            [4,2,5,4,1,3,5,4,5,4,1,2,3,1,3,3,1,5,2,1,4,2,1,3,4],
+            [1,3,4,5,2,4,2,5,2,1,2,3,1,4,5,1,4,2,5,4,2,5,3,1,5]
+        ];
+        const cols = 5;
+        numbers.forEach((list, i) => {
+            list.forEach((num, j) => {
+                let x = j % cols
+                let y = Math.floor(j / cols);
+                let circ = MakeSvgElem("circle", {
+                    cx:(x*58 + 45.5 - 9.2*i), cy:(y*58 + 8.5 + 9.1*i), r:8.3, fill:"#FFF", stroke:"#000","stroke-width":1.8
+                });
+                let text = MakeSvgElem("text", {
+                    x:(x*58 + 45.5 - 9.2*i), y:(y*58 + (i == 2 && j == 12 ? 13.8 : 12) + 9.1*i),
+                    "text-anchor":"middle", "font-size":(i == 2 && j == 12 ? 15 : 10)
+                });
+                text.innerHTML = num;
+                svgNums.append(circ);
+                svgNums.append(text);
+            });
+
+        });
+
+        $("svg circle").each(function(i, e) {
+            let circ = e.cloneNode();
+            $(circ).addClass("highlightable");
+            e.parentNode.insertBefore(circ, e.nextSibling);
+        });
+        // $("svg.nums circle").each(function(i, e) {
+        //     let circ = e.cloneNode();
+        //     $(circ).addClass("highlightable");
+        //     e.parentNode.insertBefore(circ, e.nextSibling);
+        // });
+    });
+    </script>
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+        img {
+            width: 100%;
+        }
+        svg {
+            width: 100%;
+        }
+        svg path, svg ellipse, svg text {
+            user-select: none;
+            pointer-events: none;
+        }
+        svg circle.highlightable {
+            fill: transparent;
+        }
+        svg text {
+            font-family: 'Arial';
+            fill: #000;
+            font-weight: bold;
+        }
+        .dark svg path, .dark svg ellipse, .dark svg circle, .dark svg rect {
+            stroke: #DDD;
+        }
+        .dark svg circle:not(.highlightable) { fill: #222; }
+        /* .dark svg ellipse { fill: #222; } */
+        .dark svg text { fill: #DDD; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">XYレントゲン</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/XY-Ray.svg" class="diagram">
+                <h2>モジュール詳細：XYレントゲン</h2>
+                <p class="flavour-text">今すぐ2Dメガネをかけよう。</p>
+                <p>スキャナーの正方形の窓には3つの立体が映し出されるが、一度に映し出されるのはそれぞれの立体の断面のみである。<br>
+                それぞれのスキャンは、どの向きからでも行うことができる。</p>
+                <p>すべての立体は、下の2つのグリッドのうち小さいほうにある。<br>それぞれの立体は、小さいグリッドにおける中心位置から見てずれている。このずれはオフセットである。<br>
+                これらのオフセットは、モジュールに入力すべき3組の数字のペアを生成するために使用される。</p>
+                <ol>
+                    <li>一次オフセットに3つの立体のいずれかを割り当てる。</li>
+                    <li>シリアルナンバーの最初2つの数字について考える。
+                        <ul>
+                            <li>最初の数字が2つ目の数字より大きい場合、一次オフセットの立体の直前にスキャンされた立体を二次オフセットに割り当てる。</li>
+                            <li>それ以外の場合、一次オフセットの立体の直後にスキャンされた立体を二次オフセットに割り当てる。</li>
+                        </ul>
+                    </li>
+                    <li>大きい方の立方体の中心から一次オフセットを適用し、最初の数字を求める。</li>
+                    <li>一次オフセットで到達した位置から二次オフセットを適用し、2つ目の数字を求める。</li>
+                    <li>数字のペアをモジュールに入力したら、入力すべき他の2つのペアを得るために、以下の変更を加えて上記の2つのステップを正しい順番で繰り返す。
+                        <ul>
+                            <li>一次オフセットを二次オフセットに置き換える。</li>
+                            <li>二次オフセットを未使用のオフセットに置き換える。</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">XYレントゲン</span>
+            </div>
+            <div class="page-content">
+                <svg class="shapes" viewBox="0 0 268 266.8" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="translate(32 -17)" stroke="#000">
+                        <g transform="translate(-27 26)" fill="#fff" stroke-width="2">
+                            <path d="M31 239h145M31 59h145m18 17v145"/>
+                            <circle cx="58.9" cy="-193.7" r="17.6" transform="rotate(90)"/>
+                            <circle cx="238.8" cy="-193.7" r="17.6" transform="rotate(90)"/>
+                            <path d="M14 76v145"/>
+                            <circle cx="58.9" cy="-13.7" r="17.6" transform="rotate(90)"/>
+                            <circle cx="238.8" cy="-13.7" r="17.6" transform="rotate(90)"/>
+                            <path d="M104 76v145"/>
+                            <circle cx="58.9" cy="-103.7" r="17.6" transform="rotate(90)"/>
+                            <circle cx="238.8" cy="-103.7" r="17.6" transform="rotate(90)"/>
+                            <path d="M31 149h145"/>
+                            <circle cx="13.7" cy="148.9" r="17.6"/>
+                            <circle cx="103.7" cy="148.9" r="17.6"/>
+                            <circle cx="193.7" cy="148.9" r="17.6"/>
+                        </g>
+                        <g transform="translate(-2 2)" fill="#fff" stroke-width="2">
+                            <path d="M31 239h145M31 59h145m18 17v145"/>
+                            <circle cx="58.9" cy="-193.7" r="17.6" transform="rotate(90)"/>
+                            <circle cx="238.8" cy="-193.7" r="17.6" transform="rotate(90)"/>
+                            <path d="M14 76v145"/>
+                            <circle cx="58.9" cy="-13.7" r="17.6" transform="rotate(90)"/>
+                            <circle cx="238.8" cy="-13.7" r="17.6" transform="rotate(90)"/>
+                            <path d="M104 76v145"/>
+                            <circle cx="58.9" cy="-103.7" r="17.6" transform="rotate(90)"/>
+                            <circle cx="238.8" cy="-103.7" r="17.6" transform="rotate(90)"/>
+                            <path d="M31 149h145"/>
+                            <circle cx="13.7" cy="148.9" r="17.6"/>
+                            <circle cx="103.7" cy="148.9" r="17.6"/>
+                            <circle cx="193.7" cy="148.9" r="17.6"/>
+                        </g>
+                        <g transform="translate(23 -23)" fill="#fff" stroke-width="2">
+                            <path d="M31 239h145M31 59h145m18 17v145"/>
+                            <circle cx="58.9" cy="-193.7" r="17.6" transform="rotate(90)"/>
+                            <circle cx="238.8" cy="-193.7" r="17.6" transform="rotate(90)"/>
+                            <path d="M14 76v145"/>
+                            <circle cx="58.9" cy="-13.7" r="17.6" transform="rotate(90)"/>
+                            <circle cx="238.8" cy="-13.7" r="17.6" transform="rotate(90)"/>
+                            <path d="M104 76v145"/>
+                            <circle cx="58.9" cy="-103.7" r="17.6" transform="rotate(90)"/>
+                            <circle cx="238.8" cy="-103.7" r="17.6" transform="rotate(90)"/>
+                            <path d="M31 149h145"/>
+                            <circle cx="13.7" cy="148.9" r="17.6"/>
+                            <circle cx="103.7" cy="148.9" r="17.6"/>
+                            <circle cx="193.7" cy="148.9" r="17.6"/>
+                        </g>
+                        <ellipse cx="101.5" cy="150.4" rx="13.6" ry="13.6" fill="none" stroke-width="1.8"/>
+                        <path d="M115 151a13 3 0 0 1-7 2 13 3 0 0 1-14 0 13 3 0 0 1-6-2" fill="none" stroke-width="1.8"/>
+                        <path d="M115 151a13 3 0 0 0-7-2 13 3 0 0 0-14 0 13 3 0 0 0-6 2" fill="none" stroke-width="1.8" stroke-dasharray="3.6,1.8"/>
+                        <g fill="none">
+                            <path d="m79 162 10 5v16l-14 4-11-5v-15z" stroke-width=".8"/>
+                            <path d="m64 167 11 5v15m0-15 14-5" stroke-width=".8"/>
+                            <path d="m89 182-11-4 1-16m-1 16-14 4" stroke-width=".8" stroke-dasharray="1.678,.839"/>
+                        </g>
+                        <path d="m127 111 14 16-14 14-15-16z" fill="none"/>
+                        <path d="m127 111-6 17 6 13" fill="none"/>
+                        <path d="m112 125 9 3 20-1" fill="none"/>
+                        <path d="m112 125 18-2 11 4" fill="none" stroke-dasharray="1.936,.968"/>
+                        <path d="m127 111 2 12-2 18" fill="none" stroke-dasharray="1.936,.968"/>
+                        <g fill="none" stroke-width="1">
+                            <path d="m12 136-6 28 20-10z"/>
+                            <path d="M12 136 1 151l5 13"/>
+                            <path d="m1 151 25 3" stroke-dasharray="2.01084,1.00542"/>
+                        </g>
+                        <g fill="none">
+                            <path d="m192 135 8 5 7 10-7 11-8 4-8-4-7-11 7-10z" stroke-width=".9"/>
+                            <path d="m184 161 8-4m-15-7 8-4m13 0 9 4m-16 7 9 4m-8-4-7-11 7-10 6 10-6 11" stroke-width=".9" stroke-dasharray="1.86424,.93212"/>
+                            <path d="m184 140 8 4m-15 6 8 4m13 0 9-4m-16-6 9-4m-8 4-7 10 7 11 6-11-6-10" stroke-width=".9"/>
+                        </g>
+                        <g transform="translate(266 51) scale(.54697)" fill="none" stroke-width="2">
+                            <ellipse cx="-90.9" cy="118" rx="18.1" ry="5.9"/>
+                            <path d="M-73 155a18 6 0 0 1-9 5 18 6 0 0 1-18 0 18 6 0 0 1-9-5"/>
+                            <path d="M-73 157a18 6 0 0 0-9-5 18 6 0 0 0-18 0 18 6 0 0 0-9 5" stroke-dasharray="6,2"/>
+                            <path d="M-109 156v-39m36 39v-39"/>
+                        </g>
+                        <g fill="none" stroke-width=".9">
+                            <path d="m37 113 10 3-4 8H30l-4-8zM26 130l4 8h13l4-8"/>
+                            <path d="m26 130 11-3 10 3m-10-17v14" stroke-dasharray="1.8076,.9038"/>
+                            <path d="M26 116v14m4-6v14m13-14v14m4-22v14"/>
+                        </g>
+                        <g fill="none" stroke-width="1.2">
+                            <path d="M-1 182a13 4 0 0 1-6 3 13 4 0 0 1-13 0 13 4 0 0 1-6-3"/>
+                            <path d="M-1 182a13 4 0 0 0-6-4 13 4 0 0 0-13 0 13 4 0 0 0-6 4" stroke-dasharray="2.31436,1.15718"/>
+                            <path d="m-27 182 14-21 12 20"/>
+                        </g>
+                        <g fill="none">
+                            <path transform="matrix(.14972 0 0 .12945 187 122)" d="m-47 413-82 113-93-67v-92l93-67z" stroke-width="7.6"/>
+                            <path d="m-66 97-25 42 47-13" stroke-width="2" transform="matrix(.56587 0 0 .48927 205 113)"/>
+                            <path d="m-66 156-25-42 47 12" stroke-width="2" stroke-dasharray="4,2" transform="matrix(.56587 0 0 .48927 205 113)"/>
+                        </g>
+                        <g fill="none" stroke-width=".8">
+                            <path d="m102 50 7 6-3 9h-9l-3-9z"/>
+                            <path d="m102 71 7-5-3-9h-9l-3 9z" stroke-dasharray="1.677,.839"/>
+                            <path d="m102 46 8 3 6 7v9l-6 8-8 2-9-2-5-8v-9l5-7zM102 50v-4m-8 10h-6m21 0h7m-19 9-4 8m13-8 4 8"/>
+                            <path d="M102 71v4m7-9 7-1m-22 1-6-1m9-8-4-8m13 8 4-8" stroke-dasharray="1.6774,.8387"/>
+                        </g>
+                        <g fill="none" stroke-width=".7">
+                            <path d="m101 231 9 15H93z"/>
+                            <path d="m101 250 9-14H93z" stroke-dasharray="1.453605315,.726803619"/>
+                            <path d="m102 225 13 8v15l-13 8-14-8v-15z"/>
+                            <path d="m88 233 13-2 14 2m-14-2 1-6m-14 8 5 13m22-13-5 13m5 2-5-2m-17 0-5 2m5-2 9 10m8-10-8 10"/>
+                            <path d="m101 250 1 6m-14-8 13 2 14-2m-27-15 5 3 9-11 8 11 5-3m-27 15 5-12m17 0 5 12" stroke-dasharray="1.48190442,.74095221"/>
+                        </g>
+                        <g fill="none" stroke-width=".9">
+                            <path d="m139 215-9 14-11-5-5-9 5-9 11-5z"/>
+                            <path d="m114 215 12 4 13-4"/>
+                            <path d="m119 206 7 13 4 10"/>
+                            <path d="m114 215 12-4 13 4" stroke-dasharray="1.85704,.929"/>
+                            <path d="m130 201-4 10-7 13" stroke-dasharray="1.857,.929"/>
+                        </g>
+                        <g fill="none">
+                            <path d="M19 253H4l-7-13 7-12h15l7 12z" stroke-width=".9"/>
+                            <path d="m12 232 7 12H5z"/>
+                            <path d="m12 248 7-12H5z" stroke-dasharray="2.043442282,1.0217"/>
+                            <path d="m4 228 1 8-8 4m22-12v8l7 4M4 253l8-5 7 5" stroke-width=".9" stroke-dasharray="1.884,.94212"/>
+                            <path d="m4 228 8 4 7-4m-22 12 8 4-1 9m22-13-7 4v9" stroke-width=".9"/>
+                        </g>
+                        <path d="m-13 71 5 2 8 6v12l-8 7-5 1-6-1-7-7V79l7-6z" fill="none" stroke-width=".8"/>
+                        <path transform="matrix(.09737 0 0 .1088 19 36)" d="m-335 420 52 89h-103z" fill="none" stroke-width="7.8"/>
+                        <path transform="matrix(.09737 0 0 -.1088 19 135)" d="m-335 420 52 89h-103z" fill="none" stroke-width="7.8" stroke-dasharray="15.546,7.773"/>
+                        <path d="m-18 79-1-6h11v6" fill="none" stroke-width=".8" stroke-dasharray="1.6,.8"/>
+                        <path d="m-18 91-1 7h11v-7m-10 0-8-6 5-9 8 6m5 9 8-6-5-9-8 6m-8-6 8-5 8 5m-21 3 5-3m16 0 5 3" fill="none" stroke-width=".8"/>
+                        <path d="m-18 79-8 6 5 9 8-5m5-10 8 6-5 9-8-5m-8 5 8 5 8-5m-21-3 5 3m21-3-5 3" fill="none" stroke-width=".8" stroke-dasharray="1.6,.8"/>
+                        <path d="m183 67 11 3 11-3" fill="none" stroke-width=".9"/>
+                        <path d="m183 67 11-3 11 3m-16-16 5 13" fill="none" stroke-width=".9" stroke-dasharray="1.880004,.940002"/>
+                        <path d="m177 54 6 13m6-10 5 13m6-16 5 13m-28-13 12 3 11-3m-23 0 12-3 11 3" fill="none" stroke-width=".9"/>
+                        <g fill="none">
+                            <g stroke-width="2">
+                                <path d="M-56 132a22 7 0 0 1-11 6 22 7 0 0 1-22 0 22 7 0 0 1-10-6" transform="matrix(.61817 0 0 .43262 215 29)"/>
+                                <path transform="matrix(.61817 0 0 -.43262 215 29)" d="M-56-132a22 7 0 0 1-11 7 22 7 0 0 1-22 0 22 7 0 0 1-10-7" stroke-dasharray="4,2"/>
+                                <path d="m-100 132 23-35 22 34" transform="matrix(.61817 0 0 .43262 215 29)"/>
+                            </g>
+                            <path d="m-117 106 13 19 13-19" stroke-width="1.1" transform="matrix(1.0684 0 0 .74772 277 7)"/>
+                        </g>
+                        <g fill="none">
+                            <path d="m77 70 13 13v5l-13 13-14-13v-5z"/>
+                            <path d="m63 83 9 5 5 13m13-13-8-5-5-13m-5 18 10-5"/>
+                            <path d="m90 83-8 5-5 13M63 88l9-5 5-13m5 18-10-5" stroke-dasharray="1.9594,.9797"/>
+                        </g>
+                        <path d="m-13 250 13 10v11l-13 9-12-7v-15z" fill="none" stroke-width=".9"/>
+                        <path d="m-25 273 15 1 10-3" fill="none" stroke-width=".9"/>
+                        <path d="m0 271-16-2-9 4" fill="none" stroke-width=".9" stroke-dasharray="1.76666,.883331"/>
+                        <path d="m0 260-16 1-9-3" fill="none" stroke-width=".9"/>
+                        <path d="m-25 258 15-2 10 4m-13-10 3 6m0 0-6 13m6-13 10 15m-25-13 9 11m0 0 3 11" fill="none" stroke-width=".9" stroke-dasharray="1.76666,.883331"/>
+                        <path d="m-10 274-3 6m-3-19 6 13m-6-13-9 12m25-13-10 14m-3-24-3 11" fill="none" stroke-width=".9"/>
+                        <path d="m-225 356 104 104-104 104-104-104Z" transform="matrix(.1229 0 0 .0867 64 -4)" fill="none" stroke-width="9.7"/>
+                        <path d="M37 27v-7m0 31v-6m-13-9 6-10 7-6m12 16-5-10-7-6m12 16-5 10-7 5M24 36l6 10 7 5" fill="none"/>
+                        <path d="m30 26 13 20m0-20L30 46" fill="none" stroke-dasharray="2,1"/>
+                        <g transform="translate(60 13) scale(.47587)" fill="none" stroke-width="2">
+                            <ellipse cx="-101.8" cy="100.9" rx="30.2" ry="20.5"/>
+                            <path d="M-71 101a30 9 0 0 1-16 8 30 9 0 0 1-30 0 30 9 0 0 1-15-8"/>
+                            <path d="M-132 101a9 30 90 0 1 15-8 9 30 90 0 1 30 0 9 30 90 0 1 16 8" stroke-dasharray="4,2"/>
+                        </g>
+                        <ellipse cx="191.5" cy="240.4" rx="10.2" ry="14.9" fill="none"/>
+                        <path d="M202 241a10 3 0 0 1-10 3 10 3 0 0 1-11-3" fill="none"/>
+                        <path d="M202 242a10 3 0 0 0-10-4 10 3 0 0 0-11 3" fill="none" stroke-dasharray="2,1"/>
+                        <g fill="none" stroke-width=".7">
+                            <path d="m218 22 7 3 5 4v9l-2 5-5 4-8 2-7-3-5-4v-9l2-5 5-4z"/>
+                            <path d="m230 29-2 5v9m-13 6 5-4 8-2m-20 3 6-3 6 2m-6-2 7-2 7 2m-7-2v-9l7 2m-7-2 4-5 5 2m-16 14v-8l7-3M203 42l4-2 7 3m-7-3v-8l-4 1m4-1 7 3m-7-3 8-4 6 4m-6-4 3-6 7 5m-18 5 3-8"/>
+                            <path d="m203 42 2-5v-9m13-6-5 4-8 2m20-3-6 3-6-2m6 2-7 3-7-3m7 3v8l-7-2m7 2-4 5-5-2m16-14v8l-7 3m18-10-4 2-7-3m7 3v8l4-1m-4 1-7-3m7 3-8 4-6-4m6 4-3 6-7-5m18-5-3 8" stroke-dasharray="1.39324,.69662"/>
+                        </g>
+                        <g fill="none" stroke-width="2">
+                            <path d="M-71 113a22 7 0 0 1-11 6 22 7 0 0 1-22 0 22 7 0 0 1-11-6" transform="matrix(.58578 0 0 .54331 181 -21)"/>
+                            <path transform="matrix(.58578 0 0 -.54331 181 -21)" d="M-71-113a22 7 0 0 1-11 6 22 7 0 0 1-22 0 22 7 0 0 1-11-6" stroke-dasharray="4,2"/>
+                            <path d="m-116 113 23-35 22 34m0 0a22 18 0 0 1-22 17 22 18 0 0 1-23-16" transform="matrix(.58578 0 0 .54331 181 -21)"/>
+                        </g>
+                        <g transform="translate(82 153) scale(.48378)" fill="none" stroke-width="2">
+                            <rect width="49.7" height="49.7" x="-119.6" y="103.4" ry="12.8"/>
+                            <path d="M-115 150a12 30 45 0 1 3-18 12 30 45 0 1 21-21 12 30 45 0 1 18-3"/>
+                            <path d="M-116 108a12 30-45 0 1 18 3 12 30-45 0 1 21 21 12 30-45 0 1 3 18"/>
+                            <path d="M-115 106a12 30-45 0 0 3 18 12 30-45 0 0 21 21 12 30-45 0 0 18 3" stroke-dasharray="4,2"/>
+                            <path d="M-116 148a12 30 45 0 0 18-3 12 30 45 0 0 21-21 12 30 45 0 0 3-18" stroke-dasharray="4,2"/>
+                        </g>
+                        <g fill="none" stroke-width=".9">
+                            <path d="m216 209 7 4-2 8h-9l-2-8z"/>
+                            <path d="m221 201 8 6 2 8-2 9-8 6h-9l-8-6-2-9 2-8 8-6z"/>
+                            <path d="m216 227-4-6-7-2 5-6v-7l6 2 7-2v7l5 6-7 2zM204 207l6-1 2-5m9 0 2 5 6 1m2 8-3 4 1 5m-8 6-5-3-4 3m-8-6 1-5-3-4"/>
+                            <path d="m216 222 7-4-2-8h-9l-2 8z" stroke-dasharray="1.777,.888"/>
+                            <path d="m216 204-4 6-7 2 5 6v7l6-2 7 2v-7l5-6-7-2z" stroke-dasharray="1.777,.888"/>
+                            <path d="m204 224 6 1 2 5m9 0 2-5 6-1m2-8-3-4 1-5m-8-6-5 3-4-3m-8 6 1 5-3 4" stroke-dasharray="1.77688,.88844"/>
+                        </g>
+                        <g fill="none">
+                            <path transform="matrix(.12706 0 0 .11322 198 211)" d="m-141 479-25 61-74 70-97-73V420l97-72 74 70z" stroke-width="7.6"/>
+                            <path d="m-110 128 19 17 26-17m-45 33 19-16 26 16" stroke-width="1.8" transform="matrix(.48023 0 0 .4279 208 204)"/>
+                            <path d="M-65 128v32" stroke-width="2" transform="matrix(.48023 0 0 .4279 208 204)"/>
+                            <path d="m-85 109 5 19v33l-5 18m5-51 21 16-21 17" stroke-width="2" stroke-dasharray="4,2" transform="matrix(.48023 0 0 .4279 208 204)"/>
+                            <path d="m-110 128 8 17 22-17m-30 31 8-14 22 16" stroke-width="2" stroke-dasharray="4,2" transform="matrix(.48023 0 0 .4279 208 204)"/>
+                        </g>
+                        <g transform="translate(129 188) scale(.54432)" fill="none">
+                            <path d="M-72 153a29 29 0 0 1-24 14 29 29 0 0 1-25-13" stroke-width="2"/>
+                            <ellipse cx="-27.2" cy="172" rx="7.3" ry="22" transform="rotate(30)" stroke-width="2"/>
+                            <ellipse cx="140.8" cy="75.2" rx="7.3" ry="22" transform="scale(-1 1) rotate(30)" stroke-width="2"/>
+                            <path d="M-84 124a16 16 0 0 0-13-8 16 16 0 0 0-13 7" stroke-width="2"/>
+                            <path d="M-76 158a21 6 0 0 1-20 5 21 6 0 0 1-22-5" stroke-width="1.6"/>
+                            <path d="M-76 160a21 6 0 0 0-20-6 21 6 0 0 0-22 5" stroke-width="1.6" stroke-dasharray="3.28706,1.64353"/>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">XYレントゲン</span>
+            </div>
+            <div class="page-content">
+                <svg class="nums" viewBox="-2 -2 290 289" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="#fff" stroke="#000">
+                        <path d="M54.7 240.8H270M54.7 182.6H270M54.7 8.5H270M54.7 66.7H270m8-49.1V233" stroke-width="2.5"/>
+                        <path d="M219.8 17.6V233" stroke-width="2.5"/>
+                        <path d="M45.7 17.6V233" stroke-width="2.5"/>
+                        <path d="M103.4 17.6V233" stroke-width="2.5"/>
+                        <path d="M54.7 125H270" stroke-width="2.5"/>
+                        <path d="M161.4 17.6V233" stroke-width="2.5"/>
+                    </g>
+                    <g fill="#fff" stroke="#000">
+                        <path d="M45.7 249.8H261M45.7 191.6H261M45.7 17.5H261M45.7 75.7H261m8-49.1V242" stroke-width="2.5"/>
+                        <path d="M210.8 26.6V242" stroke-width="2.5"/>
+                        <path d="M36.7 26.6V242" stroke-width="2.5"/>
+                        <path d="M94.5 26.6V242" stroke-width="2.5"/>
+                        <path d="M45.7 134H261" stroke-width="2.5"/>
+                        <path d="M152.4 26.6V242" stroke-width="2.5"/>
+                    </g>
+                    <g fill="#fff" stroke="#000">
+                        <path d="M36.7 258.8H252M36.7 200.6H252M36.7 26.5H252M36.7 84.7H252m8-49.1V251" stroke-width="2.5"/>
+                        <path d="M201.8 35.6V251" stroke-width="2.5"/>
+                        <path d="M27.7 35.6V251" stroke-width="2.5"/>
+                        <path d="M85.5 35.6V251" stroke-width="2.5"/>
+                        <path d="M36.7 143H252" stroke-width="2.5"/>
+                        <path d="M143.4 35.6V251" stroke-width="2.5"/>
+                    </g>
+                    <g fill="#fff" stroke="#000">
+                        <path d="M27.1 268.3h215.4M27.1 210.1h215.4M27.1 36h215.4M27.1 94.3h215.4m7.9-49.2v215.4" stroke-width="2.5"/>
+                        <path d="M192.2 45.1v215.4" stroke-width="2.5"/>
+                        <path d="M18.2 45.1v215.4" stroke-width="2.5"/>
+                        <path d="M76 45.1v215.4" stroke-width="2.5"/>
+                        <path d="M27.1 152.5h215.4" stroke-width="2.5"/>
+                        <path d="M134 45.1v215.4" stroke-width="2.5"/>
+                    </g>
+                    <path d="M17.6 277.3H233M17.6 219.1H233M17.6 45H233M17.6 103.2H233m7.9-49.6v215.3" fill="#fff" stroke="#000" stroke-width="2.5"/>
+                    <path d="M182.7 53.6v215.3" fill="#fff" stroke="#000" stroke-width="2.5"/>
+                    <path d="M8.6 53.6v215.3" fill="#fff" stroke="#000" stroke-width="2.5"/>
+                    <path d="M66.4 53.6v215.3" fill="#fff" stroke="#000" stroke-width="2.5"/>
+                    <path d="M17.6 161.5H233" fill="#fff" stroke="#000" stroke-width="2.5"/>
+                    <path d="M124.4 53.6v215.3" fill="#fff" stroke="#000" stroke-width="2.5"/>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
+        </div>
+    </div>
+</body>
+</html>

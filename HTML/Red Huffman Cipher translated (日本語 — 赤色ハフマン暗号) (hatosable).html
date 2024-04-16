@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>赤色ハフマン暗号 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .dark table, table { border: none; }
+        .modifiedTable
+        {
+            font-size: 80%;
+            text-align: center;
+        }
+        .modifiedTable td, .modifiedTable th { padding: .2em .6em 0; }
+        .page-footer::before { content: "Page "; }
+        .page-footer::after { content: " of 3"; }
+        .invert {
+            color: white;
+            background-color: black;
+        }
+        .dark .invert {
+            color: black;
+            background-color: lightgray;
+        }
+        h3 { margin-top: .5em; }
+        .squeezeB { margin-bottom: auto; }
+        .squeezeT { margin-top: auto; }
+        .page-bg-05 p { margin: 1em 0 .2em; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">赤色ハフマン暗号</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Ultimate Cipher.svg" class="diagram">
+                <h2>モジュール詳細：赤色ハフマン暗号</h2>
+                <p class="flavour-text">最も低効率な暗号は、そもそも実用的ではなかったのだ。</p>
+                <p>モジュールは、3つのディスプレー、キーボード、左右の矢印、及び「#/Y」の形式で現在のページを表示するボタン(送信ボタン)で構成されている。Yはページの総数である。</p>
+                <p>矢印を使用してページを移動することができる。最後のページと最初のページは、ループする。ページ数は単語生成に使用された二進数の長さによって変化する。ページは、平均ページ数は2ページである。</p>
+                <p>モジュールを解除するには、以下の3ステップに従って単語を復号する。復号された単語を取得したら、キーボードを使用して入力する。入力を開始すると、ディスプレーが空白になり、下のディスプレーに現在入力されている内容が表示される。</p>
+                <p class="squeezeB">
+                    入力を消去するには、いずれかの矢印をクリックする。<br>
+                    入力に問題がなければ、「SUB」と書かれたボタンを押して、回答を送信する。
+                    ミスが記録された場合、モジュールの最初のページに戻るが、暗号の再生成はされない。
+                </p>
+                <h3>ステップ1：二分探索</h3>
+                <table class="centered modifiedTable">
+                    <tr><th>文字</th><th>バイナリ</th><th>文字</th><th>バイナリ</th><th>文字</th><th>バイナリ</th><th>文字</th><th>バイナリ</th><th>文字</th><th>バイナリ</th><th>文字</th><th>バイナリ</th><th>文字</th><th>バイナリ</th><th>文字</th><th>バイナリ</th></tr>
+                    <tr>
+                        <th>A</th><td>0000</td>
+                        <th>B</th><td>0001</td>
+                        <th>C</th><td>0010</td>
+                        <th>D</th><td>0011</td>
+                        <th>E</th><td>0100</td>
+                        <th>F</th><td>0101</td>
+                        <th>G</th><td>0110</td>
+                        <th>H</th><td>0111</td>
+                    </tr>
+                    <tr>
+                        <th>I</th><td>1000</td>
+                        <th>J</th><td>1001</td>
+                        <th>K</th><td>1010</td>
+                        <th>L</th><td>1011</td>
+                        <th>M</th><td>1100</td>
+                        <th>N</th><td>1101</td>
+                        <th>O</th><td>1110</td>
+                        <th>P</th><td>1111</td>
+                    </tr>
+                    <tr>
+                        <td class="empty" colspan="2"></td>
+                        <th>Q</th><td>00</td>
+                        <th>R</th><td>01</td>
+                        <th>S</th><td>10</td>
+                        <th>T</th><td>11</td>
+                        <th>U</th><td>0</td>
+                        <th>V</th><td>1</td>
+                    </tr>
+                </table>
+                <p class="squeezeB">各ページには、元のメッセージの変換に使用される最大18個の文字が含まれている。ページの情報を読み順に使用し、一つの長い文字列を作成する。表示されたこれらの文字をバイナリの部品に変換し、一つの長いバイナリ文字列を作成する。これは、後の2ステップで使用する。</p>
+                <h3>ステップ2：ハフマン木の構築</h3>
+                <p class="squeezeT squeezeB">取得したバイナリ文字列を使用し、26個の葉を取得するまで、以下の手順を繰り返す。葉とは、ハフマン木の末端にある節のことである。各桁は左から右に一度だけ読み取られ、戻ることはない。</p>
+                <ol class="squeezeT squeezeB">
+                    <li>「0」と「1」の葉から開始する。</li>
+                    <li>バイナリの桁を、バイナリ文字列内の先頭にある一つの節に出会うまで読み続ける。</li>
+                    <li>その情報を部分的なバイナリ文字列として分離させ、バイナリ文字列から始まりそれぞれ「0」と「1」で終わるような2つの項目に変更する。分割の際、葉の順序は維持すること。</li>
+                    <li>上記の2ステップを繰り返す。</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">赤色ハフマン暗号</span>
+            </div>
+            <div class="page-content">
+                <h2>例 - 赤色ハフマン暗号用の木の構築</h2>
+                <p>
+                    先頭8桁のみを示す。<br>
+                    初期バイナリ文字列： <strong>0111100000110101</strong><br>
+                    <strong>[0]</strong>111100000110101
+                </p>
+                <table class="centered">
+                    <tr><td class="invert">[0]</td><td>[1]</td></tr>
+                </table>
+                <p>
+                    1回目の分離後のバイナリ文字列： <strong>111100000110101</strong><br>
+                    <strong>[1]</strong>11100000110101
+                </p>
+                <table class="centered">
+                    <tr><td>[00]</td><td>[01]</td><td class="invert">[1]</td></tr>
+                </table>
+                <p>
+                    2回目の分離後のバイナリ文字列： <strong>11100000110101</strong><br>
+                    <strong>[11]</strong>100000110101
+                </p>
+                <table class="centered">
+                    <tr><td>[00]</td><td>[01]</td><td>[10]</td><td class="invert">[11]</td></tr>
+                </table>
+                <p>
+                    3回目の分離後のバイナリ文字列： <strong>100000110101</strong><br>
+                    <strong>[10]</strong>0000110101
+                </p>
+                <table class="centered">
+                    <tr><td>[00]</td><td>[01]</td><td class="invert">[10]</td><td>[110]</td><td>[111]</td></tr>
+                </table>
+                <p>
+                    4回目の分離後のバイナリ文字列： <strong>0000110101</strong><br>
+                    <strong>[00]</strong>00110101
+                </p>
+                <table class="centered">
+                    <tr><td class="invert">[00]</td><td>[01]</td><td>[100]</td><td>[101]</td><td>[110]</td><td>[111]</td></tr>
+                </table>
+                <p>
+                    5回目の分離後のバイナリ文字列： <strong>00110101</strong><br>
+                    <strong>[001]</strong>10101
+                </p>
+                <table class="centered">
+                    <tr><td>[000]</td><td class="invert">[001]</td><td>[01]</td><td>[100]</td><td>[101]</td><td>[110]</td><td>[111]</td></tr>
+                </table>
+                <p>
+                    6回目の分離後のバイナリ文字列： <strong>10101</strong><br>
+                    <strong>[101]</strong>01
+                </p>
+                <table class="centered">
+                    <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td>[01]</td><td>[100]</td><td class="invert">[101]</td><td>[110]</td><td>[111]</td></tr>
+                </table>
+                <p>
+                    7回目の分離後のバイナリ文字列： <strong>01</strong></p>
+                <table class="centered">
+                    <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td class="invert">[01]</td><td>[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td>[111]</td></tr>
+                </table>
+                <p>8回目の分離後の葉：</p>
+                <table class="centered">
+                    <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td>[010]</td><td>[011]</td><td>[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td>[111]</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">赤色ハフマン暗号</span>
+            </div>
+            <div class="page-content">
+                <h3>ステップ3：ハフマン木の読み取り</h3>
+                <p>ハフマン木のそれぞれの葉に、0から始まる葉を優先してアルファベットを割り当てる。</p>
+                <p>バイナリの桁を、残りのバイナリ文字列内の先頭にある一つの葉に出会うまで読み続ける。この英字を記録し、そのバイナリをバイナリ文字列から切り離す。これを、バイナリ文字列を使い切るまで繰り返す。 順番に取得した英字が、復号された単語になる。</p>
+                <h2>例 — 赤色ハフマン暗号バイナリの読み取り</h2>
+                <p class="squeezeB">この例では、アルファベット26文字の代わりに文字列「BLACKSMITH」を使用し、4文字を読み取る。</p>
+                <p class="centered squeezeT">初期の残ったバイナリ文字列：<strong>1001011010011</strong></p>
+                <table>
+                    <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td>[010]</td><td>[011]</td><td class="invert">[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td>[111]</td></tr>
+                    <tr><th>B</th><th>L</th><th>A</th><th>C</th><th>K</th><th class="invert">S</th><th>M</th><th>I</th><th>T</th><th>H</th></tr>
+                </table>
+                <p class="centered">
+                    “100”, S<br>
+                    1文字目読み取り後のバイナリ文字列：<strong>1011010011</strong>
+                </p>
+                <table>
+                    <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td>[010]</td><td>[011]</td><td>[100]</td><td>[1010]</td><td class="invert">[1011]</td><td>[110]</td><td>[111]</td></tr>
+                    <tr><th>B</th><th>L</th><th>A</th><th>C</th><th>K</th><th>S</th><th>M</th><th class="invert">I</th><th>T</th><th>H</th></tr>
+                </table>
+                <p class="centered">
+                    “1011”, I<br>
+                    2文字目読み取り後のバイナリ文字列：<strong>010011</strong>
+                </p>
+                <table>
+                    <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td class="invert">[010]</td><td>[011]</td><td>[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td>[111]</td></tr>
+                    <tr><th>B</th><th>L</th><th>A</th><th class="invert">C</th><th>K</th><th>S</th><th>M</th><th>I</th><th>T</th><th>H</th></tr>
+                </table>
+                <p class="centered">
+                    “010”, C<br>
+                    3文字目読み取り後のバイナリ文字列：<strong>011</strong>
+                </p>
+                <table>
+                    <tr><td>[000]</td><td>[0010]</td><td>[0011]</td><td>[010]</td><td class="invert">[011]</td><td>[100]</td><td>[1010]</td><td>[1011]</td><td>[110]</td><td>[111]</td></tr>
+                    <tr><th>B</th><th>L</th><th>A</th><th>C</th><th class="invert">K</th><th>S</th><th>M</th><th>I</th><th>T</th><th>H</th></tr>
+                </table>
+                <p class="centered">
+                    “011”, K<br>
+                    復号された単語：<strong>SICK</strong>
+                </p>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+    </div>
+</body>
+</html>

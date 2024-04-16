@@ -1,6 +1,5 @@
 ﻿<!DOCTYPE html>
 <html lang="ja">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
@@ -10,19 +9,153 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
-    <style>
-        table.indeed td {
-            text-align: center;
-            width: 1.5cm;
-            height: 1cm;
-        }
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        $(function() {
+            let gridRend = $(".grid");
+            let gridRendALT = $(".gridB");
+            const gridA = [
+                0,3,0,1,2,3,0,2,0,2,
+                2,2,3,0,1,2,3,2,3,3,
+                3,2,0,0,2,0,0,3,1,1,
+                2,0,3,1,1,3,3,0,3,0,
+                1,1,3,2,3,1,1,3,2,2,
+                3,0,0,1,3,0,2,1,2,1,
+                3,0,1,0,2,3,1,1,2,3,
+                2,2,1,3,0,0,2,0,3,2,
+                0,1,1,0,3,2,1,1,3,1,
+                2,0,1,0,0,3,2,1,2,1
+            ];
+            const gridB = [
+                1,2,2,1,2,0,0,3,3,0,
+                3,0,0,2,2,1,0,0,3,3,
+                1,0,0,3,2,0,1,1,3,1,
+                2,1,3,2,3,2,0,1,3,0,
+                2,3,3,2,1,2,1,1,1,2,
+                0,2,1,0,1,3,3,1,2,3,
+                1,0,3,2,3,2,3,2,2,0,
+                0,2,0,0,3,0,1,3,1,0,
+                0,3,2,1,3,3,2,0,1,0,
+                2,1,1,3,1,2,2,0,3,1
+            ];
+            const hexSide = 10;
+            const sidePx = 10;
+            const gOff = -130;
+            const gOff2 = 30;
+            let h = hexSide;
+            let i = 0;
 
-        .dark table, table {
-            border: none;
+            let offPx = Math.round(1000 * sidePx * 0.8660254) / 1000.0;
+            for (let x = 0; x < 10; x++)
+            {
+                let off2 = 6 + offPx * (x - 2);
+                let off = 6 + offPx * (x - 1);
+                let guideTxt = MakeSvgElem("text", {
+                    class:`invert small`, x: (offPx * x + off2 - gOff), y: (2.9), fill: "black"
+                });
+                guideTxt.innerHTML = x.toString();
+                gridRend.append(guideTxt);
+                let guideTxtALT = MakeSvgElem("text", {
+                    class:`invert small`, x: (offPx * x + off + gOff2), y: (2.9), fill: "black"
+                });
+                guideTxtALT.innerHTML = x.toString();
+                gridRendALT.append(guideTxtALT);
+            }
+            for (let r = 0; r < hexSide; r++) {
+                let off = 6 + offPx * (27 - r);
+                let off2 = 6 + offPx * r;
+                let txt = MakeSvgElem("text", {
+                    class:`invert small`, x: (off + offPx * -2 + gOff), y: (r*15.1 + 18), fill: "black",
+                });
+                txt.innerHTML = r;
+                gridRend.append(txt);
+                let txtB = MakeSvgElem("text", {
+                    class:`invert small`, x: (off2 + offPx * -2 + gOff2), y: (r*15.1 + 18), fill: "black"
+                });
+                txtB.innerHTML = r;
+                gridRendALT.append(txtB);
+                for (let c = 0; c < 10; c++) {
+                    gridRend.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable hex invert`, "stroke-width":"1", stroke:"#000", fill: "transparent"
+                    }));
+                    let txt = MakeSvgElem("text", {
+                        class:`invert`, x: (off + offPx * 2 * c + gOff), y: (r*15.1 + 18), fill: "black"
+                    });
+                    txt.innerHTML = gridA[i];
+                    gridRend.append(txt);
+                    gridRend.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable`, fill: "transparent"
+                    }));
+
+                    gridRendALT.append(RegularPolygon(sidePx, off2 + offPx * 2 * c + gOff2, r*15.1 + 14, 6, 0, {
+                        class:`highlightable hex invert`, "stroke-width":"1", stroke:"#000", fill: "transparent"
+                    }));
+                    let txtB = MakeSvgElem("text", {
+                        class:`invert`, x: (off2 + offPx * 2 * c + gOff2), y: (r*15.1 + 18), fill: "black"
+                    });
+                    txtB.innerHTML = gridB[i];
+                    gridRendALT.append(txtB);
+                    gridRendALT.append(RegularPolygon(sidePx, off2 + offPx * 2 * c + gOff2, r*15.1 + 14, 6, 0, {
+                        class:`highlightable`, fill: "transparent"
+                    }));
+                    i++;
+                }
+            }
+            let n = 0;
+            let strAdd = ["左上","右上","左","&bullet;","右","左下","右下"];
+            for (let r = 7; r < 10; r++) {
+                let off = 6 + offPx * (27 - r);
+                let off2 = 6 + offPx * r;
+                for (let c = 11; c < 14; c++) {
+                    if ((r == 7 && c == 13) || r == 9 && c == 11) continue;
+                    gridRend.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable hex invert`, "stroke-width":"1", stroke:"#000", fill: "transparent"
+                    }));
+                    gridRend.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable`, fill: "transparent"
+                    }));
+                    let txt = MakeSvgElem("text", {
+                        class:`invert`, x: (off + offPx * 2 * c + gOff), y: (r*15.1 + 18), fill: "black", fontsize: "10pt",
+                    });
+                    txt.innerHTML = strAdd[n];
+                    gridRend.append(txt);
+                    n++;
+                }
+            }
+            for (let r = 0; r < 3; r++) {
+                let off = 6 + offPx * (21 - r);
+                let off2 = 6 + offPx * r;
+                for (let c = 11; c < 14; c++) {
+                    if ((r == 0 && c == 13) || r == 2 && c == 11) continue;
+                    gridRendALT.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable hex invert`, "stroke-width":"1", stroke:"#000", fill: "transparent"
+                    }));
+                    gridRendALT.append(RegularPolygon(sidePx, off + offPx * 2 * c + gOff, r*15.1 + 14, 6, 0, {
+                        class:`highlightable`, fill: "transparent"
+                    }));
+                    let txt = MakeSvgElem("text", {
+                        class:`invert`, x: (off + offPx * 2 * c + gOff), y: (r*15.1 + 18), fill: "black", fontsize: "10pt",
+                    });
+                    txt.innerHTML = strAdd[n % 7];
+                    gridRendALT.append(txt);
+                    n++;
+                }
+            }
+        });
+    </script>
+    <style>
+        table.indeed td:nth-child(n+2) {
+            text-align: center;
+            width: 10%;
         }
+        .small { font-size: smaller; }
+        .dark .invert { filter: invert(85%);}
+        .hex { fill: none; }
+        .dark table, table { border: none; }
+        svg:not(.diagram) { width: 95%; }
     </style>
 </head>
-
 <body>
     <div class="section">
         <div class="page page-bg-01">
@@ -36,53 +169,23 @@
                 <p class="flavour-text">紆余曲折を経験したことを忘れないで！</p>
                 <p>ボタンが黒色ではない場合、異なるモジュールを参照している。</p>
                 <p>
-                    モジュール上には、4つの黒い方向ボタンと中央にディスプレーがある。ディスプレーはモジュールのステージ数と徐々に減少する2つのバーが表示されており、そのステージのバッファ時間がどのくらい残っているか示している。バッファが空の状態で、あるモジュールが解除されるたび、このステージ数は変化する。
+                   モジュール上には、4つの黒い方向ボタンと中央にディスプレーがある。ディスプレーはモジュールのステージ番号と徐々に減少する2つのバーが表示されており、そのステージの待機時間がどのくらい残っているか示している。待機時間が空の状態で、<a href="../More/Ignore Table.html#mod=blackArrowsModule">無視されないモジュール</a>が解除されるたび、このステージ番号は変化する。矢印の点滅がいくつか表示され、点滅シーケンス内には緩やかに点滅する矢印のセットも含まれている。
+             </p>
+             <p><strong>緩やかに点滅する方向が一つもない場合、<a href="Black Arrows translated (日本語 — 黒色矢印) 旧版 (hatosable).html">旧版マニュアル</a>を参照する。</strong></p>
+             <p>シリアルナンバー内にあるすべての英字のアルファベット上における位置の数の合計を取得し、これを8で割った余りを求める。結果が4, 5, 6, 7である場合、移動の際にグリッドBを用いる。そうでない場合、グリッドAを用いる。この結果は4で割った余りを求めることで、初期値にもなる。</p>
+             <p>
+                 次ページのグリッドの初期位置を見つける。シリアルナンバーの3番目の文字を段に、6番目の文字を列に使用する。列は左から右に、取得したグリッドの対角線上に斜めに並んでおり、段も同じ形式で番号が付けられている。初期位置にある数字をステージ0として記録しておく。
+                 各ステージにおいて、必要に応じてグリッドの周囲をループしながら、指示された方向に移動する。 グリッドは平行四辺形のようなタイル状であり、角は互いに接するようになっている。
                 </p>
                 <p>
-                    次ページのグリッドの開始位置を見つける。シリアルナンバーの3番目の文字を段に、6番目の文字を列に使用する。開始位置の数字を記録しておく。各ステージにおいて、必要であればグリッドの周囲をループさせ、指示された方向に移動する。「到達した」数字を毎回記録する。
+              その後のステージにおいては、モジュールの矢印は6方向のうちのいずれかに点滅するか、4つ全てが同時に点滅する。後者は、その場に留まることを表す。2つ同時の矢印点滅はグリッド内の移動方向の組み合わせを表している。緩やかに点滅する矢印は、その方向に移動後、このステージで取得しなければならない数字を示している。
+              取得した各数字に、求めた初期値とステージ番号を足し、和を4で割った余りを求め、最終的な数字を得る。
                 </p>
                 <p>
-                 それぞれ「到達した」数字に、シリアルナンバー内にあるすべての英字のアルファベット上における位置の数の合計を足し、+nする。nは現在のステージ数である(開始位置の数字は、ステージ0とする)。12より大きな数を得た場合、そうでなくなるまで12を繰り返し引く。
+                 ボスモジュールではない他のモジュール全てが解除された時、ディスプレーが空欄になり、モジュールに入力できるようになる。これより前にモジュールに送信を行おうとすると、ミスが記録される。ステージ0を含めた獲得した数字全てを、3ページの表を用いて矢印に変換し、その順番で矢印を押す。モジュールへの送信が可能な状態で間違った矢印を押すと、間違って入力したステージ番号が表示されるとともに、ミスが記録されるまでの矢印が存在しているなら、それを再表示する。
                 </p>
-                <p>
-                    各ステージにおいて、モジュールの矢印は8方向のうちのいずれかに点滅するか、4つ全てが同時に点滅してその場に留まることを表す。2つ同時の矢印点滅はグリッド内の移動方向の組み合わせを表している。矢印のセットが空白の前に複数回点滅した場合、空白前に矢印が点滅した回数に基づいて、その移動を繰り返し、移動終了後のみに注目する。
-                </p>
-                <p>
-                    ボスモジュールではない他のモジュール全てが解除された時、ディスプレーが空欄になり、モジュールに入力できるようになる。これより前にモジュールに送信を行おうとすると、ミスが記録される。ステージ0を含めた獲得した数字全てを下の表を用いて矢印に変換し、その順番に矢印を押す。モジュールへの送信が可能な状態で間違った矢印を押すと、間違って入力したステージ数が表示されるとともに、ミスが記録されるまでの矢印の入力方向が存在しているなら、それを再表示する。
-                </p>
-                <table class='indeed'>
-                    <tr>
-                        <td>1</td>
-                        <td>2</td>
-                        <td>3</td>
-                        <td>4</td>
-                        <td>5</td>
-                        <td>6</td>
-                        <td>7</td>
-                        <td>8</td>
-                        <td>9</td>
-                        <td>10</td>
-                        <td>11</td>
-                        <td>12</td>
-                    </tr>
-                    <tr>
-                        <td>上</td>
-                        <td>下</td>
-                        <td>左</td>
-                        <td>右</td>
-                        <td>下</td>
-                        <td>右</td>
-                        <td>左</td>
-                        <td>上</td>
-                        <td>右</td>
-                        <td>上</td>
-                        <td>左</td>
-                        <td>下</td>
-                    </tr>
-                </table>
             </div>
-            <div class="page-footer">*モジュールのいくつかは「黒色矢印」モジュールに無視される。</div>
-            <div class="page-footer relative-footer">ページ 1/2</div>
+            <div class="page-footer relative-footer">ページ 1/3</div>
         </div>
         <div class="page page-bg-02">
             <div class="page-header">
@@ -90,155 +193,43 @@
                 <span class="page-header-section-title">黒色矢印</span>
             </div>
             <div class="page-content">
-                <table class='indeed'>
-                    <tr>
-                        <td class='corner'></td>
-                        <th>1</th>
-                        <th>2</th>
-                        <th>3</th>
-                        <th>4</th>
-                        <th>5</th>
-                        <th>6</th>
-                        <th>7</th>
-                        <th>8</th>
-                        <th>9</th>
-                        <th>0</th>
-                    </tr>
-                    <tr>
-                        <th>1</th>
-                        <td>11</td>
-                        <td>4</td>
-                        <td>9</td>
-                        <td>4</td>
-                        <td>8</td>
-                        <td>6</td>
-                        <td>6</td>
-                        <td>1</td>
-                        <td>10</td>
-                        <td>6</td>
-                    </tr>
-                    <tr>
-                        <th>2</th>
-                        <td>9</td>
-                        <td>9</td>
-                        <td>12</td>
-                        <td>10</td>
-                        <td>10</td>
-                        <td>9</td>
-                        <td>9</td>
-                        <td>6</td>
-                        <td>1</td>
-                        <td>10</td>
-                    </tr>
-                    <tr>
-                        <th>3</th>
-                        <td>6</td>
-                        <td>9</td>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>11</td>
-                        <td>11</td>
-                        <td>3</td>
-                        <td>5</td>
-                        <td>1</td>
-                        <td>2</td>
-                    </tr>
-                    <tr>
-                        <th>4</th>
-                        <td>6</td>
-                        <td>7</td>
-                        <td>1</td>
-                        <td>12</td>
-                        <td>4</td>
-                        <td>1</td>
-                        <td>8</td>
-                        <td>4</td>
-                        <td>5</td>
-                        <td>8</td>
-                    </tr>
-                    <tr>
-                        <th>5</th>
-                        <td>8</td>
-                        <td>1</td>
-                        <td>4</td>
-                        <td>5</td>
-                        <td>9</td>
-                        <td>4</td>
-                        <td>9</td>
-                        <td>7</td>
-                        <td>7</td>
-                        <td>3</td>
-                    </tr>
-                    <tr>
-                        <th>6</th>
-                        <td>11</td>
-                        <td>6</td>
-                        <td>3</td>
-                        <td>2</td>
-                        <td>8</td>
-                        <td>11</td>
-                        <td>5</td>
-                        <td>7</td>
-                        <td>6</td>
-                        <td>2</td>
-                    </tr>
-                    <tr>
-                        <th>7</th>
-                        <td>9</td>
-                        <td>9</td>
-                        <td>10</td>
-                        <td>2</td>
-                        <td>8</td>
-                        <td>9</td>
-                        <td>3</td>
-                        <td>4</td>
-                        <td>2</td>
-                        <td>4</td>
-                    </tr>
-                    <tr>
-                        <th>8</th>
-                        <td>5</td>
-                        <td>9</td>
-                        <td>9</td>
-                        <td>3</td>
-                        <td>8</td>
-                        <td>9</td>
-                        <td>5</td>
-                        <td>3</td>
-                        <td>6</td>
-                        <td>5</td>
-                    </tr>
-                    <tr>
-                        <th>9</th>
-                        <td>9</td>
-                        <td>4</td>
-                        <td>4</td>
-                        <td>2</td>
-                        <td>11</td>
-                        <td>7</td>
-                        <td>10</td>
-                        <td>9</td>
-                        <td>8</td>
-                        <td>9</td>
-                    </tr>
-                    <tr>
-                        <th>0</th>
-                        <td>7</td>
-                        <td>11</td>
-                        <td>8</td>
-                        <td>6</td>
-                        <td>7</td>
-                        <td>10</td>
-                        <td>12</td>
-                        <td>12</td>
-                        <td>1</td>
-                        <td>5</td>
-                    </tr>
-                </table>
+                <h3>グリッドA</h3>
+                <svg class="grid" viewbox="0 -10 300 180" xmlns="http://www.w3.org/2000/svg" text-anchor="middle" font-size="8"></svg>
+                <h3>グリッドB</h3>
+                <svg class="gridB" viewbox="0 -10 300 185" xmlns="http://www.w3.org/2000/svg" text-anchor="middle" font-size="8"></svg>
             </div>
-            <div class="page-footer relative-footer">ページ 2/2</div>
+            <div class="page-footer relative-footer">ページ 2/3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">黒色矢印</span>
+            </div>
+            <div class="page-content">
+                <h3>方向表</h3>
+                <p>
+                    方向表を使用するときは、該当する<strong>すべての</strong>条件を取得し、その段を<strong>ステージ0と「一番下の」該当する条件</strong>から順に割り当てていく。ループは可能で、ステージ1には一番上の該当する条件を割り当て、その後も同様に行う。
+                </p>
+                <table class="indeed">
+                    <tr><th rowspan="2">存在条件</th><th colspan="4">取得した数字</th></tr>
+                    <tr><th>0</th><th>1</th><th>2</th><th>3</th></tr>
+                    <tr><td>「赤色、橙色、黄色、緑色、青色、紫色」矢印(Red, Orange, Yellow, Green, Blue, Purple Arrows )のいずれか*</td><td>右</td><td>下</td><td>上</td><td>左</td></tr>
+                    <tr><td>点灯していないTRN</td><td>左</td><td>上</td><td>右</td><td>下</td></tr>
+                    <tr><td>点灯したBOB</td><td>上</td><td>下</td><td>左</td><td>右</td></tr>
+                    <tr><td>シリアルナンバーに母音</td><td>左</td><td>右</td><td>下</td><td>上</td></tr>
+                    <tr><td>ちょうど2個のポートが付いたポートプレート</td><td>右</td><td>上</td><td>左</td><td>下</td></tr>
+                    <tr><td>2個以上の点灯していないインジケーター</td><td>下</td><td>左</td><td>右</td><td>上</td></tr>
+                    <tr><td>黒色矢印(Black Arrows)*</td><td>上</td><td>右</td><td>下</td><td>左</td></tr>
+                    <tr><td>4個以上のバッテリー</td><td>下</td><td>上</td><td>左</td><td>右</td></tr>
+                    <tr><td>2個以上の点灯したインジケーター</td><td>右</td><td>左</td><td>下</td><td>上</td></tr>
+                    <tr><td>点灯したCLR</td><td>左</td><td>下</td><td>上</td><td>右</td></tr>
+                    <tr><td>「ダブル、色付き、点滅」矢印(Double, Coloured, Flashing Arrows)のいずれか*</td><td>上</td><td>左</td><td>右</td><td>下</td></tr>
+                    <tr><td>点灯していないFRQ</td><td>下</td><td>右</td><td>上</td><td>左</td></tr>
+                </table>
+                <p>*記載されているモジュールが存在するかどうかを示している。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/3</div>
         </div>
     </div>
 </body>
-
 </html>

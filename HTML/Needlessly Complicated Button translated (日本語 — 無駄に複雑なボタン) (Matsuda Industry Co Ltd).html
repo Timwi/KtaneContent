@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>無駄に複雑なボタン — Keep Talking・Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+        .no-visibility {
+            opacity: 0;
+        }
+        #annoying-table{
+            text-align: center;
+            padding: 0.5em;
+            font-size: smaller;
+        }
+        #annoying-table th{
+          width: 7em;
+        }
+        .fb {
+            display: flex;
+        }
+        .smallStuff {
+            font-size: 10pt;
+        }
+        .img-holder {
+            width: 100%;
+            height: 800px;
+            position: relative;
+        }
+        .img-holder img, .img-holder svg {
+            width: 100%;
+            position: absolute;
+            top: 0; left: 0;
+        }
+        .hstack {
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .hstack table {
+            width: 55%;
+            border-width: 3px;
+        }
+        .hstack table:nth-child(2) { width: 40% }
+        td svg { width: 20mm; }
+        .dark img.inv { filter: invert(85%); }
+        .dark svg g.inv text { fill: #DDD; }
+        .dark svg ellipse, .dark svg line { stroke: #DDD; }
+    </style>
+    <script>
+        window.onload = function(){
+            "use strict";
+            // nuisance table code
+            const table = document.getElementById("annoying-table");
+            const headerLeading = [
+                "ボタンのラベル",
+                "ポートの数よりバッテリーの数の方が多い",
+                "ボタンのラベルの最初または最後の文字が、爆弾のインジケーターに含まれる",
+                "ボタンのラベルのいずれかの文字がシリアルナンバーに含まれる",
+                "それ以外"
+            ];
+            const caseA = "1 ・ 2";
+            const caseB = "2 ・ 3";
+            const caseC = "1 ・ 3";
+            const entries = [ // entry, invisible?, A, B, C, Else
+                ["Blank",           0, caseA, caseB, caseC, caseB],
+                ["Detonate",        0, caseC, caseA, caseB, caseC],
+                ["Press",           0, caseB, caseB, caseC, caseC],
+                ["Cyan",            0, caseB, caseC, caseC, caseA],
+                ["Literally Blank", 0, caseA, caseC, caseC, caseB],
+                ["No Label",        0, caseC, caseC, caseB, caseA],
+                ["Abort",           0, caseC, caseB, caseC, caseA],
+                ["Red",             0, caseB, caseB, caseC, caseC],
+                ["Yellow",          0, caseC, caseA, caseB, caseB],
+                ["Green",           0, caseA, caseC, caseC, caseB],
+                ["Button",          0, caseC, caseB, caseC, caseB],
+                ["Blue",            0, caseB, caseA, caseA, caseC],
+                ["Magenta",         0, caseC, caseB, caseC, caseC],
+                ["[No Label]",      1, caseB, caseB, caseC, caseA],
+                ["Hold",            0, caseA, caseC, caseA, caseB],
+                ["Nothing",         0, caseC, caseA, caseB, caseC],
+            ];
+            const ceaseTheShuffle = false; // Toggle this if you want to be less fun
+            const shuffle = (array) => { // https://github.com/coolaj86/knuth-shuffle
+                let currentIndex = array.length, temporaryValue, randomIndex;
+                if (ceaseTheShuffle) {
+                    return array;
+                }
+                // While there remain elements to shuffle...
+                while (0 !== currentIndex) {
+                    // Pick a remaining element...
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex -= 1;
+                    //・swap it with the current element.
+                    temporaryValue = array[currentIndex];
+                    array[currentIndex] = array[randomIndex];
+                    array[randomIndex] = temporaryValue;
+                }
+                return array;
+            }
+            const emptyTable = () => {
+                table.innerHTML = ""; // easiest way i could think to do this
+            }
+            const createTable = (entries) => {
+                const trl = document.createElement("tr"); // always first item in table
+                for (let h = 0; h < 5; h++) {
+                    const th = document.createElement("th");
+                    th.appendChild(document.createTextNode(headerLeading[h]));
+                    trl.appendChild(th);
+                }
+                table.appendChild(trl);
+                for (let j = 0; j < entries.length; j++) {
+                    const tr = document.createElement("tr"); // create table entry
+                    const invisFlag = (entries[j][1] === 1);
+                    for (let i = 0; i < 6; i++) {
+                        if (i == 0) {
+                            const th = document.createElement("th"); // create table entry header
+                            if (invisFlag) {
+                                th.className = "no-visibility";
+                            }
+                            th.appendChild(document.createTextNode(entries[j][i]));
+                            tr.appendChild(th);
+                        } else if (i > 1) {
+                            const td = document.createElement("td"); // create table entry document
+                            td.appendChild(document.createTextNode("インジケーター"));
+                            td.appendChild(document.createElement("br"));
+                            td.appendChild(document.createTextNode(entries[j][i]));
+                            tr.appendChild(td);
+                        }
+                    }
+                    table.appendChild(tr); // append table entry to table
+                }
+                return table;
+            };
+            const renderDelay = 5000;
+            const renderTable = () => {
+                const newEntries = shuffle(entries);
+                emptyTable();
+                createTable(newEntries);
+                setTimeout(() => {
+                    renderTable();
+                }, renderDelay)
+            }
+            renderTable(); // START THE MAYHEM
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking・Nobody Explodes Mod</span>
+                <span class="page-header-section-title">無駄に複雑なボタン</span>
+            </div>
+            <div class="page-content">
+                <div class="fb">
+                    <div>
+                <h2>モジュール詳細：無駄に複雑なボタン</h2>
+                        <p class="flavour-text">3つのインジケーターとボタン？何を心配することがあるんだ？</p>
+
+                        <ul>
+                            <li>このモジュールを解除するには、適切なタイミングで、適切な時間だけ、ボタンを押し続ける必要がある。</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <img class="diagram" src="img/Component/Needlessly Complicated Button.svg">
+                    </div>
+                </div>
+
+                <h3>パート A: ボタン</h3>
+                <ul>
+                    <li>ボタンには、 <strong>図 A</strong> に記載されている単語を含むラベルが貼られている。
+                        <ul>
+                            <li>この図を使用して、3つのインジケーターのうち、どれが1番目、2番目、「残りのインジケーター」かを判断する。</li>
+                        </ul>
+                    </li>
+                    <li>図に記されたインジケーターのうち、左側がインジケーター1、右側がインジケーター2、記されていないインジケーターが「残りのインジケーター」である。</li>
+                </ul>
+
+                <h3>パート B: インジケーター</h3>
+                <ul>
+                    <li>使用する2つのインジケーターが決定した後、それらを <strong>図 C</strong> で使用する必要がある。
+                        <ul>
+                            <li>図 C は、<strong>ボタンが押されたときに、タイマーの最後の数字が何でなければならないかを示す</strong>。</li>
+                        </ul>
+                    </li>
+                    <li>残りのインジケーターは、 <strong>図 B</strong> で爆弾のエッジワークとともに使用する必要がある。
+                        <ul>
+                            <li>図 B は、<strong>ボタンをいつまで押し続けるか、いつ離すかを示す</strong>。</li>
+                        </ul>
+                    </li>
+                    <li>2つの図から情報を得た後、 <strong>パート C</strong> に進む。</li>
+                </ul>
+
+                <h3>パート C:</h3>
+                <ul>
+                    <li>図から正しい情報を得た後、カウントダウンタイマーの最後の数字が <strong>図 C</strong> から得た数字（数字がマイナスになってしまう場合、マイナスでなくなるまで10を足す）の下1桁と同じ時にボタンを押し始め、 <strong>図 B</strong> で指定された時間だけ押し続ける。</li>
+                    <!--<li>間違った場合、モジュールはリセットされ<strong>残りのインジケーターが変化する！</strong></li>-->
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking・Nobody Explodes Mod</span>
+                <span class="page-header-section-title">無駄に複雑なボタン</span>
+            </div>
+            <div class="page-content">
+                <h3>図 A</h3>
+                <table id="annoying-table">
+                    <tr><th>ボタンのラベル</th><th>ポートの数よりバッテリーの数の方が多い</th><th>ボタンのラベルの最初または最後の文字が、爆弾のインジケーターに含まれる</th><th>ボタンのラベルのいずれかの文字がシリアルナンバーに含まれる</th><th>それ以外</th></tr>
+                    <tr><th>Abort</th><td>インジケーター<br>1・3</td><td>インジケーター<br>2・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>1・2</td></tr>
+                    <tr><th>Green</th><td>インジケーター<br>1・2</td><td>インジケーター<br>1・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>2・3</td></tr>
+                    <tr><th>Blue</th><td>インジケーター<br>2・3</td><td>インジケーター<br>1・2</td><td>インジケーター<br>1・2</td><td>インジケーター<br>1・3</td></tr>
+                    <tr><th>Button</th><td>インジケーター<br>1・3</td><td>インジケーター<br>2・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>2・3</td></tr>
+                    <tr><th>Press</th><td>インジケーター<br>2・3</td><td>インジケーター<br>2・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>1・3</td></tr>
+                    <tr><th>Blank</th><td>インジケーター<br>1・2</td><td>インジケーター<br>2・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>2・3</td></tr>
+                    <tr><th>Yellow</th><td>インジケーター<br>1・3</td><td>インジケーター<br>1・2</td><td>インジケーター<br>2・3</td><td>インジケーター<br>2・3</td></tr>
+                    <tr><th>No Label</th><td>インジケーター<br>1・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>2・3</td><td>インジケーター<br>1・2</td></tr>
+                    <tr><th>Detonate</th><td>インジケーター<br>1・3</td><td>インジケーター<br>1・2</td><td>インジケーター<br>2・3</td><td>インジケーター<br>1・3</td></tr>
+                    <tr><th>Red</th><td>インジケーター<br>2・3</td><td>インジケーター<br>2・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>1・3</td></tr>
+                    <tr><th>Cyan</th><td>インジケーター<br>2・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>1・2</td></tr>
+                    <tr><th>Hold</th><td>インジケーター<br>1・2</td><td>インジケーター<br>1・3</td><td>インジケーター<br>1・2</td><td>インジケーター<br>2・3</td></tr>
+                    <tr><th>Magenta</th><td>インジケーター<br>1・3</td><td>インジケーター<br>2・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>1・3</td></tr>
+                    <tr><th>Nothing</th><td>インジケーター<br>1・3</td><td>インジケーター<br>1・2</td><td>インジケーター<br>2・3</td><td>インジケーター<br>1・3</td></tr>
+                    <tr><th class="no-visibility">[No Label]</th><td>インジケーター<br>2・3</td><td>インジケーター<br>2・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>1・2</td></tr>
+                    <tr><th>Literally Blank</th><td>インジケーター<br>1・2</td><td>インジケーター<br>1・3</td><td>インジケーター<br>1・3</td><td>インジケーター<br>2・3</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking・Nobody Explodes Mod</span>
+                <span class="page-header-section-title">無駄に複雑なボタン</span>
+            </div>
+            <div class="page-content">
+                <h3>図 B</h3>
+                <svg class="centered-img" style="width: 70%" viewBox="0 0 800 650" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
+                    <ellipse rx="300" ry="160" stroke="#000" fill="none" stroke-width="3" stroke-dasharray="15,10,4,10" transform="rotate(45 -187.132 572.487)"></ellipse>
+                    <ellipse rx="300" ry="160" stroke="#000" fill="none" stroke-width="3" transform="rotate(-45 587.132 -393.198)"></ellipse>
+                    <ellipse rx="300" ry="160" stroke="#000" fill="none" stroke-width="3" stroke-dasharray="3" transform="rotate(45 -357.843 501.777)"></ellipse>
+                    <ellipse rx="300" ry="160" stroke="#000" fill="none" stroke-width="8" stroke-dasharray="8" transform="rotate(-45 757.843 -463.909)"></ellipse>
+                    <g class="inv">
+                    <text x="225" y="150" font-size="2.5em">I</text>
+                    <text x="575" y="150" font-size="2.5em">B</text>
+                    <text x="100" y="350" font-size="2.5em">H</text>
+                    <text x="700" y="350" font-size="2.5em">D</text>
+                    <text x="185" y="250" font-size="2.5em">F</text>
+                    <text x="400" y="225" font-size="2.5em">G</text>
+                    <text x="615" y="250" font-size="2.5em">J</text>
+                    <text x="400" y="590" font-size="2.5em">A</text>
+                    <text x="260" y="495" font-size="2.5em">?</text>
+                    <text x="530" y="495" font-size="2.5em">B</text>
+                    <text x="305" y="350" font-size="2.5em">J</text>
+                    <text x="500" y="350" font-size="2.5em">F</text>
+                    <text x="335" y="530" font-size="2.5em">C</text>
+                    <text x="465" y="530" font-size="2.5em">I</text>
+                    <text x="400" y="450" font-size="2.5em">?</text>
+                    <text x="400" y="80" font-size="2.5em">A</text>
+                    </g>
+                </svg>
+                <div class="hstack">
+                <table>
+                    <tr> <th>線の種類</th> <th>使用する条件</th> </tr>
+                    <tr>
+                        <td>
+                            <svg viewBox="0 0 50 5" xmlns="http://www.w3.org/2000/svg">
+                                <line x1="0" x2="100" y1="2.5" y2="2.5" stroke="black" stroke-width="2" stroke-dasharray="2.8,2" fill="none" />
+                            </svg>
+                        </td>
+                        <td>ボタンは赤、緑、青のいずれか</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <svg viewBox="0 0 50 5" xmlns="http://www.w3.org/2000/svg">
+                                <line x1="0" x2="100" y1="2.5" y2="2.5" stroke="black" stroke-width="2" stroke-dasharray="14,5,3.5,5" fill="none" />
+                            </svg>
+                        </td>
+                        <td>シリアルナンバーに偶数が<br>含まれる</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <svg viewBox="0 0 50 5" xmlns="http://www.w3.org/2000/svg">
+                                <line x1="0" x2="100" y1="2.5" y2="2.5" stroke="black" stroke-width="2" stroke-dasharray="" fill="none" />
+                            </svg>
+                        </td>
+                        <td>残りのインジケーターの数字は<br>素数</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <svg viewBox="0 0 50 5" xmlns="http://www.w3.org/2000/svg">
+                                <line x1="0" x2="100" y1="2.5" y2="2.5" stroke="black" stroke-width="7" stroke-dasharray="5,2.8" fill="none" />
+                            </svg>
+                        </td>
+                        <td>残りのインジケーターの数字根は<br>奇数</td>
+                    </tr>
+                </table>
+                <table>
+                    <tr><th>文字</th><th>押し続ける時間</th></tr>
+                    <tr><th>I</th><td>押してすぐに離す</td></tr>
+                    <tr><th>A</th><td>5 秒間</td></tr>
+                    <tr><th>B</th><td>10 秒間</td></tr>
+                    <tr><th>C</th><td>15 秒間</td></tr>
+                    <tr><th>D</th><td>20 秒間</td></tr>
+                    <tr><th>F</th><td>タイマーの最後の数字が1になるまで</td></tr>
+                    <tr><th>G</th><td>タイマーの最後の数字が3になるまで</td></tr>
+                    <tr><th>H</th><td>タイマーの最後の数字が5になるまで</td></tr>
+                    <tr><th>J</th><td>タイマーの最後の数字が8になるまで</td></tr>
+                    <tr><th>?</th><td>モジュールが解除されるまで</td></tr>
+                </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/4</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking・Nobody Explodes Mod</span>
+                <span class="page-header-section-title">無駄に複雑なボタン</span>
+            </div>
+            <div class="page-content">
+                <h3>図 C</h3>
+                <br>
+                <p class="smallStuff">*この図についての注意事項: インジケーター1/2は、<strong>関連するインジケーター</strong>を示している。</p>
+                <div class="img-holder">
+                    <img class="inv" src="img/Needlessly Complicated Button/Diagram C.svg">
+                    <svg xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 736 960">
+                        <style>
+                        .st6{white-space:pre}.st7{font-size:36px}.st8{fill:#fff}.st9{font-size:14px}.st10{font-size:13px}.st11{font-size:12px}
+                        </style>
+                        <path d="M218 460.4h300v281.1H218V460.4z" stroke="#000" stroke-width="2.1" stroke-miterlimit="7.9"/>
+                        <path d="M442.4 565.3a74.7 74.7 0 0 1-43.7 60.5 75 75 0 0 0-30.5-52.6v.1a74.1 74.1 0 0 1 74.2-8" fill="#ff0"/>
+                        <path d="M293.8 565.6a74.8 74.8 0 0 1 74.5 7.6v.1a74.5 74.5 0 0 0-30.4 52.7 74.7 74.7 0 0 1-44.1-60.2" fill="#f0f"/>
+                        <path d="M368.3 694.1a74.5 74.5 0 0 0 30.4-68.3 74.3 74.3 0 0 1-60.8.2 74.5 74.5 0 0 0 30.4 68.1" fill="#0ff"/>
+                        <path class="st8" d="M368.3 573.2a74.8 74.8 0 0 1 30.5 52.6 74.3 74.3 0 0 1-60.8.2 74.6 74.6 0 0 1 30.3-52.8"/>
+                        <path d="M293.8 565.6a74.8 74.8 0 0 1 74.5 7.6v.1a74.1 74.1 0 0 1 73-8.4l1.1.5v-.1a74.7 74.7 0 1 0-148.6.5" fill="red"/>
+                        <path d="M368.3 694.1a74.5 74.5 0 0 0 30.4-68.3 74.9 74.9 0 0 0 43.7-60.5v.1a74.7 74.7 0 1 1-74.1 128.7" fill="#0f0"/>
+                        <path d="M293.8 565.6a74.8 74.8 0 1 0 74.5 128.6l-.1-.1a74.7 74.7 0 0 1-30.3-68.1 74.7 74.7 0 0 1-44.1-60.2" fill="#00f"/>
+                        <text transform="translate(359.5 539)" class="st7">8</text>
+                        <text transform="translate(400.8 597.9)" class="st7">7</text>
+                        <text transform="translate(318.6 596.2)" class="st7">0</text>
+                        <text transform="translate(430.6 663.8)" class="st7">4</text>
+                        <text transform="translate(357 668.2)" class="st7">6</text>
+                        <text transform="translate(290 663.4)" class="st7">3</text>
+                        <text transform="translate(357 617.7)" class="st7">9</text>
+                        <text transform="translate(358 732.5)" class="st7 st8">1</text>
+                        <g class="inv">
+                        <text transform="translate(102.99 27.8)">
+                            <tspan x="-2.5" y="0" class="st9">インジケーター2</tspan>
+                            <tspan x="28" y="16.8" class="st9">は奇数？</tspan>
+                        </text>
+                        <text transform="translate(302.4 19.1)">
+                            <tspan x="0" y="0" class="st9">シリアルナンバーの</tspan>
+                            <tspan x="22.1" y="16.8" class="st9">最後の数字は</tspan>
+                            <tspan x="26.2" y="33.6" class="st9">偶数/奇数？</tspan>
+                        </text>
+                        <text transform="translate(519.72 28.9)">
+                            <tspan x="0" y="0" class="st9">インジケーター1</tspan>
+                            <tspan x="31.2" y="16.8" class="st9">は偶数？</tspan>
+                        </text>
+                        <text transform="translate(445.06 175.4)">
+                            <tspan x="0" y="0" class="st9">インジケーター</tspan>
+                            <tspan x="20.9" y="16.8" class="st9">2は奇数？</tspan>
+                        </text>
+                        <text transform="translate(605.06 175.4)">
+                            <tspan x="0" y="0" class="st9">インジケーター</tspan>
+                            <tspan x="19.1" y="16.8" class="st9">2は偶数？</tspan>
+                        </text>
+                        <text transform="translate(416.12 323.4)">
+                            <tspan x="0" y="0" class="st10">パラレルポート</tspan>
+                            <tspan x="21.9" y="15.6" class="st10">がある？</tspan>
+                        </text>
+                        <text transform="translate(604.72 323.4)">
+                            <tspan x="0" y="0" class="st9">点灯FRKか点灯</tspan>
+                            <tspan x="7.5" y="16.8" class="st9">CLRがある？</tspan>
+                        </text>
+                        <text transform="translate(233.65 315.9)">
+                            <tspan x="0" y="0" class="st9">RJ-45または</tspan>
+                            <tspan x="-13.1" y="14" class="st9">シリアルポート</tspan>
+                            <tspan x="10" y="28" class="st9">がある？</tspan>
+                        </text>
+                        <text transform="translate(29.6 323.4)">
+                            <tspan x="14" y="0" class="st9">単3 > 単1</tspan>
+                            <tspan x=".9" y="16.8" class="st9">バッテリー？</tspan>
+                        </text>
+                        <text transform="translate(28.76 171.76)">
+                            <tspan x="-5" y="0" class="st9">インジケーター</tspan>
+                            <tspan x="15.9" y="16.8" class="st9">1は奇数？</tspan>
+                        </text>
+                        <text transform="translate(184.76 173.51)">
+                            <tspan x="0" y="0" class="st9">インジケーター</tspan>
+                            <tspan x="19.1" y="16.8" class="st9">1は偶数？</tspan>
+                        </text>
+                        <text transform="translate(335.93 135.57)" class="st9">開始地点</text>
+                        <text transform="translate(67.63 806.9)" class="st9">スタート</text>
+                        <text transform="translate(208.21 798.7)" class="st9">
+                         <tspan x="0" y="0" class="st9">フロー</tspan>
+                         <tspan x="-.2" y="15" class="st9">チャート</tspan>
+                        </text>
+                        <text transform="translate(339.94 798.7)">
+                            <tspan x="0" y="0" class="st9">カラー</tspan>
+                            <tspan x="-.2" y="15" class="st9">ホイール</tspan>
+                        </text>
+                        <text transform="translate(279.76 772.3)" class="st11">初期出力</text>
+                        <text transform="translate(486.58 805.7)" class="st9">ルール</text>
+                        <text transform="translate(605.19 798.7)">
+                            <tspan x="0" y="0" class="st9">ボタンの</tspan>
+                            <tspan x="0" y="15" class="st9">タイミング</tspan>
+                        </text>
+                        <text transform="translate(616.65 776.05)" class="st11">最終出力</text>
+                        <text transform="translate(43.69 655.54)">
+                            <tspan x="3" y="0" class="st11">上のテキストボックス</tspan>
+                            <tspan x="3" y="15" class="st11">から得た数字を使用し</tspan>
+                            <tspan x="3" y="30" class="st11">右のテキストボックス</tspan>
+                            <tspan x="-2.5" y="45" class="st11">からボタンを押し始める</tspan>
+                            <tspan x="0" y="60" class="st11">タイミングを決定する。</tspan>
+                        </text>
+                        <text transform="translate(55.73 487.56)">
+                            <tspan x="12" y="0" class="st11">右のベン図から</tspan>
+                            <tspan x="2" y="15" class="st11">ボタンの色を探し、</tspan>
+                            <tspan x="9" y="30" class="st11">数字を取得する。</tspan>
+                            <tspan x="21" y="45" class="st11">この数字を</tspan>
+                            <tspan x="0" y="60" class="st11">フローチャートから</tspan>
+                            <tspan x="8" y="75" class="st11">得た数字に加え、</tspan>
+                            <tspan x="8" y="90" class="st11">初期出力を得る。</tspan>
+                            <tspan x="10.1" y="105" class="st11"></tspan>
+                            <tspan x="10.7" y="96" class="st11"></tspan>
+                            <tspan x="12.4" y="108" class="st11"></tspan>
+                            <tspan x="4.7" y="120" class="st11"></tspan>
+                        </text>
+                        <text transform="translate(233.97 456.45)" class="st9 st6">-1       3      4         -2          3          1       5     -4</text>
+                        <text transform="translate(236.57 25.55)" class="st9">偶数</text>
+                        <text transform="translate(463.92 25.95)" class="st9">奇数</text>
+                        <text transform="translate(107.29 101.2)" class="st10">はい</text>
+                        <text transform="translate(171.09 101.64)" class="st10">いいえ</text>
+                        <text transform="translate(35.8 205.28)" class="st10">はい</text>
+                        <text transform="translate(75.64 205.72)" class="st10">いいえ</text>
+                        <text transform="translate(199.55 205.06)" class="st10">はい</text>
+                        <text transform="translate(233.39 205.5)" class="st10">いいえ</text>
+                        <text transform="translate(458.82 205.5)" class="st10">はい</text>
+                        <text transform="translate(492.66 205.94)" class="st10">いいえ</text>
+                        <text transform="translate(617.55 206.16)" class="st10">はい</text>
+                        <text transform="translate(656.39 206.6)" class="st10">いいえ</text>
+                        <text transform="translate(525.37 100.98)" class="st10">はい</text>
+                        <text transform="translate(585.17 101.42)" class="st10">いいえ</text>
+                        <text transform="translate(430.15 356.43)" class="st10">はい</text>
+                        <text transform="translate(462.6 356.86)" class="st10">いいえ</text>
+                        <text transform="translate(624.46 356.2)" class="st10">はい</text>
+                        <text transform="translate(656.92 356.65)" class="st10">いいえ</text>
+                        <text transform="translate(237 356.65)" class="st10">はい</text>
+                        <text transform="translate(269.45 357.08)" class="st10">いいえ</text>
+                        <text transform="translate(43.94 355.99)" class="st10">はい</text>
+                        <text transform="translate(76.4 356.43)" class="st10">いいえ</text>
+                        <text transform="translate(612 463.36)">
+                            <tspan x="0" y="0" class="st11">ルール:</tspan>
+                            <tspan x="-36.9" y="12" class="st11">それぞれのルールは</tspan>
+                            <tspan x="-36.9" y="24" class="st11">一度だけ適用される。</tspan>
+                            <tspan x="-58.2" y="48" class="st11">1.  爆弾にある特殊モジュール</tspan>
+                            <tspan x="-43.9" y="60" class="st11">1つにつき、初期出力に</tspan>
+                            <tspan x="-40.8" y="72" class="st11">4を加える。</tspan>
+                            <tspan x="-58.3" y="96" class="st11">2.「インジケーター1の数字</tspan>
+                            <tspan x="-54.5" y="108" class="st11">根と初期出力の値が等しい」</tspan>
+                            <tspan x="-60.7" y="120" class="st11">《XOR》「インジケーター2</tspan>
+                            <tspan x="-46.5" y="132" class="st11">の数字根と初期出力の値</tspan>
+                            <tspan x="-46.5" y="144" class="st11">が等しい」の結果が真の</tspan>
+                            <tspan x="-50.7" y="156" class="st11"> 場合、真のインジケーター</tspan>
+                            <tspan x="-53.2" y="168" class="st11">ではないもう片方のインジ</tspan>
+                            <tspan x="-56.6" y="180" class="st11">ケーターの数字根を加える。</tspan>
+                            <tspan x="-59.9" y="216" class="st11">3.  いずれかのインジケーター</tspan>
+                            <tspan x="-54.4" y="228" class="st11">の最後の数字がボタンの色</tspan>
+                            <tspan x="-53.9" y="240" class="st11">に対応する数字である場合、</tspan>
+                            <tspan x="-52.4" y="252" class="st11">出力にその色の数字の2倍を</tspan>
+                            <tspan x="7" y="264" class="st11">加える。</tspan>
+                        </text>
+                        <text transform="translate(292.3 820.16)" font-size="22">+</text>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/4</div>
+        </div>
+    </div>
+</body>
+</html>

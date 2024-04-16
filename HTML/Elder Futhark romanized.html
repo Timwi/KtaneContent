@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Elder Futhark — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        table, .dark table { border: none; }
+        .cipher {
+            width: 100%;
+            margin-top: .5cm;
+        }
+        .cipher th { background: #ddd; }
+        .dark .cipher th { background: #383838; }
+        .cipher td, .cipher th {
+            padding: .05cm 0;
+            text-align: center;
+        }
+        li { margin: .7em 0; }
+        .ruleseed-active .rule {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .dark img:not(.diagram) { filter: invert(87%); }
+    </style>
+    <script>
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+
+        function setRules(rnd)
+        {
+            let standardAlphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'y', 'l', 'm', 'n', 'o', 'p', 'z', 'r', 's', 't', 'u', 'v', 'x'];
+
+            const referenceRunes = document.querySelectorAll(".raido tr:nth-child(n+1) > td:first-child");
+            for (let i = 0; i < 23; i++) {
+                console.log(referenceRunes);
+                referenceRunes[i].innerHTML = `<img src="img/Elder Futhark/${standardAlphabet[i]}.svg"/>`;
+            }
+
+            let cycleLeft = rnd.seed === 1 ? false : rnd.next(0, 2) !== 0;
+            document.getElementById('rule-1').innerHTML = cycleLeft ? 'left' : 'right';
+
+            let order = ['first', 'second', 'third'];
+            if (rnd.seed !== 1) rnd.shuffleFisherYates(order);
+
+            document.getElementById('rule-first').innerHTML = rnd.seed === 1 ? 'first' : order[0];
+            document.getElementById('rule-second').innerHTML = rnd.seed === 1 ? 'second' : order[1];
+
+            let edgeworkConditions = [
+                'the sum of the digits in the serial number',
+                'the sum of the first three characters in the serial number (use alphabetic positions for letters)',
+                'the sum of the last three characters in the serial number (use alphabetic positions for letters)',
+                'the number of ports',
+                'the number of indicators',
+                'the number of batteries',
+                'the number of ports plus indicators',
+                'the number of ports plus batteries',
+                'the number of indicators plus batteries'
+            ];
+
+            let edgeworkCondition = rnd.seed === 1 ? 0 : rnd.next(0, edgeworkConditions.length);
+            let modulo = rnd.seed === 1 ? 6 : rnd.next(4, 9);
+            document.getElementById('rule-2').innerHTML = edgeworkConditions[edgeworkCondition];
+            document.getElementById('rule-3').innerHTML = modulo;
+
+            let row1 = document.getElementsByClassName('row-1')[0];
+            let ths = row1.getElementsByTagName('th');
+            for (let i = 0; i < 23; i++)
+            ths[i].innerHTML = standardAlphabet[i].toUpperCase();
+
+            let rowShuffle = [];
+            let columnShuffle = [];
+            for (let i = 0; i < 23; i++)
+            {
+                rowShuffle.push(i);
+                columnShuffle.push(i);
+            }
+            rnd.shuffleFisherYates(rowShuffle);
+            rnd.shuffleFisherYates(columnShuffle);
+
+            let otherRows = document.getElementsByClassName('row');
+            for (let i = 0; i < 23; i++)
+            {
+                otherRows[i].getElementsByTagName('th')[0].innerHTML = standardAlphabet[i].toUpperCase();
+                let cells = otherRows[i].getElementsByTagName('td');
+                for (let j = 0; j < 23; j++)
+                cells[j].innerHTML = standardAlphabet[(columnShuffle[j] + rowShuffle[i]) % 23].toUpperCase();
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Elder Futhark</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Elder Futhark.svg" class="diagram">
+                <h2>On the Subject of Elder Futhark</h2>
+                <p class="flavour-text">“Fehu, Uruz, Teiwaz, Hagalaz, Ansuz, Raido, Kenaz”</p>
+                <p>Elder Futhark consists of 23 different runes. Three runes are shown on the top of the module. The goal is to encode their names and input the result back in Elder Futhark.</p>
+                <ul>
+                    <li>First, identify the names of the runes in the sequence (see Appendix RAIDO).</li>
+                    <li>If one name is longer than the others, pad the shorter ones with repetitions of themselves. For example, if the runes are <em>EHWAZ</em>, <em>THURISAZ</em> and <em>ISA</em>, the result for the former and the latter would be <em>EHWAZEHW</em> and <em>ISAISAIS</em>.</li>
+                    <li>Interweave the three names, beginning with the first letter of the rune shown <span class='rule' id='rule-first'>first</span>, followed by the first letter of the rune shown <span class='rule' id='rule-second'>second</span> and then the first letter of the remaining rune. Continue in that fashion for the second letter, the third letter, etc. till all letters are interweaved.<br>For example, <em>GEBOGEB</em> + <em>JERAJER</em> + <em>NAUTHIZ</em> = <em>GJNEEABRUOATGJHEIEBRZ</em>.</li>
+                    <li>Cycle the result to the <span class='rule' id='rule-1'>right</span> by <span class='rule' id='rule-2'>the sum of the digits in the serial number</span>, modulo <span class='rule' id='rule-3'>6</span>.</li>
+                    <li>Truncate the result to the total length of the original runes’ names. This is your encryption key.</li>
+                    <li>Transliterate the original names and the encryption key into Elder Futhark (see Appendix RAIDO).</li>
+                    <li>Use the table in Appendix FEHU to encrypt the runes’ names using the encryption key.
+                        <ul>
+                            <li>Use the columns in the table for the runes’ names.</li>
+                            <li>Use the rows in the table for the encryption key.</li>
+                            <li>The rune at the intersection of that row/column is your result.</li>
+                        </ul>
+                    </li>
+                    <li>Enter the result into the module by pressing each rune in order.</li>
+                    <li>When a mistake is made, the module resets to the beginning of the current rune. This means that if the first rune’s encrypted name was already entered correctly, only the second rune’s name needs to be re-entered.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Elder Futhark</span>
+            </div>
+            <div class="page-content">
+                <h3>Appendix RAIDO: Runes, their names and their corresponding letters</h3>
+                <div class="raido hstack left top gap3">
+                    <table>
+                        <tr><th>Rune</th><th>Letters</th><th>Name</th></tr>
+                        <tr><td></td><td>a</td><td>“Ansuz”</td></tr>
+                        <tr><td></td><td>b</td><td>“Berkana”</td></tr>
+                        <tr><td></td><td>c, k, q</td><td>“Kenaz”</td></tr>
+                        <tr><td></td><td>d</td><td>“Dagaz”</td></tr>
+                        <tr><td></td><td>e</td><td>“Ehwaz”</td></tr>
+                        <tr><td></td><td>f</td><td>“Fehu”</td></tr>
+                        <tr><td></td><td>g</td><td>“Gebo”</td></tr>
+                        <tr><td></td><td>h</td><td>“Hagalaz”</td></tr>
+                        <tr><td></td><td>i</td><td>“Isa”</td></tr>
+                        <tr><td></td><td>j</td><td>“Jera”</td></tr>
+                        <tr><td></td><td>y</td><td>“Eihwaz”</td></tr>
+                        <tr><td></td><td>l</td><td>“Laguz”</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>Rune</th><th>Letters</th><th>Name</th></tr>
+                        <tr><td></td><td>m</td><td>“Mannaz”</td></tr>
+                        <tr><td></td><td>n</td><td>“Nauthiz”</td></tr>
+                        <tr><td></td><td>o</td><td>“Othila”</td></tr>
+                        <tr><td></td><td>p</td><td>“Perthro”</td></tr>
+                        <tr><td></td><td>z</td><td>“Algiz”</td></tr>
+                        <tr><td></td><td>r</td><td>“Raido”</td></tr>
+                        <tr><td></td><td>s</td><td>“Sowulo”</td></tr>
+                        <tr><td></td><td>t</td><td>“Teiwaz”</td></tr>
+                        <tr><td></td><td>u</td><td>“Uruz”</td></tr>
+                        <tr><td></td><td>v, w</td><td>“Wunjo”</td></tr>
+                        <tr><td></td><td>x</td><td>“Thurisaz”</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Elder Futhark</span>
+            </div>
+            <div class="page-content">
+                <h3>Appendix FEHU: Futhark Cipher</h3>
+                <table class="cipher">
+                    <tr class="row-1"><td class="corner"></td><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="row"><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
