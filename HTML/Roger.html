@@ -14,14 +14,30 @@
             margin: 0 auto;
             padding: 1em;
         }
+        textarea { 
+            background-color: #fff; 
+            color: #000; 
+            font-family: "Atkinson Hyperlegible";
+            font-size: 20px;
+            width: 500px; 
+            height: 800px;
+            display: block; 
+            margin: auto;
+            resize: none;
+        }
+        .dark textarea { 
+            background-color: #000; 
+            color: #fff;
+        }
     </style>
 </head>
 <body>
     <canvas id="module" width="600" height="600" tabindex="0"></canvas> <!-- tabindex is such a hack -->
+    <div id="logDiv"></div>
     <script>
         (function() { //thanks emik...
-            
             const canvas = document.getElementById("module");
+            const logDiv = document.getElementById("logDiv");
             let mouseClicked = false;
             let mousePos;
             let clock;
@@ -67,6 +83,8 @@
             let hint = "";
             let outputNumber;
             let shownNumber;
+            let logArray = [];
+            let revealedLog = false;
             
             generateButton();
             draw();
@@ -75,17 +93,17 @@
             
             function generateButton() {
                 const shapes = [
-                [[230, 160], [370, 160], [450, 300], [370, 440], [230, 440], [150, 300]],
-                [[300, 150], [450, 300], [300, 450], [150, 300]],
-                [[300, 150], [450, 260], [390, 440], [210, 440], [150, 260]],
-                [[300, 150], [440, 440], [160, 440]]
+                    [[230, 160], [370, 160], [450, 300], [370, 440], [230, 440], [150, 300]],
+                    [[300, 150], [450, 300], [300, 450], [150, 300]],
+                    [[300, 150], [450, 260], [390, 440], [210, 440], [150, 260]],
+                    [[300, 150], [440, 440], [160, 440]]
                 ];
                 const shapeNames = ["hexagon", "diamond", "pentagon", "triangle"];
                 const colors = [
-                ["#f00", "#f55", "#f22", "#f66", "#e00"],
-                ["#00f", "#55f", "#22f", "#66f", "#00e"],
-                ["#111", "#666", "#333", "#777", "#000"],
-                ["#777", "#ccc", "#999", "#ddd", "#666"]
+                    ["#f00", "#f55", "#f22", "#f66", "#e00"],
+                    ["#00f", "#55f", "#22f", "#66f", "#00e"],
+                    ["#111", "#666", "#333", "#777", "#000"],
+                    ["#777", "#ccc", "#999", "#ddd", "#666"]
                 ];
                 const colorNames = ["red", "blue", "black", "gray"];
                 const flickerNames = ["primes", "squares", "every other", "every three", "length two", "length three"];
@@ -101,10 +119,14 @@
                 button.flickerType = flickerNames[RNG(6)];
                 
                 reset();
-                if (seed != "") { calculateSolution(parseInt(seed, 10)); }
+                if (seed != "") { 
+                    logArray.push("Generated " + button.colorName + " " + button.shapeName + " button with '" + button.char + "' on it that flickers " + descrFlicker(button.flickerType, true) + ".");
+                    calculateSolution(parseInt(seed, 10)); 
+                }
             }
             
             function calculateSolution(z) {
+                logArray.push("Seed value provided is " + z.toString().padStart(4, "0") + ".");
                 solution = [];
                 stageOrder = getStageOrder(z%16);
                 let binarySeed = toBinary(z);
@@ -112,48 +134,66 @@
                 for (s = 0; s < 4; s++) {
                     switch (stageOrder[s]) {
                         case "shape": 
-                        if ((binarySeed[3] == "0" && button.shapeName == "diamond") || (binarySeed[3] == "1" && (button.shapeName == "hexagon" || button.shapeName == "diamond"))) {
-                            solution.push("press odd prime");
-                        } else if ((binarySeed[4] == "0" && (button.shapeName == "diamond" || button.shapeName == "triangle")) || (binarySeed[4] == "1" && (button.shapeName == "hexagon" || button.shapeName == "pentagon"))) {
-                            solution.push("press even");
-                        } else {
-                            solution.push("press odd composite");
-                        }
+                            logArray.push("Step " + (s+1) + " - Shape Pressing:");
+                            if ((binarySeed[3] == "0" && button.shapeName == "diamond") || (binarySeed[3] == "1" && (button.shapeName == "hexagon" || button.shapeName == "diamond"))) {
+                                solution.push("press odd prime");
+                                logArray.push("    The number of sides on the button is " + (binarySeed[3] == "0" ? "4" : "even") + ", press when the module timer is an odd prime number.");
+                            } else if ((binarySeed[4] == "0" && (button.shapeName == "diamond" || button.shapeName == "triangle")) || (binarySeed[4] == "1" && (button.shapeName == "hexagon" || button.shapeName == "pentagon"))) {
+                                solution.push("press even");
+                                logArray.push("    The number of sides on the button is not " + (binarySeed[3] == "0" ? "4" : "even") + ", but the button " + (binarySeed[4] == "0" ? "does not have" : "has") + " an obtuse angle, press when the module timer is even number.");
+                            } else {
+                                solution.push("press odd composite");
+                                logArray.push("    The number of sides on the button is not " + (binarySeed[3] == "0" ? "4" : "even") + ", " + (binarySeed[4] == "0" ? "and the button has" : "nor does the button have") + " an obtuse angle, press when the module timer is an odd composite number.");
+                            }
                         break;
                         case "char": 
-                        if (button.char.match(/\d/)) {
-                            solution.push("hold " + (binarySeed[9] == "0" ? button.char : (10 - parseInt(button.char, 10))));
-                        } else if (button.char.match(/[RSTLN]/)) {
-                            solution.push("hold " + ((CHARS.indexOf(button.char)+1) % (binarySeed[1] == "0" ? 8 : 11)));
-                        } else if (button.char.match(/[AEIOU]/)) {
-                            solution.push("hold " + ((vowels.indexOf(button.char)+1) * (binarySeed[7] == "0" ? 1 : 2))); break;    
-                        } else {
-                            solution.push("hold 7");
-                        }
+                            logArray.push("Step " + (s+1) + " - Character Holding:");
+                            if (button.char.match(/\d/)) {
+                                solution.push("hold " + (binarySeed[9] == "0" ? button.char : (10 - parseInt(button.char, 10))));
+                                logArray.push("    The number of sides on the button is a number, hold for " + (binarySeed[9] == "0" ? button.char : (10 - parseInt(button.char, 10))) + " seconds.");
+                            } else if (button.char.match(/[RSTLN]/)) {
+                                solution.push("hold " + ((CHARS.indexOf(button.char)+1) % (binarySeed[1] == "0" ? 8 : 11)));
+                                logArray.push("    The number of sides on the button is not a number, but is one of 'RSTLN', hold for " + (CHARS.indexOf(button.char)+1) % (binarySeed[1] == "0" ? 8 : 11) + " seconds.");
+                            } else if (button.char.match(/[AEIOU]/)) {
+                                solution.push("hold " + ((vowels.indexOf(button.char)+1) * (binarySeed[7] == "0" ? 1 : 2)));
+                                logArray.push("    The number of sides on the button is not a number, nor is it one of 'RSTLN', but is a vowel, hold for " + ((vowels.indexOf(button.char)+1) * (binarySeed[7] == "0" ? 1 : 2)) + " second(s).");
+                            } else {
+                                solution.push("hold 7");
+                                logArray.push("    The number of sides on the button is not a number, is not one of 'RSTLN', nor is it a vowel, hold for 7 seconds.");
+                            }
                         break;
                         case "color": 
-                        if (button.colorName == "red") {
-                            solution.push("tap " + (binarySeed[6] == "0" ? 5 : 4));
-                        } else if (button.colorName == (binarySeed[0] == "0" ? "black" : "gray")) {
-                            solution.push("tap 7");
-                        } else {
-                            solution.push("tap 2");
-                        }
+                            logArray.push("Step " + (s+1) + " - Color Tapping:");
+                            if (button.colorName == "red") {
+                                solution.push("tap " + (binarySeed[6] == "0" ? 5 : 4));
+                                logArray.push("    The button is red, tap " + (binarySeed[6] == "0" ? 5 : 4) + " times within 3 seconds.");
+                            } else if (button.colorName == (binarySeed[0] == "0" ? "black" : "gray")) {
+                                solution.push("tap 7");
+                                logArray.push("    The button is not red, but is " + (binarySeed[0] == "0" ? "black" : "gray") + ", tap 7 times within 3 seconds.");
+                            } else {
+                                solution.push("tap 2");
+                                logArray.push("    The button is not red, nor is it " + (binarySeed[0] == "0" ? "black" : "gray") + ", tap twice within 3 seconds.");
+                            }
                         break;
                         case "flicker": 
-                        if ((binarySeed[2] == "0" && button.flickerType == "primes") || (binarySeed[2] == "1" && button.flickerType == "squares")) {
-                            solution.push("morse " + (binarySeed[2] == "0" ? "P" : "S"));
-                            morsePresses = binarySeed[2] == "0" ? 4 : 3;
-                        } else if ((binarySeed[8] == "0" && button.flickerType == "every other") || (binarySeed[8] == "1" && button.flickerType == "every three")) {
-                            solution.push("morse " + (binarySeed[8] == "0" ? "W" : "H"));
-                            morsePresses = binarySeed[8] == "0" ? 3 : 4;
-                        } else if ((binarySeed[5] == "0" && button.flickerType == "length two") || (binarySeed[5] == "1" && button.flickerType == "length three")) {
-                            solution.push("morse " + (binarySeed[5] == "0" ? "Y" : "Q"));
-                            morsePresses = 4;
-                        } else {
-                            solution.push("morse X");
-                            morsePresses = 4;
-                        }
+                            logArray.push("Step " + (s+1) + " - Flickering Morse:");
+                            if ((binarySeed[2] == "0" && button.flickerType == "primes") || (binarySeed[2] == "1" && button.flickerType == "squares")) {
+                                solution.push("morse " + (binarySeed[2] == "0" ? "P" : "S"));
+                                morsePresses = binarySeed[2] == "0" ? 4 : 3;
+                                logArray.push("    The button flickers " + descrFlicker(binarySeed[2] == "0" ? "primes" : "squares", false) + ", submit a " + (binarySeed[2] == "0" ? "P" : "S") + " in Morse code.");
+                            } else if ((binarySeed[8] == "0" && button.flickerType == "every other") || (binarySeed[8] == "1" && button.flickerType == "every three")) {
+                                solution.push("morse " + (binarySeed[8] == "0" ? "W" : "H"));
+                                morsePresses = binarySeed[8] == "0" ? 3 : 4;
+                                logArray.push("    The button does not flicker " + descrFlicker(binarySeed[2] == "0" ? "primes" : "squares", false) + ", but does flicker " + descrFlicker("every " + (binarySeed[2] == "0" ? "other" : "three"), false) + ", submit a " + (binarySeed[2] == "0" ? "W" : "H") + " in Morse code.");
+                            } else if ((binarySeed[5] == "0" && button.flickerType == "length two") || (binarySeed[5] == "1" && button.flickerType == "length three")) {
+                                solution.push("morse " + (binarySeed[5] == "0" ? "Y" : "Q"));
+                                morsePresses = 4;
+                                logArray.push("    The button does not flicker " + descrFlicker(binarySeed[2] == "0" ? "primes" : "squares", false) + ", nor does it flicker " + descrFlicker("every " + (binarySeed[2] == "0" ? "other" : "three"), false) + ", but does flicker " + descrFlicker("length " + (binarySeed[5] == "0" ? "two" : "three"), false) + ", submit a " + (binarySeed[5] == "0" ? "Y" : "Q") + " in Morse code.");
+                            } else {
+                                solution.push("morse X");
+                                morsePresses = 4;
+                                logArray.push("    The button does not flicker " + descrFlicker(binarySeed[2] == "0" ? "primes" : "squares", false) + ", nor does it flicker " + descrFlicker("every " + (binarySeed[2] == "0" ? "other" : "three"), false) + ", nor does it flicker " + descrFlicker("length " + (binarySeed[5] == "0" ? "two" : "three"), false) + ", submit an X in Morse code.");
+                            }
                         break;
                     }
                 }
@@ -170,44 +210,49 @@
                 if (greenLights == 4) { return; }
                 switch (solution[greenLights].split(" ")[0]) {
                     case "press": 
-                    if (isPrime(buttonHoldTime%60) && buttonHoldTime%2 == 1) {
-                        givenInputs.push("press odd prime");
-                    } else if (buttonHoldTime%2 == 0) {
-                        givenInputs.push("press even");
-                    } else {
-                        givenInputs.push("press odd composite");
-                    }
-                    greenLights += 1;
-                    hint = "p " + timer.toString().padStart(2, " ");
+                        if (isPrime(buttonHoldTime%60) && buttonHoldTime%2 == 1) {
+                            givenInputs.push("press odd prime");
+                        } else if (buttonHoldTime%2 == 0) {
+                            givenInputs.push("press even");
+                        } else {
+                            givenInputs.push("press odd composite");
+                        }
+                        logArray.push("Input " + (greenLights + 1) + " - Pressed at " + timer + ".");
+                        greenLights += 1;
+                        hint = "p " + timer.toString().padStart(2, " ");
                     break;
                     case "hold": 
-                    givenInputs.push("hold " + (buttonReleaseTime - buttonHoldTime));
-                    greenLights += 1;
-                    hint = "h " + ((buttonReleaseTime - buttonHoldTime)%100).toString().padStart(2, " ");
+                        givenInputs.push("hold " + (buttonReleaseTime - buttonHoldTime));
+                        logArray.push("Input " + (greenLights + 1) + " - Held for " + (buttonReleaseTime - buttonHoldTime) + ".");
+                        greenLights += 1;
+                        hint = "h " + ((buttonReleaseTime - buttonHoldTime)%100).toString().padStart(2, " ");
                     break;
                     case "tap": 
-                    if (tapWindow == null) { tapWindow = 3; }
-                    taps += (b) ? 1 : 0;
-                    if (!b) {
-                        givenInputs.push("tap " + taps);
-                        greenLights += 1;
-                        hint = "t " + (taps%100).toString().padStart(2, " ");
-                        taps = 0;
-                        tapWindow = null;
-                    }
+                        if (tapWindow == null) { tapWindow = 3; }
+                        taps += (b) ? 1 : 0;
+                        if (!b) {
+                            givenInputs.push("tap " + taps);
+                            logArray.push("Input " + (greenLights + 1) + " - Tapped " + taps + " times.");
+                            greenLights += 1;
+                            hint = "t " + (taps%100).toString().padStart(2, " ");
+                            taps = 0;
+                            tapWindow = null;
+                        }
                     break;
                     case "morse": 
-                    givenMorse += buttonHoldTime != buttonReleaseTime ? "-" : ".";
-                    if (givenMorse.length == morsePresses) {
-                        givenInputs.push("morse " + morse(givenMorse));
-                        greenLights += 1;
-                        hint = "m  " + morse(givenMorse);
-                        givenMorse = "";
-                    }
+                        givenMorse += buttonHoldTime != buttonReleaseTime ? "-" : ".";
+                        if (givenMorse.length == morsePresses) {
+                            givenInputs.push("morse " + morse(givenMorse));
+                            logArray.push("Input " + (greenLights + 1) + " - Morse; submitted " + givenMorse + " (" + morse(givenMorse) + ").");
+                            greenLights += 1;
+                            hint = "m  " + morse(givenMorse);
+                            givenMorse = "";
+                        }
                     break;
                 }
                 if (greenLights == 4) {
                     shownNumber = arraysMatch(solution, givenInputs) ? outputNumber : RNG(10000).toString().padStart(4, "0");
+                    logArray.push("Provided inputs are " + (arraysMatch(solution, givenInputs) ? "correct, showing correct answer " + outputNumber + "." : "incorrect, showing random number."));
                 }
             }
             
@@ -293,7 +338,7 @@
                     ctx.textAlign = "center";
                     ctx.fillStyle = button.color[getButtonShade()];
                     drawPoly(ctx, button.shape);
-                    ctx.font = "150px Roboto Mono";
+                    ctx.font = "150px Atkinson Hyperlegible";
                     ctx.fillStyle = "#fff";
                     ctx.fillText(button.char, 300, getCharOffset());
                 }
@@ -348,6 +393,7 @@
                 } else if (pointInCirc([x,y], resetCirc)) {
                     hoveringOver = "reset";
                     if (mouseClicked) {
+                        logArray.push("Reset button pressed.");
                         reset();
                     }
                 } else {
@@ -365,7 +411,25 @@
             }
             
             function processKey(key) {
+                if (key == "Tab") {
+                    if (!revealedLog) {
+                        let logCheck = window.prompt("Provide the code given via the defuser's logfile.");
+                        let shaInput = "Roger Logging " + seed;
+                        sha1(shaInput).then(hash => {
+                            if (logCheck == hash) {
+                                showLogging();
+                            }
+                        });
+                        revealedLog = true;
+                    } else {
+                        logDiv.innerHTML = "";
+                        showLogging();
+                    }
+                }
                 if (seed.length == 4) { return; }
+                if (key == "Backspace" && seed.length != 0) {
+                    seed = seed.substring(0, seed.length - 1);
+                }
                 if (key.match(/\d/)) {
                     seed += key;
                     if (seed.length == 4) {
@@ -373,6 +437,13 @@
                     }
                 }
                 draw();
+            }
+
+            function showLogging() {
+                let textarea = document.createElement("textarea");
+                textarea.innerHTML = logArray.join("\n");
+                textarea.readOnly = "true";
+                logDiv.appendChild(textarea);
             }
             
             function RNG(x) {
@@ -415,6 +486,17 @@
                 const morseCode = [".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."];
                 let index = morseCode.indexOf(m);
                 return (index == -1) ? "?" : CHARS[index];
+            }
+
+            function descrFlicker(f, x) {
+                switch (f) {
+                    case "primes": return "when the module timer is a prime number";
+                    case "squares": return "when the module timer is a square number";
+                    case "every other": return (x ? "for a second " : "") + "every other second";
+                    case "every three": return (x ? "for a second " : "") + "every 3 seconds";
+                    case "length two": return "for 2 seconds" + (x ? "every 3 seconds" : "");
+                    case "length three": return "for 3 seconds" + (x ? "every 4 seconds" : "");
+                }
             }
             
             function drawPoly(ctx, path) {
