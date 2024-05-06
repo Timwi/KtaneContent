@@ -308,7 +308,7 @@ KtaneTheWeakestLinkData = {
       "Question": "Which face of the Rubik’s Cube is unused to get the answer for Rubik’s Cube?",
       "Answers": ["Back"],
       "WrongAnswers": ["Down"],
-      "Category": ""
+      "Category": "KTANE"
     },
     {
       "Question": "How many positions does each dial have in Safety Safe?",
@@ -446,7 +446,7 @@ KtaneTheWeakestLinkData = {
       "Question": "What module does a beggar come from?",
       "Answers": ["Garnet Thief"],
       "WrongAnswers": ["Lion share"],
-      "Category": ""
+      "Category": "KTANE"
     },
     {
       "Question": "Seated and Teased, what other word can you spell in Anagrams?",
@@ -723,7 +723,7 @@ KtaneTheWeakestLinkData = {
       "Question": "“If A + B is square, +4 to A” is a condition from what module?",
       "Answers": ["Morsematics"],
       "WrongAnswers": ["Colored Squares"],
-      "Category": ""
+      "Category": "KTANE"
     },
     {
       "Question": "What does NH3 mean in Neutralization?",
@@ -980,7 +980,7 @@ KtaneTheWeakestLinkData = {
       "Question": "Which continent would you have to travel to if you want to see a hippo in the wild?",
       "Answers": ["Africa"],
       "WrongAnswers": [" South America"],
-      "Category": ""
+      "Category": "Geography"
     },
     {
       "Question": "What isolated African nation has the highest rate of endemism in the world?",
@@ -1164,7 +1164,7 @@ KtaneTheWeakestLinkData = {
       "Question": "A person who earns just enough for basic needs is said to live 'hand to ..' what?",
       "Answers": ["Mouth"],
       "WrongAnswers": ["Frugal", "hand"],
-      "Category": ""
+      "Category": "Language"
     },
     {
       "Question": "What 'B' is another name for the American Buffalo?",
@@ -1328,7 +1328,7 @@ KtaneTheWeakestLinkData = {
       "Question": "What 'D' is a language that is no longer spoken?",
       "Answers": ["Dead"],
       "WrongAnswers": ["Extinct"],
-      "Category": ""
+      "Category": "Language"
     },
     {
       "Question": "In English editions of Scrabble, which letter is worth 5 points?",
