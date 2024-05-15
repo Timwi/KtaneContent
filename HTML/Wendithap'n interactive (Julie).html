@@ -81,9 +81,12 @@
                 const output = $(".wd-output").empty();
                 const val = format(input.val());
                 if (val.length) {
-                    const eq = (n) => format(n.Name) == val;
-                    const mods = data.filter(m => validTypes.includes(m.Type) && !m.TranslationOf && (format(m.Name).indexOf(val) > -1 || format(m.ModuleID).indexOf(val) > -1)).sort((a, b) => eq(a) && !eq(b) ? -1 : eq(b) && !eq(a) ? 1 : 0).slice(0, 18);
-                    mods.forEach((m) => output.append($("<div/>").append($("<span/>").text(new Date(m.Published).toLocaleDateString()), $("<span/>").text(m.Name))));
+                    const eq = n => format(n.Name) === val;
+                    const mods = data.filter(m => validTypes.includes(m.Type) && !m.TranslationOf && ((format(m.Name) + format(m.ModuleID) + format(m.SortKey ?? "")).includes(val))).sort((a, b) => eq(a) && !eq(b) ? -1 : eq(b) && !eq(a) ? 1 : 0).slice(0, 18);
+                    for (const mod of mods) {
+                        const parts = mod.Published.split("-").map(n => parseInt(n, 10));
+                        output.append($("<div/>").append($("<span/>").text([parts[1], parts[2], parts[0]].join("/")), $("<span/>").text(mod.Name)))
+                    }
                     if (!mods.length) output.append($("<div/>").addClass("no-results").html("No mods found"));
                 }
             });
