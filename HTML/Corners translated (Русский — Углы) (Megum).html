@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Углы — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/font-cyrillic.css">
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <style>
+        .dark svg text { fill: #DDD; }
+        .dark svg rect:not(.highlightable) { stroke: #DDD; }
+    </style>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            var skip = rnd.next(0, 70);
+            for (var i = 0; i < skip; i++)
+                rnd.nextDouble();
+
+            var snDigits = rnd.shuffleFisherYates([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+            snDigits.push(...rnd.shuffleFisherYates([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
+            var cornerColors = rnd.shuffleFisherYates([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+
+            var todo = [];
+            var processed = [];
+            var done = [];
+            for (var i = 0; i < 16; i++)
+                done.push({ x: i % 4, y: (i / 4)|0, connections: [false, false, false, false], digit: snDigits[i], corner: cornerColors[i] % 4, color: (cornerColors[i] / 4)|0 });
+
+            var startX = rnd.next(0, 4);
+            var startY = rnd.next(0, 4);
+
+            for (var directionality = 0; directionality < 2; directionality++)
+            {
+                todo.push(...done.splice(0, done.length));
+
+                var startIx = todo.findIndex(sq => sq.x === startX && sq.y === startY);
+                processed.push(...todo.splice(startIx, 1));
+
+                var dx = [ 0, 1, 0, -1 ];
+                var dy = [ -1, 0, 1, 0 ];
+
+                while (todo.length > 0)
+                {
+                    var pIx = rnd.next(0, processed.length);
+                    var x = processed[pIx].x;
+                    var y = processed[pIx].y;
+                    var availableConnections = [];
+                    var destIx;
+                    for (var dir = 0; dir < 4; dir++)
+                        if ((destIx = todo.findIndex(sq => sq.x === x + dx[dir] && sq.y === y + dy[dir])) !== -1)
+                            availableConnections.push({ dir: dir, destIx: destIx });
+                    if (availableConnections.length === 0)
+                    {
+                        done.push(processed[pIx]);
+                        processed.splice(pIx, 1);
+                    }
+                    else
+                    {
+                        var cn = availableConnections [ rnd.next(0, availableConnections.length) ];
+                        if (directionality === 0)
+                            processed[pIx].connections[cn.dir] = true;
+                        else
+                            todo[cn.destIx].connections[(cn.dir + 2) % 4] = true;
+                        processed.push(todo[cn.destIx]);
+                        todo.splice(cn.destIx, 1);
+                    }
+                }
+
+                done.push(...processed.splice(0, processed.length));
+            }
+
+            var colors = ['#f00', '#0a0', '#00f', '#dd0'];
+            document.getElementById('flowchart-inner').innerHTML = done
+                .map(sq => `<g transform='translate(${5 + 12 * sq.x} ${5 + 12 * sq.y})'>
+                    <path fill='${colors[sq.color]}' d='M -5 2 v-7h7 L -4 -4 z' transform='rotate(${90*sq.corner})' />
+                    <rect fill='none' stroke='black' stroke-width='.2' x='-5' y='-5' width='10' height='10' />
+                    <text x='0' y='1.5'>${sq.digit}</text>
+                    <text font-size='2' x='${sq.corner === 0 || sq.corner === 3 ? -3 : 3}' y='${sq.corner === 0 || sq.corner === 1 ? -2 : 3.5}'>${"RGBY"[sq.color]}</text>
+                    ${[0, 1, 2, 3].filter(dir => sq.connections[dir]).map(dir => `<path transform='rotate(${90*dir})' d='M -4 -5.5 L -2 -6.5 0 -5.5 z' fill='#89a' />`).join('')}
+                </g>`)
+                .join('');
+
+            let grid = $("#flowchart");
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    let box = MakeSvgElem("rect", {
+                        fill:"transparent", width:10, height:10, x:(c*12), y:(r*12), class:"highlightable"
+                    });
+                    grid.append(box);
+                }
+            }
+        }
+    </script>
+    <script src="js/ktane-utils.js"></script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Углы</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Corners.svg">
+                <h2>Об Углах</h2>
+                <p class="flavour-text">Решение прямо за углом!.</p>
+
+                <ul>
+                    <li>Определите цвета четырёх углов на модуле. Они могут быть красными, зелёными, жёлтыми или синими.</li>
+                    <li>На диаграмме найдите 4 клетки с углами, покрашенными в соответствующие цвета.</li>
+                    <li>Среди найденных клеток, начните на клетке с последней цифрой серийного номера. Нажмите на соответствующий угол на модуле, чтобы начать.</li>
+                    <li>Найдите кратчайший путь на диаграмме, который покрывает оставшиеся три клетки, и нажмите оставшиеся углы в порядке появления в найденном пути.</li>
+                </ul>
+
+                <svg id='flowchart' viewBox='-1 -1 48 48' font-family='Special Elite' font-size='4' text-anchor='middle'>
+                    <g id='flowchart-inner'></g>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">Страница 1 из 1</div>
+        </div>
+    </div>
+</body>
+</html>
