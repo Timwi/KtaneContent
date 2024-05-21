@@ -31,20 +31,27 @@
                 [ "awaaa", "wwawa", "aaaaa", "aawaa", "aaaaa" ],
             ];
 
+            const rows = 5;
+            const cols = 5;
+
+            let selectedTopIndex = null;
+            let selectedBottomIndex = null;
+
             let mazeClass = $(".updog-maze");
-            for (let row = 0; row < 5; row++) {
-                for (let col = 0; col < 5; col++) {
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
                     mazeClass.append(MakeSvgElem("rect", { class:"highlightable", x: 5 + col * 100, y: 5 + row * 100, width: 100, height: 100 }));
                 }
             }
             
-            let mazes = document.getElementsByClassName("updog-maze");
-            let count = 0;
-            for (let maze of mazes) {
-                for (let row = 0; row < 5; row++) {
-                    for (let col = 0; col < 5; col++) {
-                        let letter = cellLayout[count][row].charAt(col);
+            let mazes = $(".updog-maze");
+            mazes.each(function(index) {
+                let maze = $(this);
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        let letter = cellLayout[index][row].charAt(col);
                         maze.append(MakeSvgElem("circle", { cx: 55 + col * 100, cy: 55 + row * 100, r: 20, fill: `#${colours[letter]}`}));
+                        maze.append(MakeSvgElem("circle", { class: "circle-overlay", cx: 55 + col * 100, cy: 55 + row * 100, r: 38 }));
 
                         if (letter == "y") {
                             maze.append(MakeSvgElem("text", { x: 55 + col * 100, y: 67 + row * 100 }, "Y"));
@@ -54,10 +61,38 @@
                         }
                     }
                 }
-                count += 1;
-            }
 
-            mazeClass.append(MakeSvgElem("rect", { class: "border", x: 5, y: 5, height: 500, width: 500 }));
+                maze.click(function() {
+                    $(".circle-overlay").removeClass("circled");
+                    if (index < 6) {
+                        // Top mazes
+                        $(".updog-maze").removeClass("top-selected");
+                        maze.addClass("top-selected");
+                        selectedTopIndex = index;
+                    } else {
+                        // Bottom mazes
+                        $(".updog-maze").removeClass("bottom-selected");
+                        maze.addClass("bottom-selected");
+                        selectedBottomIndex = index;
+                    }
+
+                    if (selectedTopIndex !== null && selectedBottomIndex !== null) {
+                        let topMaze = mazes.eq(selectedTopIndex);
+                        let bottomMaze = mazes.eq(selectedBottomIndex);
+                        let bottomLayout = cellLayout[selectedBottomIndex];
+
+                        for (let row = 0; row < rows; row++) {
+                            for (let col = 0; col < cols; col++) {
+                                if (bottomLayout[row].charAt(col) === "w") {
+                                    topMaze.find(".circle-overlay").eq(row * cols + col).addClass("circled");
+                                }
+                            }
+                        }
+                    }
+                });
+
+                maze.append(MakeSvgElem("rect", { class: "border", x: 5, y: 5, height: 500, width: 500 }));
+            });
         });
     </script>
     <style>
@@ -102,6 +137,22 @@
         .updog-maze .walls {
             fill: none;
             stroke-width: 7px;
+        }
+
+        .updog-maze.top-selected .border,
+        .updog-maze.bottom-selected .border {
+            stroke: red;
+        }
+
+        .dark .updog-maze .circle-overlay, .updog-maze .circle-overlay {
+            fill: none;
+            stroke: none;
+            pointer-events: none;
+        }
+
+        .updog-maze .circle-overlay.circled {
+            stroke: #00B000;
+            stroke-width: 5px;
         }
     </style>
 </head>
@@ -175,6 +226,8 @@
                         </ul>
                     </li>
                 </ol>
+
+                <p><strong>Select a maze on this page and the next page to highlight the bone locations in the chosen top maze.</strong></p>
                 <table class="updog-maze-table">
                     <tr>
                         <th class="updog-maze-cell">Dog</th>
