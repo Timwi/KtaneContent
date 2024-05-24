@@ -19466,10 +19466,10 @@ let parseData = [
 						}
 					}
 
-					const colors = { 'R':'#F00', 'B':'#00F', 'Y':'#FF0', 'W':'#EEE', 'K':'#222' };
+					const colors = { 'R':'#F00', 'B':'#00F', 'Y':'#FF0', 'W':'#EEE', 'K':'#000' };
 					const xPath = 'M-30-8h60v16h-60z';
 
-					let svg = `<svg viewbox='-5 -5 530 530' style='width: 4in; display: block'>`;
+					let svg = `<svg viewbox='-5 -5 530 530' class="wire-terminals" style='width: 4in; display: block'>`;
 					for (let row = 0; row < 8; row++){
 						for (let col = 0; col < 3; col++) {
 							let ix = 3 * row + col;
@@ -19478,9 +19478,9 @@ let parseData = [
 							const y = 60 * row + 20 * Math.floor(row / 2) + 5;
 							svg += `<rect x='${x - 5}' y='${y}' width='50' height='30' fill='${hColor}' stroke='#222' stroke-width='3'/>`;
 							if (module.hCut[ix] == 'X'){
-								svg += `<path transform='translate(${x + 20}, ${y + 15})' d='M-6.4-24v48h12.8v-48z' fill='#CCC' stroke='#000' stroke-width='3'/>`;
+								svg += `<path transform='translate(${x + 20}, ${y + 15})' d='m15 10-10-10 10-10-5-5-10 10-10-10-5 5 10 10-10 10 5 5 10-10 10 10z' fill='#888' stroke='#000' stroke-width='2'/>`;
 							} else if (module.hCut[ix] == '/') {
-								svg += `<path transform='translate(${x + 20}, ${y + 15})' d='M-8-24v48h16v-48z' fill='#FFF' />`
+								svg += `<path class="cutwire" transform='translate(${x + 20}, ${y + 15})' d='M-10-24v48h20v-48z' fill='#FFF' />`
 							}
 						}
 					}
@@ -19492,9 +19492,9 @@ let parseData = [
 							const y = 140 * row + 100;
 							svg += `<rect x='${x}' y='${y - 5}' width='30' height='50' fill='${vColor}' stroke='#222' stroke-width='3'/>`;
 							if (module.vCut[ix] == 'X'){
-								svg += `<path transform='translate(${x + 15}, ${y + 20})' d='M-24-6.4h48v12.8h-48z' fill='#CCC' stroke='#000' stroke-width='3'/>`;
+								svg += `<path transform='translate(${x + 15}, ${y + 20})' d='m15 10-10-10 10-10-5-5-10 10-10-10-5 5 10 10-10 10 5 5 10-10 10 10z' fill='#888' stroke='#000' stroke-width='2'/>`;
 							} else if (module.vCut[ix] == '/') {
-								svg += `<path transform='translate(${x + 15}, ${y + 20})' d='M-24-8h48v16h-48z' fill='#FFF'/>`;
+								svg += `<path class="cutwire" transform='translate(${x + 15}, ${y + 20})' d='M-24-10h48v20h-48z' fill='#FFF'/>`;
 							}
 						}
 					}
