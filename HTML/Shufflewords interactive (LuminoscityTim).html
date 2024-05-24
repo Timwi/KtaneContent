@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Shufflewords — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="data/Shufflewords/Shufflewords.js"></script>
+    <script>
+    $(function() {
+        const rows = 5;
+        const cols = 5;
+        const sqw = 100;
+        const sqspace = 10;
+        const sqsize = sqw + sqspace;
+        const arrowSize = 40;
+        const xOff = 132;
+        const yOff = 152;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+
+        let tiles = [];
+        let tileAt = [];
+        let movementList = [];
+        let answerList = [];
+        let generating = false;
+        let saveStates = [];
+        let currentState = 0;
+        let nMoves = 60;
+        let nTiles = rows * cols;
+        let generatedState = Array(cols).fill().map(()=>Array(rows).fill(0));
+
+        let grid = $("svg.grid");
+
+        // Add triangles per column
+        for (let col = 0; col < cols; col++) {
+            let cx = xOff + col * sqsize + sqw / 2;
+            let cy = yOff - arrowSize;
+            grid.append(RegularPolygon(arrowSize, cx, cy, 3, 0, { class: "arrow" }));
+            grid.append(RegularPolygon(arrowSize, cx, yOff + rows * sqsize + sqw / 3.2, 3, 180, { class: "arrow" }));
+            grid.append(MakeSvgElem("text", { "font-size":40, x:cx, y:yOff - arrowSize - 65 }, String.fromCharCode(65 + col)));
+        }
+
+        // Add triangles per row
+        for (let row = 0; row < rows; row++) {
+            let cx = xOff - arrowSize;
+            let cy = yOff + row * sqsize + sqw / 2;
+            grid.append(RegularPolygon(arrowSize, cx, cy, 3, 270, { class: "arrow" }));
+            grid.append(RegularPolygon(arrowSize, xOff + cols * sqsize + sqw / 3.2, cy, 3, 90, { class: "arrow" }));
+            grid.append(MakeSvgElem("text", { x:xOff - arrowSize - 65, y:(cy + 17) }, row+1));
+        }
+
+        for (let row = 0; row < rows; row++) {
+            tileAt.push([]);
+            for (let col = 0; col < cols; col++) {
+                let x = col * sqsize;
+                let y = row * sqsize;
+                let letter = String.fromCharCode(65 + row * cols + col);
+                let group = $(MakeSvgElem("g", { class: "tile" }));
+                group.append(MakeSvgElem("rect", { class: "square", x: xOff, y: yOff, width: sqw, height: sqw }));
+                group.append(MakeSvgElem("text", { x: (xOff + sqw / 2), y: (yOff + sqw / 2 + 20) }, letter));
+                group.css("transform", `translate(${x}px, ${y}px)`);
+                grid.append(group);
+
+                let tileObj = { x: col, y: row, index: row * cols + col, tile: group };
+                tiles.push(tileObj);
+                tileAt[row].push(tileObj);
+            }
+        }
+
+        let resetButton = $(MakeSvgElem("g", { class:"reset" }));
+        resetButton.append(MakeSvgElem("text", { x:740, y:82 }, "↻"));
+        resetButton.append(MakeSvgElem("rect", { class:"reset square", x:690, y:10, width:sqw, height:sqw }));
+        grid.append(resetButton);
+        resetButton.click(function(event) {
+            resetPos();
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        function shiftRow(isRow, pos, direction) {
+            //direction: 1 = up or right
+            if (isRow) {
+                // Move squares in the row
+                let end = (direction < 0 ? cols - 1 : 0);
+                let endTile = tileAt[pos][cols - end - 1];
+                for (let col = 0; col < cols - 1; col++) {
+                    let c = (direction < 0 ? col : cols - col - 1);
+                    tileAt[pos][c] = tileAt[pos][c-direction];
+                    tileAt[pos][c].x = c;
+                    let newX = c * sqsize;
+                    let newY = pos * sqsize;
+                    tileAt[pos][c].tile.css("transform", `translate(${newX}px, ${newY}px)`);
+                }
+                tileAt[pos][end] = endTile;
+                tileAt[pos][end].x = end;
+                let newX = end * sqsize;
+                let newY = pos * sqsize;
+                tileAt[pos][end].tile.css("transform", `translate(${newX}px, ${newY}px)`);
+            } else {
+                // Move squares in the column
+                let end = (direction > 0 ? rows - 1 : 0);
+                let endTile = tileAt[rows - end - 1][pos];
+                for (let row = 0; row < rows - 1; row++) {
+                    let r = (direction > 0 ? row : rows - row - 1);
+                    tileAt[r][pos] = tileAt[r+direction][pos];
+                    tileAt[r][pos].y = r;
+                    let newX = pos * sqsize;
+                    let newY = r * sqsize;
+                    tileAt[r][pos].tile.css("transform", `translate(${newX}px, ${newY}px)`);
+                }
+                tileAt[end][pos] = endTile;
+                tileAt[end][pos].y = end;
+                let newX = pos * sqsize;
+                let newY = end * sqsize;
+                tileAt[end][pos].tile.css("transform", `translate(${newX}px, ${newY}px)`);
+            }
+        }
+
+        let audio0 = $("<audio>")
+            .attr("src", "audio/Not The Bulb/TapCode.wav")
+            .appendTo(grid);
+        let audio1 = $("<audio>")
+            .attr("src", "audio/Not The Bulb/NonoClick.wav")
+            .appendTo(grid);
+        let audioSolve = $("<audio>")
+            .attr("src", "audio/Not The Bulb/StarDing.wav")
+            .prop("volume", 0.4)
+            .appendTo(grid);
+
+        function playMoveSound(dir) {
+            if ($("button.sound").hasClass("play")) {
+                let aud = dir > 0 ? audio0[0].cloneNode() : audio1[0].cloneNode();
+                aud.volume = 0.4;
+                aud.play();
+            }
+        }
+
+        function moveText(isRow, pos, direction, times) {
+            let r = isRow ? "row" : "col";
+            let direc = direction < 0 ? (isRow ? "L" : "D") : (isRow ? "R" : "U");
+            let p = isRow ? (pos + 1) : String.fromCharCode(65 + pos);
+            return `${r}${pos+1} ${direc}${times}`;
+        }
+
+        // Add click event handlers to arrow buttons
+        $(".arrow").each(function(index) {
+            $(this).click(function() {
+                if (mode() == MODE_READ) return;
+
+                let isRow = index >= cols * 2;
+                let pos = isRow ? Math.floor(index / 2) - cols : Math.floor(index / 2);
+                let direction = (index % 2 === 0) == isRow ? -1 : 1;    
+                shiftRow(isRow, pos, direction);
+                
+                let currentMove = moveText(isRow, pos, direction, 1);
+                let lastMove = movementList[movementList.length - 1];
+
+                if (lastMove) {
+                    let lastMoveData = lastMove.split(" ");
+                    let lastMoveIsRow = lastMoveData[0].startsWith("row");
+                    let lastMovePos = parseInt(lastMoveData[0].slice(3)) - 1;
+                    let lastMoveDirection = lastMoveData[1].startsWith("R") || lastMoveData[1].startsWith("U") ? 1 : -1;
+
+                    if (isRow === lastMoveIsRow && pos === lastMovePos) {
+                        if (direction === -lastMoveDirection) {
+                            // If the opposite arrow is clicked right after the same row or column was just clicked
+                            let count = parseInt(lastMoveData[1].slice(1)) - 1;
+                            if (count > 0) {
+                                movementList[movementList.length - 1] = moveText(isRow, pos, lastMoveDirection, count);
+                            } else {
+                                movementList.pop();
+                            }
+                        } else {
+                            // If the same arrow is clicked right after the same row or column was just clicked
+                            let count = parseInt(lastMoveData[1].slice(1)) + 1;
+                            movementList[movementList.length - 1] = moveText(isRow, pos, direction, count);
+                        }
+                    } else {
+                        movementList.push(currentMove);
+                    }
+                } else {
+                    movementList.push(currentMove);
+                }
+
+                $(".path .str").text(movementList.join(" "));
+
+                if (mode() == MODE_PLAY && isSolved()) {
+                    $(".solved-text").removeClass("invis");
+                    if ($("button.sound").hasClass("play"))
+                        audioSolve[0].play();
+                } else {
+                    $(".solved-text").addClass("invis");
+                    playMoveSound(direction);
+                }
+            });
+        });
+
+        let inputs = $(".inputs");
+        for (let y = 0; y < rows; y++) {
+            let row = $("<div>").addClass("hstack").appendTo(inputs);
+            for (let x = 0; x < cols; x++) {
+                $("<input>").addClass(`readinp i${y*cols + x} x${x} y${y}`).on("input", function() {
+                    let e = $(this);
+                    e.val(e.val().toUpperCase());
+                    tiles[y * cols + x].tile.find("text").text(e.val());
+                    if (e.val().length > 0) $(`.readinp.i${(y*cols + x + 1) % nTiles}`).select();
+                }).click(function() {
+                    $(this).select();
+                }).appendTo(row);
+            }
+        }
+        $("button.clear-read").click(function() {
+            $(".inputs input").val('');
+            $(`.tile text`).html('');
+            resetButton.click();
+        });
+
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        function generate() {
+            generating = true;
+            answerList = []; // Clear the answerList
+
+            // Randomly choose to fill either 5 columns or 5 rows with words
+            let fillRows = Math.random() > 0.5;
+
+            // Fill in the selected rows or columns with 5 random words from the starting list
+            let selectedWords = [];
+            for (let i = 0; i < 5; i++) {
+                let randomIndex = Math.floor(Math.random() * startingWords.length);
+                selectedWords.push(startingWords[randomIndex]);
+            }
+
+            for (let i = 0; i < nTiles; i++) {
+                let letter;
+                if (fillRows) {
+                    letter = selectedWords[Math.floor(i / cols)][i % cols];
+                } else {
+                    letter = selectedWords[i % rows][Math.floor(i / rows)];
+                }
+                tiles[i].tile.find("text").text(letter);
+                $(`.inputs input.i${i}`).val(letter);
+            }
+
+            // Scramble the tiles by randomly shifting the rows and columns
+            let prevIsRow = null;
+            let prevPos = null;
+            for (let i = 0; i < nMoves; i++) {
+                let isRow, pos, direction, times;
+                do {
+                    isRow = Math.random() > 0.5;
+                    pos = Math.floor(Math.random() * (isRow ? rows : cols));
+                    direction = Math.random() > 0.5 ? -1 : 1;
+                    times = Math.floor(Math.random() * 3) + 1;
+                } while (isRow === prevIsRow && pos === prevPos);
+
+                prevIsRow = isRow;
+                prevPos = pos;
+
+                for (let j = 0; j < times; j++) {
+                    shiftRow(isRow, pos, direction);
+                }
+                answerList.unshift(moveText(isRow, pos, -direction, times));
+            }
+
+            // Save the generated state
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    generatedState[row][col] = { x: tileAt[row][col].x, y: tileAt[row][col].y, index: tileAt[row][col].index };
+                }
+            }
+
+            // Display the selected words in the solution with line breaks
+            $(".solution .str").html(selectedWords.join("&nbsp;&nbsp;&nbsp;") + "<br>" + answerList.join(" "));
+
+            generating = false;
+        }
+
+        function isSolved() {
+            let rows = [];
+            for (let i = 0; i < 5; i++) {
+                rows[i] = tileAt[i].map(tile => tile.tile.find("text").text()).join("");
+            }
+
+            let cols = [];
+            for (let i = 0; i < 5; i++) {
+                cols[i] = tileAt.map(row => row[i]).map(tile => tile.tile.find("text").text()).join("");
+            }
+
+            let check = [[], []];
+            for (let i = 0; i < 5; i++) {
+                check[0][i] = validWords.includes(rows[i]);
+                check[1][i] = validWords.includes(cols[i]);
+            }
+
+            return check[0].every(x => x) || check[1].every(x => x);
+        }
+
+        function resetPos(mod = null) {
+            if (mod === null) mod = mode();
+            if (mod == MODE_PLAY) {
+                // Reset the grid to the generated state in play mode
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        let tile = generatedState[row][col];
+                        let x = tile.x * sqsize;
+                        let y = tile.y * sqsize;
+                        let i = tile.index;
+                        tiles[i].tile.css("transform", `translate(${x}px, ${y}px)`);
+                        tiles[i].x = tile.x;
+                        tiles[i].y = tile.y;
+                        tileAt[row][col] = tiles[i];
+                    }
+                }
+            } else {
+                // Reset the grid to the initial state in other modes
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        let x = col * sqsize;
+                        let y = row * sqsize;
+                        let i = row * cols + col;
+                        tiles[i].tile.css("transform", `translate(${x}px, ${y}px)`);
+                        tiles[i].y = row;
+                        tiles[i].x = col;
+                        tileAt[row][col] = tiles[i];
+                    }
+                }
+            }
+            $(".solved-text").addClass("invis");
+            movementList = [];
+            $(".path .str").text("");
+        }
+
+        let tools = $(".tools");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
+
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            $("body").toggleClass("solve", $(this).hasClass("solve"));
+        });
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if (mode() == MODE_PLAY) {
+                generate();
+            }
+            else resetPos();
+            $(".reset-grid").click();
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $(".solved-text").addClass("invis");
+            $("body").removeClass("solution-shown solve play");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $("button.read-solve").removeClass("solve");
+            $("input.readinp").val("");
+            resetPos();
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".solved-text, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveReadInputs = Array.from($("input.readinp")).map(x => $(x)).map(x => x.val() || "");
+            let saveLabels = Array.from($("g.tile text")).map(x => $(x)).map(x => x.text() || "");
+            let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            // Save tileAt and generatedState
+            let s_tileAt = JSON.parse(JSON.stringify(tileAt));
+            let s_generatedState = JSON.parse(JSON.stringify(generatedState));
+
+            let s_answerList = [];
+            let s_movementList = [];
+            Object.assign(s_movementList, movementList);
+            Object.assign(s_answerList, answerList);
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".solved-text, .tools button").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $("input.readinp").each((i, x) => $(x).val(saveReadInputs[i]));
+                $("g.tile text").each((i, x) => $(x).text(saveLabels[i]));
+                $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
+                movementList = Array(s_movementList.length);
+                answerList = Array(s_answerList.length);
+                Object.assign(movementList, s_movementList);
+                Object.assign(answerList, s_answerList);
+                $(".path .str").text(movementList.join(" "));
+                $(".solution .str").text(answerList.join(" "));
+                currentState = stateNumber;
+
+                // Restore tileAt and generatedState
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        let tile = s_tileAt[row][col];
+                        let x = tile.x * sqsize;
+                        let y = tile.y * sqsize;
+                        let i = tile.index;
+                        tiles[i].tile.css("transform", `translate(${x}px, ${y}px)`);
+                        tiles[i].x = tile.x;
+                        tiles[i].y = tile.y;
+                        tileAt[row][col] = tiles[i];
+                        generatedState = JSON.parse(JSON.stringify(s_generatedState));
+                    }
+                }
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        svg.grid {
+            width: 500px;
+        }
+        svg rect {
+            stroke: #000;
+            stroke-width: 4px;
+            fill: none;
+        }
+        .dark svg :is(rect, polygon) {
+            stroke: #DDD;
+        }
+        svg text {
+            font-size: 50px;
+            user-select: none;
+            pointer-events: none;
+        }
+        .dark svg text {
+            fill: #DDD;
+        }
+        svg g.reset text {
+            font-size: 70px;
+        }
+        svg g.tile>text {
+            font-size: 60px;
+        }
+        svg g.tile {
+            transition: transform 0.4s;
+        }
+        .arrow, .square {
+            stroke-width: 4px;
+            stroke: #000;
+            fill: transparent;
+        }
+        .arrow, .square.reset {
+            cursor: pointer;
+        }
+
+        .solution, .path {
+            transition: 0.5s;
+        }
+        .path span:not(.str), .solution span:not(.str) {
+            display: inline-block;
+            min-width: 108px;
+        }
+        body:not(.solution-shown) .path,
+        body:not(.solution-shown) .solution,
+        body:not(.play) .solution {
+            color: transparent;
+            font-size: 0;
+        }
+
+        .tools {
+            width: 130px;
+        }
+        .tools button {
+            margin: 8px;
+        }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { color: transparent; }
+
+        .inputs input {
+            width: 70px;
+            margin: 3px;
+            text-align: center;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 9px 10px 5px;
+            transition: color 0.5s, background-color 0.5s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        body.play button.read-solve::before,
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.show-sol {
+            padding: 3px 3px 1px 3px;
+        }
+        body:is(.solve, .play) button.clear-read,
+        body.play button.read-solve {
+            user-select: none;
+            pointer-events: none;
+            background-color: #555;
+        }
+        body:is(.solve, .play) .inputs input {
+            visibility: hidden;
+        }
+        body:not(.solve, .play) .arrow {
+            user-select: none;
+            pointer-events: none;
+            cursor: default;
+            opacity: 30%;
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+        .read-label {
+            font-size: 20px;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Shufflewords</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Shufflewords.svg" class="diagram">
+                <h2>On the Subject of Shufflewords</h2>
+                <p class="flavour-text">Five passwords. That secure enough for ya?</p>
+                <p>This module consists of a 5×5 grid of letters.</p>
+                <p>Pressing the arrows will shift the row/column one space towards it, wrapping the nearest letter to the opposite side of the module.</p>
+                <p>
+                    The desired state of the grid has all five rows or all five columns filled with a valid english word reading from left to right/top to bottom.<br>
+                    Press the submit button once the grid is in a valid configuration.
+                </p>
+                <div class="inputs vstack">
+                    <div class="hstack even alignc">
+                        <p class="read-label">Read</p>
+                        <button class="clear-read">Clear</button>
+                    </div>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="hstack wrap left">
+                    <div class="vstack tools alignc top"></div>
+                    <svg class="grid" viewbox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
+                        <rect x="123" y="142" width="560" height="560" />
+                    </svg>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="saves hstack wrap left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack left" style="margin-top: 5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="hstack left path"><span>Path:</span><span class="str"></span></div>
+                <div style="height: 1mm"></div>
+                <div class="hstack left solution"><span>Solution:</span><span class="str"></span></div>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>
+                        In <b>Read</b> mode:
+                        <ul>
+                            <li><b>Type in</b> the letters on the module using the textboxes.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <b>Solve</b> mode:
+                        <ul>
+                            <li>Use the <b>arrow buttons</b> to shift the rows and columns of the grid.</li>
+                            <li>The <b>↻</b> button resets the grid to its starting state.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <b>Generated</b> mode:
+                        <ul>
+                            <li>Press the <b>Manual</b> button to switch to <b>Generated</b> mode.</li>
+                            <li>The <b>↻</b> button resets the grid to its initial generated state.</li>
+                            <li>Have fun solving the generated puzzle.</li>
+                        </ul>
+                    </li>
+                    <li>The sound effects can be muted.</li>
+                    <li>The movement path you came up with (and the solution to generated puzzles) can be shown or hidden.</li>
+                    <li>Press <b>Save</b> to save the current state of the interactive.</li>
+                    <li>The <b>Reset Saves</b> button clears all the saved states.</li>
+                    <li>The <b>Reset All</b> button resets the entire interactive.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
