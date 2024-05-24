@@ -1,0 +1,878 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Wire Terminals — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        const rows = 4;
+        const cols = 4;
+        const sqw = 80;
+        const sqspace = 30;
+        const sqsize = sqw + sqspace;
+        const wireW = 29.9;
+        const wireH = 21;
+        const xOff = 2;
+        const yOff = 2;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+        const colors = [ "red", "yellow" , "blue", "white", "black" ];
+        const ledColors = ["Red", "Yellow", "Blue", "White", "Black"];
+        const colorL = {
+            white: 'W',
+            black: 'K',
+            red: 'R',
+            blue: 'B',
+            yellow: 'Y'
+        };
+        const colorKey = {
+            r: 0,
+            y: 1,
+            b: 2,
+            w: 3,
+            k: 4
+        };
+        const wIdx = [
+            0, 2, 4, 1, 3, 5,
+            24, 25, 26, 27, 28, 29, 30, 31,
+            6, 8, 10, 7, 9, 11,
+            32, 33, 34, 35, 36, 37, 38, 39,
+            12, 14, 16, 13, 15, 17,
+            40, 41, 42, 43, 44, 45, 46, 47,
+            18, 20, 22, 19, 21, 23
+        ];
+        const wrIdx = [
+            0, 3, 1, 4, 2, 5,
+            14, 17, 15, 18, 16, 19, 28, 31,
+            29, 32, 30, 33, 42, 45, 43, 46, 44, 47,
+            6, 7, 8, 9, 10, 11, 12, 13,
+            20, 21, 22, 23, 24, 25, 26, 27,
+            34, 35, 36, 37, 38, 39, 40, 41
+        ];
+        console.log(wIdx.map((x,i) => wIdx.indexOf(i)).join(", "));
+
+
+        let generating = false;
+        let saveStates = [];
+        let currentState = 0;
+        let nTiles = rows * cols;
+        let grid = $("svg.grid");
+        let currentLedColor = 0;
+        let selectedLed = -1;
+        let selectedWire = -1;
+
+        let wireIndex = 0;
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                let x = col * sqsize;
+                let y = row * sqsize;
+                let idx = row * cols + col;
+                let square = MakeSvgElem("rect", { class: "square", x:(xOff + x), y:(yOff + y), width:sqw, height:sqw });
+                let circlegroup = $(MakeSvgElem("g", { class: `ledgroup white x${col} y${row} l${idx}`, cx:(xOff + x + sqw/2), cy:(yOff + y + sqw/2), r:25 }));
+                let circle = $(MakeSvgElem("circle", { class: "led", cx:(xOff + x + sqw/2), cy:(yOff + y + sqw/2), r:25 }));
+                let ledtext = $(MakeSvgElem("text", { class: "ledtext", x:(xOff + x + sqw/2), y:(yOff + y + 50) }, "W"));
+                circlegroup.append(circle);
+                circlegroup.append(ledtext);
+                circlegroup.click(function() {
+                    if (mode() == MODE_READ) {
+                        clearSelected();
+                        nextColor(this);
+                        selectedLed = idx;
+                        updateSelection();
+                        return false;
+                    }
+                });
+                grid.append(square);
+                grid.append(circlegroup);
+
+                if (col > 0) {
+                    let w = wireIndex++;
+                    let wire1 = $(MakeSvgElem("g", { class: `wire white h w1 wire${w} x${col} y${row}` }));
+                    wire1.click(function() { clickWire(this, w, true); return false; });
+                    let wireText1 = $(MakeSvgElem("text", { class: "wiretext", x:(xOff + col * sqw + sqspace * (col-1) + 15), y:(yOff*6 + y + 18) }, "W"));
+                    let wirebody1 = $(MakeSvgElem("rect", { class: "wirebody", x:(xOff + col * sqw + sqspace * (col-1)), y:(yOff*6 + y), width:wireW, height:wireH }));
+                    wire1.append(MakeSvgElem("rect", { class:"backing h",x:(xOff + col * sqw + sqspace * (col-1)), y:(yOff*6 + y), width:(wireW/6), height:wireH }));
+                    wire1.append(MakeSvgElem("rect", { class:"backing h",x:(xOff + col * sqw + sqspace * col - wireW/6), y:(yOff*6 + y), width:(wireW/6), height:wireH }));
+                    let w2 = wireIndex++;
+                    let wire2 = $(MakeSvgElem("g", { class: `wire white h w2 wire${w2} x${col} y${row}` }));
+                    wire2.click(function() { clickWire(this, w2, true); return false; });
+                    let wireText2 = $(MakeSvgElem("text", { class: "wiretext", x:(xOff + col * sqw + sqspace * (col-1) + 15), y:(yOff*5 + y + sqw/2 + 18) }, "W"));
+                    let wirebody2 = $(MakeSvgElem("rect", { class: "wirebody", x:(xOff + col * sqw + sqspace * (col-1)), y:(yOff*5 + y + sqw/2), width:wireW, height:wireH }));
+                    wire2.append(MakeSvgElem("rect", { class:`backing h x${col} y${row}`,x:(xOff + col * sqw + sqspace * (col-1)), y:(yOff*5 + y + sqw/2), width:(wireW/6), height:wireH }));
+                    wire2.append(MakeSvgElem("rect", { class:`backing h x${col} y${row}`,x:(xOff + col * sqw + sqspace * col - wireW/6), y:(yOff*5 + y + sqw/2), width:(wireW/6), height:wireH }));
+
+                    wire1.append(wirebody1);
+                    wire1.append(wireText1);
+                    wire2.append(wirebody2);
+                    wire2.append(wireText2);
+                    grid.append(wire1);
+                    grid.append(wire2);
+                    grid.append(MakeSvgElem("rect", { class:"backing", x:(xOff + col * sqw + sqspace * (col-1)), y:(yOff*6 + y - 3), width:(wireW/18), height:(wireH+6) }));
+                    grid.append(MakeSvgElem("rect", { class:"backing", x:(xOff + col * sqw + sqspace * col - wireW/18), y:(yOff*6 + y - 3), width:(wireW/18), height:(wireH+6) }));
+                    grid.append(MakeSvgElem("rect", { class:"backing", x:(xOff + col * sqw + sqspace * (col-1)), y:(yOff*5 + y + sqw/2 - 3), width:(wireW/18), height:(wireH+6) }));
+                    grid.append(MakeSvgElem("rect", { class:"backing", x:(xOff + col * sqw + sqspace * col - wireW/18), y:(yOff*5 + y + sqw/2 - 3), width:(wireW/18), height:(wireH+6) }));
+                }
+                if (row > 0) {
+                }
+            }
+        }
+        for (let row = 1; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                let x = col * sqsize;
+                let y = row * sqsize;
+                let w = wireIndex++;
+                let wire1 = $(MakeSvgElem("g", { class: `wire white v w1 wire${w} x${col} y${row}` }));
+                wire1.click(function() { clickWire(this, w, false); return false; });
+                let wireText1 = $(MakeSvgElem("text", { class: "wiretext", x:(xOff*6 + x + 10.5), y:(yOff + row * sqw + sqspace * (row-1) + 22) }, "W"));
+                let wirebody1 = $(MakeSvgElem("rect", { class: "wirebody", x:(xOff*6 + x), y:(yOff + row * sqw + sqspace * (row-1)), width:wireH, height:wireW }));
+                wire1.append(MakeSvgElem("rect", { class:`backing v x${col} y${row}`, x:(xOff*6 + x), y:(yOff + row * sqw + sqspace * (row-1)), width:wireH, height:(wireW/6) }));
+                wire1.append(MakeSvgElem("rect", { class:`backing v x${col} y${row}`, x:(xOff*6 + x), y:(yOff + row * sqw + sqspace * row - wireW/6), width:wireH, height:(wireW/6) }));
+                let w2 = wireIndex++;
+                let wire2 = $(MakeSvgElem("g", { class: `wire white v w2 wire${w2} x${col} y${row}` }));
+                wire2.click(function() { clickWire(this, w2, false); return false; });
+                let wireText2 = $(MakeSvgElem("text", { class: "wiretext", x:(xOff*5 + x + sqw/2 + 10.5), y:(yOff + row * sqw + sqspace * (row-1) + 22) }, "W"));
+                let wirebody2 = $(MakeSvgElem("rect", { class: "wirebody", x:(xOff*5 + x + sqw/2), y:(yOff + row * sqw + sqspace * (row-1)), width:wireH, height:wireW }));
+                wire2.append(MakeSvgElem("rect", { class:`backing v x${col} y${row}`, x:(xOff*5 + x + sqw/2), y:(yOff + row * sqw + sqspace * (row-1)), width:wireH, height:(wireW/6) }));
+                wire2.append(MakeSvgElem("rect", { class:`backing v x${col} y${row}`, x:(xOff*5 + x + sqw/2), y:(yOff + row * sqw + sqspace * row - wireW/6), width:wireH, height:(wireW/6) }));
+
+                wire1.append(wirebody1);
+                wire1.append(wireText1);
+                wire2.append(wirebody2);
+                wire2.append(wireText2);
+                grid.append(wire1);
+                grid.append(wire2);
+                grid.append(MakeSvgElem("rect", { class:"backing", x:(xOff*6 + x - 3), y:(yOff + row * sqw + sqspace * (row-1)), width:(wireH+6), height:(wireW/18) }));
+                grid.append(MakeSvgElem("rect", { class:"backing", x:(xOff*6 + x - 3), y:(yOff + row * sqw + sqspace * row - wireW/18), width:(wireH+6), height:(wireW/18) }));
+                grid.append(MakeSvgElem("rect", { class:"backing", x:(xOff*5 + x + sqw/2 - 3), y:(yOff + row * sqw + sqspace * (row-1)), width:(wireH+6), height:(wireW/18) }));
+                grid.append(MakeSvgElem("rect", { class:"backing", x:(xOff*5 + x + sqw/2 - 3), y:(yOff + row * sqw + sqspace * row - wireW/18), width:(wireH+6), height:(wireW/18) }));
+            }
+        }
+
+        $("table tr:not(:first-child)").click(function() {
+            let elem = $(this);
+            if (!elem.hasClass("selected") && $("table tr.selected").length < 5) {
+                elem.addClass(`selected ${colors[currentLedColor]}`);
+                elem.find("th:first-child").text(ledColors[currentLedColor]);
+                currentLedColor++;
+            }
+        });
+
+        $(".clear-selections").click(function() {
+            $("table tr.selected").each(function() {
+                $(this).removeClass("selected red yellow blue white black");
+                $(this).find("th:first-child").text("");
+            });
+            currentLedColor = 0;
+        });
+
+        function updateSelection() {
+            $(".ledgroup.selected, .wire.selected").removeClass("selected");
+            if (selectedLed >= 0) {
+                $(`.ledgroup.l${selectedLed}`).addClass("selected");
+            }
+            else if (selectedWire >= 0) {
+                $(`.wire.wire${wIdx[selectedWire]}`).addClass("selected");
+            }
+        }
+
+        function clearSelected() {
+            selectedLed = selectedWire = -1;
+            updateSelection();
+        }
+
+        let down = false;
+        $(document).click(clearSelected).keydown(function(event) {
+            if (mode() != MODE_READ) return true;
+            if (down) return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if ((selectedLed >= 0 || selectedWire >= 0) && NoSpecialKeys(event) && (k == "r" || k == "y" || k == "b" || k == "w" || k == "k")) {
+                if (selectedLed >= 0) {
+                    setColor($(`.ledgroup.l${selectedLed}`), colorKey[k]);
+                    selectedLed = (selectedLed + 1) % nTiles;
+                    updateSelection();
+                }
+                else {
+                    setColor($(`.wire.wire${wIdx[selectedWire]}`), colorKey[k]);
+                    selectedWire = (selectedWire + 1) % 48;
+                    updateSelection();
+                }
+                down = false;
+                return false;
+            }
+ 
+            down = false;
+        });
+
+        let audioCut = $("<audio>")
+            .attr("src", "audio/Old Fogey/WireSnip.wav ")
+            .appendTo(grid);
+        let audioRes = $("<audio>")
+            .attr("src", "audio/Old Fogey/BigButtonRelease.wav")
+            .appendTo(grid);
+        let audioSolve = $("<audio>")
+            .attr("src", "audio/Module Listening/Creation - Solve.wav")
+            .prop("volume", 0.4)
+            .appendTo(grid);
+
+        function playCutSound(cut) {
+            if ($("button.sound").hasClass("play")) {
+                let aud = cut ? audioCut[0].cloneNode() : audioRes[0].cloneNode();
+                aud.volume = 0.8;
+                aud.play();
+            }
+        }
+
+        function ERange(start, count) {
+            return [...Array(count).keys()].map(x => x + start);
+        }
+
+        function clickWire(wire, w, horiz) {
+            if (mode() == MODE_SOLVE) {
+                $(wire).toggleClass("cut");
+                playCutSound($(wire).hasClass("cut"));
+            }
+            else if (mode() == MODE_PLAY) {
+                playClickWire(w);
+            }
+            else {
+                clearSelected();
+                nextColor(wire);
+                selectedWire = wrIdx[w];
+                updateSelection();
+            }
+        }
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        function hasColor(elem) {
+            return colors.findIndex(color => $(elem).hasClass(color));
+        }
+
+        function nextColor(elem) {
+            let col = hasColor(elem);
+            let next = (col + 1) % colors.length;
+            setColor(elem, next);
+            return next;
+        }
+
+        function setColor(elem, c) {
+            $(elem).removeClass(colors.join(" ")).addClass(colors[c]);
+            $(elem).find("text").html(colorL[colors[c]]);
+        }
+
+        function resetWires() {
+            $(".wire").removeClass("cut");
+        }
+
+        function Strike() {
+            alert("Strike!");
+        }
+
+        let tools = $(".tools");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
+
+        $("<button>").addClass("reset").text("Reset").appendTo(tools).click(function() {
+            if ($(".wire").hasClass("cut")) playCutSound(false);
+            resetWires();
+        });
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            $("body").toggleClass("solve", $(this).hasClass("solve"));
+        });
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if (mode() == MODE_PLAY) {
+                generate();
+            }
+            else resetWires();
+            $(".reset-grid").click();
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $(".solved-text").addClass("invis");
+            $("body").removeClass("solution-shown solve play");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $("button.read-solve").removeClass("solve");
+            $(".wire, .ledgroup").removeClass(colors.join(" ")).addClass("white");
+            $("svg text").text("W");
+            $(".clear-selections").click();
+            resetWires();
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".solved-text, .tools button, .ledgroup, .wire, tr")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveLabels = Array.from($("svg text, table th:first-child")).map(x => $(x)).map(x => x.text() || "");
+            let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveSolutionHtml = $(".solution div").html();
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            // Save generated puzzle arrays
+            let saveArrays = {
+                cut: JSON.parse(JSON.stringify(cut)),
+                lgrid: JSON.parse(JSON.stringify(lgrid)),
+                wgrid: JSON.parse(JSON.stringify(wgrid)),
+                lnums: JSON.parse(JSON.stringify(lnums))
+            };
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".solved-text, .tools button, .ledgroup, .wire, tr").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $("svg text, table th:first-child").each((i, x) => $(x).text(saveLabels[i]));
+                $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
+                $(".solution div").html(saveSolutionHtml);
+                currentState = stateNumber;
+
+                // Restore generated puzzle arrays
+                cut = JSON.parse(JSON.stringify(saveArrays.cut));
+                lgrid = JSON.parse(JSON.stringify(saveArrays.lgrid));
+                wgrid = JSON.parse(JSON.stringify(saveArrays.wgrid));
+                lnums = JSON.parse(JSON.stringify(saveArrays.lnums));
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+
+        //the rest of the code is from the module source code
+
+        let cut = Array(3).fill().map(()=>Array(48).fill(false));
+        const livecons = [ [3, 4], [1, 2], [0, 4], [1, 3], [0, 2], [1, 4], [2, 3], [0, 1], [2, 4], [0, 3] ];
+        let lgrid = Array(4).fill().map(()=>Array(4).fill(0));
+        let wgrid = Array(3).fill().map(()=>Array(7).fill().map(()=>Array(7).fill(0)));
+        let lnums = [];
+
+        function playClickWire(w) {
+            let wire = $(`.wire.wire${w}`);
+            if (wire.hasClass("cut")) {
+                return;
+            }
+            else if (cut[0][w]) {
+                // console.log(w); return;
+                wire.addClass("cut");
+                playCutSound(true);
+                cut[0][w] = false;
+                cut[1][w] = true;
+                cut[2][w] = true;
+                let p = P(w);
+                wgrid[2][p[0]][p[1]] += 1;
+                for (let i = 0; i < 24; i++) {
+                    if (cut[1][2 * i] != cut[1][(2 * i) + 1]) {
+                        p = P(2 * i);
+                        if (!Connected(p[0], p[1])) {
+                            wgrid[2][p[0]][p[1]] = 3;
+                            cut[0][2 * i] = false;
+                            cut[0][(2 * i) + 1] = false;
+                            cut[1][2 * i] = true;
+                            cut[1][(2 * i) + 1] = true;
+                            i = 0;
+                        }
+                    }
+                }
+                if (cut[1].every(x => x)) {
+                    if ($("button.sound").hasClass("play"))
+                        audioSolve[0].play();
+                    $(".solved-text").removeClass("invis");
+                }
+                else if (cut[0].every(x => !x)) {
+                    generateMain();
+                }
+            }
+            else {
+                // console.log("Strike", w); return;
+                Strike();
+            }
+        }
+
+        function wOrder() {
+            return [
+                wgrid[0][0][1], wgrid[0][0][3], wgrid[0][0][5],
+                wgrid[1][0][1], wgrid[1][0][3], wgrid[1][0][5],
+                wgrid[0][1][0], wgrid[1][1][0], wgrid[0][1][2], wgrid[1][1][2], wgrid[0][1][4], wgrid[1][1][4], wgrid[0][1][6], wgrid[1][1][6],
+                wgrid[0][2][1], wgrid[0][2][3], wgrid[0][2][5],
+                wgrid[1][2][1], wgrid[1][2][3], wgrid[1][2][5],
+                wgrid[0][3][0], wgrid[1][3][0], wgrid[0][3][2], wgrid[1][3][2], wgrid[0][3][4], wgrid[1][3][4], wgrid[0][3][6], wgrid[1][3][6],
+                wgrid[0][4][1], wgrid[0][4][3], wgrid[0][4][5],
+                wgrid[1][4][1], wgrid[1][4][3], wgrid[1][4][5],
+                wgrid[0][5][0], wgrid[1][5][0], wgrid[0][5][2], wgrid[1][5][2], wgrid[0][5][4], wgrid[1][5][4], wgrid[0][5][6], wgrid[1][5][6],
+                wgrid[0][6][1], wgrid[0][6][3], wgrid[0][6][5],
+                wgrid[1][6][1], wgrid[1][6][3], wgrid[1][6][5]
+            ];
+        }
+        function config() {
+            let r = ["R","Y","B","W","K"];
+            let w = wOrder();
+            return [
+                [   "■",   "■",   "■",  r[w[0]],  "■",   "■",   "■",   r[w[1]],   "■",   "■",   "■",   r[w[2]],   "■",   "■",   "■" ],
+                [   "■",   "□",   "■",    " ",    "■",   "□",   "■",     " ",     "■",   "□",   "■",     " ",     "■",   "□",   "■" ],
+                [   "■",   "■",   "■",  r[w[3]],  "■",   "■",   "■",   r[w[4]],   "■",   "■",   "■",   r[w[5]],   "■",   "■",   "■" ],
+                [ r[w[6]], " ", r[w[7]],  " ",  r[w[8]], " ", r[w[9]],   " ",   r[w[10]]," ", r[w[11]],  " ",   r[w[12]]," ", r[w[13]] ],
+                [   "■",   "■",   "■",  r[w[14]], "■",   "■",   "■",   r[w[15]],  "■",   "■",   "■",   r[w[16]],  "■",   "■",   "■" ],
+                [   "■",   "□",   "■",    " ",    "■",   "□",   "■",     " ",     "■",   "□",   "■",     " ",     "■",   "□",   "■" ],
+                [   "■",   "■",   "■",  r[w[17]], "■",   "■",   "■",   r[w[18]],  "■",   "■",   "■",   r[w[19]],  "■",   "■",   "■" ],
+                [ r[w[20]]," ",r[w[21]],  " ",  r[w[22]]," ", r[w[23]],  " ",   r[w[24]]," ", r[w[25]],  " ",   r[w[26]]," ", r[w[27]] ],
+                [   "■",   "■",   "■",  r[w[28]], "■",   "■",   "■",   r[w[29]],  "■",   "■",   "■",   r[w[30]],  "■",   "■",   "■" ],
+                [   "■",   "□",   "■",    " ",    "■",   "□",   "■",     " ",     "■",   "□",   "■",     " ",     "■",   "□",   "■" ],
+                [   "■",   "■",   "■",  r[w[31]], "■",   "■",   "■",   r[w[32]],  "■",   "■",   "■",   r[w[33]],  "■",   "■",   "■" ],
+                [ r[w[34]]," ",r[w[35]],  " ",  r[w[36]]," ", r[w[37]],  " ",   r[w[38]]," ", r[w[39]],  " ",   r[w[40]]," ", r[w[41]] ],
+                [   "■",   "■",   "■",  r[w[42]], "■",   "■",   "■",   r[w[43]],  "■",   "■",   "■",   r[w[44]],  "■",   "■",   "■" ],
+                [   "■",   "□",   "■",    " ",    "■",   "□",   "■",     " ",     "■",   "□",   "■",     " ",     "■",   "□",   "■" ],
+                [   "■",   "■",   "■",  r[w[45]], "■",   "■",   "■",   r[w[46]],  "■",   "■",   "■",   r[w[47]],  "■",   "■",   "■" ]
+            ];
+        }
+
+        function configStr() {
+            let conf = config();
+            for(let i = 0; i < 12; i++) {
+                let p = P(2 * i);
+                conf[4 * Math.floor(i / 3)][4 * (i % 3) + 3] = cut[2][2 * i] ? "*" : (wgrid[2][p[0]][p[1]] < 3 ? (cut[0][2 * i] ? "-" : "X") : "X");
+                conf[4 * Math.floor(i / 3) + 2][4 * (i % 3) + 3] = cut[2][2 * i + 1] ? "*" : (wgrid[2][p[0]][p[1]] < 3 ? (cut[0][2 * i + 1] ? "-" : "X") : "X");
+                p = P((2 * i) + 24);
+                conf[4 * Math.floor(i / 4) + 3][4 * (i % 4)] = cut[2][2 * i + 24] ? "*" : (wgrid[2][p[0]][p[1]] < 3 ? (cut[0][2 * i + 24] ? "|" : "X") : "X");
+                conf[4 * Math.floor(i / 4) + 3][4 * (i % 4) + 2] = cut[2][2 * i + 25] ? "*" : (wgrid[2][p[0]][p[1]] < 3 ? (cut[0][2 * i + 25] ? "|" : "X") : "X");
+            }
+            return conf.map(x => x.join("")).join("\n");
+        }
+
+        function P(i) {
+            let p = [0,0];
+            if (i < 24) {
+                p[0] = 2 * Math.floor(i / 6);
+                p[1] = 2 * (Math.floor(i / 2) % 3) + 1;
+            }
+            else {
+                p[0] = 2 * Math.floor((i - 24) / 8) + 1;
+                p[1] = 2 * (Math.floor((i - 24) / 2) % 4);
+            }
+            return p;
+        }
+
+        function generateMain() {
+            let success = false;
+            while (!success) {
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        let r = Math.floor(Math.random() * colors.length);
+                        lgrid[i][j] = r;
+                        wgrid[0][2 * i][2 * j] = lnums[r];
+                        wgrid[1][2 * i][2 * j] = lnums[r];
+                    }
+                }
+                for(let i = 0; i < 48; i++) {
+                    if (!cut[1][i]) {
+                        let p = P(i);
+                        let w = wgrid[2][p[0]][p[1]];
+                        if (w < 2) {
+                            w = wgrid[i % 2][p[0]][p[1]];
+                            if (i < 24) {
+                                if (livecons[wgrid[i % 2][p[0]][p[1] - 1]].includes(w) || livecons[wgrid[i % 2][p[0]][p[1] + 1]].includes(w))
+                                    continue;
+                            }
+                            else {
+                                if (livecons[wgrid[i % 2][p[0] - 1][p[1]]].includes(w) || livecons[wgrid[i % 2][p[0] + 1][p[1]]].includes(w))
+                                    continue;
+                            }
+                            cut[0][i] = true;
+                        }
+                    }
+                }
+                success = cut[0].some(x => x);
+            }
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    setColor($(`.ledgroup.x${col}.y${row}`), lgrid[row][col]);
+                }
+            }
+            $(".solution div").html(configStr().replace(/\n/g, "<br>"));
+        }
+
+        function generate() {
+            generating = true;
+            $(".clear-selections").click();
+
+            cut = Array(3).fill().map(()=>Array(48).fill(false));
+            lgrid = Array(4).fill().map(()=>Array(4).fill(0));
+            wgrid = Array(3).fill().map(()=>Array(7).fill().map(()=>Array(7).fill(0)));
+
+            for (let i = 0; i < 48; i++) {
+                let r = Math.floor(Math.random() * colors.length);
+                let p = P(i);
+                wgrid[i % 2][p[0]][p[1]] = r;
+            }
+            lnums = [Math.floor(Math.random() * 10)];
+            let second = Math.floor(Math.random() * 10);
+            for (let i = 1; i < colors.length; i++) {
+                lnums.push(0);
+                lnums[i] = (lnums[i - 1] + second) % 10;
+                while (lnums.slice(0,i).includes(lnums[i]))
+                    lnums[i] = (lnums[i] + 1) % 10;
+            }
+            
+            generateMain();
+            let wcolors = wOrder();
+            for(let i = 0; i < 48; i++)
+                setColor($(`.wire.wire${wIdx[i]}`), wcolors[i]);
+
+            // Auto-select the corresponding rows of the table
+            console.log(lnums);
+            for (let i = 0; i < lnums.length; i++) {
+                $(`table tr:nth-child(${lnums[i] + 2})`).click();
+            }
+            generating = false;
+        }
+
+        function Connected(j, k) {
+            let tgrid = Array(2).fill().map(()=>Array(7).fill().map(()=>Array(7).fill(0)));
+            for (let i = 0; i < 49; i++) {
+                tgrid[0][Math.floor(i / 7)][i % 7] = wgrid[2][Math.floor(i / 7)][i % 7];
+                tgrid[1][Math.floor(i / 7)][i % 7] = wgrid[2][Math.floor(i / 7)][i % 7];
+            }
+            tgrid[0][j][k] = 2;
+            tgrid[1][j][k] = 2;
+            tgrid[0][2 * Math.floor(Math.random() * 4)][2 * Math.floor(Math.random() * 4)] = 2;
+            while(ERange(0, 16).map(x => tgrid[0][2 * Math.floor(x / 4)][2 * (x % 4)] == tgrid[1][2 * Math.floor(x / 4)][2 * (x % 4)]).some(x => !x))
+            {
+                for (let i = 0; i < 16; i++)
+                    tgrid[1][2 * Math.floor(i / 4)][2 * (i % 4)] = tgrid[0][2 * Math.floor(i / 4)][2 * (i % 4)];
+                for (let i = 0; i < 16; i++) {
+                    let p = [ 2 * Math.floor(i / 4), 2 * (i % 4) ];
+                    if(tgrid[0][p[0]][p[1]] == 2) {
+                        tgrid[0][p[0]][p[1]] = 3;
+                        if (p[0] > 0 && tgrid[0][p[0] - 1][p[1]] != 2 && tgrid[0][p[0] - 2][p[1]] == 0)
+                            tgrid[0][p[0] - 2][p[1]] = 1;
+                        if (p[1] > 0 && tgrid[0][p[0]][p[1] - 1] != 2 && tgrid[0][p[0]][p[1] - 2] == 0)
+                            tgrid[0][p[0]][p[1] - 2] = 1;
+                        if (p[0] < 6 && tgrid[0][p[0] + 1][p[1]] != 2 && tgrid[0][p[0] + 2][p[1]] == 0)
+                            tgrid[0][p[0] + 2][p[1]] = 1;
+                        if (p[1] < 6 && tgrid[0][p[0]][p[1] + 1] != 2 && tgrid[0][p[0]][p[1] + 2] == 0)
+                            tgrid[0][p[0]][p[1] + 2] = 1;
+                    }
+                }
+                for (let i = 0; i < 16; i++) {
+                    if (tgrid[0][2 * Math.floor(i / 4)][2 * (i % 4)] == 1)
+                        tgrid[0][2 * Math.floor(i / 4)][2 * (i % 4)] = 2;
+                }           
+            }
+            return ERange(0, 16).map(x => tgrid[0][2 * Math.floor(x / 4)][2 * (x % 4)] == 3).every(x => x);
+        }
+    });
+    </script>
+    <style>
+        table th:first-child { width: 60px; }
+        table tr.selected.red { background-color: #FF000066; }
+        table tr.selected.yellow { background-color: #FFFF0066; }
+        table tr.selected.blue { background-color: #0000FF66; }
+
+        table tr.selected.white { background-color: #88888844; }
+        .dark table tr.selected.white {
+            background-color: #FFFFFFDD;
+            color: #000;
+        }
+        table tr.selected.black { background-color: #000; color: #DDD; }
+
+        svg { width: 80%; }
+        svg :is(rect, circle) {
+            fill: transparent;
+            stroke: #000;
+            stroke-width: 2px;
+        }
+        .dark svg :is(rect.square, rect.backing, .wirebody, circle) {
+            stroke: #DDD;
+        }
+        svg .led,
+        svg :is(.wirebody, .backing:is(.v, .h)) {
+            cursor: pointer;
+            fill: #FFF;
+        }
+        svg rect.backing { stroke-width: 1.6px; }
+
+        svg text {
+            user-select: none;
+            pointer-events: none;
+        }
+        svg text.ledtext {
+            font-size: 30px;
+        }
+        svg text.wiretext {
+            font-size: 20px;
+        }
+
+        .white :is(.led, .wire :is(.wirebody, .backing:is(.h,.v))) { fill: #FFF; }
+        .black :is(.led, .wire :is(.wirebody, .backing:is(.h,.v))) { fill: #000; }
+        .red :is(.led, .wire :is(.wirebody, .backing:is(.h,.v))) { fill: #F00; }
+        .blue :is(.led, .wire :is(.wirebody, .backing:is(.h,.v))) { fill: #00F; }
+        .yellow :is(.led, .wire :is(.wirebody, .backing:is(.h,.v))) { fill: #FF0; }
+
+        .dark svg text { fill: #000; }
+        .dark :is(.black, .red, .blue) text, :is(.black, .red, .blue) text { fill: #FFF; }
+        
+        .dark svg .wire.cut .wirebody, svg .wire.cut .wirebody {
+            stroke: transparent;
+            fill: transparent !important;
+        }
+
+        svg .ledgroup.selected circle, svg .wire.selected :is(.wirebody, .wirebody.cut) {
+            stroke: #888;
+            stroke-width: 4px;
+            stroke-dasharray: 7 3.5;
+        }
+        svg .wire.cut text { fill: #000; }
+        .dark svg .wire.cut text { fill: #DDD; }
+        svg .wire.cut text, .dark svg .wire.cut text {
+            opacity: 40%;
+        }
+
+        .tools {
+            width: 130px;
+        }
+        .tools button {
+            margin: 8px;
+        }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { color: transparent; }
+        .solution { transition: 0.3s; }
+        .solution div {
+            background-color: white;
+            transition: 0.3s;
+            font-family: monospace;
+            font-size: 22px;
+            display: inline-block;
+            line-height: 0.9;
+        }
+        .dark .solution div { background: #222; }
+        body:not(.solution-shown) :is(.solution, .solution div),
+        body:not(.play) :is(.solution, .solution div) {
+            color: transparent;
+            font-size: 0;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 9px 10px 5px;
+            transition: color 0.5s, background-color 0.5s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.reset {
+            margin: 20px 0;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        body.play button.read-solve::before,
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.show-sol {
+            padding: 3px 3px 1px 3px;
+        }
+        body.play button.reset,
+        body:not(.play) button.show-sol,
+        body:not(.play, .solve) button.reset,
+        body:is(.solve, .play) button.clear-selections,
+        body:is(.solve, .play) button.clear-read,
+        body.play button.read-solve {
+            user-select: none;
+            pointer-events: none;
+            background-color: #555;
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wire Terminals</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Wire Terminals.svg" class="diagram">
+                <h2>On the Subject of Wire Terminals</h2>
+                <p class="flavour-text">If wires are the lifeblood of electronics, we may need to call in a neurosurgeon.</p>
+                <ul>
+                    <li>This module consists of a network of terminals, each with an LED and up to eight coloured wires connecting it to its neighbours.</li>
+                    <li>The colour of the LED denotes which wires connected to its terminal are live and should not be cut.</li>
+                    <li>Use the list below to assign a pair of wire colours to an LED colour:
+                    <ol>
+                        <li>Take the first numeric digit of the serial number and assign its corresponding pair to the Red LED.</li>
+                        <li>
+                            Take the second numeric digit of the serial number and move down the list that many spaces, wrapping around from bottom to top.<br>
+                            If the space landed on is already assigned to another LED colour, continue moving down to the first unassigned space.
+                        </li>
+                        <li>Repeat the previous step to assign the LED colours Yellow, Blue, White, and Black, in that order.</li>
+                    </ol></li>
+                </ul>
+                <p class="centered">Click a row to mark its corresponding LED.</p>
+                <div class="hstack alignc gap2">
+                    <button class="clear-selections">Clear</button>
+                    <table>
+                        <tr><th>LED</th><th>Digit</th><th>Color Pair</th></tr>
+                        <tr><th></th><th>0</th><th>White &amp; Black</th></tr>
+                        <tr><th></th><th>1</th><th>Yellow &amp; Blue</th></tr>
+                        <tr><th></th><th>2</th><th>Red &amp; Black</th></tr>
+                        <tr><th></th><th>3</th><th>Yellow &amp; White</th></tr>
+                        <tr><th></th><th>4</th><th>Red &amp; Blue</th></tr>
+                        <tr><th></th><th>5</th><th>Yellow &amp; Black</th></tr>
+                        <tr><th></th><th>6</th><th>Blue &amp; White</th></tr>
+                        <tr><th></th><th>7</th><th>Red &amp; Yellow</th></tr>
+                        <tr><th></th><th>8</th><th>Blue &amp; Black</th></tr>
+                        <tr><th></th><th>9</th><th>Red &amp; White</th></tr>
+                    </table>
+                </div>
+                <ul>
+                    <li>If cutting a wire would result in partitioning the network into two disconnected groups, that wire is always live regardless of the states of the terminals it connects to.</li>
+                    <li>Once only live wires remain uncut, the colours of the LEDs will change.</li>
+                    <li>The module is solved when the only remaining uncut wires are always live.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wire Terminals</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap left">
+                    <div class="vstack tools alignc top"></div>
+                    <svg class="grid" viewbox="0 0 414 414" xmlns="http://www.w3.org/2000/svg" text-anchor="middle"></svg>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="saves hstack wrap left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack left" style="margin-top: 5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="solution">X = avoid cutting.<br><div></div></div>
+                <div style="height: 5mm"></div>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>
+                        In <b>Read</b> mode:
+                        <ul>
+                            <li><b>Click on a row</b> in the table to mark the corresponding LED color.</li>
+                            <li><b>Click on an LED or wire</b> to select it.</li>
+                            <li>While an LED or wire is selected, type <b>R</b>, <b>Y</b>, <b>B</b>, <b>W</b>, or <b>K</b> to set its color, or click to cycle the colors.</li>
+                            <li>The <b>Clear</b> button will reset the table rows.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <b>Solve</b> mode:
+                        <ul>
+                            <li>Click a wire to cut it.</li>
+                            <li>The <b>Reset</b> button will restore all the cut wires to their initial uncut state.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <b>Generated</b> mode:
+                        <ul>
+                            <li>Press the <b>Manual</b> button to switch to <b>Generated</b> mode.</li>
+                            <li>The interactive will act like the module.</li>
+                            <li>Have fun solving generated puzzles!</li>
+                        </ul>
+                    </li>
+                    <li>The sound effects can be muted.</li>
+                    <li>The solution to the generated puzzle can be shown or hidden.</li>
+                    <li>Press <b>Save</b> to save the current state of the interactive.</li>
+                    <li>The <b>Reset Saves</b> button clears all the saved states.</li>
+                    <li>The <b>Reset All</b> button resets the entire interactive to its initial state.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
