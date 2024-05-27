@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Blue Hexabuttons — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        $(function() {
+            let grid = $("svg.grid");
+            let gridSize = 160;
+            let cx = 250, cy = 250;
+            const hOrder = [0,1,5,2,4,3];
+            let coords = [];
+            let hexAt = Array(6).fill(0);
+            let selected;
+            let saveStates = [];
+            let currentState = 0;
+    
+            const swaps = {
+                "swap12": [[0,1]],
+                "swap13": [[0,2]],
+                "swap14": [[0,3]],
+                "swap15": [[0,4]],
+                "swap16": [[0,5]],
+                "swap23": [[1,2]],
+                "swap24": [[1,3]],
+                "swap25": [[1,4]],
+                "swap26": [[1,5]],
+                "swap34": [[2,3]],
+                "swap35": [[2,4]],
+                "swap36": [[2,5]],
+                "swap45": [[3,4]],
+                "swap46": [[3,5]],
+                "swap56": [[4,5]],
+                "rotate1": [[0,1], [0,3], [0,5], [0,4], [0,2]],
+                "rotate2": [[0,3], [0,4], [1,5], [1,2]],
+                "rotate3": [[0,5], [1,4], [2,3]],
+                "rotate4": [[1,2], [1,5], [0,4], [0,3]],         //same as -2
+                "rotate5": [[1,0], [1,2], [1,4], [1,5], [1,3]],  //same as -1
+                "rotate-1": [[1,0], [1,2], [1,4], [1,5], [1,3]],
+                "rotate-2": [[1,2], [1,5], [0,4], [0,3]],
+                "rotate-3": [[0,5], [1,4], [2,3]],               //same as +3
+                "rotate-4": [[0,3], [0,4], [1,5], [1,2]],        //same as +2
+                "rotate-5": [[0,1], [0,3], [0,5], [0,4], [0,2]], //same as +1
+                "swap123456": [[0,1], [2,3], [4,5]],
+                "swap132546": [[0,2], [1,4], [3,5]],
+                "swap162435": [[0,5], [1,3], [2,4]]
+            };
+    
+            for (let i = 0; i < 6; i++) {
+                let angle = (hOrder[i]-2) * Math.PI / 3;
+                let x = gridSize * Math.cos(angle);
+                let y = gridSize * Math.sin(angle);
+                coords.push([x,y]);
+                let g = MakeSvgElem("g", { class:`hexagon h${i}`, transform: `translate(${x},${y})`});
+                let hex = RegularPolygon(gridSize / 1.9, 250, 250, 6, 0, {fill: "none", stroke: "black"});
+                let text = MakeSvgElem("text", {x: 250, y: 250, "dominant-baseline": "central"}, i + 1);
+                $(text).click(function() {
+                    selectNone();
+                    $(this).addClass("selected");
+                    selected = i;
+                    return false;
+                });
+                g.append(hex, text);
+                hexAt[i] = { index: i, hex: g };
+                grid.append(g);
+            }
+    
+            function selectNone() {
+                selected = null;
+                $("svg.grid text").removeClass("selected");
+            }
+    
+            $(document).click(function(event) {
+                selectNone();
+            }).keydown(function(event) {
+                let k = event.key.toLowerCase();
+                if (/^\d$/.test(k)) {
+                    if (selected !== null) {
+                        $(`.hexagon.h${selected} text`).text(k).removeClass("selected");
+                        selected = (selected + 1) % 6;
+                        $(`.hexagon.h${selected} text`).addClass("selected");
+                    }
+                }
+            });
+    
+            function updatePositions() {
+                coords.forEach(function(e, i) {
+                    let h = $(hexAt[i].hex);
+                    h.attr("transform", `translate(${e[0]},${e[1]})`);
+                });
+            }
+    
+            $("svg.swap").click(function() {
+                let type = Array.from(this.classList).find(x => x.length > 4);
+                let t = swaps[type];
+                t.forEach(function(s) {
+                    [hexAt[s[0]], hexAt[s[1]]] = [hexAt[s[1]], hexAt[s[0]]];
+                });
+                updatePositions();
+            });
+    
+            function resetPos() {
+                hexAt = coords.map((_, i) => ({ index: i, hex: $(`.hexagon.h${i}`)[0] }));
+                updatePositions();
+            }
+    
+            let tools = $(".tools");
+    
+            $("<button>").addClass("reset").text("Reset").appendTo(tools).click(function() {
+                resetPos();
+            });
+            $("<button>").addClass("sound play").appendTo(tools).click(function() {
+                $(this).toggleClass("play");
+            });
+    
+            $(".reset-saves").click(function() {
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+    
+            $(".reset-all").click(function() {
+                $("button.sound").addClass("play");
+                resetPos();
+                $("svg.grid text").each((i, x) => $(x).text(i + 1));
+    
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+    
+            function removeFutureSaves() {
+                if (currentState < saveStates.length - 1) {
+                    for (let i = currentState + 1; i < saveStates.length; i++) {
+                        saveStates[i].remove();
+                    }
+                    saveStates.splice(currentState + 1, saveStates.length - currentState);
+                }
+            }
+    
+            $("button.save").click(function() {
+                removeFutureSaves();
+    
+                let saveStateClass = Array.from($(".tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+                let saveLabels = Array.from($("svg text")).map(x => $(x)).map(x => x.text() || "");
+                let stateNumber = saveStates.length;
+                currentState = stateNumber;
+    
+                let savedHexAt = hexAt.map(x => ({ index: x.index, hex: x.hex[0] }));
+    
+                let button = $("<button>").text(stateNumber + 1).click(function() {
+                    $(".tools button").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                    $("svg text").each((i, x) => $(x).text(saveLabels[i]));
+                    currentState = stateNumber;
+    
+                    hexAt = savedHexAt.map(x => ({ index: x.index, hex: $(`.hexagon.h${x.index}`)[0] }));
+                    updatePositions();
+                }).addClass("flash").appendTo(".saves");
+                setTimeout(() => {
+                    button.removeClass("flash");
+                }, 100);
+    
+                saveStates.push(button);
+            });
+        });
+    </script>
+    <style>
+        .dark table, table { margin: 1em auto; }
+        td { text-align: center; }
+        .iota {
+            font-family: Consolas;
+            font-weight: 550;
+            font-size: 50px;
+        }
+        .infinity {
+            font-size: 45px;
+            font-weight: 400;
+        }
+        .greek-letters th:nth-child(2n + 1) {
+            font-family: Roboto Mono;
+            font-weight: 400;
+            font-size: 47px;
+            padding: 0 10px;
+        }
+
+        svg.grid { width: 500px; }
+        svg polygon { stroke-width: 6px; }
+        svg.swap {
+            width: 2.5cm;
+            cursor: pointer;
+        }
+        svg .hexagon {
+            transform-origin: 250px 250px;
+            transition: transform 1s;
+        }
+        svg text {
+            cursor: text;
+            user-select: none;
+        }
+        svg text.selected { fill: red; }
+
+        ul { margin: 0; }
+
+        .dark { --col: #DDD; }
+        .dark svg.swap path { stroke: var(--col); }
+
+        .dark #arrow-end, .dark #arrow-start, .dark #arrow-cw { fill: var(--col); }
+        .dark svg.swap text { fill: var(--col); }
+
+        .tools {
+            width: 130px;
+        }
+        .tools button {
+            margin: 8px;
+        }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { color: transparent; }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 9px 10px 5px;
+            transition: color 0.5s, background-color 0.5s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Blue Hexabuttons</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Colored Hexabuttons.svg" class="diagram">
+                <h2>On the Subject of Blue Hexabuttons</h2>
+                <p class="flavour-text">What fruit always feels depressed? A blue-berry.</p>
+                <p>The symbols written on each button references to a movement when you press the center button. Find the symbol on the table below to find out which button is linked to which movement:</p>
+                <table class="greek-letters">
+                    <tr><th>ζΓγηξο</th><th>1st Movement</th><th>ΞΣ£Ψθx</th><th>4th Movement</th></tr>
+                    <tr><th>¢σνρεΠ</th><th>2nd Movement</th><th>τ$<span class="iota">ι</span>αφς</th><th>5th Movement</th></tr>
+                    <tr><th>υΛλδΔμ</th><th>3rd Movement</th><th>βΩωκπ<span class="infinity">∞</span></th><th>6th Movement</th></tr>
+                </table>
+                <p>Pressing the center button will transition into the movement phase. The symbols on the buttons will disappear as well as the center button. Each movement has a different value found on the table on the next page.</p>
+                <div class="hstack wrap left">
+                    <div class="vstack tools alignc top"></div>
+                    <svg class="grid" viewbox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" font-size="30" text-anchor="middle"></svg>
+                </div>
+                <div style="height: 5mm"></div>
+                <div class="saves hstack wrap left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack left" style="margin-top: 5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <div style="height: 5mm"></div>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>Click a hexagon number to select it and type a new number.</li>
+                    <li>Click any swap diagram on the next page to perform the transformation on the interactive below.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>Press <b>Save</b> to save the current state of the interactive.</li>
+                    <li>The <b>Reset Saves</b> button clears all the saved states.</li>
+                    <li>The <b>Reset All</b> button resets the entire interactive.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Blue Hexabuttons</span>
+            </div>
+            <div class="page-content">
+                <p>The button that is linked with that movement gets that value. Press the buttons in ascending value order to disarm the module. Do note, since the buttons have moved around, the values move with them. Therefore, keep track of which button is which.</p>
+                <table>
+                    <tr>
+                        <th><svg class="swap swap12" viewBox="6 2 58 56">
+                            <defs>
+                                <marker style="overflow:visible;" orient="auto" id="arrow-end">
+                                    <path transform="scale(.6) rotate(180) translate(-2.3,0)" d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "></path>
+                                </marker>
+                                <marker style="overflow:visible;" orient="auto" id="arrow-start">
+                                    <path transform="scale(.6) translate(-2.3,0)" d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "></path>
+                                </marker>
+                                <marker style="overflow:visible;" orient="auto" id="arrow-cw">
+                                    <path transform="scale(.5) rotate(165) translate(-2.3,0)" d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "></path>
+                                </marker>
+                            </defs>
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 25.980762 15 43.30127 15" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>3</th>
+                        <th><svg class="swap swap25" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 43.30127 15 25.980762 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>23</th>
+                        <th><svg class="swap swap56" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 25.980762 45 43.30127 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>24</th>
+                        <th><svg class="swap rotate4" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-end="url(#arrow-cw)" fill="none" stroke="black" stroke-width="1"
+                                d="M 34.641014 36.432691 A 6.4326906 6.4326906 0 0 1 28.208323 30 A 6.4326906 6.4326906 0 0 1 34.641014 23.567309 A 6.4326906 6.4326906 0 0 1 41.073705 30 L 41.073705 30 A 6.4326906 6.4326906 0 0 1 40.21119 33.217553"></path>
+                            <text x="34.641016" y="33.5" font-size="10" text-anchor="middle">4</text>
+                        </svg></th>
+                        <th>1</th>
+                    </tr>
+                    <tr>
+                        <th><svg class="swap swap13" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 25.980762 15 17.320508 30" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>17</th>
+                        <th><svg class="swap swap26" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 43.30127 15 43.30127 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>11</th>
+                        <th><svg class="swap swap123456" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 25.980762 15 43.30127 15" fill="none" stroke="black" stroke-width="1"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 17.320508 30 51.961524 30" fill="none" stroke="black" stroke-width="1"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 25.980762 45 43.30127 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>2</th>
+                        <th><svg class="swap rotate5" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-end="url(#arrow-cw)" fill="none" stroke="black" stroke-width="1"
+                                d="M 34.641014 36.432691 A 6.4326906 6.4326906 0 0 1 28.208323 30 A 6.4326906 6.4326906 0 0 1 34.641014 23.567309 A 6.4326906 6.4326906 0 0 1 41.073705 30 L 41.073705 30 A 6.4326906 6.4326906 0 0 1 40.21119 33.217553"></path>
+                            <text x="34.641016" y="33.5" font-size="10" text-anchor="middle">5</text>
+                        </svg></th>
+                        <th>19</th>
+                    </tr>
+                    <tr>
+                        <th><svg class="swap swap14" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 25.980762 15 51.961524 30" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>0</th>
+                        <th><svg class="swap swap34" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 17.320508 30 51.961524 30" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>5</th>
+                        <th><svg class="swap swap162435" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 25.980762 15 43.30127 45" fill="none" stroke="black" stroke-width="1"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 43.30127 15 51.961524 30" fill="none" stroke="black" stroke-width="1"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 17.320508 30 25.980762 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>14</th>
+                        <th><svg class="swap rotate-1" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path transform="translate(34.641016) scale(-1 1) translate(-34.641016)" marker-end="url(#arrow-cw)" fill="none" stroke="black" stroke-width="1"
+                                d="M 34.641014 36.432691 A 6.4326906 6.4326906 0 0 1 28.208323 30 A 6.4326906 6.4326906 0 0 1 34.641014 23.567309 A 6.4326906 6.4326906 0 0 1 41.073705 30 L 41.073705 30 A 6.4326906 6.4326906 0 0 1 40.21119 33.217553"></path>
+                            <text x="34.641016" y="33.5" font-size="10" text-anchor="middle">1</text>
+                        </svg></th>
+                        <th>13</th>
+                    </tr>
+                    <tr>
+                        <th><svg class="swap swap15" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 25.980762 15 25.980762 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>25</th>
+                        <th><svg class="swap swap35" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 17.320508 30 25.980762 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>16</th>
+                        <th><svg class="swap swap132546" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 25.980762 15 17.320508 30" fill="none" stroke="black" stroke-width="1"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 43.30127 15 25.980762 45" fill="none" stroke="black" stroke-width="1"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 51.961524 30 43.30127 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>15</th>
+                        <th><svg class="swap rotate-2" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path transform="translate(34.641016) scale(-1 1) translate(-34.641016)" marker-end="url(#arrow-cw)" fill="none" stroke="black" stroke-width="1"
+                                d="M 34.641014 36.432691 A 6.4326906 6.4326906 0 0 1 28.208323 30 A 6.4326906 6.4326906 0 0 1 34.641014 23.567309 A 6.4326906 6.4326906 0 0 1 41.073705 30 L 41.073705 30 A 6.4326906 6.4326906 0 0 1 40.21119 33.217553"></path>
+                            <text x="34.641016" y="33.5" font-size="10" text-anchor="middle">2</text>
+                        </svg></th>
+                        <th>21</th>
+                    </tr>
+                    <tr>
+                        <th><svg class="swap swap16" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 25.980762 15 43.30127 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>6</th>
+                        <th><svg class="swap swap36" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 17.320508 30 43.30127 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>9</th>
+                        <th><svg class="swap rotate1" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-end="url(#arrow-cw)" fill="none" stroke="black" stroke-width="1"
+                                d="M 34.641014 36.432691 A 6.4326906 6.4326906 0 0 1 28.208323 30 A 6.4326906 6.4326906 0 0 1 34.641014 23.567309 A 6.4326906 6.4326906 0 0 1 41.073705 30 L 41.073705 30 A 6.4326906 6.4326906 0 0 1 40.21119 33.217553"></path>
+                            <text x="34.641016" y="33.5" font-size="10" text-anchor="middle">1</text>
+                        </svg></th>
+                        <th>26</th>
+                        <th><svg class="swap rotate-3" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path transform="translate(34.641016) scale(-1 1) translate(-34.641016)" marker-end="url(#arrow-cw)" fill="none" stroke="black" stroke-width="1"
+                                d="M 34.641014 36.432691 A 6.4326906 6.4326906 0 0 1 28.208323 30 A 6.4326906 6.4326906 0 0 1 34.641014 23.567309 A 6.4326906 6.4326906 0 0 1 41.073705 30 L 41.073705 30 A 6.4326906 6.4326906 0 0 1 40.21119 33.217553"></path>
+                            <text x="34.641016" y="33.5" font-size="10" text-anchor="middle">3</text>
+                        </svg></th>
+                        <th>18</th>
+                    </tr>
+                    <tr>
+                        <th><svg class="swap swap23" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 43.30127 15 17.320508 30" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>22</th>
+                        <th><svg class="swap swap45" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 51.961524 30 25.980762 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>27</th>
+                        <th><svg class="swap rotate2" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-end="url(#arrow-cw)" fill="none" stroke="black" stroke-width="1"
+                                d="M 34.641014 36.432691 A 6.4326906 6.4326906 0 0 1 28.208323 30 A 6.4326906 6.4326906 0 0 1 34.641014 23.567309 A 6.4326906 6.4326906 0 0 1 41.073705 30 L 41.073705 30 A 6.4326906 6.4326906 0 0 1 40.21119 33.217553"></path>
+                            <text x="34.641016" y="33.5" font-size="10" text-anchor="middle">2</text>
+                        </svg></th>
+                        <th>8</th>
+                        <th><svg class="swap rotate-4" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path transform="translate(34.641016) scale(-1 1) translate(-34.641016)" marker-end="url(#arrow-cw)" fill="none" stroke="black" stroke-width="1"
+                                d="M 34.641014 36.432691 A 6.4326906 6.4326906 0 0 1 28.208323 30 A 6.4326906 6.4326906 0 0 1 34.641014 23.567309 A 6.4326906 6.4326906 0 0 1 41.073705 30 L 41.073705 30 A 6.4326906 6.4326906 0 0 1 40.21119 33.217553"></path>
+                            <text x="34.641016" y="33.5" font-size="10" text-anchor="middle">4</text>
+                        </svg></th>
+                        <th>7</th>
+                    </tr>
+                    <tr>
+                        <th><svg class="swap swap24" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 43.30127 15 51.961524 30" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>4</th>
+                        <th><svg class="swap swap46" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" d="M 51.961524 30 43.30127 45" fill="none" stroke="black" stroke-width="1"></path>
+                        </svg></th>
+                        <th>20</th>
+                        <th><svg class="swap rotate3" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path marker-end="url(#arrow-cw)" fill="none" stroke="black" stroke-width="1"
+                                d="M 34.641014 36.432691 A 6.4326906 6.4326906 0 0 1 28.208323 30 A 6.4326906 6.4326906 0 0 1 34.641014 23.567309 A 6.4326906 6.4326906 0 0 1 41.073705 30 L 41.073705 30 A 6.4326906 6.4326906 0 0 1 40.21119 33.217553"></path>
+                            <text x="34.641016" y="33.5" font-size="10" text-anchor="middle">3</text>
+                        </svg></th>
+                        <th>10</th>
+                        <th><svg class="swap rotate-5" viewBox="6 2 58 56">
+                            <path fill="none" stroke="#000" d="m17.32 10 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m8.66 25 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path fill="none" stroke="#000" d="m17.32 40 8.66-5 8.66 5v10l-8.66 5-8.66-5zm17.32 0 8.66-5 8.66 5v10l-8.66 5-8.66-5z"></path>
+                            <path transform="translate(34.641016) scale(-1 1) translate(-34.641016)" marker-end="url(#arrow-cw)" fill="none" stroke="black" stroke-width="1"
+                                d="M 34.641014 36.432691 A 6.4326906 6.4326906 0 0 1 28.208323 30 A 6.4326906 6.4326906 0 0 1 34.641014 23.567309 A 6.4326906 6.4326906 0 0 1 41.073705 30 L 41.073705 30 A 6.4326906 6.4326906 0 0 1 40.21119 33.217553"></path>
+                            <text x="34.641016" y="33.5" font-size="10" text-anchor="middle">5</text>
+                        </svg></th>
+                        <th>12</th>
+                    </tr>
+                </table>
+                <p>If you would like to see the symbols again, press the center button. You can only press the non-center buttons after the movement phase.</p>
+                <p>Pressing the buttons in the wrong order will result in a strike. Any input you have made will be undone.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
