@@ -12,8 +12,10 @@
     <script src="js/Utilities/svg-utils.js"></script>
     <script>
         $(function() {
-            let grid = $("svg.grid");
-            let gridSize = 160;
+            let grid = $("div.grid");
+            let gridSize = 540;
+            let svgSize = 500;
+            let svgCalcSize = 178;
             let cx = 250, cy = 250;
             const hOrder = [0,1,5,2,4,3];
             let coords = [];
@@ -55,26 +57,27 @@
     
             for (let i = 0; i < 6; i++) {
                 let angle = (hOrder[i]-2) * Math.PI / 3;
-                let x = gridSize * Math.cos(angle);
-                let y = gridSize * Math.sin(angle);
+                let x = 31.5 + 33 * Math.cos(angle);
+                let y = 31.5 + 33 * Math.sin(angle);
                 coords.push([x,y]);
-                let g = MakeSvgElem("g", { class:`hexagon h${i}`, transform: `translate(${x},${y})`});
-                let hex = RegularPolygon(gridSize / 1.9, 250, 250, 6, 0, {fill: "none", stroke: "black"});
-                let text = MakeSvgElem("text", {x: 250, y: 250, "dominant-baseline": "central"}, i + 1);
-                $(text).click(function() {
+                let hexGroup = $("<div>").addClass(`hexagon-group h${i}`).css({left: `${x}%`, top: `${y}%`});
+                let hex = MakeSvgTag(svgSize, svgSize, 0, 0, {class: "hex"}).append(RegularPolygon(svgSize/2.1, svgSize/2, svgSize/2, 6, 0, {fill: "none", stroke: "black"}));
+                let textInput = $("<input>").addClass("transparent-input").attr({type: "text", maxlength: "1"}).val(i+1);
+                let container = $("<div>").addClass("hstack alignc").append(textInput);
+                hexGroup.append(hex, container);
+                textInput.click(function() {
                     selectNone();
                     $(this).addClass("selected");
                     selected = i;
                     return false;
                 });
-                g.append(hex, text);
-                hexAt[i] = { index: i, hex: g };
-                grid.append(g);
+                hexAt[i] = { index: i, hex: hexGroup };
+                grid.append(hexGroup);
             }
     
             function selectNone() {
                 selected = null;
-                $("svg.grid text").removeClass("selected");
+                $(".transparent-input").removeClass("selected");
             }
     
             $(document).click(function(event) {
@@ -83,9 +86,13 @@
                 let k = event.key.toLowerCase();
                 if (/^\d$/.test(k)) {
                     if (selected !== null) {
-                        $(`.hexagon.h${selected} text`).text(k).removeClass("selected");
+                        let currentInput = $(`.hexagon-group.h${selected} .transparent-input`);
+                        currentInput.val(k).removeClass("selected");
+                        currentInput.blur();
                         selected = (selected + 1) % 6;
-                        $(`.hexagon.h${selected} text`).addClass("selected");
+                        let nextInput = $(`.hexagon-group.h${selected} .transparent-input`);
+                        nextInput.addClass("selected");
+                        nextInput.focus();
                     }
                 }
             });
@@ -93,22 +100,48 @@
             function updatePositions() {
                 coords.forEach(function(e, i) {
                     let h = $(hexAt[i].hex);
-                    h.attr("transform", `translate(${e[0]},${e[1]})`);
+                    h.css({left: `${e[0]}%`, top: `${e[1]}%`});
                 });
             }
+
+            let audio1 = $("<audio>")
+                .attr("src", "audio/Module Listening/Only Connect - Button.wav")
+                .appendTo(grid);
+            let audio2 = $("<audio>")
+                .attr("src", "audio/Module Listening/Only Connect - Transition.wav")
+                .appendTo(grid);
+            let audio3 = $("<audio>")
+                .attr("src", "audio/Module Listening/Creation - New Element.wav")
+                .prop("volume", 0.4)
+                .appendTo(grid);
     
             $("svg.swap").click(function() {
                 let type = Array.from(this.classList).find(x => x.length > 4);
                 let t = swaps[type];
+                if ($("button.sound").hasClass("play")) {
+                    if (type.includes("rotate"))
+                        audio3[0].cloneNode().play();
+                    else if (type.length > 6)
+                        audio2[0].cloneNode().play();
+                    else
+                        audio1[0].cloneNode().play();
+                }
                 t.forEach(function(s) {
                     [hexAt[s[0]], hexAt[s[1]]] = [hexAt[s[1]], hexAt[s[0]]];
                 });
                 updatePositions();
+
+                let tableCell = $(this).parent();
+                tableCell.addClass("flash");
+                setTimeout(() => {
+                    tableCell.removeClass("flash");
+                }, 200);
             });
     
             function resetPos() {
-                hexAt = coords.map((_, i) => ({ index: i, hex: $(`.hexagon.h${i}`)[0] }));
+                hexAt = coords.map((_, i) => ({ index: i, hex: $(`.hexagon-group.h${i}`)[0] }));
                 updatePositions();
+                if ($("button.sound").hasClass("play")) audio2[0].cloneNode().play();
             }
     
             let tools = $(".tools");
@@ -127,9 +160,9 @@
             });
     
             $(".reset-all").click(function() {
-                $("button.sound").addClass("play");
                 resetPos();
-                $("svg.grid text").each((i, x) => $(x).text(i + 1));
+                $("button.sound").addClass("play");
+                $(".transparent-input").each((i, x) => $(x).val(i + 1));
     
                 saveStates.forEach(x => x.remove());
                 saveStates = [];
@@ -149,7 +182,7 @@
                 removeFutureSaves();
     
                 let saveStateClass = Array.from($(".tools button")).map(x => $(x)).map(x => x.attr("class") || "");
-                let saveLabels = Array.from($("svg text")).map(x => $(x)).map(x => x.text() || "");
+                let saveLabels = Array.from($(".transparent-input")).map(x => $(x)).map(x => x.val() || "");
                 let stateNumber = saveStates.length;
                 currentState = stateNumber;
     
@@ -157,10 +190,10 @@
     
                 let button = $("<button>").text(stateNumber + 1).click(function() {
                     $(".tools button").each((i, x) => $(x).attr("class", saveStateClass[i]));
-                    $("svg text").each((i, x) => $(x).text(saveLabels[i]));
+                    $(".transparent-input").each((i, x) => $(x).val(saveLabels[i]));
                     currentState = stateNumber;
     
-                    hexAt = savedHexAt.map(x => ({ index: x.index, hex: $(`.hexagon.h${x.index}`)[0] }));
+                    hexAt = savedHexAt.map(x => ({ index: x.index, hex: $(`.hexagon-group.h${x.index}`)[0] }));
                     updatePositions();
                 }).addClass("flash").appendTo(".saves");
                 setTimeout(() => {
@@ -173,7 +206,13 @@
     </script>
     <style>
         .dark table, table { margin: 1em auto; }
-        td { text-align: center; }
+        th {
+            transition: background-color 0.5s;
+        }
+
+        th.flash {
+            background-color: blue;
+        }
         .iota {
             font-family: Consolas;
             font-weight: 550;
@@ -190,21 +229,53 @@
             padding: 0 10px;
         }
 
-        svg.grid { width: 500px; }
-        svg polygon { stroke-width: 6px; }
+        html {
+            --gridsize: 500px
+        }
+        div.grid { 
+            min-width: var(--gridsize);
+            width: var(--gridsize);
+            height: var(--gridsize);
+            position: relative;
+        }
+        svg.hex {
+            overflow: visible;
+            width: 100%;
+        }
+        svg.hex polygon { 
+            stroke-width: 20px;
+        }
         svg.swap {
             width: 2.5cm;
             cursor: pointer;
         }
-        svg .hexagon {
-            transform-origin: 250px 250px;
-            transition: transform 1s;
+        div.hexagon-group {
+            transition: left 1s, top 1s;
+            position: absolute;
+            width: calc(var(--gridsize) / 2.7);
+            height: calc(var(--gridsize) / 2.7);
         }
-        svg text {
-            cursor: text;
-            user-select: none;
+        .hexagon-group .hstack {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
         }
-        svg text.selected { fill: red; }
+        .transparent-input {
+            width: 20%;
+            height: 30%;
+            margin: 0;
+            background-color: transparent;
+            border: none;
+            outline: none;
+            text-align: center;
+            font-size: 40px;
+            font-family: 'Special Elite';
+            line-height: 1;
+        }
+        .transparent-input.selected {
+            color: red;
+        }
 
         ul { margin: 0; }
 
@@ -215,17 +286,11 @@
         .dark svg.swap text { fill: var(--col); }
 
         .tools {
-            width: 130px;
+            width: 110px;
         }
         .tools button {
             margin: 8px;
         }
-        .solved-text {
-            color: #0C0;
-            transition: color 0.5s;
-            user-select: none;
-        }
-        .invis { color: transparent; }
 
         button {
             font-family: Special Elite;
@@ -280,7 +345,7 @@
                 <p>Pressing the center button will transition into the movement phase. The symbols on the buttons will disappear as well as the center button. Each movement has a different value found on the table on the next page.</p>
                 <div class="hstack wrap left">
                     <div class="vstack tools alignc top"></div>
-                    <svg class="grid" viewbox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" font-size="30" text-anchor="middle"></svg>
+                    <div class="grid"></div>
                 </div>
                 <div style="height: 5mm"></div>
                 <div class="saves hstack wrap left">
