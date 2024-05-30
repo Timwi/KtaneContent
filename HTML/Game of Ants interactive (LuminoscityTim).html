@@ -85,7 +85,7 @@
             if (readState) {
                 $(".netsquare, .ant-child").each((i, x) => $(x).attr("class", readState[i]));
             }
-            selected = $(".ant-grid .netsq.x0.y0");
+            selected = $(".antsquare.x0.y0");
             selectNone();
             currX = currY = 0;
             gameGrid = JSON.parse(JSON.stringify(origGameGrid));
@@ -328,7 +328,7 @@
                             removeOthers(i + 1);
                         }
                         else {
-                            setAnt($(`.ant-grid .netsq.x${ant[1]}.y${ant[0]}`), i + 1, ant[2], false);
+                            setAnt($(`.antsquare.x${ant[1]}.y${ant[0]}`), i + 1, ant[2], false);
                         }
                     });
                 }
@@ -411,11 +411,11 @@
             let antshare = new Array(antnum);
             let antlog = new Array(antnum);
             antpos.sort((a,b) => a[1] == b[1] ? (a[0] - b[0]) : (a[1] - b[1]));
-            removeAnts($(".ant-grid .netsq"));
+            removeAnts($(".antsquare"));
             for (let i = 0; i < antnum; i++) {
                 let ant = antpos[i];
                 antlog[i] = coordinateName(ant) + ":";
-                setAnt($(`.ant-grid .netsq.x${ant[1]}.y${ant[0]}`), i + 1, ant[2]);
+                setAnt($(`.antsquare.x${ant[1]}.y${ant[0]}`), i + 1, ant[2]);
             }
 
             while (true) {
@@ -600,7 +600,7 @@
                         direction[1] == -1 ? $(`.btn-w.l${currX}`) : $(`.btn-s.l${currX}`);
                     leaveButton.addClass("leave");
                 } else {
-                    let elem = $(`.ant-grid .netsq.x${x}.y${y}`);
+                    let elem = $(`.antsquare.x${x}.y${y}`);
                     setAnt(elem, antType, dirIdx);
                     autoclick = true;
                     elem.click();
@@ -640,11 +640,13 @@
                         selected.addClass("white");
                         gameGrid[currY][currX] = true;
                     }
-                    if (currX == cols - 1)
-                        currY = (currY + 1) % cols;
-                    currX = (currX + 1) % rows;
-                    selected = $(`.square.x${currX}.y${currY}`);
-                    updateSelection();
+                    if (mode() == MODE_READ) {
+                        if (currX == cols - 1)
+                            currY = (currY + 1) % cols;
+                        currX = (currX + 1) % rows;
+                        selected = $(`.golsquare.x${currX}.y${currY}`);
+                        updateSelection();
+                    }
                 }
             }
             down = false;
@@ -676,12 +678,12 @@
             row = $("<div>").addClass("square-row").appendTo(golgrid);
             $("<div>").addClass("square numbers").text(y).appendTo(row);
             for (let x = 1; x <= cols; x++) {
-                let square = $("<div>").addClass(`netsquare square netsq x${x-1} y${y-1} black`).appendTo(row).each(function(_, e) {
+                let square = $("<div>").addClass(`netsquare square netsq golsquare x${x-1} y${y-1} black`).appendTo(row).each(function(_, e) {
                     var element = $(e);
                     element.click(function() {
                         let group = $(`.netsquare.x${x-1}.y${y-1}`);
                         nextColor(group);
-                        selected = $(`.gol-grid .netsquare.x${x-1}.y${y-1}`);
+                        selected = $(`.golsquare.x${x-1}.y${y-1}`);
                         let n = selected.hasClass("white");
                         updateSelection();
                         currX = x-1;
@@ -720,11 +722,9 @@
             //add leave buttons
             $("<button>").addClass(`leave-button btn-a l${y-1}`).text("▼").appendTo(row);
             for (let x = 1; x <= cols; x++) {
-                let square = $("<div>").addClass(`netsquare square netsq x${x-1} y${y-1} black`).appendTo(row).each(function(_, e) {
+                let square = $("<div>").addClass(`netsquare square antsquare netsq x${x-1} y${y-1} black`).appendTo(row).each(function(_, e) {
                     var element = $(e);
                     element.click(function(event) {
-                        let pos = (y-1) * cols + x-1;
-
                         if (rotating || event.ctrlKey || event.metaKey || event.shiftKey) {
                             let antElems = element.hasClass("multiple") ? element.find(".ant-child.ant") : element;
                             antElems.each(function() {
@@ -742,7 +742,7 @@
                             }
                             return false;
                         }
-                        let group = $(`.ant-grid .netsquare.x${x-1}.y${y-1}`);
+                        let group = $(`.antsquare.x${x-1}.y${y-1}`);
                         selected = group;
                         updateSelection();
                         currX = x-1;
@@ -759,7 +759,14 @@
                             gameGrid[y-1][x-1] = n;
                         }
                         autoclick = false;
-                        
+                    });
+                    element.contextmenu(function() {
+                        let group = $(`.antsquare.x${x-1}.y${y-1}`);
+                        selected = group;
+                        updateSelection();
+                        currX = x-1;
+                        currY = y-1;
+                        return false;
                     });
                     
                     //add child squares
@@ -787,7 +794,7 @@
         });
 
         resetPos();
-        selected = $(".gol-grid .netsq.x0.y0");
+        selected = $(".golsquare.x0.y0");
         updateSelection();
 
         function playZeroOneSound(on) {
@@ -937,11 +944,11 @@
             $("button.read-solve").removeClass("solve");
             $(".leave-button").removeClass("leave");
             $(".netsq").removeClass(squareColors.join(" ")).addClass("black");
-            removeAnts($(".ant-grid .netsq"));
+            removeAnts($(".antsquare"));
             $(".tool.ant").removeClass("arot1 arot2 arot3").addClass("arot0");
             let gameGrid = Array(cols).fill().map(()=>Array(rows).fill(false));
             let origGameGrid = Array(cols).fill().map(()=>Array(rows).fill(false));
-            selected = $(".gol-grid .netsq.x0.y0");
+            selected = $(".golsquare.x0.y0");
             updateSelection();
 
             saveStates.forEach(x => x.remove());
@@ -1386,7 +1393,7 @@
                         In <strong>Read</strong> mode:
                         <ul>
                             <li><strong>Click on a cell</strong> in the grid to toggle its color.</li>
-                            <li>Press <strong>0</strong>, <strong>1</strong>, <strong>Space</strong>, or <strong>Enter</strong> to quickly enter the Game of Life grid.</li>
+                            <li>Press <strong>Space</strong>/<strong>Enter</strong>/<strong>0</strong> or <strong>1</strong> to quickly enter the Game of Life grid.</li>
                             <li><strong>Right-click on a cell</strong> in the Game of Life grid to mark it as changing.</li>
                             <li><strong>Click an ant tool</strong>, then click on a cell to place an ant in the selected orientation.</li>
                             <li>Using an <strong>ant tool</strong> will remove the ant of that type and replace it where you click.</li>
@@ -1399,6 +1406,7 @@
                         <ul>
                             <li><strong>Select an occupied cell</strong> to toggle it and use the <strong>arrow keys</strong> or <strong>WASD</strong> to move the selected ant in the corresponding direction.</li>
                             <li>If a cell contains multiple ants, the first ant in reading order will be moved.</li>
+                            <li><strong>Right-click</strong> a cell to select it without toggling.</li>
                             <li>The <strong>Reset</strong> button (↻) will restore the grid and ants to their initial state when switching into <strong>Solve</strong> mode.</li>
                             <li><strong>Click a bordering arrow button</strong> to mark locations where ants left the grid.</li>
                         </ul>
