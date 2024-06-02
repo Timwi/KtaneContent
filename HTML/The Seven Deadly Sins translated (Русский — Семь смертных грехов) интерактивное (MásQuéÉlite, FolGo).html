@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Семь смертных грехов — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/font-cyrillic.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+    @namespace svg "http://www.w3.org/2000/svg";
+    svg {
+        stroke: #000;
+        fill: #000;
+    }
+    .dark svg {
+        stroke: #DDD;
+        fill: #DDD;
+    }
+    svg text {
+        font-size: 21px;
+        text-anchor: middle;
+        alignment-baseline: central;
+        user-select: none;
+        stroke: black;
+        fill: black;
+    }
+    .dark polyline {
+        fill: #DDD;
+        stroke: #DDD;
+    }
+    .dark circle {
+        stroke: #DDD;
+    }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Seven Deadly Sins</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Seven Deadly Sins.svg" class="diagram">
+                <h2>О Семи смертных грехах</h2>
+                <p class="flavour-text">Лучший грех это "Лень". Он мешает вам совершать остальные 6 грехов.</p>
+                <p>
+                    Для обезвреживания модуля, нажмите на каждый грех один раз. Первый может быть выбран произвольно,
+                    хоть он может и не вести к верному решению. Для последующих нажатий, должны выполнятся следующие условия:
+                </p>
+                <ol>
+                    <li>В диаграмме ниже, должна быть стрелка идущая от греха к следующему.</li>
+                    <li>Каждый грех должен быть соседним с уже нажатым грехом на модуле.</li>
+                </ol>
+                При нажатии неверной кнопки, модуль зарегистрирует ошибку и вернется в начальное состояние.
+                <svg viewBox="0 0 672 600.91"><g></g><g transform="scale(2)"><polyline points="" stroke-width="2"/></g><g>
+                <g cursor="pointer"><circle r="9.5%" stroke-width="2.5"/><text></text></g></g>
+                </svg>
+            </div>
+           <div class="page-footer relative-footer">Страница 1 из 1</div>
+        </div>
+    </div>
+    <script>
+        let svg = document.getElementsByTagName('svg')[0];
+        let arrowGroup = svg.getElementsByTagName('g')[1];
+        let circleGroup = svg.getElementsByTagName('g')[2];
+
+        let arrowChildren = arrowGroup.getElementsByTagName('g');
+        let circleChildren = circleGroup.getElementsByTagName('g');
+
+        let clicked = -7;
+        let firstClicked = null;
+
+        function constructDiagram() {
+            let gRef = svg.childNodes[0];
+            let circleRef = circleGroup.childNodes[1];
+            let arrowRef = arrowGroup.childNodes[0];
+
+            // ----begin circles----
+
+            let colors = ["#296A56", "#8D5017", "#F0EF63", "#9596C9", "#E42F12", "#FDA0A7", "#B4DBCD"];
+            let positions = ["93,369", "140,160", "333,68", "526,160", "575,369", "440,536", "225,536"];
+            let sins = ["Зависть", "Гордыня", "Похоть", "<tspan>Чрево-</tspan><tspan dx='-4em' dy='1em'>угодие</tspan>", "Жадность", "Лень", "Гнев"];
+
+            for (let i = 0; i < 7; i++) {
+                newCircleGroup = circleRef.cloneNode(true);
+                newCircleGroup.setAttribute('transform', `translate(${positions[i]})`);
+                circle = newCircleGroup.childNodes[0];
+                circle.setAttribute('fill', colors[i]);
+                newCircleGroup.childNodes[1].innerHTML = sins[i];
+                circleGroup.appendChild(newCircleGroup);
+                newCircleGroup.addEventListener('click', () => {
+                    hasReset = checkClicks(clicked, i);
+                    clicked = hasReset ? -7 : i;
+                    if (hasReset) firstClicked = null;
+                });
+            };
+
+            // ----begin arrows----
+
+            let lengths = [46, 131, 179];
+            let translations = [["52.5,108", "133.5,38.5", "239,57", "289.5,151", "247.5,249.5", "143,278", "59,215"],
+                                ["137.7,51", "232,69", "276,154", "237,240", "145.5,263.5", "70.5,207", "67,112.5"],
+                                ["255.8,174.5", "209,237.5", "130,240", "79,181", "94.2,102.4", "164,67", "236,98"]];
+            let rotations = [["12", "64", "116", "167.5", "218", "270", "322"],
+                             ["37.6", "90", "141", "192.7", "244", "295.4", "347"],
+                             ["90.2", "141.3", "192.8", "244", "296", "347", "39"]];
+
+            for (let i = 0; i < 3; i++) {
+                newArrowGroup = arrowGroup.appendChild(gRef.cloneNode());
+                for (let j = 0; j < 7; j++) {
+                    newArrow = arrowRef.cloneNode();
+                    newArrow.setAttribute('points', `10 ${lengths[i]},10 9,14 9,10 2,6 9,10 9`);
+                    newArrow.setAttribute('transform', `translate(${translations[i][j]}) rotate(${rotations[i][j]})`);
+                    newArrowGroup.appendChild(newArrow);
+                }
+            }
+
+            // ----remove refs----
+
+            arrowRef.remove();
+            circleRef.remove();
+            gRef.remove();
+        }
+
+        function resetAll() {
+            Array.from(arrowChildren).forEach(node =>
+                Array.from(node.childNodes).forEach(line => {
+                    line.style.fill = 'inherit';
+                    line.style.stroke = 'inherit';
+                })
+            );
+            Array.from(circleChildren).forEach(
+                node => node.childNodes[0].style.stroke = 'inherit');
+            return 1;
+        }
+
+        function checkClicks(prev, curr) {
+            if (prev < 0) {
+                circleChildren[curr].childNodes[0].style.stroke = 'cyan';
+                circleChildren[curr].childNodes[0].setAttribute('stroke-width', '5');
+                return;
+            }
+            if (circleChildren[curr].childNodes[0].style.stroke == 'green' || curr == firstClicked-1 || curr == prev) {
+                circleChildren[prev].childNodes[0].setAttribute('stroke-width', '2.5');
+                circleChildren[firstClicked-1].childNodes[0].setAttribute('stroke-width', '2.5');
+                return resetAll();
+            };
+
+            distance = Math.abs((prev > curr ? curr+7 : curr)-prev);
+
+            for (let i = 0; i <= 2; i++)
+                if (distance == Math.pow(2, i)) {
+                    arrowChildren[i].childNodes[prev].style.fill = 'green';
+                    arrowChildren[i].childNodes[prev].style.stroke = 'green';
+
+                    if (firstClicked) {
+                        circleChildren[prev].childNodes[0].style.stroke = 'green';
+                        circleChildren[prev].childNodes[0].setAttribute('stroke-width', '2.5');
+                    } else firstClicked = prev+1;
+                    circleChildren[curr].childNodes[0].style.stroke = 'orange';
+                    circleChildren[curr].childNodes[0].setAttribute('stroke-width', '5');
+                    return;
+                }
+
+            circleChildren[prev].childNodes[0].setAttribute('stroke-width', '2.5');
+            circleChildren[firstClicked-1].childNodes[0].setAttribute('stroke-width', '2.5');
+            return resetAll();
+        }
+
+        window.addEventListener('DOMContentLoaded', constructDiagram);
+    </script>
+</body>
+</html>
