@@ -938,6 +938,8 @@ const everything = {
 		'Laundry': {
 			'CSS': 'laundry',
 			'RandomizeRight': true,
+			'DelayShowWrongRight': 3,
+			'DelayShowWrongLeft': 3,
 			'RandomizeLeft': true,
 			'Groups': ['methods', 'symbols'],
 			'Items': [
@@ -2156,6 +2158,25 @@ const everything = {
 					['Mace of Molag Bal', '<img src="../HTML/img/Skyrim/Color/Weapons/Mace of Molag Bal.png">' ],
 					['Volendrung', '<img src="../HTML/img/Skyrim/Color/Weapons/Volendrung.png">' ],
 					['Windshear', '<img src="../HTML/img/Skyrim/Color/Weapons/Windshear.png">' ]
+				]
+			]
+		},
+		'Dragon Shouts': {
+			'CSS': 'skyrim dragon',
+			'RandomizeRight': true,
+			'DelayShowWrongRight': 3,
+			'Groups': [ 'names', 'shouts' ],
+			'Items': [
+				[
+					['Disarm', '<table><tr><td class="dragon">zun</td><td>zun</td></tr> <tr><td class="dragon">haal</td><td>haal</td></tr> <tr><td class="dragon">viik</td><td>viik</td></tr></table>'],
+					['Dismay', '<table><tr><td class="dragon">faas</td><td>faas</td></tr> <tr><td class="dragon">ru</td><td>ru</td></tr> <tr><td class="dragon">maar</td><td>maar</td></tr></table>'],
+					['Dragonrend', '<table><tr><td class="dragon">joor</td><td>joor</td></tr> <tr><td class="dragon">zah</td><td>zah</td></tr> <tr><td class="dragon">frul</td><td>frul</td></tr></table>'],
+					['Fire Breath', '<table><tr><td class="dragon">yol</td><td>yol</td></tr> <tr><td class="dragon">toor</td><td>toor</td></tr> <tr><td class="dragon">shul</td><td>shul</td></tr></table>'],
+					['Ice Form', '<table><tr><td class="dragon">liz</td><td>liz</td></tr> <tr><td class="dragon">slen</td><td>slen</td></tr> <tr><td class="dragon">nus</td><td>nus</td></tr></table>'],
+					['Kyne’s Peace', '<table><tr><td class="dragon">kaan</td><td>kaan</td></tr> <tr><td class="dragon">drem</td><td>drem</td></tr> <tr><td class="dragon">ov</td><td>ov</td></tr></table>'],
+					['Slow Time', '<table><tr><td class="dragon">tiid</td><td>tiid</td></tr> <tr><td class="dragon">klo</td><td>klo</td></tr> <tr><td class="dragon">ul</td><td>ul</td></tr></table>'],
+					['Unrelenting Force', '<table><tr><td class="dragon">fus</td><td>fus</td></tr> <tr><td class="dragon">ro</td><td>ro</td></tr> <tr><td class="dragon">dah</td><td>dah</td></tr></table>'],
+					['Whirlwind Sprint', '<table><tr><td class="dragon">wuld</td><td>wuld</td></tr> <tr><td class="dragon">nah</td><td>nah</td></tr> <tr><td class="dragon">kest</td><td>kest</td></tr></table>'],
 				]
 			]
 		}
