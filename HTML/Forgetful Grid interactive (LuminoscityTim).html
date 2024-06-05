@@ -1,0 +1,919 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Forgetful Grid — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(document).ready(function() {
+        const rows = 5;
+        const cols = 5;
+        let colors = [ "white", "orange", "lime", "turquoise", "magenta" ];
+        let numSets = 2;
+        let selected;
+        let grid = $("div.grid");
+        let saveStates = [];
+        let currentState = 0;
+        let currentStage = 1;
+        let readState;
+        let currX = 0;
+        let currY = 0;
+        let gameGrid = Array(rows).fill().map(()=>Array(cols).fill(0));
+        let gameGridStages = [gameGrid];
+        let currentRangeStart = 1;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+
+        const colorKey = {
+            " ": 0,
+            "enter": 0,
+            "e": 0,
+            "o": 1,
+            "l": 2,
+            "t": 3,
+            "m": 4
+        }
+
+        function mode() {
+            if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        function selectNone() {
+            selected = null;
+            updateSelection();
+        }
+
+        function updateSelection() {
+            $(":not(button).selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        function hasWhichColor(elem) {
+            for (var i = 0; i < colors.length; i++) {
+                if (elem.hasClass(colors[i])) return i;
+            }
+            return -1;
+        }
+
+        function nextColor(elem) {
+            let c = hasWhichColor(elem);
+            removeColorClass(elem);
+            elem.addClass(colors[(c + 1) % colors.length]);
+        }
+
+        function removeColorClass(elem) {
+            elem.removeClass(colors.join(" "));
+        }
+
+        function resetGrid() {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    gameGrid[x][y] = 0;
+                }
+            }
+            $(".netsq").removeClass(colors.join(" ")).addClass("white");
+        }
+
+        let audioNumbers = [
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sim 4.wav")
+                .appendTo(grid)
+                .prop("volume", 0.5),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 3.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 2.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 1.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sim 3.wav")
+                .appendTo(grid)
+                .prop("volume", 0.5)
+        ];
+
+        function playGridSound(n) {
+            if ($("button.sound").hasClass("play") && !isNaN(n) && n >= 0 && n <= 4) {
+                let aud = audioNumbers[n][0].cloneNode();  
+                aud.play();
+            }
+        }
+
+        $("table.cloneme tr:nth-child(n+2)").click(function() {
+            let row = $(this);
+            $("table.cloneme tr").removeClass("highlighted");
+            row.addClass("highlighted");
+            let header = row.parent().find("tr:first-child");
+            $("table.cloned-rows").html(header.clone());
+            $("table.cloned-rows").append(row.clone());
+        });
+
+        // Add header row with letters
+        row = $("<div>").addClass("square-row letters").appendTo(grid);
+        $("<div>").addClass("square").appendTo(row);
+        for (var x = 0; x < cols; x++) {
+            $("<div>").addClass("square").text(String.fromCharCode(65 + x)).appendTo(row);
+        }
+
+        // Add grid rows with numbers and cells
+        for (let y = 1; y <= rows; y++) {
+            row = $("<div>").addClass("square-row").appendTo(grid);
+            $("<div>").addClass("square numbers").text(y).appendTo(row);
+            for (let x = 1; x <= cols; x++) {
+                let square = $("<div>").addClass(`netsquare square netsq x${x-1} y${y-1} white`).appendTo(row).each(function(_, e) {
+                    var element = $(e);
+                    element.click(function(event) {
+
+                        let group = $(`.netsq.x${x-1}.y${y-1}`);
+                        selected = group;
+                        updateSelection();
+                        currX = x-1;
+                        currY = y-1;
+
+                        nextColor($(`.netsq.x${x-1}.y${y-1}`));
+                        let n = hasWhichColor(group);
+                        playGridSound(n);
+                        gameGrid[x-1][y-1] = n;
+                        return false;
+                    });
+                });
+            }
+        }
+        
+        // Initialize color buttons
+        let colorButtons = $("<div>").addClass("color-buttons hstack right").appendTo(grid);
+        for (let i = 0; i < colors.length; i++) {
+            let button = $("<button>").addClass("color-button " + colors[i]).click(function() {
+                if (selected && selected.hasClass("netsq")) {
+                    gameGrid[currX][currY] = i;
+                    selected.removeClass(colors.join(" ")).addClass(colors[i])
+                    playGridSound(i);
+                    if (currX == cols - 1)
+                        currY = (currY + 1) % cols;
+                    currX = (currX + 1) % rows;
+                    selected = $(`.netsq.x${currX}.y${currY}`);
+                    updateSelection();
+                    return false;
+                }
+            });
+            colorButtons.append(button);
+        }
+
+        let smallGrids = $(".small-grids");
+        let stageRangeCounter = $(".stagetext.stagerange");
+
+        function updateStageRangeCounter() {
+            let rangeEnd = Math.max(0, Math.min(currentRangeStart + numSets - 1, gameGridStages.length - 1));
+            if (gameGridStages.length > 1)
+                stageRangeCounter.text(`${currentRangeStart} - ${rangeEnd}`);
+            else stageRangeCounter.text("0 - 0");
+        }
+
+        function stageRangeDec() {
+            currentRangeStart = Math.max(1, Math.floor((currentRangeStart - numSets - 1) / numSets) * numSets + 1);
+            updateStageRangeCounter();
+            updateSmallGrids();
+        }
+
+        function stageRangeInc() {
+            let rangeEnd = Math.min(currentRangeStart + numSets - 1, gameGridStages.length - 1);
+            if (rangeEnd >= gameGridStages.length - 1) return;
+            currentRangeStart = Math.max(1, Math.min(gameGridStages.length - 1, currentRangeStart + numSets));
+            updateStageRangeCounter();
+            updateSmallGrids();
+        }
+
+        $(".stagerange.minus").click(function() {
+            stageRangeDec();
+        });
+
+        $(".stagerange.plus").click(function() {
+            stageRangeInc();
+        });
+
+        function updateSmallGrids() {
+            smallGrids.empty(); // Clear the container
+
+            if (gameGridStages.length < 2) return;
+            updateStageRangeCounter();
+            let rangeEnd = Math.min(currentRangeStart + numSets - 1, gameGridStages.length - 1);
+            for (let i = currentRangeStart; i <= rangeEnd; i++) {
+                const svg = MakeSvgTag(100, 100);
+                let gridState = gameGridStages[i] || Array(rows).fill().map(() => Array(cols).fill(0));
+
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        const colorIndex = gridState[x][y];
+                        const rect = MakeSvgElem("rect", {
+                            x: x * 20,
+                            y: y * 20,
+                            width: 20,
+                            height: 20,
+                            class: colors[colorIndex],
+                            stroke: "black",
+                            "stroke-width": 1
+                        });
+                        svg.append(rect);
+                        if (colorIndex > 0) {
+                            // Add tiny text element
+                            const text = MakeSvgElem("text", {
+                                x: x * 20 + 10,
+                                y: y * 20 + 13,
+                                "text-anchor": "middle",
+                                "dominant-baseline": "middle", 
+                                "font-size": "15px",
+                                fill: "black"
+                            }, colors[colorIndex][0].toUpperCase());
+                            svg.append(text);
+                        }
+                    }
+                }
+
+                smallGrids.append(svg);
+            }
+        }
+
+        // Initialize the stage range counter
+        updateStageRangeCounter();
+
+        // Set initial stage number
+        let stageCounter = $("div.stagenumber");
+        stageCounter.text(currentStage);
+        let setCounter = $(".stagetext.setcounter");
+
+        function stageDec() {
+            currentStage = Math.max(1, currentStage - 1);
+            stageCounter.text(currentStage);
+        }
+        function stageInc() {
+            currentStage += 1;
+            stageCounter.text(currentStage);
+        }
+
+        function setsDec() {
+            numSets = Math.max(2, numSets - 1);
+            setCounter.text(numSets);
+        }
+        function setsInc() {
+            numSets = Math.min(4, numSets + 1);
+            setCounter.text(numSets);
+        }
+
+        $(".stagetext.minus").click(function() {
+            stageDec();
+        });
+        $(".stagetext.plus").click(function() {
+            stageInc();
+        });
+        
+        $(".setcounter.minus").click(function() {
+            setsDec();
+        });
+        $(".setcounter.plus").click(function() {
+            setsInc();
+        });
+
+
+        // Handle clicking the docuemtn and keyboard input
+        $(document).click(function() {
+            selectNone();
+        }).keydown(function(event) {
+            let k = event.key.toLowerCase();
+
+            if (k == "t" || k == "l" || k == "m" || k == "o" || k == "e" || k == " " || k == "enter") {
+                if (selected && selected.hasClass("netsq")) {
+                    let color = colorKey[k];
+                    gameGrid[currX][currY] = color;
+                    selected.removeClass(colors.join(" ")).addClass(colors[color])
+                    playGridSound(color);
+                    if (currX == cols - 1)
+                        currY = (currY + 1) % cols;
+                    currX = (currX + 1) % rows;
+                    selected = $(`.netsq.x${currX}.y${currY}`);
+                    updateSelection();
+
+                    if (k == " " || k == "enter") return false;
+                }
+            }
+        });
+
+        let tools = $(".tools");
+
+        $("<button>").addClass("reset-grid").text("Clear").appendTo(tools).click(function() {
+            resetGrid();
+        });
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            let solve = $(this).hasClass("solve");
+            $("body").toggleClass("solve", solve);
+            if (solve) {
+                currentRangeStart = 1;
+                updateSmallGrids();
+            }
+        });
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+
+        $(".reset-saves").click(function() {
+            if(!confirm("Are you sure you want to reset all saves?")) return;
+            $(".replace-save").prop('disabled', true);
+            saveStates.forEach(x => x.remove());
+            $(".saved-state").remove();
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-future-saves").click(function() {
+            removeFutureSaves();
+        });
+
+        $(".reset-all").click(function() {
+            if(!confirm("Are you sure you want to reset everything?")) return;
+            $("button.read-solve").removeClass("solve");
+            $("button.sound").addClass("play");
+            $("body").removeClass("solve");
+            resetGrid();
+
+            gameGridStages = [gameGrid];
+            
+            $(".replace-save").prop('disabled', true);
+            saveStates.forEach(x => x.remove());
+            $(".saved-state").remove();
+            saveStates = [];
+            currentState = 0;
+            currentStage = 1;
+            currentRangeStart = 1;
+            stageCounter.text(currentStage);
+            numSets = 2;
+            setCounter.text(numSets);
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        let buttonID = 1;
+        let replaceID = "save1";
+
+        $("button.new-save").click(function() {
+            let saveState = Array.from($(".netsquare, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let bodyClasses = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let stateNumber = saveStates.length + 1;
+            let s = currentStage;
+            currentState = stateNumber;
+
+            let s_currentRangeStart = currentRangeStart;
+            let s_numSets = numSets;
+
+            // Save the current gameGrid to gameGridStages
+            if (mode() == MODE_READ)
+                gameGridStages[s] = gameGrid.map(row => [...row]);
+
+            let button = $("<button>").text(stateNumber).addClass("saved-state").click(function() {
+                $(".netsquare, .tools button").each((i, x) => $(x).attr("class", saveState[i]));
+                $("body").each((i, x) => $(x).attr("class", bodyClasses[i]));
+                currentState = stateNumber;
+                currentStage = s;
+                stageCounter.text(s);
+                replaceID = this.id;
+                $(".replace-save").prop('disabled', false);
+                $(".saves button").removeClass("selected");
+                $(this).addClass("selected");
+                currentRangeStart = s_currentRangeStart;
+                numSets = s_numSets;
+                setCounter.text(numSets);
+                updateSmallGrids();
+
+                // Restore the gameGrid from gameGridStages
+                gameGrid = gameGridStages[s].map(row => [...row]);
+            }).addClass("flash").appendTo(".saves");
+            button.attr('id', `save-${buttonID}`);
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            $(".saves button").removeClass("selected");
+            $(".replace-save").prop('disabled', true);
+            saveStates.push(button);
+            currentStage += 1;
+            stageCounter.text(currentStage);
+            buttonID += 1;
+        });
+
+        $("button.replace-save").click(function() {
+            let saveState = Array.from($(".netsquare, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let bodyClasses = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let stateNumber = currentState;
+            let s = currentStage;
+
+            let s_currentRangeStart = currentRangeStart;
+            let s_numSets= numSets;
+
+            // Save the current gameGrid to gameGridStages
+            gameGridStages[s] = gameGrid.map(row => [...row]);
+
+            let button = $("<button>").text(stateNumber).addClass("saved-state").click(function() {
+                $(".netsquare, .tools button").each((i, x) => $(x).attr("class", saveState[i]));
+                $("body").each((i, x) => $(x).attr("class", bodyClasses[i]));
+                currentState = stateNumber;
+                currentStage = s;
+                stageCounter.text(s);
+                replaceID = this.id;
+                $(".replace-save").prop('disabled', false);
+                $(".saves button").removeClass("selected");
+                $(this).addClass("selected");
+                currentRangeStart = s_currentRangeStart;
+                numSets = s_numSets;
+                setCounter.text(numSets);
+                updateSmallGrids();
+
+                // Restore the gameGrid from gameGridStages
+                gameGrid = gameGridStages[s].map(row => [...row]);
+            }).addClass("flash");
+            button.attr('id', `save-${buttonID}`);
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            if (saveStates.length > currentState) {
+                saveStates.splice(currentState, 1, button);
+                let oldButton = document.getElementById(replaceID);
+                oldButton.parentNode.replaceChild(button[0], oldButton);
+                replaceID = `save-${buttonID}`;
+            }
+            else {
+                button.appendTo(".saves");
+                saveStates.push(button);
+            }
+            $(".saves button").removeClass("selected");
+            saveStates[saveStates.length - 1].click();
+            stageInc();
+
+            buttonID += 1;
+        });
+        
+        window.onbeforeunload = function() {
+            return true;
+        };
+    });
+    </script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+        .centered { text-align: center; }
+        .dark .grid-table, .grid-table { margin: 0; }
+        .grid-table :is(th,td) {
+            height: 23px;
+            width: 23px;
+            min-height: 23px;
+            min-width: 23px;
+            padding: 0;
+        }
+        .grid-table tr { min-height: 20px; }
+        @media screen and (max-width: 610px) {
+            .hstack.alignc.gap1 {
+                justify-content: left;
+            }
+        }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 4'; }
+
+        html {
+            --sqsize: 50px;
+        }
+        .square-row {
+            height: var(--sqsize);
+            margin: 1px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .square {
+            margin: 1px;
+            width: var(--sqsize);
+            height: var(--sqsize);
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            border: #808080 1px solid;
+            transition: background-color 0.2s, color 0.2s;
+            box-sizing: border-box;
+        }
+        .square.numbers, .letters .square {
+            margin-top: 16px;
+            border-width: 0;
+            width: var(--sqsize);
+            height: var(--sqsize);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .netsquare {
+            height: var(--sqsize);
+            width: var(--sqsize);
+            font-size: 30px;
+            line-height: 57px;
+            cursor: pointer;
+            color: #000;
+            position: relative;
+        }
+        .netsquare.selected {
+            border: 3px solid #00F;
+        }
+
+        .color-buttons {
+            margin: 10px;
+        }
+
+        .color-button {
+            width: 38px;
+            height: 38px;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:not([disabled]):hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button.save {
+            padding: 3px;
+        }
+        button[disabled] {
+            user-select: none;
+            background-color: #555;
+        }
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Stages';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+
+        :not(rect).orange { background-color: #FF6A00; }
+        :not(rect).lime { background-color: #89BA47; }
+        :not(rect).turquoise { background-color: #159D91; }
+        :not(rect).magenta { background-color: #DC1069; }
+        :not(rect).white { background-color: #FFF; }
+        :not(rect).black { background-color: #000; color: #DDD; }
+        
+        rect.orange { fill: #FF6A00; }
+        rect.lime { fill: #89BA47; }
+        rect.turquoise { fill: #159D91; }
+        rect.magenta { fill: #DC1069; }
+        rect.white { fill: #FFF; }
+
+        :is(button, .netsq).orange::after { content: 'O'; }
+        :is(button, .netsq).lime::after { content: 'L'; }
+        :is(button, .netsq).turquoise::after { content: 'T'; }
+        :is(button, .netsq).magenta::after { content: 'M'; }
+
+        :not(button).stagetext {
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
+            padding-top: 8px;
+        }
+        .stagetext.stagenumber {
+            font-size: 35px;
+            height: 30px;
+            width: 53px;
+            position: relative;
+            top: 2px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        :not(button).setcounter {
+            font-size: 25px;
+            width: 20px;
+            top: 2px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        button:is(.setcounter, .stagetext, .stagerange) {
+            font-size: 20px;
+            height: 32px;
+        }
+        .stagenumber.selected {
+            background-color: rgba(0, 0, 255, 0.4);
+        }
+        .stagetext.label {
+            margin-left: 30px;
+        }
+        .saves button.selected {
+            background-color: #EE0;
+        }
+
+        .stageholder {
+            height: 32px;
+            display: flex;
+            flex-direction: row;
+        }
+        .stagetext.stagerange {
+            font-size: 25px;
+            height: 30px;
+            width: 80px;
+            position: relative;
+            top: 2px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+            padding-top: 5px;
+        }
+
+        .tools {
+            width: 95px;
+            margin: 10px 0;
+            gap: 8px;
+        }
+
+        body:not(.solve) .stages-group {
+            display: none;
+        }
+
+        .small-grids {
+            display: grid;
+            grid-template-columns: 120px 120px;
+            grid-template-rows: 120px 120px;
+        }
+
+        .small-grids svg {
+            width: 100px;
+            height: 100px;
+            margin-left: 10px;
+        }
+        .highlighted {
+            background-color: #ff000066;
+        }
+
+        .cloned-rows {
+            margin-bottom: 10px;
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Forgetful Grid</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Forgetful Grid.svg" class="diagram">
+                <h2>On the Subject of Forgetful Grid</h2>
+                <p class="flavour-text">“You merged the wrong layers again, didn’t you?”</p>
+                <ul>
+                    <li>This module contains a 5×5 touch-screen grid, three displays on the right side of the grid, a display above the grid, and a submit button.</li>
+                    <li>The <u>green</u> number on the display next to the submit button is the stage number. The display next to the submit button will from now on be referred to as the “stage counter”.</li>
+                    <li>At the start of the bomb, the module will be on stage 0. While the module is on stage 0, the three displays on the side of the module will be blank, meaning there is no information to take note of. There will be a <u>white</u> number on the stage counter, either a 2, 3, or 4. Take note of this number, as <i>it will be important</i> during the solving process and <b>it will only appear on stage 0.</b></li>
+                </ul>
+                <h3>Obtaining Information:</h3>
+                <ul>
+                    <li><b>Note:</b> During this section, the grid can’t be interacted with. You can touch the squares all you want, but they won’t do anything.</li>
+                    <li>Every time a <a href="https://ktane.timwi.de/More/Ignore Table.html#mod=forgetfulGrid">non-ignored module</a> is solved, Forgetul Grid will advance one stage. The  stage counter will increase by one to signify this.</li>
+                    <li>During a stage, each of the three displays on the right side of the grid will alternate between two coordinates each. Each coordinate can be one of four colors (turquoise, lime, magenta, or orange). These six coordinates will be referred to as a “set” from now on.
+                        <ul>
+                            <li><b>Note:</b> If colorblind is activated, the first letter of the color will appear for all three displays before continuing to the next set of coordinates.</li>
+                        </ul>
+                    </li>
+                    <li>Make sure you keep a note of all six coordinates in the set and their respective colors. When another non-ignored module is solved, a new set will be displayed.</li>
+                    <li>Repeat this process for every non-ignored module on the bomb. Once every non-ignored module is solved, please report to the “Solving Process” section of this manual.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Forgetful Grid</span>
+            </div>
+            <div class="page-content">
+                <h3>Solving Process</h3>
+                <ul>
+                    <li>When solving, pressing a square on the grid will change its color in the order [Orange, Lime, Turquoise, Magenta, Empty].</li>
+                    <li>The defuser will need to re-enter all the coordinates from every stage.</li>
+                    <li>Every 2, 3, or 4 coordinate sets will be layered onto one grid. The amount of sets being combined was determined by the number displayed on the stage counter during stage 0.</li>
+                    <li>We will call a group of sets layered onto one grid a “combined set” from now on.</li>
+                    <li>
+                        Use the table below to determine which order the sets will be layered on top of each other.
+                        <ul>
+                            <li>The “<i>n</i> sets” in the black box in the top left of each table represents how many sets are in each combined set (the number from stage 0).</li>
+                            <li>Find the row containing the number that is equivalent to the last digit of the serial number.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <p><strong>Click a row to clone it on the last page.</strong></p>
+                <table class="cloneme centered">
+                    <tr><th class="black">2 Sets</th><th>First Set</th><th>Second Set</th></tr>
+                    <tr><th>1, 3, 5, 7, 9</th><td>Highest</td><td>Lowest</td></tr>
+                    <tr><th>2, 4, 6, 8, 0</th><td>Lowest</td><td>Highest</td></tr>
+                </table>
+                <table class="cloneme centered">
+                    <tr><th class="black">3 Sets</th><th>First Set</th><th>Second Set</th><th>Third Set</th></tr>
+                    <tr><th>1, 4, 7, 0</th><td>Highest</td><td>Lowest</td><td>Middle</td></tr>
+                    <tr><th>2, 5, 8</th><td>Middle</td><td>Highest</td><td>Lowest</td></tr>
+                    <tr><th>3, 6, 9</th><td>Lowest</td><td>Middle</td><td>Highest</td></tr>
+                </table>
+                <table class="cloneme centered">
+                    <tr><th class="black">4 Sets</th><th>First Set</th><th>Second Set</th><th>Third Set</th><th>Fourth Set</th></tr>
+                    <tr><th>1, 5, 9</th><td>Highest</td><td>2nd Highest</td><td>2nd Lowest</td><td>Lowest</td></tr>
+                    <tr><th>2, 6, 0</th><td>2nd Lowest</td><td>Highest</td><td>Lowest</td><td>2nd Highest</td></tr>
+                    <tr><th>3, 7</th><td>Lowest</td><td>2nd Lowest</td><td>2nd Highest</td><td>Highest</td></tr>
+                    <tr><th>4, 8</th><td>2nd Highest</td><td>Lowest</td><td>Highest</td><td>2nd Lowest</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Forgetful Grid</span>
+            </div>
+            <div class="page-content">
+                <p>Here is an example diagram with three sets and how they would layer on top of each other:</p>
+                <div class="hstack alignc gap1">
+                    <table class="grid-table">
+                        <tr><th class="empty" colspan="5">Middle</th></tr>
+                        <tr><td></td><td class="turquoise"></td><td></td><td></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr><td></td><td class="turquoise"></td><td></td><td></td><td class="orange"></td></tr>
+                        <tr><td></td><td></td><td></td><td class="magenta"></td><td></td></tr>
+                        <tr><td class="lime"></td><td></td><td class="lime"></td><td></td><td></td></tr>
+                        <tr><th class="empty" colspan="5">First Set</th></tr>
+                    </table>
+                    <span>+</span>
+                    <table class="grid-table">
+                        <tr><th class="empty" colspan="5">Highest</th></tr>
+                        <tr><td class="orange"></td><td></td><td></td><td class="orange"></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td></td><td class="orange"></td></tr>
+                        <tr><td class="lime"></td><td></td><td></td><td></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td class="lime"></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td class="lime"></td><td></td></tr>
+                        <tr><th class="empty" style="font-size: 15px" colspan="5">Second Set</th></tr>
+                    </table>
+                    <span>+</span>
+                    <table class="grid-table">
+                        <tr><th class="empty" colspan="5">Lowest</th></tr>
+                        <tr><td></td><td class="lime"></td><td class="orange"></td><td></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr><td class="turquoise"></td><td></td><td></td><td class="orange"></td><td></td></tr>
+                        <tr><td class="magenta"></td><td></td><td class="orange"></td><td></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr><th class="empty" colspan="5">Third Set</th></tr>
+                    </table>
+                    <span>=</span>
+                    <table class="grid-table">
+                        <tr><th class="empty" colspan="5"></th></tr>
+                        <tr><td class="orange"></td><td class="turquoise"></td><td class="orange"></td><td class="orange"></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td></td><td class="orange"></td></tr>
+                        <tr><td class="lime"></td><td class="turquoise"></td><td></td><td class="orange"></td><td class="orange"></td></tr>
+                        <tr><td class="magenta"></td><td></td><td class="orange"></td><td class="lime"></td><td></td></tr>
+                        <tr><td class="lime"></td><td></td><td class="lime"></td><td class="lime"></td><td></td></tr>
+                        <tr><th class="empty" style="font-size:12px" colspan="5">Combined Set</th></tr>
+                    </table>
+                </div>
+                <ul>
+                    <li>The stage counter will display how many combined sets are left.</li>
+                    <li>Combined sets must be entered <i>in order</i>, starting from the first one (stages 1 through 2-4).</li>
+                    <li>After entering a combined set into the grid, press the submit button. If the defuser is correct, then the grid will clear itself and the number on the stage counter will decrease by one. Then enter the next combined set and repeat.</li>
+                    <li>If a combined set is entered incorrectly, a strike will be given. Then the three displays on the right side will cycle through all the coordinates that make up the correct combined set. The number on the stage counter will turn <u>yellow</u> and display the stage number for each set of coordinates as it cycles through them. Pressing any square on the grid will revert the module back to normal, and you can continue from where you left off.</li>
+                    <li>If the total number of regular sets is not enough to form a whole amount of combined sets (for example, there are 11 sets total but every 3 sets must be combined, leaving  2 remaining on the last stage), simply layer the remaining sets on the last stage as usual.</li>
+                    <li>After submitting the final combined set, the module will be solved.</li>
+                    <li>The grid on the module will be labeled with the letters A-E and numbers 1-5. However, the axis and order of them may vary between each Forgetful Grid module.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Forgetful Grid</span>
+            </div>
+            <div class="page-content">
+                <table class="centered cloned-rows"></table>
+                <div class="stageholder hstack left">
+                    <div class="stagetext sets">Sets:</div>
+                    <div class="stagetext setcounter">2</div>
+                    <button class="setcounter minus">-</button>
+                    <button class="setcounter plus">+</button>
+                    <div class="stagetext label">Stage:</div>
+                    <div class="stagetext stagenumber">1</div>
+                    <button class="stagetext minus">-</button>
+                    <button class="stagetext plus">+</button>
+                </div>
+                <div class="hstack wrap left gap">
+                    <div class="vstack tools alignc"></div>
+                    <div class="grid"></div>
+                    <div class="vstack stages-group gap1">
+                        <div class="vstack">
+                            <div class="stageholder hstack">
+                                <div class="stagetext stages">Stages:</div>
+                                <div class="stagetext stagerange">1 - 2</div>
+                            </div>
+                            <div class="hstack">
+                                <button class="stagerange minus">-</button>
+                                <button class="stagerange plus">+</button>
+                            </div>
+                        </div>
+                        <div class="small-grids"></div>
+                    </div>
+                </div>
+                <div class="saves hstack wrap left">
+                    <button class="save replace-save" disabled>Replace<br>Stage</button>
+                    <button class="save new-save">Next<br>Stage</button>
+                </div>
+                <div style="margin-top: 5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-future-saves">Delete Future Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>
+                        In <strong>Stages</strong> mode:
+                        <ul>
+                            <li><strong>Click on a cell</strong> to cycle through colors (Orange, Lime, Turquoise, Magenta, Empty).</li>
+                            <li><strong>Click on a color button</strong> below the grid (or type <strong>O, L, T, M, E/Space/Enter</strong>) to set the color of the selected cell.</li>
+                            <li>Use the <strong>Stage</strong> counter to track the current stage number.</li>
+                            <li>Use the <strong>Sets</strong> counter to mark how many sets are combined (2, 3, or 4).</li>
+                            <li>The <strong>Clear</strong> button resets the main grid.</li>
+                            <li>The <strong>Next Stage</strong> button saves the current grid state and advances to the next stage.</li>
+                            <li>The <strong>Replace Stage</strong> button overwrites the selected stage’s grid state.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Solve</strong> mode:
+                        <ul>
+                            <li>The stages to be combined are shown on the right of the grid.</li>
+                            <li>Use the <strong>Stages</strong> range buttons (<strong>+ -</strong>) to navigate through different groups of stages.</li>
+                            <li>Use the main grid to combine the sets. Save each combined set with the <strong>Next Stage</strong> button.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Reset Saves</strong> clears all saved grid states.</li>
+                    <li><strong>Delete Future Saves</strong> removes saved states after the current selected one.</li>
+                    <li><strong>Reset All</strong> resets the entire interactive.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+    </div>
+</body>
+</html>
