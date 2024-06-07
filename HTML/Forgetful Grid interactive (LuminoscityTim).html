@@ -124,19 +124,30 @@
         // Add header row with letters
         row = $("<div>").addClass("square-row letters").appendTo(grid);
         $("<div>").addClass("square").appendTo(row);
-        for (var x = 0; x < cols; x++) {
-            $("<div>").addClass("square").text(String.fromCharCode(65 + x)).appendTo(row);
+        for (let x = 0; x < cols; x++) {
+            $("<input>").attr({"type": "text", "maxlength": 1}).addClass(`transparent-input lett x${x}`).val(String.fromCharCode(65 + x)).click(function() {
+                $(this).select();
+            }).on("input", function() {
+                this.value = this.value.toUpperCase();
+                if (x >= cols - 1) $("input.numbers.y0").select();
+                else $(`input.lett.x${x + 1}`).select();
+            }).appendTo(row);
         }
 
         // Add grid rows with numbers and cells
         for (let y = 1; y <= rows; y++) {
             row = $("<div>").addClass("square-row").appendTo(grid);
-            $("<div>").addClass("square numbers").text(y).appendTo(row);
+            $("<input>").attr("type", "text").addClass(`transparent-input square numbers y${y-1}`).val(y).click(function() {
+                $(this).select();
+            }).on("input", function() {
+                this.value = this.value.toUpperCase();
+                if (y >= rows) $("input.lett.x0").select();
+                else $(`input.numbers.y${y}`).select();
+            }).appendTo(row);
             for (let x = 1; x <= cols; x++) {
                 let square = $("<div>").addClass(`netsquare square netsq x${x-1} y${y-1} white`).appendTo(row).each(function(_, e) {
                     var element = $(e);
                     element.click(function(event) {
-
                         let group = $(`.netsq.x${x-1}.y${y-1}`);
                         selected = group;
                         updateSelection();
@@ -377,6 +388,7 @@
         $("button.new-save").click(function() {
             let saveState = Array.from($(".netsquare, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
             let bodyClasses = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let rowLabels = Array.from($("input.transparent-input")).map(x => $(x)).map(x => x.val() || "");
             let stateNumber = saveStates.length + 1;
             let s = currentStage;
             currentState = stateNumber;
@@ -391,6 +403,7 @@
             let button = $("<button>").text(stateNumber).addClass("saved-state").click(function() {
                 $(".netsquare, .tools button").each((i, x) => $(x).attr("class", saveState[i]));
                 $("body").each((i, x) => $(x).attr("class", bodyClasses[i]));
+                $("input.transparent-input").each((i, x) => $(x).val(rowLabels[i]));
                 currentState = stateNumber;
                 currentStage = s;
                 stageCounter.text(s);
@@ -422,6 +435,7 @@
         $("button.replace-save").click(function() {
             let saveState = Array.from($(".netsquare, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
             let bodyClasses = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let rowLabels = Array.from($("input.transparent-input")).map(x => $(x)).map(x => x.val() || "");
             let stateNumber = currentState;
             let s = currentStage;
 
@@ -434,6 +448,7 @@
             let button = $("<button>").text(stateNumber).addClass("saved-state").click(function() {
                 $(".netsquare, .tools button").each((i, x) => $(x).attr("class", saveState[i]));
                 $("body").each((i, x) => $(x).attr("class", bodyClasses[i]));
+                $("input.transparent-input").each((i, x) => $(x).val(rowLabels[i]));
                 currentState = stateNumber;
                 currentStage = s;
                 stageCounter.text(s);
@@ -459,13 +474,14 @@
                 let oldButton = document.getElementById(replaceID);
                 oldButton.parentNode.replaceChild(button[0], oldButton);
                 replaceID = `save-${buttonID}`;
+                oldButton.remove();
             }
             else {
                 button.appendTo(".saves");
                 saveStates.push(button);
             }
             $(".saves button").removeClass("selected");
-            saveStates[saveStates.length - 1].click();
+            $(".saves button.saved-state").last().click();
             stageInc();
 
             buttonID += 1;
@@ -520,12 +536,11 @@
             font-size: 30px;
             user-select: none;
             text-align: center;
-            border: #808080 1px solid;
             transition: background-color 0.2s, color 0.2s;
             box-sizing: border-box;
         }
-        .square.numbers, .letters .square {
-            margin-top: 16px;
+        .square.numbers, .letters input {
+            margin-top: 4px;
             border-width: 0;
             width: var(--sqsize);
             height: var(--sqsize);
@@ -541,10 +556,27 @@
             line-height: 57px;
             cursor: pointer;
             color: #000;
+            border: #808080 1px solid;
             position: relative;
         }
         .netsquare.selected {
             border: 3px solid #00F;
+        }
+
+        .transparent-input {
+            font-family: 'Special Elite';
+            background-color: transparent;
+            border: none;
+            outline: none;
+            font-size: 30px;
+            text-align: center;
+            padding: 0;
+            min-width: var(--sqsize);
+            max-width: var(--sqsize);
+            min-height: var(--sqsize);
+            max-height: var(--sqsize);
+            margin: 1px;
+            box-sizing: border-box;
         }
 
         .color-buttons {
