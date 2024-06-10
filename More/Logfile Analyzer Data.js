@@ -16993,6 +16993,88 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "SueetWall",
+		loggingTag: "Sueet Wall",
+		matches: [
+			{
+				regex: /Layout:/,
+				handler: function(_, module) {
+					module.grid = readTaggedLines(5).map(l => l.split(" ").map(c => c.split("-")));
+
+					let svg = $("<svg viewbox='-5 -5 170 210'>").addClass("sueet-wall");
+
+					module.makeCell = function(row, col, cell, light_col, dark_col) {
+						let group = $SVG("<g>").attr("transform", `translate(${40 * col} ${40 * row})`);
+						
+						$SVG("<rect>").addClass("cell")
+							.attr("width", 40).attr("height", 40)
+							.attr("fill", light_col)
+							.appendTo(group);
+						$SVG("<rect>")
+							.attr("x", 10).attr("y", 10)
+							.attr("width", 20).attr("height", 20)
+							.attr("fill", dark_col)
+							.appendTo(group);
+						$SVG("<text>").addClass("number-text")
+							.attr("x", 3).attr("y", 3)
+							.attr("fill", cell[0] == "B" ? "#000" : "#F00")
+							.text(cell[1])
+							.appendTo(group);
+						$SVG("<text>").addClass("suit")
+							.attr("x", 37).attr("y", 37)
+							.attr("fill", cell[2] == "♠" || cell[2] == "♣" ? "#000" : "#F00")
+							.text(cell[2])
+							.appendTo(group);
+
+						return group;
+					};
+
+					for (let row = 0; row < 5; row++) {
+						for (let col = 0; col < 4; col++) {
+							module.makeCell(row, col, module.grid[row][col], "#FFF", "#D3D3D3").appendTo(svg);
+						}
+					}
+
+					module.push({ label: "Layout:", obj: svg });
+
+					return true;
+				}
+			},
+			{
+				regex: /Solution: (.+?)\./,
+				handler: function(matches, module) {
+					const correctCells = matches[1].split(", ").map(c => (c[1] - 1)*4 + c.charCodeAt(0)-65);
+					
+					let svg = $("<svg viewbox='-5 -5 170 210'>").addClass("sueet-wall");
+
+					for (let row = 0; row < 5; row++) {
+						for (let col = 0; col < 4; col++) {
+							module.makeCell(
+								row,
+								col,
+								module.grid[row][col],
+								correctCells.includes(row * 4 + col) ? "#c2ffc7" : "#87c9ff",
+								correctCells.includes(row * 4 + col) ? "#9dde9d" : "#70a7df").appendTo(svg);
+						}
+					}
+
+					module.push(["Solution:", [{obj: svg, nobullet: true}]]);
+
+					return true;
+				}
+			},
+			{ 
+				regex: /No buttons are correct, you can press any button\./,
+				handler: function(matches, module) {
+					module.push(["Solution:", ["No buttons are correct, you can press any button."]]);
+
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "superpositionRB",
 		loggingTag: "Superposition",
 		matches: [
