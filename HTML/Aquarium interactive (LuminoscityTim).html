@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Aquarium — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/set-utils.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script>
+    $(function() {
+        var selected;
+        let grid = $(".grid");
+        let sizeNumber = $(".sizeNumber");
+        const SIZE_MIN = 4;
+        const SIZE_MAX = 8;
+        let cols = 6;
+        let rows = 6;
+        let gameGrid = Array(SIZE_MAX).fill().map(()=>Array(SIZE_MAX).fill(0));
+        let currX = 0;
+        let currY = 0;
+        let resultList = [];
+        let solList = [];
+        let generating = false;
+        let saveStates = [];
+        let currentState = 0;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+        const colors = [ "empty", "water", "air" ];
+        const colorKey = {
+            "w": 1,
+            "a": 2,
+            "e": 0,
+            " ": 0,
+            "enter": 0,
+        };
+
+        let mobile = (/mobi/i.test(navigator.userAgent));
+        $("body").toggleClass("mobile", mobile);
+
+        function selectNone() {
+            selected = null;
+            updateSelection();
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        function resetGrid() {
+            selected = $(".netsq.x0.y0");
+            updateSelection();
+            currX = currY = 0;
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++)
+                    gameGrid[x][y] = 0;
+            updateGrid();
+        }
+
+        function RandRange(start, end) {
+            return Math.floor(Math.random() * (end - start) + start);
+        }
+
+        function ERange(start, count) {
+            return [...Array(count).keys()].map(x => x + start);
+        }
+
+        function coordinateName(coord) {
+            return `${String.fromCharCode(65 + coord[0])}${coord[1] + 1}`;
+        }
+
+        const regionSize = {
+            4: 8,
+            5: 10,
+            6: 12,
+            7: 14,
+            8: 16
+        };
+
+        // These functions were taken from the module source code
+        function generate() {
+            generating = true;
+
+            let tryAgain = true;
+            let horizClues = Array(rows).fill(null);
+            let vertClues = Array(cols).fill(null);
+            let regions = [];
+            while (tryAgain) {
+                // Generate regions
+                regions = [];
+                let covered = Array(cols * rows).fill(false);
+                let numCovered = 0;
+                while (numCovered < cols * rows) {
+                    let newRegion = GenerateContiguousRegion(RandRange(0, regionSize[rows]), covered);
+                    regions.push(new RegionInfo(newRegion));
+                    for (let i = 0; i < cols * rows; i++) {
+                        if (newRegion[i]) {
+                            covered[i] = true;
+                            numCovered++;
+                        }
+                    }
+                }
+
+                // Decide on a random solution
+                let solutionLevels = regions.map(reg => RandRange(0, reg.BottomRow - reg.TopRow + 2));
+                solList = MakeSolutionBoard(regions, solutionLevels);
+
+                // Find the horizontal and vertical clues that aren't 0 or 6
+                horizClues = Array(rows).fill(null);
+                vertClues = Array(cols).fill(null);
+                for (let row = 0; row < rows; row++) {
+                    let cl = ERange(0, cols).reduce((sum, col) => sum + (solList[col + cols * row] ? 1 : 0), 0);
+                    if (cl !== 0 && cl !== cols) {
+                        horizClues[row] = cl;
+                    }
+                }
+                for (let col = 0; col < cols; col++) {
+                    let cl = ERange(0, rows).reduce((sum, row) => sum + (solList[col + cols * row] ? 1 : 0), 0);
+                    if (cl !== 0 && cl !== rows) {
+                        vertClues[col] = cl;
+                    }
+                }
+
+                // Ensure that this puzzle isn't ambiguous with all those clues present
+                let solutions = solveRecurse(regions, Array(regions.length).fill(null), horizClues, vertClues);
+                let res1 = solutions.next();
+                let res2 = solutions.next();
+                if (res2.done) {
+                    tryAgain = false;
+                    console.log("solutionLevels:", solutionLevels);
+                }
+            }
+            console.log("top:", vertClues);
+            console.log("side:", horizClues);
+            console.log(regions);
+            console.log(solList);
+
+            // Determine a minimal set of clues required for the puzzle to be unique
+            let allClues = ShuffleFisherYates(
+                horizClues.flatMap((clue, index) => clue === null ? [] : [{ Clue: clue, IsRow: true, Index: index }])
+                .concat(vertClues.flatMap((clue, index) => clue === null ? [] : [{ Clue: clue, IsRow: false, Index: index }]))
+            );
+            console.log(allClues);
+
+            let requiredClues = ReduceRequiredSet(ERange(0, allClues.length), test => {
+                let horizCl = Array(rows).fill(null);
+                let vertCl = Array(cols).fill(null);
+                for (let clueIx of test.SetToTest) {
+                    if (allClues[clueIx].IsRow) {
+                        horizCl[allClues[clueIx].Index] = allClues[clueIx].Clue;
+                    } else {
+                        vertCl[allClues[clueIx].Index] = allClues[clueIx].Clue;
+                    }
+                }
+                let solutions = solveRecurse(regions, Array(regions.length).fill(null), horizCl, vertCl);
+                let res1 = solutions.next();
+                let res2 = solutions.next();
+                return res2.done;
+            }).map(cIx => allClues[cIx]);
+            console.log(requiredClues);
+
+            // display the clues
+            for (let col = 0; col < cols; col++) {
+                let clue = requiredClues.find(cl => !cl.IsRow && cl.Index === col);
+                $(`.transparent-input.top.x${col}.y0`).val(clue ? clue.Clue : "");
+            }
+            for (let row = 0; row < rows; row++) {
+                let clue = requiredClues.find(cl => cl.IsRow && cl.Index === row);
+                $(`.transparent-input.right.x9.y${row}`).val(clue ? clue.Clue : "");
+            }
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    // gameGrid[col][row] = solList[col + cols * row] ? 1 : 2;
+                    gameGrid[col][row] = 0;
+                }
+            }
+
+            // show the walls
+            $("svg .wall").addClass("solid");
+            for (let cell = 0; cell < (cols - 1) * rows; cell++) {
+                let leftCell = cell % (cols - 1) + cols * Math.floor(cell / (cols - 1));
+                let rightCell = cell % (cols - 1) + 1 + cols * Math.floor(cell / (cols - 1));
+                if (regions.findIndex(reg => reg.Region[leftCell]) === regions.findIndex(reg => reg.Region[rightCell])) {
+                    let x = cell % (cols - 1) + 1;
+                    let y = Math.floor(cell / (cols - 1));
+                    $(`.wall.vwall.x${x}.y${y}`).removeClass("solid");
+                }
+            }
+            for (let cell = 0; cell < cols * (rows - 1); cell++) {
+                let aboveCell = cell % cols + cols * Math.floor(cell / cols);
+                let belowCell = cell % cols + cols * (Math.floor(cell / cols) + 1);
+                if (regions.findIndex(reg => reg.Region[aboveCell]) === regions.findIndex(reg => reg.Region[belowCell])) {
+                    let x = cell % cols;
+                    let y = Math.floor(cell / cols) + 1;
+                    $(`.wall.hwall.x${x}.y${y}`).removeClass("solid");
+                }
+            }
+
+            $(".solution .str").text("Water " + solList.map((s, i) => s? coordinateName([i%cols, Math.floor(i/cols)]) : '').join(" "));
+            generating = false;
+        }
+
+        function MakeSolutionBoard(regions, solutionLevels) {
+            let solutionBoard = Array(cols * rows).fill(false);
+            for (let regIx = 0; regIx < regions.length; regIx++) {
+                for (let cell of regions[regIx].Cells) {
+                    if (Math.floor(cell / cols) > regions[regIx].BottomRow - solutionLevels[regIx]) {
+                        solutionBoard[cell] = true;
+                    }
+                }
+            }
+            return solutionBoard;
+        }
+
+        class RegionInfo {
+            constructor(region) {
+                this.Region = region;
+                this.Cells = SelectIndexWhere(region, b => b);
+                this.TopRow = Math.floor(this.Cells[0] / cols);
+                this.BottomRow = Math.floor(this.Cells[this.Cells.length - 1] / cols);
+                this.NumRows = this.BottomRow - this.TopRow + 1;
+            }
+        }
+
+        function* Orthogonal(cell, gridWidth = cols, gridHeight = rows) {
+            let x = cell % gridWidth;
+            let y = Math.floor(cell / gridHeight);
+            for (let xx = x - 1; xx <= x + 1; xx++) {
+                if (xx >= 0 && xx < gridWidth) {
+                    for (let yy = y - 1; yy <= y + 1; yy++) {
+                        if (yy >= 0 && yy < gridHeight && (xx !== x || yy !== y) && (xx === x || yy === y)) {
+                            yield xx + gridWidth * yy;
+                        }
+                    }
+                }
+            }
+        }
+
+        function* solveRecurse(regions, sofar, horizClues, vertClues) {
+            let bestRegIx = -1;
+            let smallestSize = rows + 1;
+            let skip1 = false;
+            for (let r = 0; r < sofar.length; r++) {
+                if (sofar[r] !== null) {
+                    continue;
+                }
+                if (regions[r].NumRows < smallestSize) {
+                    smallestSize = regions[r].NumRows;
+                    bestRegIx = r;
+                    if (smallestSize === 1) {
+                        skip1 = true;
+                        break;
+                    }
+                }
+            }
+            if (!skip1 && bestRegIx === -1) {
+                yield [...sofar];
+                return;
+            }
+
+            for (let level = 0; level <= smallestSize; level++) {
+                sofar[bestRegIx] = level;
+                let horizMin = Array(rows).fill(0);
+                let horizMax = Array(rows).fill(0);
+                let vertMin = Array(cols).fill(0);
+                let vertMax = Array(cols).fill(0);
+                for (let regIx = 0; regIx < regions.length; regIx++) {
+                    for (let cell of regions[regIx].Cells) {
+                        if (sofar[regIx] === null) {
+                            horizMax[Math.floor(cell / cols)]++;
+                            vertMax[cell % cols]++;
+                        } else if (Math.floor(cell / cols) > regions[regIx].BottomRow - sofar[regIx]) {
+                            horizMin[Math.floor(cell / cols)]++;
+                            horizMax[Math.floor(cell / cols)]++;
+                            vertMin[cell % cols]++;
+                            vertMax[cell % cols]++;
+                        }
+                    }
+                }
+                let valid = true;
+                for (let row = 0; row < rows; row++) {
+                    if (horizClues[row] !== null && (horizMin[row] > horizClues[row] || horizMax[row] < horizClues[row])) {
+                        valid = false;
+                        break;
+                    }
+                }
+                for (let col = 0; valid && col < cols; col++) {
+                    if (vertClues[col] !== null && (vertMin[col] > vertClues[col] || vertMax[col] < vertClues[col])) {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (valid) {
+                    yield* solveRecurse(regions, sofar, horizClues, vertClues);
+                }
+            }
+            sofar[bestRegIx] = null;
+        }
+
+        function GenerateContiguousRegion(maxSize, forbidden) {
+            let region = Array(cols * rows).fill(false);
+            let allowed = SelectIndexWhere(forbidden, b => !b);
+            region[allowed[RandRange(0, allowed.length)]] = true;
+            let curSize = 1;
+
+            while (curSize < maxSize) {
+                let adjs = new Set();
+                for (let i = 0; i < cols * rows; i++) {
+                    if (region[i]) {
+                        for (let adj of Orthogonal(i)) {
+                            if (!region[adj] && !forbidden[adj]) {
+                                adjs.add(adj);
+                            }
+                        }
+                    }
+                }
+                if (adjs.size === 0) {
+                    return region;
+                }
+                let adjsArr = [...adjs];
+                region[adjsArr[RandRange(0, adjsArr.length)]] = true;
+                curSize++;
+            }
+            return region;
+        }
+        // Taken from module source code ^^^
+
+
+        function updateResult() {
+            resultList = [];
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    switch (gameGrid[x][y]) {
+                    case 1:
+                        resultList.push(true);
+                        break;
+                    case 2:
+                        resultList.push(false);
+                        break;
+                    default:
+                        resultList.push(null);
+                        break;
+                    }
+                }
+            }
+            $(".path .str").text("Water " + resultList.map((s, i) => (s === true ? coordinateName([i%cols, Math.floor(i/cols)]) : '')).join(" "));
+        }
+
+        const fulldir = {
+            up: [0, -1],
+            left: [-1, 0],
+            down: [0, 1],
+            right: [1, 0],
+            w: [0, -1],
+            a: [-1, 0],
+            s: [0, 1],
+            d: [1, 0],
+        }
+        const directions = {
+            up: [0, 0],
+            left: [0, 0],
+            down: [0, 1],
+            right: [1, 0],
+            w: [0, 0],
+            a: [0, 0],
+            s: [0, 1],
+            d: [1, 0],
+        };
+        function arrowPressed(direction, vert) {
+            if (mode() == MODE_READ) {
+                let x = currX + direction[0];
+                let y = currY + direction[1];
+                let wall = [];
+                if (x > 0 && x < cols && y >= 0 && y < rows) {
+                    wall = vert ? $(`svg .wall.hwall.x${x}.y${y}`) : $(`svg .wall.vwall.x${x}.y${y}`);
+                }
+                else return;
+                    
+                if (wall.length > 0) {
+                    wall.toggleClass("solid");
+                }
+            }
+        }
+
+        let down = false;
+        $(document).click(function(event) {
+            selectNone();
+        }).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if (mode() == MODE_READ && selected && selected.hasClass("netsq")) {
+                if (k.startsWith("arrow")) {
+                    let which = k.substring(5);
+                    arrowPressed(directions[which], fulldir[which][0] == 0);
+                    down = false;
+                    return false;
+                } else if (NoSpecialKeys(event) && (k == "w" || k == "a" || k == "s" || k == "d")) {
+                    arrowPressed(directions[k], fulldir[k][0] == 0);
+                    down = false;
+                    return false;
+                }
+            }
+            else if (selected && selected.hasClass("netsq") && ["w", "a", "e", " ", "enter"].includes(k)) {
+                gameGrid[currX][currY] = colorKey[k];
+                updateGrid();
+                if (isSolved()) {
+                    if ($("button.sound").hasClass("play"))
+                        audioSolve[0].play();  
+                    $(".solved-text").removeClass("invis");
+                } else {
+                    playNumberSound(colorKey[k]);
+                    $(".solved-text").addClass("invis");
+                }
+                
+                if ([" ", "enter"].includes(k)) {
+                    down = false;
+                    return false;
+                }
+            }
+            else if (k == "-") 
+                sizeDec();
+            else if (k == "=" || k == "+")
+                sizeInc();
+
+            down = false;
+        });
+
+        const viewboxes = {
+            4:"0 0 302 302",
+            5:"0 0 362 362",
+            6:"0 0 424 424",
+            7:"0 0 484 484",
+            8:"0 0 545 545"
+        };
+        const bordersize = {
+            4:"242",
+            5:"302",
+            6:"364",
+            7:"424",
+            8:"485"
+        };
+        function sizeDec(manual = true) {
+            if (manual && mode() != MODE_PLAY) return;
+            cols = rows = Math.max(SIZE_MIN, rows - 1);
+            sizeNumber.text(rows);
+            $("body").removeClass("square4 square5 square6 square7 square8").addClass(`square${rows}`);
+            svg.attr("viewBox", viewboxes[rows]);
+            $("rect.outline").attr({ width:bordersize[rows], height:bordersize[rows] });
+            updateGrid();
+        }
+        function sizeInc(manual = true) {
+            if (manual && mode() != MODE_PLAY) return;
+            cols = rows = Math.min(SIZE_MAX, rows + 1);
+            sizeNumber.text(rows); 
+            $("body").removeClass("square4 square5 square6 square7 square8").addClass(`square${rows}`);
+            svg.attr("viewBox", viewboxes[rows]);
+            $("rect.outline").attr({ width:bordersize[rows], height:bordersize[rows] });
+            updateGrid();
+        }
+        $(".sizetext.minus").click(function() {
+            sizeDec();    
+        });
+        $(".sizetext.plus").click(function() {
+            sizeInc();
+        });
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else if ($("button.read-solve").hasClass("solve"))  
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        function isSolved() {
+            if (mode() == MODE_PLAY) {
+                if (resultList.every((elem,i) => resultList[i] === solList[i])) {
+                    if ($("button.sound").hasClass("play"))
+                        audioSolve[0].play();
+                    return true;
+                }
+                else 
+                    return false;
+            }
+            return false;
+        }
+        function playNumberSound(n) {
+            if ($("button.sound").hasClass("play") && !isNaN(n) && n >= 0 && n <= 2) {
+                let aud = audioNumbers[n][0].cloneNode();  
+                aud.volume = 0.3;
+                aud.play();
+            }
+        }
+
+        let gridSize = 60; // Size of each cell
+        let wallSize = 4; // Size of the walls
+        let svg = MakeSvgTag((cols + 1) * gridSize + wallSize, (rows + 1) * gridSize + wallSize, 0, 0, { class: "aquarium-grid" });
+
+        // Create row labels
+        for (let y = 1; y <= SIZE_MAX; y++) {
+            let label = $(MakeSvgElem("text", { x: gridSize / 2, y: y * gridSize + gridSize * 1.1, "text-anchor": "middle", "dominant-baseline": "central", class: "grid-label" }, y));
+            if (y >= 8) label.addClass("eight"); 
+            else if (y >= 7) label.addClass("seven");
+            else if (y >= 6) label.addClass("six");
+            else if (y >= 5) label.addClass("five");
+            svg.append(label);
+        }
+
+        // Create column labels
+        for (let x = 1; x <= SIZE_MAX; x++) {
+            let label = $(MakeSvgElem("text", { x: x * gridSize + gridSize / 2.1, y: 0, "text-anchor": "middle", "dominant-baseline": "central", class: "grid-label" }, String.fromCharCode(64 + x)));
+            if (x >= 8) label.addClass("eight"); 
+            else if (x >= 7) label.addClass("seven");
+            else if (x >= 6) label.addClass("six");
+            else if (x >= 5) label.addClass("five");
+            svg.append(label);
+        }
+
+        // Create cells and walls
+        for (let y = 0; y < SIZE_MAX; y++) {
+            for (let x = 0; x < SIZE_MAX; x++) {
+                let cell = $(MakeSvgElem("rect", {
+                    x: (x + 1) * gridSize,
+                    y: (y + 1.5) * gridSize,
+                    width: gridSize,
+                    height: gridSize,
+                    class: `netsq x${x} y${y} empty`
+                }));
+                if (x >= 7 || y >= 7) cell.addClass("eight"); 
+                else if (x >= 6 || y >= 6) cell.addClass("seven");
+                else if (x >= 5 || y >= 5) cell.addClass("six");
+                else if (x >= 4 || y >= 4) cell.addClass("five");
+                cell.click(function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    selected = $(this);
+                    updateSelection();
+                    currX = x;
+                    currY = y;
+                    
+                    if (mode() != MODE_READ) {
+                        gameGrid[x][y] = (gameGrid[x][y] + 1) % colors.length;
+                        updateGrid();
+                        
+                        if (isSolved()) {
+                            if ($("button.sound").hasClass("play"))
+                                audioSolve[0].play();  
+                            $(".solved-text").removeClass("invis");
+                        } else {
+                            playNumberSound(gameGrid[x][y]);
+                            $(".solved-text").addClass("invis");
+                        }
+                    }
+                });
+                svg.append(cell);
+            }
+        }
+        // Add vertical walls
+        let wallIdx = 0;
+        for (let y = 0; y < SIZE_MAX; y++) {
+            for (let x = 1; x < SIZE_MAX; x++) {
+                let vWall = $(MakeSvgElem("line", {
+                    x1: (x + 1) * gridSize,
+                    y1: (y + 1.5) * gridSize,
+                    x2: (x + 1) * gridSize,
+                    y2: (y + 2.5) * gridSize,
+                    class: `wall vwall x${x} y${y} w${wallIdx++}`,
+                    "stroke-linecap": "round"
+                }));
+                if (x >= 7 || y >= 7) vWall.addClass("eight"); 
+                else if (x >= 6 || y >= 6) vWall.addClass("seven");
+                else if (x >= 5 || y >= 5) vWall.addClass("six");
+                else if (x >= 4 || y >= 4) vWall.addClass("five");
+                vWall.click(toggleWall);
+                svg.append(vWall);
+            }
+        }
+        // Add horizontal walls
+        for (let y = 1; y < SIZE_MAX; y++) {
+            for (let x = 0; x < SIZE_MAX; x++) {
+                let hWall = $(MakeSvgElem("line", {
+                    x1: (x + 1) * gridSize,
+                    y1: (y + 1.5) * gridSize,
+                    x2: (x + 2) * gridSize,
+                    y2: (y + 1.5) * gridSize,
+                    class: `wall hwall x${x} y${y} w${wallIdx++}`,
+                    "stroke-linecap": "round"
+                }));
+                if (x >= 7 || y >= 7) hWall.addClass("eight"); 
+                else if (x >= 6 || y >= 6) hWall.addClass("seven");
+                else if (x >= 5 || y >= 5) hWall.addClass("six");
+                else if (x >= 4 || y >= 4) hWall.addClass("five");
+                hWall.click(toggleWall);
+                svg.append(hWall);
+            }
+        }
+        svg.append(MakeSvgElem("rect", { class: "outline", x:58, y:88, width:364, height:364, fill:"none", stroke:"#000", "stroke-width":(wallSize) }));
+        grid.append(svg);
+
+        // Add transparent input elements for clues
+        for (let x = 0; x < SIZE_MAX; x++) {
+            let input = $("<input>").addClass(`transparent-input qty top x${x} y0`).val(1).attr({maxlength: "1", inputMode: "numeric"});
+            input.css({
+                left: `${(x + 1) * gridSize*1.07}px`
+            });
+            if (x >= 7) input.addClass("eight"); 
+            else if (x >= 6) input.addClass("seven");
+            else if (x >= 5) input.addClass("six");
+            else if (x >= 4) input.addClass("five");
+            grid.append(input);
+        }
+
+        for (let y = 0; y < SIZE_MAX; y++) {
+            let input = $("<input>").addClass(`transparent-input qty right x9 y${y}`).val(1).attr({maxlength: "1", inputMode: "numeric"});
+            input.css({
+                top: `${(y + 2) * gridSize * 1.08}px`
+            });
+            if (y >= 7) input.addClass("eight"); 
+            else if (y >= 6) input.addClass("seven");
+            else if (y >= 5) input.addClass("six");
+            else if (y >= 4) input.addClass("five");
+            grid.append(input);
+        }
+
+        // Function to toggle wall visibility
+        function toggleWall(event) {
+            if (mode() == MODE_READ)
+                $(event.target).toggleClass("solid");
+        }
+
+        function updateGrid() {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    let n = gameGrid[x][y];
+                    let elem = $(`.netsq.x${x}.y${y}`);
+                    elem.removeClass(colors.join(" ")).addClass(colors[n]);
+                }
+            }
+            updateResult();
+        }
+
+        $(".transparent-input").click(function() {
+            $(this).select();
+            return false;
+        });
+        $(".transparent-input.qty").on("input", function() {
+            let elem = $(this);
+            if (elem.val().length < 1) return;
+            else {
+                let n = parseInt(elem.val());
+                if (isNaN(n) || n < 1 || n > rows)
+                    elem.val("");
+            }
+
+            let classes = elem.attr("class").split(" ");
+
+            let x = parseInt(classes.find(e => e.startsWith("x")).slice(1));
+            let y = parseInt(classes.find(e => e.startsWith("y")).slice(1));
+            let next;
+            
+            if (elem.hasClass("top")) next = (x < cols - 1 ? `.transparent-input.qty.top.x${x + 1}.y0` : ".transparent-input.qty.right.x9.y0");
+            else next = (y < rows - 1 ? `.transparent-input.qty.right.x9.y${y + 1}` : ".transparent-input.qty.top.x0.y0");
+            $(next).select();
+        });
+
+        let audioNumbers = [
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Unfair Cipher - Press 3.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Not The Bulb/TapCode.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Not The Bulb/NonoClick.wav")
+                .appendTo(grid)
+        ];
+        let audioSolve = $("<audio>")
+            .attr("src","audio/Module Listening/Visual Impairment - Solve.wav")
+            .prop("volume", 0.4)
+            .appendTo(grid);
+
+        let tools = $(".tools");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
+        $("<div>").addClass("netsquare reset-grid square").text("↻").appendTo(tools).click(function() {
+            if (mode() != MODE_READ) {
+                resetGrid();
+                $(".solved-text").addClass("invis");
+                return false;
+            }
+        });
+
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            $("body").toggleClass("solve", $(this).hasClass("solve"));
+        });
+
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if (mode() == MODE_PLAY) {
+                generate();
+                updateGrid();
+            }
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $("button.read-solve").removeClass("solve");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $(".solved-text").addClass("invis");
+            $("body").removeClass("play solve solution-shown");
+            $(".transparent-input.qty").val(1);
+            while (rows > 6 || rows < 6) {
+                if (rows > 6) sizeDec(false);
+                else sizeInc(false);
+            }
+            
+            resetGrid();
+            $("svg .wall").removeClass("solid");
+            
+            saveStates.forEach(x => x.remove());  
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {  
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();  
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+            
+            let saveStateClass = Array.from($(".netsquare, line.wall, .solved-text, .tools button, .sizeHolder, .transparent-input")).map(x => $(x)).map(x => x.attr("class") || "");
+            let bodyClass = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let inputs = Array.from($(".transparent-input")).map(x => $(x)).map(x => x.val() || "");
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+            
+            let s_solList = JSON.stringify(solList);
+            let s_gameGrid = JSON.stringify(gameGrid);
+            let s_selected = selected;
+            let s_cols = cols;
+            let s_rows = rows;
+            let s_currX = currX;
+            let s_currY = currY;
+            
+            let button = $("<button>").text(stateNumber+1).click(function() {
+                $(".netsquare, line.wall, .solved-text, .tools button, .sizeHolder, .transparent-input").each((i,x) => $(x).attr("class", saveStateClass[i]));
+                $("body").each((i,x) => $(x).attr("class", bodyClass[i]));
+                $(".transparent-input").each((i,x) => $(x).val(inputs[i]));
+                currentState = stateNumber;
+                while (rows > s_rows || rows < s_rows) {
+                    if (rows > s_rows) sizeDec(false);
+                    else sizeInc(false);
+                }
+                selected = s_selected;
+                currX = s_currX;
+                currY = s_currY;
+                cols = s_cols;
+                rows = s_rows;
+                solList = JSON.parse(s_solList);
+                gameGrid = JSON.parse(s_gameGrid);
+                
+                $(".solution .str").text("Water " + solList.map((s, i) => s? coordinateName([i%cols, Math.floor(i/cols)]) : '').join(" "));
+                updateGrid();
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+            
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        .hstack, .vstack {
+            align-items: center;
+        }
+        .tools {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            width: 140px;
+        }
+        @media screen and (max-width: 724px) {
+            .tools {
+                flex-direction: row;
+                flex-wrap: wrap;
+                width: unset;
+            }
+        }
+        body:is(.square7, .square8) .tools {
+            flex-direction: row;
+            flex-wrap: wrap;
+            width: unset;
+        }
+        .tools button {
+            margin: 8px;
+        }
+        .solved-text {
+            color: #0C0;
+            transition: 0.5s;
+            user-select: none;
+        }
+        .invis { opacity: 0; }
+
+        html {
+            --sqsize: 65px;
+        }
+
+        .grid {
+            position: relative;
+        }
+
+        body.square4 .grid {
+            width: calc(var(--sqsize) * 6);
+            height: calc(var(--sqsize) * 6);
+        }
+        body.square4 .aquarium-grid {
+            width: calc(var(--sqsize) * 5);
+            height: calc(var(--sqsize) * 6);
+        }
+        body.square5 .grid {
+            width: calc(var(--sqsize) * 7);
+            height: calc(var(--sqsize) * 7);
+        }
+        body.square5 .aquarium-grid {
+            width: calc(var(--sqsize) * 6);
+            height: calc(var(--sqsize) * 7);
+        }
+        body.square6 .grid {
+            width: calc(var(--sqsize) * 8);
+            height: calc(var(--sqsize) * 8);
+        }
+        body.square6 .aquarium-grid {
+            width: calc(var(--sqsize) * 7);
+            height: calc(var(--sqsize) * 8);
+        }
+        body.square7 .grid {
+            width: calc(var(--sqsize) * 9);
+            height: calc(var(--sqsize) * 9);
+        }
+        body.square7 .aquarium-grid {
+            width: calc(var(--sqsize) * 8);
+            height: calc(var(--sqsize) * 9);
+        }
+        body.square8 .grid {
+            width: calc(var(--sqsize) * 10);
+            height: calc(var(--sqsize) * 10);
+        }
+        body.square8 .aquarium-grid {
+            width: calc(var(--sqsize) * 9);
+            height: calc(var(--sqsize) * 10);
+        }
+
+        .empty {
+            background-color: #888;
+        }
+        .water {
+            background-color: #46F;
+        }
+        .air {
+            background-color: #FFF;
+        }
+
+        .square {
+            margin: 2px;
+            width: var(--sqsize);
+            height: var(--sqsize);
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .netsquare {
+            background-color: #FFF;
+            height: var(--sqsize);
+            width: var(--sqsize);
+            font-size: 30px;
+            border: #808080 1px solid;
+            line-height: 60px;
+            font-weight: bold;
+            position: relative;
+        }
+        body:is(.solve, .play) :is(.netsquare, .netsq) {
+            cursor: pointer;
+        }
+        .netsquare.reset-grid {
+            color: #000;
+        }
+
+        .aquarium-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .netsq.empty { fill: #CCCCCC; }
+        .netsq.water { fill: #87CEEB; }
+        .netsq.air { fill: white; }
+
+        .netsq.selected {
+            outline-color: #F00;
+            outline-style: dotted;
+            outline-width: 6px;
+            outline-offset: -5px;
+        }
+
+        .grid-label {
+            font-size: 30px;
+            font-family: 'Special Elite';
+            opacity: 50%;
+            user-select: none;
+        }
+
+        .wall {
+            stroke: transparent;
+            stroke-width: 5px;
+            cursor: pointer;
+        }
+        body.solve .wall {
+            pointer-events: none;
+        }
+
+        .wall.solid {
+            stroke: black;
+        }
+
+        .dark svg text { fill: #DDD; }
+
+        .transparent-input.qty.top {
+            top: 60px;
+        }
+
+        .transparent-input.qty.right {
+            right: 0px;
+        }
+
+        body.square7 .eight,
+        body.square6 :is(.seven, .eight),
+        body.square5 :is(.six, .seven, .eight),
+        body.square4 :is(.five, .six, .seven, .eight) {
+            opacity: 0;
+            user-select: none;
+            pointer-events: none;
+            width: 0;
+            height: 0;
+            border-width: 0;
+            margin: 0;
+        }
+
+        .transparent-input {
+            font-family: 'Special Elite';
+            background-color: transparent;
+            border: none;
+            outline: none;
+            font-size: 30px;
+            text-align: center;
+            padding: 0;
+            width: var(--sqsize);
+            height: var(--sqsize);
+            box-sizing: border-box;
+            line-height: var(--sqsize);
+            position: absolute;
+        }
+
+        .dark .transparent-input.qty { color: #DDD; }
+
+        .switch-holder {
+            font-size: 20px;
+            margin: 10px;
+        }
+        .switch-label {
+            margin: 0 10px;
+        }
+
+        .sizetext {
+            font-size: 20px;
+            padding-top: 8px;
+        }
+        .sizeNumber {
+            position: relative;
+            top: 2px;
+            font-size: 35px;
+            width: 52px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .sizeHolder button {
+            padding-top: 12px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+        }
+
+        .path, .solution {
+            font-family: 'Roboto Mono';
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        :is(.path, .solution) span:not(.str) {
+            display: inline-block;
+            min-width: 120px;
+        }
+        body:not(.solution-shown) :is(.solution, .path),
+        body:not(.play) .solution {
+            color: transparent;
+            font-size: 0;
+        }
+        body:not(.play) .sizeHolder {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        body:not(.play, .solve) :is(button.show-sol, .reset-grid),
+        body:not(.play, .solve).mobile .netsq,
+        body.play button.read-solve {
+            user-select: none;
+            pointer-events: none;
+            background-color: #666;
+        }
+
+        body:is(.play, .solve) input.transparent-input.qty {
+            user-select: none;
+            pointer-events: none;
+            color: #FF0000CC;
+        }
+
+        body.play button.read-solve::before,
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        body:is(.square7, .square8) button.read-solve {
+            width: 77px;
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.pencil-tool.pencil::before {
+            content: 'Pencil On';
+        }
+        button.pencil-tool:not(.pencil)::before {
+            content: 'Pencil Off';  
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        body:is(.square7, .square8) button.expert-play {
+            width: 118px;
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';  
+        }
+        button.show-sol {
+            padding: 3px 3px 1px;
+            width: 100px;
+        }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+        .page.strip { --strip-color: #08F; }
+    </style>
+</head>
+<body class="square6">
+    <div class="section">
+        <div class="page page-bg-01 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Aquarium</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Aquarium.svg" class="diagram">
+                <h2>On the Subject of Aquariums</h2>
+                <p class="flavour-text">If there is magic on this planet, it is contained in water.</p>
+                <p>The module displays a 6×6 grid divided into blocks called “tanks”.</p>
+                <p>You have to “fill” the tanks with water up to a certain level or leave it empty.</p>
+                <p>The water level in each tank is one and the same across its full width.</p>
+                <p>The numbers outside the grid show the number of cells filled with water horizontally and vertically. Not all numbers are given.</p>
+                <p>All the tanks with water (in blue) and all the tanks with air (in white) must be toggled.  Click on a square to cycle it between unfilled, water, and air.</p>
+                <p>If you wish to reset the puzzle, you may press the red button.</p>
+                <p>The module will disarm once all the appropriate cells have been filled in with either water or air.</p>
+
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>
+                        In <strong>Read</strong> mode:
+                        <ul>
+                            <li><strong>Type in</strong> the row and column clues. Type <strong>0/Space</strong> to leave it blank.</li>
+                            <li><strong>Click on the walls</strong> between squares to toggle them.</li>
+                            <li>Or <strong>Click on a cell</strong> to select it and use the <strong>arrow keys</strong> or <strong>WASD keys</strong> to toggle the walls around the selected cell.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Solve</strong> mode:
+                        <ul>
+                            <li><strong>Click on a cell</strong> to cycle its state between water, air, or undecided.</li>
+                            <li>Press <strong>W, A, E/Space/Enter</strong> to set the selected cell state.</li>
+                            <li>The <strong>Reset</strong> button (↻) will clear the grid, not the walls.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Generated</strong> mode:
+                        <ul>
+                            <li>Press the <strong>Manual</strong> button to switch to <strong>Generated</strong> mode.</li>
+                            <li>Have fun solving the generated puzzle!</li>
+                            <li>Use the <strong>Size</strong> buttons (or type <strong>-</strong> and <strong>+</strong>) to adjust the size of the grid. (Puzzle will have to be regenerated.)</li>
+                            <li>The <strong>Solution</strong> button will show the solution to the generated puzzle.</li>
+                        </ul>
+                    </li>
+                    <li>The <strong>Save</strong> button creates a new save state.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>The <strong>Reset Saves</strong> button clears all the saved states.</li>
+                    <li>The <strong>Reset All</strong> button resets the entire interactive.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Aquarium</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap left">
+                    <div class="tools"></div>
+                    <div class="vstack gridholder">
+                        <div class="grid vstack left"></div>
+                    </div>
+                </div>
+                <div style="height:5mm"></div>
+                <div class="saves hstack wrap left">
+                    <button class="save">Save</button>  
+                </div>
+                <div class="hstack left" style="margin-top:5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                    <div style="width:8mm"></div>
+                    <div class="sizeHolder hstack">
+                        <div class="sizetext label">Size:</div>
+                        <div class="sizetext sizeNumber">6</div>
+
+                        <button class="sizetext minus">-</button>
+                        <button class="sizetext plus">+</button>
+                    </div>
+                </div>
+                <div style="height:5mm"></div>
+                <div class="hstack left path"><span>Result:</span><span class="str"></span></div>
+                <div style="height:1mm"></div>
+                <div class="hstack left solution"><span>Solution:</span><span class="str"></span></div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>

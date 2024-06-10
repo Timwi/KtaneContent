@@ -1,5 +1,19 @@
 /* Library for array manipulation utilities. */
 
+
+function SelectIndexWhere(source, predicate) {
+    function* selectIndexWhereIterator(source, predicate) {
+        let i = 0;
+        for (let item of source) {
+            if (predicate(item)) {
+                yield i;
+            }
+            i++;
+        }
+    }
+    return [...selectIndexWhereIterator(source, predicate)];
+}
+
 /**
  * Shuffle an array in place using the Fisher-Yates method.
  * @param {array} list - Array to be shuffled.
