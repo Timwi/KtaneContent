@@ -195,7 +195,7 @@
                 return false;
             down = true;
             let k = event.key;
-            if (k == "-") 
+            if (k == "-")
                 sizeDec();
             else if (k == "=" || k == "+")
                 sizeInc();
@@ -211,12 +211,12 @@
                         else {
                             playNumberSound(n);
                             $(".solved-text").addClass("invis");
+                            if (currX == _sizeW - 1)
+                                currY = (currY + 1) % _sizeW;
+                            currX = (currX + 1) % _sizeH;
+                            selected = $(`.netsq.x${currX}.y${currY}`);
+                            updateSelection();
                         }
-                        if (currX == _sizeW - 1)
-                            currY = (currY + 1) % _sizeW;
-                        currX = (currX + 1) % _sizeH;
-                        selected = $(`.netsq.x${currX}.y${currY}`);
-                        updateSelection();
                     }
                 }
             }
@@ -233,12 +233,12 @@
         function sizeInc() {
             if (mode() != MODE_PLAY) return;
             _sizeW = _sizeH = Math.min(SIZE_MAX, _sizeH + 1);
-            sizeNumber.text(_sizeH); 
+            sizeNumber.text(_sizeH);
             $("body").removeClass("square4 square5 square6 square7 square8").addClass(`square${_sizeH}`);
             updateGrid();
         }
         $(".sizetext.minus").click(function() {
-            sizeDec();    
+            sizeDec();
         });
         $(".sizetext.plus").click(function() {
             sizeInc();
@@ -261,7 +261,7 @@
         function mode() {
             if ($("button.expert-play").hasClass("play"))
                 return MODE_PLAY;
-            else if ($("button.read-solve").hasClass("solve"))  
+            else if ($("button.read-solve").hasClass("solve"))
                 return MODE_SOLVE;
             else
                 return MODE_READ;
@@ -274,19 +274,17 @@
                         audioSolve[0].play();
                     return true;
                 }
-                else 
-                    return false;
             }
             return false;
         }
         function playNumberSound(n) {
             if ($("button.sound").hasClass("play") && !isNaN(n) && n >= 0 && n <= 9) {
-                let aud = audioNumbers[n][0].cloneNode();  
+                let aud = audioNumbers[n][0].cloneNode();
                 aud.volume = 0.3;
                 aud.play();
             }
         }
-        
+
         let row = $("<div>").addClass("square-row letters").appendTo(grid);
         $("<div>").addClass("square").appendTo(row);
         $("<div>").addClass("square").appendTo(row);
@@ -304,7 +302,7 @@
         for (let x = 1; x <= SIZE_MAX; x++) {
             // Add textboxes for column clues
             let input = $("<input>").addClass(`transparent-input qty top x${x-1} y0`).val(1).attr({maxlength: "1", inputMode: "numeric"}).appendTo(row);
-            if (x >= 8) input.addClass("eight"); 
+            if (x >= 8) input.addClass("eight");
             else if (x >= 7) input.addClass("seven");
             else if (x >= 6) input.addClass("six");
             else if (x >= 5) input.addClass("five");
@@ -322,12 +320,12 @@
                 input.addClass("eight");
             }
             else if (y >= 7) {
-                row.addClass("seven"); 
+                row.addClass("seven");
                 number.addClass("seven");
                 input.addClass("seven");
             }
             else if (y >= 6) {
-                row.addClass("six"); 
+                row.addClass("six");
                 number.addClass("six");
                 input.addClass("six");
             }
@@ -342,17 +340,18 @@
                     var element = $(e);
                     if (y >= 8 || x >= 8) element.addClass("eight");
                     else if (y >= 7 || x >= 7) element.addClass("seven");
-                    else if (y >= 6 || x >= 6) element.addClass("six");  
+                    else if (y >= 6 || x >= 6) element.addClass("six");
                     else if (y >= 5 || x >= 5) element.addClass("five");
-                    
+
                     element.click(function(event) {
                         event.preventDefault();
                         event.stopPropagation();
-                        
+
                         let pencil = $(".pencil-tool").hasClass("pencil");
                         if (selectedTool) {
                             let n = parseInt(selectedTool.text());
                             gameGrid[x-1][y-1] = n;
+                            element.find("input.pencil").val(""); // Clear pencil markings
                         }
                         else if (!pencil)
                             gameGrid[x-1][y-1] = (gameGrid[x-1][y-1] + 1) % (_sizeW + 1);
@@ -360,17 +359,17 @@
                             return false;
 
                         updateGrid();
-                        
+
                         if (selectedTool == null) {
                             selected = $(this);
                             updateSelection();
                             currX = x-1;
                             currY = y-1;
                         }
-                        
+
                         if (isSolved()) {
                             if ($("button.sound").hasClass("play"))
-                                audioSolve[0].play();  
+                                audioSolve[0].play();
                             $(".solved-text").removeClass("invis");
                         }
                         else {
@@ -387,7 +386,7 @@
 
             // Add a textbox for the row clue
             input = $("<input>").addClass(`transparent-input qty right x9 y${y-1}`).val(1).attr({maxlength: "1", inputMode: "numeric"}).appendTo(row);
-            if (y >= 8) input.addClass("eight"); 
+            if (y >= 8) input.addClass("eight");
             else if (y >= 7) input.addClass("seven");
             else if (y >= 6) input.addClass("six");
             else if (y >= 5) input.addClass("five");
@@ -398,7 +397,7 @@
         for (let x = 1; x <= SIZE_MAX; x++) {
             // Add textboxes for column clues
             let input = $("<input>").addClass(`transparent-input qty bottom x${x-1} y9`).val(1).attr({maxlength: "1", inputMode: "numeric"}).appendTo(row);
-            if (x >= 8) input.addClass("eight"); 
+            if (x >= 8) input.addClass("eight");
             else if (x >= 7) input.addClass("seven");
             else if (x >= 6) input.addClass("six");
             else if (x >= 5) input.addClass("five");
@@ -430,14 +429,14 @@
             let x = parseInt(classes.find(e => e.startsWith("x")).slice(1));
             let y = parseInt(classes.find(e => e.startsWith("y")).slice(1));
             let next;
-            
+
             if (elem.hasClass("top")) next = (x < _sizeW - 1 ? `.transparent-input.qty.top.x${x + 1}.y0` : `.transparent-input.qty.right.x9.y0`);
             else if (elem.hasClass("right")) next = (y < _sizeH - 1 ? `.transparent-input.qty.right.x9.y${y + 1}` : `.transparent-input.qty.bottom.x${_sizeW - 1}.y9`);
             else if (elem.hasClass("bottom")) next = (x > 0 ? `.transparent-input.qty.bottom.x${x - 1}.y9` : `.transparent-input.qty.left.x0.y${_sizeH - 1}`);
             else next = (y > 0 ? `.transparent-input.qty.left.x0.y${y - 1}` : `.transparent-input.qty.top.x0.y0`);
             $(next).select();
         });
-        
+
         let audioNumbers = [
             $("<audio>")
                 .attr("src", "audio/Module Listening/Shapes and Bombs - Solve.wav")
@@ -472,7 +471,7 @@
             .attr("src","audio/Module Listening/Sonic the Hedgehog - Begin.wav")
             .prop("volume", 0.4)
             .appendTo(grid);
-        
+
         let tools = $(".tools");
         $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
         $("<div>").addClass("netsquare reset-grid square").text("↻").appendTo(tools).click(function() {
@@ -491,7 +490,7 @@
             $(this).toggleClass("pencil");
             $("body").toggleClass("pencil", $(this).hasClass("pencil"));
         });
-        
+
         $("<button>").addClass("sound play").appendTo(tools).click(function() {
             $(this).toggleClass("play");
         });
@@ -513,7 +512,7 @@
             $(this).toggleClass("show");
             $("body").toggleClass("tp-shown", $(this).hasClass("show"));
         });
-        
+
         $(".reset-saves").click(function() {
             saveStates.forEach(x => x.remove());
             saveStates = [];
@@ -538,8 +537,8 @@
             resetGrid();
             $(".transparent-input.qty").val(1);
             $(".transparent-input.pencil").val("");
-            
-            saveStates.forEach(x => x.remove());  
+
+            saveStates.forEach(x => x.remove());
             saveStates = [];
             currentState = 0;
             while (_sizeH > 5 || _sizeH < 5) {
@@ -547,25 +546,25 @@
                 else sizeInc();
             }
         });
-        
-        function removeFutureSaves() {  
+
+        function removeFutureSaves() {
             if (currentState < saveStates.length - 1) {
                 for (let i = currentState + 1; i < saveStates.length; i++) {
-                    saveStates[i].remove();  
+                    saveStates[i].remove();
                 }
                 saveStates.splice(currentState + 1, saveStates.length - currentState);
             }
         }
-        
+
         $("button.save").click(function() {
             removeFutureSaves();
-            
+
             let saveStateClass = Array.from($(".netsquare, .solved-text, .tools button, .sizeHolder, .transparent-input")).map(x => $(x)).map(x => x.attr("class") || "");
             let bodyClass = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
             let inputs = Array.from($(".transparent-input")).map(x => $(x)).map(x => x.val() || "");
             let stateNumber = saveStates.length;
             currentState = stateNumber;
-            
+
             let s_solList = JSON.stringify(solList);
             let s_gameGrid = JSON.stringify(gameGrid);
             let s_selected = selected;
@@ -574,7 +573,7 @@
             let s_sizeH = _sizeH;
             let s_currX = currX;
             let s_currY = currY;
-            
+
             let button = $("<button>").text(stateNumber+1).click(function() {
                 $(".netsquare, .solved-text, .tools button, .sizeHolder, .transparent-input").each((i,x) => $(x).attr("class", saveStateClass[i]));
                 $("body").each((i,x) => $(x).attr("class", bodyClass[i]));
@@ -591,14 +590,14 @@
                 _sizeH = s_sizeH;
                 solList = JSON.parse(s_solList);
                 gameGrid = JSON.parse(s_gameGrid);
-                
+
                 $(".solution .str").text(solList.join(""));
                 updateGrid();
             }).addClass("flash").appendTo(".saves");
             setTimeout(() => {
                 button.removeClass("flash");
             }, 100);
-            
+
             saveStates.push(button);
         });
     });
@@ -647,11 +646,11 @@
             user-select: none;
         }
         .invis { opacity: 0; }
-        
+
         html {
             --sqsize: 56px;
         }
-        .square-row {  
+        .square-row {
             height: var(--sqsize);
             margin: 1.7px;
             display: flex;
@@ -698,7 +697,7 @@
             border-width: 0;
             margin-top: 10px;
         }
-        .netsquare {  
+        .netsquare {
             background-color: #FFF;
             height: var(--sqsize);
             width: var(--sqsize);
@@ -809,7 +808,7 @@
             right: 0;
         }
         .dark .transparent-input.qty { color: #DDD; }
-        
+
         .switch-holder {
             font-size: 20px;
             margin: 10px;
@@ -817,7 +816,7 @@
         .switch-label {
             margin: 0 10px;
         }
-        
+
         .sizetext {
             font-size: 20px;
             padding-top: 8px;
@@ -858,7 +857,7 @@
         .netsquare.reset-grid {
             color: #000;
         }
-        
+
         button {
             font-family: Special Elite;
             background-color: white;
@@ -911,7 +910,7 @@
             content: 'Pencil On';
         }
         button.pencil-tool:not(.pencil)::before {
-            content: 'Pencil Off';  
+            content: 'Pencil Off';
         }
         body:is(.square6, .square7, .square8) button.pencil-tool {
             width: 120px;
@@ -935,13 +934,13 @@
             content: 'Solution Shown';
         }
         button.show-sol:not(.show)::before {
-            content: 'Solution Hidden';  
+            content: 'Solution Hidden';
         }
         button.show-tp.show::before {
             content: 'TP Shown';
         }
         button.show-tp:not(.show)::before {
-            content: 'TP Hidden';  
+            content: 'TP Hidden';
         }
         button.show-tp { width: 120px; }
         button.show-sol {
@@ -966,17 +965,17 @@
                 <img src="img/Component/Towers.svg" class="diagram">
                 <h2>On the Subject of Towers</h2>
                 <p class="flavour-text">Everything looks new from a different perspective.</p>
-                
+
                 <ul>
                     <li>A variant of a sudoku puzzle will be displayed on the module.</li>
-                    <li>A sudoku puzzle consists of the amount of numbers from one to the length/height of the grid. They are formatted in such a way that no number appears twice in any row or column.</li>  
+                    <li>A sudoku puzzle consists of the amount of numbers from one to the length/height of the grid. They are formatted in such a way that no number appears twice in any row or column.</li>
                     <li>The clues of this particular puzzle are as follows:
-                    <ul>  
+                    <ul>
                         <li>Each number of the actual puzzle is representative of the height of a tower.</li>
                         <li>For each row and column, the number associated with that side indicates how many towers you can see from that spot.</li>
                         <li>Taller towers obstruct shorter towers.</li>
                     </ul></li>
-                    <li>Clicking on each square of the grid will adjust the height of the tower by one based on the tower mode (up or down).</li> 
+                    <li>Clicking on each square of the grid will adjust the height of the tower by one based on the tower mode (up or down).</li>
                     <li>Solve the puzzle to disarm the module.</li>
                 </ul>
 
@@ -1037,7 +1036,7 @@
                 </div>
                 <div style="height:5mm"></div>
                 <div class="saves hstack wrap just-left">
-                    <button class="save">Save</button>  
+                    <button class="save">Save</button>
                 </div>
                 <div class="hstack just-left" style="margin-top:5mm">
                     <button class="reset-saves">Reset Saves</button>

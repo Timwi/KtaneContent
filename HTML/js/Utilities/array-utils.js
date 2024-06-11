@@ -1,17 +1,22 @@
 /* Library for array manipulation utilities. */
 
-
+/**
+ * Selects the indices of elements in an iterable that satisfy a given predicate.
+ * 
+ * @param {Iterable} source - The source iterable to search through.
+ * @param {Function} predicate - A test function that takes an element and returns a boolean for whether the element passes the test.
+ * @returns {Array<number>} An array of indices where the predicate is true.
+ */
 function SelectIndexWhere(source, predicate) {
-    function* selectIndexWhereIterator(source, predicate) {
-        let i = 0;
-        for (let item of source) {
-            if (predicate(item)) {
-                yield i;
-            }
-            i++;
+    let indices = [];
+    let i = 0;
+    for (const item of source) {
+        if (predicate(item)) {
+            indices.push(i);
         }
+        i++;
     }
-    return [...selectIndexWhereIterator(source, predicate)];
+    return indices;
 }
 
 /**

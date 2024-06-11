@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Tents — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/set-utils.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/coord-utils.js"></script>
+    <script>
+    $(function() {
+        var selected;
+        let grid = $(".grid");
+        let sizeNumber = $(".sizeNumber");
+        const SIZE_MIN = 4;
+        const SIZE_MAX = 9;
+        let cols = rows = 6;
+        let gameGrid = Array(SIZE_MAX).fill().map(()=>Array(SIZE_MAX).fill(0));
+        let currX = currY = 0;
+        let resultList = [];
+        let solList = [];
+        let generating = false;
+        let saveStates = [];
+        let currentState = 0;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+        const colors = [ "empty", "grass", "tent" ];
+        const colorKey = {
+            "t": 2,
+            "g": 1,
+            "e": 0,
+            " ": 0,
+            "enter": 0,
+        };
+
+        function ERange(start, count) {
+            return [...Array(count).keys()].map(x => x + start);
+        }
+
+        function RandRange(start, end) {
+            return Math.floor(Math.random() * (end - start) + start);
+        }
+
+        // Below are taken from the module source code
+        function* findTentPlacement(trees, sofar) {
+            if (sofar.length === trees.length) {
+                yield sofar;
+                return;
+            }
+
+            for (let potentialTent of trees[sofar.length].OrthogonalNeighbors) {
+                if (!trees.some(t => t.Equals(potentialTent)) && !sofar.some(s => s.Equals(potentialTent) || s.Neighbors.some(n => n.Equals(potentialTent)))) {
+                    yield* findTentPlacement(trees, [...sofar, potentialTent]);
+                }
+            }
+        }
+
+        function* solveTents(trees, sofar, cols, rows) {
+            if (sofar.length === trees.length) {
+                yield sofar;
+                return;
+            }
+
+            for (let potentialTent of trees[sofar.length].OrthogonalNeighbors) {
+                if (!trees.some(t => t.Equals(potentialTent)) &&
+                    !sofar.some(s => s.Equals(potentialTent) || s.Neighbors.some(n => n.Equals(potentialTent))) &&
+                    (cols[potentialTent.X] === null || sofar.filter(t => t.X === potentialTent.X).length < cols[potentialTent.X]) &&
+                    (rows[potentialTent.Y] === null || sofar.filter(t => t.Y === potentialTent.Y).length < rows[potentialTent.Y])) {
+                    yield* solveTents(trees, [...sofar, potentialTent], cols, rows);
+                }
+            }
+        }
+
+        function generatePuzzle(w, h, numTrees) {
+            while (true) {
+                let trees = ShuffleFisherYates(ERange(0, w * h)).slice(0, numTrees).map(cell => new Coord(w, h, cell));
+                trees.sort((a, b) => a.OrthogonalNeighbors.filter(neigh => !trees.some(t => t.Equals(neigh))).length - b.OrthogonalNeighbors.filter(neigh => !trees.some(t => t.Equals(neigh))).length);
+
+                let tentGenerator = findTentPlacement(trees, []);
+                let tents = tentGenerator.next().value;
+                if (!tents) continue;
+
+                let colClues = ERange(0, w).map(x => tents.filter(t => t.X === x).length);
+                let rowClues = ERange(0, h).map(y => tents.filter(t => t.Y === y).length);
+
+                let cluelessSolutions = solveTents(trees, [], Array(w).fill(null), Array(h).fill(null));
+                let res1 = cluelessSolutions.next();
+                let res2 = cluelessSolutions.next();
+                if (!res2.done) {
+                    let fullClueSolutions = solveTents(trees, [], colClues, rowClues);
+                    res1 = fullClueSolutions.next();
+                    res2 = fullClueSolutions.next();
+                    if (!res2.done) continue;
+
+                    let allClues = [...colClues.map((c, ix) => ({ col: true, ix, clue: c })), ...rowClues.map((r, ix) => ({ col: false, ix, clue: r }))];
+                    let reqClues = ReduceRequiredSet(allClues, test => {
+                        let colClues = new Array(w).fill(null);
+                        let rowClues = new Array(h).fill(null);
+                        for (let { col, ix, clue } of test.SetToTest) {
+                            (col ? colClues : rowClues)[ix] = clue;
+                        }
+                        let solutions = solveTents(trees, [], colClues, rowClues);
+                        let res1 = solutions.next();
+                        let res2 = solutions.next();
+                        return res2.done;
+                    });
+                    return { reqClues, trees, tents };
+                }
+            }
+        }
+
+        const treeRange = {
+            4: [3,4],
+            5: [3,6],
+            6: [5,9],
+            7: [7,12],
+            8: [9,15],
+            9: [11,19]
+        }
+
+        function generate() {
+            generating = true;
+
+            let w = cols;
+            let h = rows;
+            let numTrees = RandRange(treeRange[rows][0], treeRange[rows][1]+1);
+            console.log(treeRange[rows][0], numTrees, treeRange[rows][1]);
+            $(`.transparent-input.qty`).val("");
+            $(`.netsq`).removeClass("tree");
+
+            let { reqClues, trees, tents } = generatePuzzle(w, h, numTrees);
+
+            // Update the grid with trees
+            for (let tree of trees) {
+                $(`.netsq.x${tree.X}.y${tree.Y}`).addClass("tree");
+            }
+
+            // Update the input fields with clues
+            for (let { col, ix, clue } of reqClues) {
+                let input = col ? $(`.transparent-input.qty.top.x${ix}.y0`) : $(`.transparent-input.qty.right.x9.y${ix}`);
+                input.val(clue);
+            }
+
+            // Store the solution
+            solList = [];
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    const tent = tents.some(t => t.X == x && t.Y == y);
+                    const tree = trees.some(t => t.X == x && t.Y == y);
+                    solList.push(tent ? true : tree ? null : false);
+                }
+            }
+
+            $(".solution .str").text("Tent " + solList.map((s, i) => (s === true ? coordinateName([Math.floor(i/cols), i%cols]) : '')).join(" "));
+
+            generating = false;
+        }
+        // Taken from module source code ^^^
+
+        function selectNone() {
+            selected = null;
+            updateSelection();
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        function isSolved() {
+            if (mode() == MODE_PLAY) {
+                if (resultList.every((elem,i) => resultList[i] === solList[i])) {
+                    if ($("button.sound").hasClass("play"))
+                        audioSolve[0].play();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function playTreeSound(n) {
+            if ($("button.sound").hasClass("play") && !isNaN(n) && n >= 0 && n <= 2) {
+                let aud = audioNumbers[n][0].cloneNode();
+                aud.volume = 0.5;
+                aud.play();
+            }
+        }
+
+        function sizeDec(manual = true) {
+            if (manual && mode() != MODE_PLAY) return;
+            cols = rows = Math.max(SIZE_MIN, rows - 1);
+            sizeNumber.text(rows);
+            $("body").removeClass("square4 square5 square6 square7 square8 square9").addClass(`square${rows}`);
+            updateGrid();
+        }
+        function sizeInc(manual = true) {
+            if (manual && mode() != MODE_PLAY) return;
+            cols = rows = Math.min(SIZE_MAX, rows + 1);
+            sizeNumber.text(rows);
+            $("body").removeClass("square4 square5 square6 square7 square8 square9").addClass(`square${rows}`);
+            updateGrid();
+        }
+        $(".sizetext.minus").click(function() {
+            sizeDec();
+        });
+        $(".sizetext.plus").click(function() {
+            sizeInc();
+        });
+
+        function resetGrid() {
+            selected = $(".netsq.x0.y0");
+            updateSelection();
+            currX = currY = 0;
+            for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++)
+                    gameGrid[x][y] = 0;
+            updateGrid();
+            $(".solved-text").addClass("invis");
+        }
+
+        let row = $("<div>").addClass("square-row letters").appendTo(grid);
+        $("<div>").addClass("square").appendTo(row);
+
+        for (let x = 1; x <= SIZE_MAX; x++) {
+            let letter = $("<div>").addClass("square grid-label").text(String.fromCharCode(64+x)).appendTo(row);
+            if (x >= 9) letter.addClass("nine");
+            else if (x >= 8) letter.addClass("eight");
+            else if (x >= 7) letter.addClass("seven");
+            else if (x >= 6) letter.addClass("six");
+            else if (x >= 5) letter.addClass("five");
+        }
+        row = $("<div>").addClass("square-row letters").appendTo(grid);
+        $("<div>").addClass("square").appendTo(row);
+        for (let x = 1; x <= SIZE_MAX; x++) {
+            // Add textboxes for column clues
+            let input = $("<input>").addClass(`transparent-input qty top x${x-1} y0`).val(1).attr({maxlength: "1", inputMode: "numeric"}).appendTo(row);
+            if (x >= 9) input.addClass("nine");
+            else if (x >= 8) input.addClass("eight");
+            else if (x >= 7) input.addClass("seven");
+            else if (x >= 6) input.addClass("six");
+            else if (x >= 5) input.addClass("five");
+        }
+        for (let y = 1; y <= SIZE_MAX; y++) {
+            row = $("<div>").addClass("square-row").appendTo(grid);
+
+            let number = $("<div>").addClass("square numbers grid-label").text(y).appendTo(row);
+
+            // Add a textbox for the row clue
+            if (y >= 9) {
+                row.addClass("nine");
+                number.addClass("nine");
+            }
+            else if (y >= 8) {
+                row.addClass("eight");
+                number.addClass("eight");
+            }
+            else if (y >= 7) {
+                row.addClass("seven");
+                number.addClass("seven");
+            }
+            else if (y >= 6) {
+                row.addClass("six");
+                number.addClass("six");
+            }
+            else if (y >= 5) {
+                row.addClass("five");
+                number.addClass("five");
+            }
+
+            for (let x = 1; x <= SIZE_MAX; x++) {
+                let square = $("<div>").addClass(`netsquare square netsq x${x-1} y${y-1}`).appendTo(row).each(function(_,e) {
+                    var element = $(e);
+                    if (y >= 9 || x >= 9) element.addClass("nine");
+                    else if (y >= 8 || x >= 8) element.addClass("eight");
+                    else if (y >= 7 || x >= 7) element.addClass("seven");
+                    else if (y >= 6 || x >= 6) element.addClass("six");
+                    else if (y >= 5 || x >= 5) element.addClass("five");
+
+                    element.click(function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        if (mode() == MODE_READ) {
+                            element.removeClass(colors.join(" "));
+                            gameGrid[x-1][y-1] = 0;
+                            element.toggleClass("tree");
+                            if ($("button.sound").hasClass("play")) {
+                                let hasTree = element.hasClass("tree");
+                                let aud = (hasTree ? audioTree1 : audioTree0)[0].cloneNode();
+                                aud.volume = 0.5;
+                                aud.play();
+                            }
+                        } else {
+                            if ($(this).hasClass("tree")) {
+                                return;
+                            } else {
+                                gameGrid[x-1][y-1] = (gameGrid[x-1][y-1] + 1) % colors.length;
+                                updateGrid();
+
+                                selected = $(this);
+                                updateSelection();
+                                currX = x-1;
+                                currY = y-1;
+
+                                if (isSolved()) {
+                                    if ($("button.sound").hasClass("play"))
+                                        audioSolve[0].play();
+                                    $(".solved-text").removeClass("invis");
+                                }
+                                else {
+                                    playTreeSound(gameGrid[x-1][y-1]);
+                                    $(".solved-text").addClass("invis");
+                                }
+                            }
+                        }
+                    });
+                });
+
+                $("<div>").addClass("bg").appendTo(square);
+                $("<div>").addClass("symbol").appendTo(square);
+            }
+
+            // Add a textbox for the row clue
+            input = $("<input>").addClass(`transparent-input qty right x9 y${y-1}`).val(1).attr({maxlength: "1", inputMode: "numeric"}).appendTo(row);
+            if (y >= 9) input.addClass("nine");
+            else if (y >= 8) input.addClass("eight");
+            else if (y >= 7) input.addClass("seven");
+            else if (y >= 6) input.addClass("six");
+            else if (y >= 5) input.addClass("five");
+        }
+
+        $(".transparent-input").click(function() {
+            $(this).select();
+            return false;
+        });
+        $(".transparent-input.qty").on("input", function() {
+            let elem = $(this);
+            if (elem.val().length < 1) return;
+            else {
+                let n = parseInt(elem.val());
+                if (isNaN(n) || n < 1 || n > rows)
+                    elem.val("");
+            }
+
+            let classes = elem.attr("class").split(" ");
+
+            let x = parseInt(classes.find(e => e.startsWith("x")).slice(1));
+            let y = parseInt(classes.find(e => e.startsWith("y")).slice(1));
+            let next;
+
+            if (elem.hasClass("top")) next = (x < cols - 1 ? `.transparent-input.qty.top.x${x + 1}.y0` : ".transparent-input.qty.right.x9.y0");
+            else next = (y < rows - 1 ? `.transparent-input.qty.right.x9.y${y + 1}` : ".transparent-input.qty.top.x0.y0");
+            $(next).select();
+        });
+
+        let audioNumbers = [
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Samples - Kick.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Colored Squares 3.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Colored Squares 4.wav")
+                .appendTo(grid)
+        ];
+        let audioTree0 = $("<audio>")
+            .attr("src", "audio/Module Listening/Tennis 2.wav")
+            .prop("volume", 0.1)
+            .appendTo(grid);
+        let audioTree1 = $("<audio>")
+            .attr("src", "audio/Module Listening/Tennis 1.wav")
+            .prop("volume", 0.1)
+            .appendTo(grid);
+        let audioSolve = $("<audio>")
+            .attr("src","audio/Module Listening/Valves.wav")
+            .prop("volume", 0.4)
+            .appendTo(grid);
+
+        let down = false;
+        $(document).click(function(event) {
+            selectNone();
+        }).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+
+            if (selected && selected.hasClass("netsq") && ["t", "g", "e", " ", "enter"].includes(k)) {
+                gameGrid[currX][currY] = colorKey[k];
+                updateGrid();
+                if (isSolved()) {
+                    if ($("button.sound").hasClass("play"))
+                        audioSolve[0].play();
+                    $(".solved-text").removeClass("invis");
+                } else {
+                    playTreeSound(colorKey[k]);
+                    $(".solved-text").addClass("invis");
+                    do {
+                        if (currX == cols - 1)
+                            currY = (currY + 1) % rows;
+                        currX = (currX + 1) % cols;
+                    } while ($(`.netsq.x${currX}.y${currY}`).hasClass("tree"));
+                    selected = $(`.netsq.x${currX}.y${currY}`);
+                    updateSelection();
+                }
+
+                if ([" ", "enter"].includes(k)) {
+                    down = false;
+                    return false;
+                }
+            }
+            else if (k == "-")
+                sizeDec();
+            else if (k == "=" || k == "+")
+                sizeInc();
+
+            down = false;
+        });
+
+
+        let tools = $(".tools");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
+        $("<div>").addClass("netsquare reset-grid square").text("↻").appendTo(tools).click(resetGrid);
+
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            $("body").toggleClass("solve", $(this).hasClass("solve"));
+        });
+
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if (mode() == MODE_PLAY) {
+                generate();
+                resetGrid();
+            }
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+
+        function coordinateName(coord) {
+            return `${String.fromCharCode(65 + coord[0])}${coord[1] + 1}`;
+        }
+
+        function updateResult() {
+            resultList = [];
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    const val = gameGrid[x][y];
+                    resultList.push(val == 2 ? true : val == 1 ? false : null);
+                }
+            }
+            $(".path .str").text("Tent " + resultList.map((s, i) => (s === true ? coordinateName([Math.floor(i/cols), i%cols]) : '')).join(" "));
+        }
+
+        function updateGrid() {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    let n = gameGrid[x][y];
+                    let elem = $(`.netsq.x${x}.y${y}`);
+                    elem.removeClass(colors.join(" ")).addClass(colors[n]);
+                }
+            }
+            updateResult();
+        }
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $("button.read-solve").removeClass("solve");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $(".solved-text").addClass("invis");
+            $("body").removeClass("play solve solution-shown");
+            $(".transparent-input.qty").val(1);
+            while (rows > 6 || rows < 6) {
+                if (rows > 6) sizeDec(false);
+                else sizeInc(false);
+            }
+
+            resetGrid();
+            $(".netsq").removeClass("tree");
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".netsquare, .solved-text, .tools button, .sizeHolder")).map(x => $(x)).map(x => x.attr("class") || "");
+            let bodyClass = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let inputs = Array.from($(".transparent-input")).map(x => $(x)).map(x => x.val() || "");
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_solList = JSON.stringify(solList);
+            let s_gameGrid = JSON.stringify(gameGrid);
+            let s_selected = selected;
+            let s_cols = cols;
+            let s_rows = rows;
+            let s_currX = currX;
+            let s_currY = currY;
+
+            let button = $("<button>").text(stateNumber+1).click(function() {
+                $(".netsquare, .solved-text, .tools button, .sizeHolder").each((i,x) => $(x).attr("class", saveStateClass[i]));
+                $("body").each((i,x) => $(x).attr("class", bodyClass[i]));
+                $(".transparent-input").each((i,x) => $(x).val(inputs[i]));
+                currentState = stateNumber;
+                while (rows > s_rows || rows < s_rows) {
+                    if (rows > s_rows) sizeDec(false);
+                    else sizeInc(false);
+                }
+                selected = s_selected;
+                currX = s_currX;
+                currY = s_currY;
+                cols = s_cols;
+                rows = s_rows;
+                solList = JSON.parse(s_solList);
+                gameGrid = JSON.parse(s_gameGrid);
+                $(".solution .str").text("Tent " + solList.map((s, i) => (s === true ? coordinateName([Math.floor(i/cols), i%cols]) : '')).join(" "));
+                updateGrid();
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+        console.log(Coord.Cells(cols, rows));
+    });
+    </script>
+    <style>
+        .hstack, .vstack {
+            align-items: center;
+        }
+        .tools {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            width: 140px;
+        }
+        @media screen and (max-width: 724px) {
+            .tools {
+                flex-direction: row;
+                flex-wrap: wrap;
+                width: unset;
+            }
+        }
+        body:is(.square7, .square8, .square9) .tools {
+            flex-direction: row;
+            flex-wrap: wrap;
+            width: unset;
+        }
+        body:is(.square7, .square8, .square9) .solved-text {
+            margin-right: 5px;
+        }
+        .tools button {
+            margin: 8px;
+        }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { opacity: 0; }
+
+        html {
+            --sqsize: 56px;
+        }
+
+        .square-row {
+            height: var(--sqsize);
+            margin: 1.7px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .square {
+            margin: 2px;
+            width: var(--sqsize);
+            height: var(--sqsize);
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            box-sizing: border-box;
+            padding-top: 6px;
+        }
+
+        .dark .square { border-color: #444; }
+
+        .square.numbers, .letters .square {
+            width: var(--sqsize);
+            height: var(--sqsize);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .netsquare {
+            background-color: transparent;
+            height: var(--sqsize);
+            width: var(--sqsize);
+            font-size: 40px;
+            border: #888 1px solid;
+            line-height: 60px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .reset-grid {
+            padding-top: 2px;
+        }
+        .netsq { position: relative; }
+
+        .netsq .bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .grid-label {
+            font-size: 30px;
+            font-family: 'Special Elite';
+            opacity: 50%;
+            user-select: none;
+        }
+
+        .netsq .symbol {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: 70%;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 1;
+        }
+
+        .netsq.tent .symbol {
+            background-image: url('img/Tents/tent.svg');
+        }
+        .netsq.tree .symbol {
+            background-image: url('img/Tents/tree.svg');
+        }
+
+        .netsquare.selected {
+            border: 3px solid #33F;
+        }
+
+        .netsq:is(.grass, .tent, .tree) .bg {
+            background-color: #8F8;
+        }
+
+        body.square8 .nine,
+        body.square7 :is(.eight, .nine),
+        body.square6 :is(.seven, .eight, .nine),
+        body.square5 :is(.six, .seven, .eight, .nine),
+        body.square4 :is(.five, .six, .seven, .eight, .nine) {
+            opacity: 0;
+            user-select: none;
+            pointer-events: none;
+            width: 0;
+            height: 0;
+            border-width: 0;
+            margin: 0;
+        }
+
+        .transparent-input {
+            font-family: 'Special Elite';
+            background-color: transparent;
+            border: none;
+            outline: none;
+            font-size: 30px;
+            text-align: center;
+            padding: 6px 0 0;
+            width: var(--sqsize);
+            height: var(--sqsize);
+            line-height: 60px;
+            margin: 2px;
+            box-sizing: border-box;
+        }
+
+        .dark .transparent-input.qty { color: #DDD; }
+        .dark .netsquare {
+            color: #DDD;
+        }
+
+        .grid {
+            position: relative;
+        }
+
+        .dark svg text { fill: #DDD; }
+
+        .sizetext {
+            font-size: 20px;
+            padding-top: 8px;
+        }
+        .sizeNumber {
+            position: relative;
+            top: 2px;
+            font-size: 35px;
+            width: 52px;
+            margin-left: 10px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .sizeHolder button {
+            padding-top: 12px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+        }
+
+        .path, .solution {
+            font-family: 'Roboto Mono';
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        :is(.path, .solution) span:not(.str) {
+            display: inline-block;
+            min-width: 120px;
+        }
+        body:not(.solution-shown) :is(.solution, .path),
+        body:not(.play) .solution {
+            color: transparent;
+            font-size: 0;
+        }
+        body:not(.play) .sizeHolder {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        body:not(.play, .solve) :is(button.show-sol, .reset-grid),
+        body.play button.read-solve {
+            user-select: none;
+            pointer-events: none;
+            background-color: #666;
+        }
+
+        body:is(.play, .solve) input.transparent-input.qty {
+            user-select: none;
+            pointer-events: none;
+            color: #FF0000CC;
+        }
+        body:is(.play, .solve) .netsq.tree {
+            pointer-events: none;
+        }
+
+        body.play button.read-solve::before,
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        body:is(.square7, .square8) button.read-solve {
+            width: 77px;
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        body:is(.square7, .square8) button.expert-play {
+            width: 118px;
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';
+        }
+        button.show-sol {
+            padding: 3px 3px 1px;
+            width: 100px;
+        }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+        .page.strip { --strip-color: #4A0; }
+    </style>
+</head>
+<body class="square6">
+    <div class="section">
+        <div class="page page-bg-01 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Tents</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Tents.svg" class="diagram">
+                <h2>On the Subject of Tents</h2>
+                <p class="flavour-text">Let’s gather ‘round the campfire, and sing our campfire song!</p>
+                <p>The module displays a 6×6 grid with an assortment of trees.</p>
+                <p>Pair each tree with a tent adjacent horizontally or vertically. This should be a 1 to 1 relation.</p>
+                <p>Tents may not be adjacent to other tents, even diagonally.</p>
+                <p>The clues outside the grid indicate the number of tents present in that row/column. Not all numbers are given.</p>
+                <p>All the cells with tents and grass must be toggled. Click on a square to cycle it between unfilled, tent, and grass.</p>
+                <p>If you wish to reset the puzzle, you may press the red button.</p>
+                <p>The module will disarm once all the appropriate cells have been set to either tents or grass.</p>
+
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>
+                        In <strong>Read</strong> mode:
+                        <ul>
+                            <li><strong>Type in</strong> the row and column clues. Type <strong>0/Space</strong> to leave it blank.</li>
+                            <li><strong>Click on cells</strong> to place trees.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Solve</strong> mode:
+                        <ul>
+                            <li><strong>Click on a cell</strong> to cycle its state between grass, tent, or empty.</li>
+                            <li>Press <strong>G, T, E/Space/Enter</strong> to set the selected cell state.</li>
+                            <li>The <strong>Reset</strong> button (↻) will clear the grid, but not the trees.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Generated</strong> mode:
+                        <ul>
+                            <li>Press the <strong>Manual</strong> button to switch to <strong>Generated</strong> mode.</li>
+                            <li>Have fun solving the generated puzzle!</li>
+                            <li>Use the <strong>Size</strong> buttons (or type <strong>-</strong> and <strong>+</strong>) to adjust the size of the grid. (Puzzle will have to be regenerated.)</li>
+                            <li>The <strong>Solution</strong> button will show the solution to the generated puzzle.</li>
+                        </ul>
+                    </li>
+                    <li>The <strong>Save</strong> button creates a new save state.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>The <strong>Reset Saves</strong> button clears all the saved states.</li>
+                    <li>The <strong>Reset All</strong> button resets the entire interactive.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Tents</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack wrap left">
+                    <div class="tools"></div>
+                    <div class="vstack gridholder">
+                        <div class="grid vstack left"></div>
+                    </div>
+                </div>
+                <div style="height:5mm"></div>
+                <div class="saves hstack wrap left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack left" style="margin-top:5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                    <div style="width:8mm"></div>
+                    <div class="sizeHolder hstack">
+                        <div class="sizetext label">Size:</div>
+                        <div class="sizetext sizeNumber">6</div>
+
+                        <button class="sizetext minus">-</button>
+                        <button class="sizetext plus">+</button>
+                    </div>
+                </div>
+                <div style="height:5mm"></div>
+                <div class="hstack left path"><span>Result:</span><span class="str"></span></div>
+                <div style="height:1mm"></div>
+                <div class="hstack left solution"><span>Solution:</span><span class="str"></span></div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
