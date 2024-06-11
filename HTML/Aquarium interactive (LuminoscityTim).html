@@ -19,7 +19,7 @@
         let grid = $(".grid");
         let sizeNumber = $(".sizeNumber");
         const SIZE_MIN = 4;
-        const SIZE_MAX = 8;
+        const SIZE_MAX = 9;
         let cols = 6;
         let rows = 6;
         let gameGrid = Array(SIZE_MAX).fill().map(()=>Array(SIZE_MAX).fill(0));
@@ -83,19 +83,20 @@
             4: 8,
             5: 10,
             6: 12,
-            7: 14,
-            8: 16
+            7: 16,
+            8: 19,
+            9: 24,
         };
 
         // These functions were taken from the module source code
         function generate() {
             generating = true;
 
-            let tryAgain = true;
             let horizClues = Array(rows).fill(null);
             let vertClues = Array(cols).fill(null);
             let regions = [];
-            while (tryAgain) {
+            let _solution;
+            while (true) {
                 // Generate regions
                 regions = [];
                 let covered = Array(cols * rows).fill(false);
@@ -113,19 +114,19 @@
 
                 // Decide on a random solution
                 let solutionLevels = regions.map(reg => RandRange(0, reg.BottomRow - reg.TopRow + 2));
-                solList = MakeSolutionBoard(regions, solutionLevels);
+                _solution = MakeSolutionBoard(regions, solutionLevels);
 
                 // Find the horizontal and vertical clues that aren't 0 or 6
                 horizClues = Array(rows).fill(null);
                 vertClues = Array(cols).fill(null);
                 for (let row = 0; row < rows; row++) {
-                    let cl = ERange(0, cols).reduce((sum, col) => sum + (solList[col + cols * row] ? 1 : 0), 0);
+                    let cl = ERange(0, cols).reduce((sum, col) => sum + (_solution[col + cols * row] ? 1 : 0), 0);
                     if (cl !== 0 && cl !== cols) {
                         horizClues[row] = cl;
                     }
                 }
                 for (let col = 0; col < cols; col++) {
-                    let cl = ERange(0, rows).reduce((sum, row) => sum + (solList[col + cols * row] ? 1 : 0), 0);
+                    let cl = ERange(0, rows).reduce((sum, row) => sum + (_solution[col + cols * row] ? 1 : 0), 0);
                     if (cl !== 0 && cl !== rows) {
                         vertClues[col] = cl;
                     }
@@ -136,21 +137,20 @@
                 let res1 = solutions.next();
                 let res2 = solutions.next();
                 if (res2.done) {
-                    tryAgain = false;
-                    console.log("solutionLevels:", solutionLevels);
+                    break;
+                    // console.log("solutionLevels:", solutionLevels);
                 }
             }
-            console.log("top:", vertClues);
-            console.log("side:", horizClues);
-            console.log(regions);
-            console.log(solList);
+            // console.log("top:", vertClues);
+            // console.log("side:", horizClues);
+            // console.log(regions);
 
             // Determine a minimal set of clues required for the puzzle to be unique
             let allClues = ShuffleFisherYates(
                 horizClues.flatMap((clue, index) => clue === null ? [] : [{ Clue: clue, IsRow: true, Index: index }])
                 .concat(vertClues.flatMap((clue, index) => clue === null ? [] : [{ Clue: clue, IsRow: false, Index: index }]))
             );
-            console.log(allClues);
+            // console.log(allClues);
 
             let requiredClues = ReduceRequiredSet(ERange(0, allClues.length), test => {
                 let horizCl = Array(rows).fill(null);
@@ -167,7 +167,6 @@
                 let res2 = solutions.next();
                 return res2.done;
             }).map(cIx => allClues[cIx]);
-            console.log(requiredClues);
 
             // display the clues
             for (let col = 0; col < cols; col++) {
@@ -180,7 +179,7 @@
             }
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
-                    // gameGrid[col][row] = solList[col + cols * row] ? 1 : 2;
+                    // gameGrid[col][row] = _solution[col + cols * row] ? 1 : 2;
                     gameGrid[col][row] = 0;
                 }
             }
@@ -206,6 +205,12 @@
                 }
             }
 
+            solList = [];
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    solList.push( _solution[x + y * cols]);
+                }
+            }
             $(".solution .str").text("Water " + solList.map((s, i) => s? coordinateName([i%cols, Math.floor(i/cols)]) : '').join(" "));
             generating = false;
         }
@@ -338,19 +343,10 @@
 
         function updateResult() {
             resultList = [];
-            for (let y = 0; y < rows; y++) {
-                for (let x = 0; x < cols; x++) {
-                    switch (gameGrid[x][y]) {
-                    case 1:
-                        resultList.push(true);
-                        break;
-                    case 2:
-                        resultList.push(false);
-                        break;
-                    default:
-                        resultList.push(null);
-                        break;
-                    }
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    const val = gameGrid[x][y];
+                    resultList.push(val == 1 ? true : val == 2 ? false : null);
                 }
             }
             $(".path .str").text("Water " + resultList.map((s, i) => (s === true ? coordinateName([i%cols, Math.floor(i/cols)]) : '')).join(" "));
@@ -385,7 +381,7 @@
                     wall = vert ? $(`svg .wall.hwall.x${x}.y${y}`) : $(`svg .wall.vwall.x${x}.y${y}`);
                 }
                 else return;
-                    
+
                 if (wall.length > 0) {
                     wall.toggleClass("solid");
                 }
@@ -417,19 +413,24 @@
                 updateGrid();
                 if (isSolved()) {
                     if ($("button.sound").hasClass("play"))
-                        audioSolve[0].play();  
+                        audioSolve[0].play();
                     $(".solved-text").removeClass("invis");
                 } else {
                     playNumberSound(colorKey[k]);
                     $(".solved-text").addClass("invis");
+                    if (currX == cols - 1)
+                        currY = (currY + 1) % rows;
+                    currX = (currX + 1) % cols;
+                    selected = $(`.netsq.x${currX}.y${currY}`);
+                    updateSelection();
                 }
-                
+
                 if ([" ", "enter"].includes(k)) {
                     down = false;
                     return false;
                 }
             }
-            else if (k == "-") 
+            else if (k == "-")
                 sizeDec();
             else if (k == "=" || k == "+")
                 sizeInc();
@@ -438,24 +439,26 @@
         });
 
         const viewboxes = {
-            4:"0 0 302 302",
-            5:"0 0 362 362",
-            6:"0 0 424 424",
-            7:"0 0 484 484",
-            8:"0 0 545 545"
+            4: "0 0 302 302",
+            5: "0 0 362 362",
+            6: "0 0 424 424",
+            7: "0 0 484 484",
+            8: "0 0 542 542",
+            9: "0 0 605 605"
         };
         const bordersize = {
-            4:"242",
-            5:"302",
-            6:"364",
-            7:"424",
-            8:"485"
+            4: "242",
+            5: "302",
+            6: "364",
+            7: "424",
+            8: "482",
+            9: "543"
         };
         function sizeDec(manual = true) {
             if (manual && mode() != MODE_PLAY) return;
             cols = rows = Math.max(SIZE_MIN, rows - 1);
             sizeNumber.text(rows);
-            $("body").removeClass("square4 square5 square6 square7 square8").addClass(`square${rows}`);
+            $("body").removeClass("square4 square5 square6 square7 square8 square9").addClass(`square${rows}`);
             svg.attr("viewBox", viewboxes[rows]);
             $("rect.outline").attr({ width:bordersize[rows], height:bordersize[rows] });
             updateGrid();
@@ -463,14 +466,14 @@
         function sizeInc(manual = true) {
             if (manual && mode() != MODE_PLAY) return;
             cols = rows = Math.min(SIZE_MAX, rows + 1);
-            sizeNumber.text(rows); 
-            $("body").removeClass("square4 square5 square6 square7 square8").addClass(`square${rows}`);
+            sizeNumber.text(rows);
+            $("body").removeClass("square4 square5 square6 square7 square8 square9").addClass(`square${rows}`);
             svg.attr("viewBox", viewboxes[rows]);
             $("rect.outline").attr({ width:bordersize[rows], height:bordersize[rows] });
             updateGrid();
         }
         $(".sizetext.minus").click(function() {
-            sizeDec();    
+            sizeDec();
         });
         $(".sizetext.plus").click(function() {
             sizeInc();
@@ -479,7 +482,7 @@
         function mode() {
             if ($("button.expert-play").hasClass("play"))
                 return MODE_PLAY;
-            else if ($("button.read-solve").hasClass("solve"))  
+            else if ($("button.read-solve").hasClass("solve"))
                 return MODE_SOLVE;
             else
                 return MODE_READ;
@@ -492,14 +495,12 @@
                         audioSolve[0].play();
                     return true;
                 }
-                else 
-                    return false;
             }
             return false;
         }
         function playNumberSound(n) {
             if ($("button.sound").hasClass("play") && !isNaN(n) && n >= 0 && n <= 2) {
-                let aud = audioNumbers[n][0].cloneNode();  
+                let aud = audioNumbers[n][0].cloneNode();
                 aud.volume = 0.3;
                 aud.play();
             }
@@ -512,7 +513,8 @@
         // Create row labels
         for (let y = 1; y <= SIZE_MAX; y++) {
             let label = $(MakeSvgElem("text", { x: gridSize / 2, y: y * gridSize + gridSize * 1.1, "text-anchor": "middle", "dominant-baseline": "central", class: "grid-label" }, y));
-            if (y >= 8) label.addClass("eight"); 
+            if (y >= 9) label.addClass("nine");
+            else if (y >= 8) label.addClass("eight");
             else if (y >= 7) label.addClass("seven");
             else if (y >= 6) label.addClass("six");
             else if (y >= 5) label.addClass("five");
@@ -522,7 +524,8 @@
         // Create column labels
         for (let x = 1; x <= SIZE_MAX; x++) {
             let label = $(MakeSvgElem("text", { x: x * gridSize + gridSize / 2.1, y: 0, "text-anchor": "middle", "dominant-baseline": "central", class: "grid-label" }, String.fromCharCode(64 + x)));
-            if (x >= 8) label.addClass("eight"); 
+            if (x >= 9) label.addClass("nine");
+            else if (x >= 8) label.addClass("eight");
             else if (x >= 7) label.addClass("seven");
             else if (x >= 6) label.addClass("six");
             else if (x >= 5) label.addClass("five");
@@ -539,26 +542,27 @@
                     height: gridSize,
                     class: `netsq x${x} y${y} empty`
                 }));
-                if (x >= 7 || y >= 7) cell.addClass("eight"); 
+                if (x >= 8 || y >= 8) cell.addClass("nine");
+                else if (x >= 7 || y >= 7) cell.addClass("eight");
                 else if (x >= 6 || y >= 6) cell.addClass("seven");
                 else if (x >= 5 || y >= 5) cell.addClass("six");
                 else if (x >= 4 || y >= 4) cell.addClass("five");
                 cell.click(function(event) {
                     event.preventDefault();
                     event.stopPropagation();
-                    
+
                     selected = $(this);
                     updateSelection();
                     currX = x;
                     currY = y;
-                    
+
                     if (mode() != MODE_READ) {
                         gameGrid[x][y] = (gameGrid[x][y] + 1) % colors.length;
                         updateGrid();
-                        
+
                         if (isSolved()) {
                             if ($("button.sound").hasClass("play"))
-                                audioSolve[0].play();  
+                                audioSolve[0].play();
                             $(".solved-text").removeClass("invis");
                         } else {
                             playNumberSound(gameGrid[x][y]);
@@ -581,7 +585,8 @@
                     class: `wall vwall x${x} y${y} w${wallIdx++}`,
                     "stroke-linecap": "round"
                 }));
-                if (x >= 7 || y >= 7) vWall.addClass("eight"); 
+                if (x >= 8 || y >= 8) vWall.addClass("nine");
+                else if (x >= 7 || y >= 7) vWall.addClass("eight");
                 else if (x >= 6 || y >= 6) vWall.addClass("seven");
                 else if (x >= 5 || y >= 5) vWall.addClass("six");
                 else if (x >= 4 || y >= 4) vWall.addClass("five");
@@ -600,7 +605,8 @@
                     class: `wall hwall x${x} y${y} w${wallIdx++}`,
                     "stroke-linecap": "round"
                 }));
-                if (x >= 7 || y >= 7) hWall.addClass("eight"); 
+                if (x >= 8 || y >= 8) hWall.addClass("nine");
+                else if (x >= 7 || y >= 7) hWall.addClass("eight");
                 else if (x >= 6 || y >= 6) hWall.addClass("seven");
                 else if (x >= 5 || y >= 5) hWall.addClass("six");
                 else if (x >= 4 || y >= 4) hWall.addClass("five");
@@ -617,7 +623,8 @@
             input.css({
                 left: `${(x + 1) * gridSize*1.07}px`
             });
-            if (x >= 7) input.addClass("eight"); 
+            if (x >= 8) input.addClass("nine");
+            if (x >= 7) input.addClass("eight");
             else if (x >= 6) input.addClass("seven");
             else if (x >= 5) input.addClass("six");
             else if (x >= 4) input.addClass("five");
@@ -629,7 +636,8 @@
             input.css({
                 top: `${(y + 2) * gridSize * 1.08}px`
             });
-            if (y >= 7) input.addClass("eight"); 
+            if (y >= 8) input.addClass("nine");
+            if (y >= 7) input.addClass("eight");
             else if (y >= 6) input.addClass("seven");
             else if (y >= 5) input.addClass("six");
             else if (y >= 4) input.addClass("five");
@@ -671,7 +679,7 @@
             let x = parseInt(classes.find(e => e.startsWith("x")).slice(1));
             let y = parseInt(classes.find(e => e.startsWith("y")).slice(1));
             let next;
-            
+
             if (elem.hasClass("top")) next = (x < cols - 1 ? `.transparent-input.qty.top.x${x + 1}.y0` : ".transparent-input.qty.right.x9.y0");
             else next = (y < rows - 1 ? `.transparent-input.qty.right.x9.y${y + 1}` : ".transparent-input.qty.top.x0.y0");
             $(next).select();
@@ -743,19 +751,19 @@
                 if (rows > 6) sizeDec(false);
                 else sizeInc(false);
             }
-            
+
             resetGrid();
             $("svg .wall").removeClass("solid");
-            
-            saveStates.forEach(x => x.remove());  
+
+            saveStates.forEach(x => x.remove());
             saveStates = [];
             currentState = 0;
         });
 
-        function removeFutureSaves() {  
+        function removeFutureSaves() {
             if (currentState < saveStates.length - 1) {
                 for (let i = currentState + 1; i < saveStates.length; i++) {
-                    saveStates[i].remove();  
+                    saveStates[i].remove();
                 }
                 saveStates.splice(currentState + 1, saveStates.length - currentState);
             }
@@ -763,13 +771,13 @@
 
         $("button.save").click(function() {
             removeFutureSaves();
-            
+
             let saveStateClass = Array.from($(".netsquare, line.wall, .solved-text, .tools button, .sizeHolder, .transparent-input")).map(x => $(x)).map(x => x.attr("class") || "");
             let bodyClass = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
             let inputs = Array.from($(".transparent-input")).map(x => $(x)).map(x => x.val() || "");
             let stateNumber = saveStates.length;
             currentState = stateNumber;
-            
+
             let s_solList = JSON.stringify(solList);
             let s_gameGrid = JSON.stringify(gameGrid);
             let s_selected = selected;
@@ -777,7 +785,7 @@
             let s_rows = rows;
             let s_currX = currX;
             let s_currY = currY;
-            
+
             let button = $("<button>").text(stateNumber+1).click(function() {
                 $(".netsquare, line.wall, .solved-text, .tools button, .sizeHolder, .transparent-input").each((i,x) => $(x).attr("class", saveStateClass[i]));
                 $("body").each((i,x) => $(x).attr("class", bodyClass[i]));
@@ -794,14 +802,14 @@
                 rows = s_rows;
                 solList = JSON.parse(s_solList);
                 gameGrid = JSON.parse(s_gameGrid);
-                
+
                 $(".solution .str").text("Water " + solList.map((s, i) => s? coordinateName([i%cols, Math.floor(i/cols)]) : '').join(" "));
                 updateGrid();
             }).addClass("flash").appendTo(".saves");
             setTimeout(() => {
                 button.removeClass("flash");
             }, 100);
-            
+
             saveStates.push(button);
         });
     });
@@ -824,7 +832,7 @@
                 width: unset;
             }
         }
-        body:is(.square7, .square8) .tools {
+        body:is(.square7, .square8, .square9) .tools {
             flex-direction: row;
             flex-wrap: wrap;
             width: unset;
@@ -834,8 +842,11 @@
         }
         .solved-text {
             color: #0C0;
-            transition: 0.5s;
+            transition: color 0.5s;
             user-select: none;
+        }
+        body:is(.square7, .square8, .square9) .solved-text {
+            margin-right: 5px;
         }
         .invis { opacity: 0; }
 
@@ -886,6 +897,14 @@
         body.square8 .aquarium-grid {
             width: calc(var(--sqsize) * 9);
             height: calc(var(--sqsize) * 10);
+        }
+        body.square9 .grid {
+            width: calc(var(--sqsize) * 11);
+            height: calc(var(--sqsize) * 11);
+        }
+        body.square9 .aquarium-grid {
+            width: calc(var(--sqsize) * 10);
+            height: calc(var(--sqsize) * 11);
         }
 
         .empty {
@@ -973,10 +992,11 @@
             right: 0px;
         }
 
-        body.square7 .eight,
-        body.square6 :is(.seven, .eight),
-        body.square5 :is(.six, .seven, .eight),
-        body.square4 :is(.five, .six, .seven, .eight) {
+        body.square8 .nine,
+        body.square7 :is(.eight, .nine),
+        body.square6 :is(.seven, .eight, .nine),
+        body.square5 :is(.six, .seven, .eight, .nine),
+        body.square4 :is(.five, .six, .seven, .eight, .nine) {
             opacity: 0;
             user-select: none;
             pointer-events: none;
@@ -1087,7 +1107,7 @@
         button.read-solve.solve::before {
             content: 'Solve';
         }
-        body:is(.square7, .square8) button.read-solve {
+        body:is(.square7, .square8, .square9) button.read-solve {
             width: 77px;
         }
         button.read-solve:not(.solve)::before {
@@ -1097,12 +1117,12 @@
             content: 'Pencil On';
         }
         button.pencil-tool:not(.pencil)::before {
-            content: 'Pencil Off';  
+            content: 'Pencil Off';
         }
         button.expert-play.play::before {
             content: 'Generated';
         }
-        body:is(.square7, .square8) button.expert-play {
+        body:is(.square7, .square8, .square9) button.expert-play {
             width: 118px;
         }
         button.expert-play:not(.play)::before {
@@ -1118,7 +1138,7 @@
             content: 'Solution Shown';
         }
         button.show-sol:not(.show)::before {
-            content: 'Solution Hidden';  
+            content: 'Solution Hidden';
         }
         button.show-sol {
             padding: 3px 3px 1px;
@@ -1164,7 +1184,7 @@
                     <li>
                         In <strong>Solve</strong> mode:
                         <ul>
-                            <li><strong>Click on a cell</strong> to cycle its state between water, air, or undecided.</li>
+                            <li><strong>Click on a cell</strong> to cycle its state between water, air, or empty.</li>
                             <li>Press <strong>W, A, E/Space/Enter</strong> to set the selected cell state.</li>
                             <li>The <strong>Reset</strong> button (↻) will clear the grid, not the walls.</li>
                         </ul>
@@ -1200,7 +1220,7 @@
                 </div>
                 <div style="height:5mm"></div>
                 <div class="saves hstack wrap left">
-                    <button class="save">Save</button>  
+                    <button class="save">Save</button>
                 </div>
                 <div class="hstack left" style="margin-top:5mm">
                     <button class="reset-saves">Reset Saves</button>
