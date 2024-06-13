@@ -30,21 +30,89 @@
             var swapSingleClicked = false;
 
             // Rotations (Clockwise: From:To, Counter: To:From)
-            var clockRot1 = ["20:0", "0:4", "4:24", "24:20"];
-            var clockRot2 = ["15:1", "1:9", "9:23", "23:15"];
-            var clockRot3 = ["10:2", "2:14", "14:22", "22:10"];
-            var clockRot4 = ["5:3", "3:19", "19:21", "21:5"];
-            var clockRot5 = ["16:6", "6:8", "8:18", "18:16"];
-            var clockRot6 = ["11:7", "7:13", "13:17", "17:11"];
+            const clockRot1 = ["20:0", "0:4", "4:24", "24:20"];
+            const clockRot2 = ["15:1", "1:9", "9:23", "23:15"];
+            const clockRot3 = ["10:2", "2:14", "14:22", "22:10"];
+            const clockRot4 = ["5:3", "3:19", "19:21", "21:5"];
+            const clockRot5 = ["16:6", "6:8", "8:18", "18:16"];
+            const clockRot6 = ["11:7", "7:13", "13:17", "17:11"];
 
             // 7,8,9,10,11 | 13,14,15,16,17 | 19,20,21,22,23 | 25,26,27,28,29 | 31,32,33,34,35
 
-            var ment1 = [7,11,35,31];
-            var ment2 = [8,17,34,25];
-            var ment3 = [9,23,33,19];
-            var ment4 = [10,29,32,13];
-            var ment5 = [14,16,28,26];
-            var ment6 = [15,22,27,20];
+            const ment1 = [7,11,35,31];
+            const ment2 = [8,17,34,25];
+            const ment3 = [9,23,33,19];
+            const ment4 = [10,29,32,13];
+            const ment5 = [14,16,28,26];
+            const ment6 = [15,22,27,20];
+
+            let saveStates = [];
+            let currentState = 0;
+
+            function removeFutureSaves() {
+                if (currentState < saveStates.length - 1) {
+                    for (let i = currentState + 1; i < saveStates.length; i++) {
+                        saveStates[i].remove();
+                    }
+                    saveStates.splice(currentState + 1, saveStates.length - currentState);
+                }
+            }
+
+            $(".reset-saves").click(function() {
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+
+            $("button.save").click(function() {
+                removeFutureSaves();
+
+                let stateNumber = saveStates.length;
+                currentState = stateNumber;
+
+                // Save the current state of the necessary variables and table contents
+                let s_letters = JSON.stringify(letters);
+                let s_pairLetter = pairLetter;
+                let s_tableCells = Array.from($("#pairTable td")).map(x => $(x)).map(x => x.text() || "");
+                let s_tableClass = Array.from($("#pairTable td")).map(x => $(x)).map(x => x.attr("class") || "");
+                let s_currentCondition = currentCondition;
+                let s_selectedRadio = $("input[name='condition']:checked").val();
+
+                // Save the additional variables
+                let s_swapRowContainer = swapRowContainer;
+                let s_swapRowClicked = swapRowClicked;
+                let s_swapColContainer = swapColContainer;
+                let s_swapColClicked = swapColClicked;
+                let s_swapSingleContainer = swapSingleContainer;
+                let s_swapSingleClicked = swapSingleClicked;
+
+                // Create a new save button
+                let button = $("<button>").text(stateNumber+1).click(function() {
+                    // Restore the saved state when the save button is clicked
+                    letters = JSON.parse(s_letters);
+                    pairLetter = s_pairLetter;
+                    $("#pairTable td").each((i,x) => $(x).text(s_tableCells[i]));
+                    $("#pairTable td").each((i,x) => $(x).attr("class", s_tableClass[i]));
+                    $(`input[name='condition'][value='${s_selectedRadio}']`).prop('checked', true);
+                    currentCondition = s_currentCondition;
+
+                    // Restore the additional variables
+                    swapRowContainer = s_swapRowContainer;
+                    swapRowClicked = s_swapRowClicked;
+                    swapColContainer = s_swapColContainer;
+                    swapColClicked = s_swapColClicked;
+                    swapSingleContainer = s_swapSingleContainer;
+                    swapSingleClicked = s_swapSingleClicked;
+
+                    currentState = stateNumber;
+                }).addClass("flash").appendTo(".saves");
+
+                setTimeout(() => {
+                    button.removeClass("flash");
+                }, 100);
+
+                saveStates.push(button);
+            });
 
             function genTable(){
                 for (var i = 0; i < 6; i++)
@@ -60,7 +128,7 @@
                                 $("<td>").appendTo(row).addClass('corner');
                                 continue;
                             }
-                            $("<td>").appendTo(row).css('font-weight', 'bold').text(nums[x-1]).each(function(_,e)
+                            $("<td>").appendTo(row).addClass('white header').text(nums[x-1]).each(function(_,e)
                             {
                                 var obj = $(e);
 
@@ -156,11 +224,11 @@
                     {
                         if (x == 0)
                         {
-                            $("<td>").appendTo(row).css('font-weight', 'bold').text(nums[i-1]).each(function(_,e)
+                            $("<td>").appendTo(row).addClass('white header').text(nums[i-1]).each(function(_,e)
                             {
                                 var obj = $(e);
 
-                                obj.on("contextmenu", function(e) {
+                                obj.contextmenu(function(e) {
                                     if (currentCondition == 0) return true;
                                     return false;
                                 });
@@ -713,7 +781,7 @@
                 pairLetter = "ABCDEFGHIJKL"[$("select option:selected").val()];
             });
 
-            document.addEventListener('keydown', e => {
+            $(document).keydown(function(e) {
                 var chars = "abcdefghijkl";
                 var nums = "123456789";
                 if (chars.indexOf(e.key.toLowerCase()) != -1)
@@ -779,16 +847,20 @@
     </script>
     <style>
         button {
-            background-color: #FFFFFF;
+            background-color: #FFF;
             border: 2px solid black;
             border-radius: 10px;
             font-size: 15px;
             padding: 12px;
+            transition: color 0.7s, background-color 0.7s;
+        }
+        button:hover {
+            background-color: #000;
+            color: #DDD;
         }
         .buttons {
             display: flex;
             justify-content: center;
-
         }
         .buttons select
         {
@@ -803,6 +875,18 @@
             margin-right: 10px;
             margin-left: 10px;
         }
+
+        select {
+            cursor: pointer;
+        }
+
+        .saves button {
+            margin: 15px 5px 5px;
+        }
+        .flash {
+            color: white;
+            background-color: blue;
+        }
         .dark table, table {
             width: 100%;
             border: none;
@@ -814,10 +898,13 @@
             text-align: center;
             padding: 20px;
         }
-        td.cell.white { background-color: white; }
-        td.cell.gray { background-color: #787878; }
-        td.cell.green { background-color: #339933; }
-        .dark td.cell.white { background-color: #222; }
+        td.header {
+            user-select: none;
+        }
+        td.white { background-color: white; }
+        td.gray { background-color: #787878; }
+        td.green { background-color: #339933; }
+        .dark td.white { background-color: #222; }
     </style>
 </head>
 <body>
@@ -829,21 +916,21 @@
             </div>
             <div class="page-content">
                 <img src="img/Component/Match 'em.svg" class="diagram">
-                <h2>On the Subject of Movin' and Matchin' 'em</h2>
+                <h2>On the Subject of Movin’ and Matchin’ ‘em</h2>
                 <p class="flavour-text">Matchmaker, matchmaker, make me a batch.</p>
 
                 <ul>
-                    <li>Use the table provided to store your pairs in them and the last slot (25th card) will be filled in with a <span style="font-weight: bold;">*</span>.</li>
+                    <li>Use the table provided to store your pairs in them and the last slot (25th card) will be filled in with a <strong>*</strong>.</li>
                     <li>Here are the following things you can do with the table below:
                         <ul>
-                            <li><span style="font-weight: bold;">Select Pair Letter</span>: Use this select box to select a letter that you wish to use OR you may use your keyboard from A to L in order to choose a letter.</li>
-                            <li><span style="font-weight: bold;">Reset Table</span>: Resets the table.</li>
-                            <li><span style="font-weight: bold;">Cursor</span>: Allows you to highlight the table if needed, does not allow any interaction with the table. Can also use '1' to select this option.</li>
-                            <li><span style="font-weight: bold;">Place Letters</span>: Allows the placement of letters into the table, left click places them and right click removes them. Can also use '2' to select this option.</li>
-                            <li><span style="font-weight: bold;">Swap Columns/Rows</span>: Select two rows/columns in order to swap them. Can also use '3' or '4' to select this option.</li>
-                            <li><span style="font-weight: bold;">Swap Single</span>: Select two cells to swap them. Can also use '5' to select this option.</li>
-                            <li><span style="font-weight: bold;">Shift Column/Row</span>: Shift a row or column by pressing left click and right click. Left click causes a row to shift left and a column to shift down. Right click causes a row to shift right and a column to shift up. Can also use '6' or '7' to select this option.</li>
-                            <li><span style="font-weight: bold;">Rotate Counter/Clockwise</span>: Rotate a cell clockwise or counter-clockwise. Hovering over a cell will tell you what other cells will be affected (middle of the table does not have rotation). Clicking on the cell will rotate all 4 cells in chosen direction. Can also use '8' or '9' to select this option.</li>
+                            <li><strong>Select Pair Letter</strong>: Use this select box to select a letter that you wish to use OR you may use your keyboard from A to L in order to choose a letter.</li>
+                            <li><strong>Reset Table</strong>: Resets the table.</li>
+                            <li><strong>Cursor</strong>: Allows you to highlight the table if needed, does not allow any interaction with the table. Can also use ‘1’ to select this option.</li>
+                            <li><strong>Place Letters</strong>: Allows the placement of letters into the table, left click places them and right click removes them. Can also use ‘2’ to select this option.</li>
+                            <li><strong>Swap Columns/Rows</strong>: Select two rows/columns in order to swap them. Can also use ‘3’ or ‘4’ to select this option.</li>
+                            <li><strong>Swap Single</strong>: Select two cells to swap them. Can also use ‘5’ to select this option.</li>
+                            <li><strong>Shift Column/Row</strong>: Shift a row or column by pressing left click and right click. Left click causes a row to shift left and a column to shift down. Right click causes a row to shift right and a column to shift up. Can also use ‘6’ or ‘7’ to select this option.</li>
+                            <li><strong>Rotate Counter/Clockwise</strong>: Rotate a cell clockwise or counter-clockwise. Hovering over a cell will tell you what other cells will be affected (middle of the table does not have rotation). Clicking on the cell will rotate all 4 cells in chosen direction. Can also use ‘8’ or ‘9’ to select this option.</li>
                         </ul>
                     </li>
                 </ul>
@@ -896,17 +983,23 @@
                 </div>
                 <div class="buttons" id="shiftSwaps">
                     <input type="radio" id="shiftRow" name="condition" value="5">
-                    <label for="shiftRow">Shift Row</label>
+                    <label for="shiftRow">(6) Shift Row</label>
                     <input type="radio" id="shiftColumn" name="condition" value="6">
-                    <label for="shiftColumn">Shift Column</label>
+                    <label for="shiftColumn">(7) Shift Column</label>
                 </div>
                 <div class="buttons" id="clockSwaps">
                     <input type="radio" id="rotateClockwise" name="condition" value="7">
-                    <label for="rotateClockwise">Rotate Clockwise</label>
+                    <label for="rotateClockwise">(8) Rotate Clockwise</label>
                     <input type="radio" id="rotateCounter" name="condition" value="8">
-                    <label for="rotateCounter">Rotate Counter-Clockwise</label>
+                    <label for="rotateCounter">(9) Rotate Counter-Clockwise</label>
+                </div>
+                <div class="saves hstack wrap left">
+                    <button class="save">Save</button>
                 </div>
 
+                <div class="hstack left" style="margin-top:5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                </div>
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
         </div>
