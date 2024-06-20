@@ -10046,7 +10046,92 @@ let parseData = [
 			{
 				regex: /The maze is/,
 				handler: function (matches, module) {
-					module.push({ label: matches.input, obj: pre(readMultiple(11)) });
+					if(module.logged)
+						return true;
+					module.logged = true;
+					const lines = readMultiple(11).split('\n');
+					const isWall = (char) => { return char === "█" || char === "▓"; }
+					const getColor = (lines, row, col, isWall) => {
+						row = 2 * row + 1
+						col = 2 * col + 1
+						let walls = "";
+						walls += isWall(lines[row - 1][col]) ? "U" : "";
+						walls += isWall(lines[row][col - 1]) ? "L" : "";
+						walls += isWall(lines[row][col + 1]) ? "R" : "";
+						walls += isWall(lines[row + 1][col]) ? "D" : "";
+						switch(walls) {
+							case "LRD":
+								return "A";
+							case "RD":
+								return "B";
+							case "R":
+								return "C";
+							case "ULR":
+								return "G";
+							case "U":
+								return "I";
+							case "L":
+								return "K";
+							case "LR":
+								return "L";
+							case "":
+								return "M";
+							case "D":
+								return "N";
+							case "UD":
+								return "O";
+							case "LD":
+								return "P";
+							case "ULD":
+								return "R";
+							case "UR":
+								return "T";
+							case "UL":
+								return "W";
+							case "URD":
+								return "Y";
+							default:
+								return "N/A"
+						}
+					}
+					const coloredMaze = [];
+					for(let row = 0; row < 5; row++) {
+						coloredMaze.push([0, 1, 2, 3, 4].map(col => getColor(lines, row, col, isWall)))
+					}
+					const coloredSvg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 450 270'>").addClass("mazery");
+					for (let row = 0; row < 5; row++) {
+						for (let col = 0; col < 5; col++) {
+							const dimension = 50;
+							const x = col * dimension;
+							const y = row * dimension;
+							const color = coloredMaze[row][col];
+							$SVG("<rect>").addClass(`color-${color}`)
+								.attr("width", dimension).attr("height", dimension)
+								.attr("x", x).attr("y", y)
+								.appendTo(coloredSvg);
+							$SVG("<text>")
+								.attr("x", x + 2)
+								.attr("y", y + dimension - 2)
+								.text(color)
+								.addClass(color)
+								.appendTo(coloredSvg);
+						}
+					}
+					const mazeSvg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 230'>").addClass("mazery");
+					for (let row = 0; row < 11; row++) {
+						for (let col = 0; col < 11; col++) {
+							const dimension = 20;
+							const x = col * dimension;
+							const y = row * dimension;
+							const char = lines[row][col];
+							$SVG("<rect>").addClass(`wall-${isWall(char) ? "K" : "W"}`)
+								.attr("width", dimension).attr("height", dimension)
+								.attr("x", x).attr("y", y)
+								.appendTo(mazeSvg);
+						}
+					}
+					module.push({ label: "Colored maze", obj: coloredSvg });
+					module.push({ label: matches.input, obj: mazeSvg });
 					return true;
 				}
 			},
