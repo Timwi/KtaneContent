@@ -5285,6 +5285,51 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "emoji",
+		loggingTag: "Emoji",
+		matches: [
+			{
+				regex: /^Puzzle: (.+) (.+)/,
+				handler: function (matches, module) {
+					const emojiNames = [matches[1], matches[2]];
+					const getImage = (name) => {
+						const div = $('<div>').addClass('emoji-container');
+						const emojis = ["ab", "abacus", "abc", "abcd", "accept", "accordion", "adult", "airplane", "alembic", "alien", "ambulance", "amphora", "anchor", "angel", "anger", "angry", "anguished", "ant", "apple", "aquarius", "aries", "art", "artist", "astonished", "astronaut", "atm", "avocado", "axe", "baby", "back", "bacon", "badger", "badminton", "bagel", "balloon", "bamboo", "banana", "bangbang", "banjo", "bank", "barber", "baseball", "basket", "basketball", "bat", "bath", "bathtub", "battery", "bear", "beaver", "bed", "bee", "beer", "beers", "beetle", "beginner", "bell", "bento", "bike", "bikini", "bird", "birthday", "bison", "blossom", "blowfish", "blueberries", "blush", "boar", "bomb", "bone", "book", "bookmark", "books", "boom", "boomerang", "boot", "bouquet", "bowling", "boy", "brain", "bread", "bricks", "briefcase", "briefs", "broccoli", "broom", "bucket", "bug", "bulb", "burrito", "bus", "busstop", "butter", "butterfly", "cactus", "cake", "calendar", "calling", "camel", "camera", "camping", "cancer", "candle", "candy", "capricorn", "carrot", "cat", "cd", "chains", "chair", "chart", "cherries", "chestnut", "chicken", "child", "chipmunk", "chopsticks", "cinema", "cityscape", "cl", "clap", "clapper", "clipboard", "cloud", "clubs", "coat", "cockroach", "cocktail", "coconut", "coffee", "coffin", "coin", "comet", "compass", "compression", "computer", "confounded", "confused", "congratulations", "construction", "cook", "cookie", "cooking", "cool", "corn", "couple", "couplekiss", "cow", "crab", "cricket", "crocodile", "croissant", "crown", "cry", "cucumber", "cupcake", "cupid", "curry", "customs", "cyclone", "dancer", "dango", "dart", "dash", "date", "deer", "desert", "diamonds", "disappointed", "dizzy", "dna", "dodo", "dog", "dollar", "dolls", "dolphin", "door", "doughnut", "dragon", "dress", "droplet", "duck", "dumpling", "dvd", "eagle", "ear", "egg", "eggplant", "eight", "elephant", "elevator", "elf", "end", "envelope", "euro", "exclamation", "expressionless", "eye", "eyeglasses", "eyes", "factory", "fairy", "falafel", "farmer", "fax", "fearful", "feather", "ferry", "firecracker", "firefighter", "fireworks", "fish", "fist", "five", "flags", "flamingo", "flashlight", "flatbread", "flushed", "fly", "fog", "foggy", "fondue", "foot", "football", "footprints", "fountain", "four", "free", "fries", "frog", "frowning", "fuelpump", "garlic", "gear", "gem", "gemini", "genie", "ghost", "gift", "giraffe", "girl", "gloves", "goat", "goggles", "golf", "gorilla", "grapes", "grimacing", "grin", "grinning", "guitar", "gun", "hamburger", "hammer", "hamster", "handbag", "hash", "headphones", "headstone", "heart", "heartbeat", "heartpulse", "hearts", "hedgehog", "helicopter", "herb", "hibiscus", "hippopotamus", "hockey", "hole", "hook", "horse", "hospital", "hotel", "hotsprings", "hourglass", "house", "hushed", "hut", "icecream", "id", "imp", "infinity", "innocent", "interrobang", "japan", "jeans", "jigsaw", "joy", "joystick", "judge", "kangaroo", "key", "keyboard", "kimono", "kiss", "kissing", "kite", "knife", "knot", "koala", "koko", "label", "lacrosse", "ladder", "leaves", "ledger", "leg", "lemon", "leo", "leopard", "libra", "link", "lips", "lipstick", "lizard", "llama", "lobster", "lock", "lollipop", "loop", "loudspeaker", "luggage", "lungs", "mag", "mage", "magnet", "mahjong", "mailbox", "mammoth", "man", "mango", "mask", "mate", "mechanic", "mega", "melon", "mens", "mermaid", "metro", "microbe", "microphone", "microscope", "minibus", "minidisc", "mirror", "moneybag", "monkey", "monorail", "mosquito", "motorboat", "motorcycle", "motorway", "mountain", "mouse", "moyai", "muscle", "mushroom", "mute", "necktie", "new", "newspaper", "ng", "nine", "ninja", "nose", "notebook", "notes", "ocean", "octopus", "oden", "office", "ok", "olive", "on", "one", "onion", "orangutan", "otter", "owl", "ox", "oyster", "package", "pager", "pancakes", "paperclip", "parachute", "parking", "parrot", "peach", "peacock", "pear", "penguin", "pensive", "persevere", "pick", "pie", "pig", "pill", "pilot", "pineapple", "pisces", "pizza", "placard", "plunger", "poodle", "popcorn", "postbox", "potato", "pouch", "pound", "pretzel", "prince", "princess", "printer", "punch", "purse", "pushpin", "question", "rabbit", "raccoon", "racehorse", "radio", "rage", "rainbow", "ram", "ramen", "rat", "razor", "receipt", "recycle", "relaxed", "relieved", "repeat", "restroom", "rewind", "ribbon", "rice", "ring", "rock", "rocket", "rooster", "rose", "rosette", "sa", "sagittarius", "sailboat", "sake", "salt", "sandal", "sandwich", "santa", "sari", "satellite", "sauropod", "saxophone", "scales", "scarf", "school", "scientist", "scissors", "scooter", "scorpion", "scorpius", "scream", "screwdriver", "scroll", "seal", "seat", "secret", "seedling", "selfie", "seven", "shamrock", "shark", "sheep", "shell", "shield", "ship", "shirt", "shorts", "shower", "shrimp", "singer", "six", "skateboard", "ski", "skier", "skunk", "sled", "sleeping", "sleepy", "sloth", "smile", "smiley", "smirk", "smoking", "snail", "snake", "snowboarder", "snowflake", "snowman", "soap", "sob", "soccer", "socks", "softball", "soon", "sos", "sound", "spades", "spaghetti", "sparkle", "sparkler", "sparkles", "speaker", "speedboat", "spider", "sponge", "spoon", "squid", "stadium", "star", "stars", "station", "stethoscope", "stew", "stopwatch", "strawberry", "student", "sunflower", "sunglasses", "sunny", "sunrise", "superhero", "supervillain", "sushi", "swan", "sweat", "symbols", "syringe", "taco", "tada", "tamale", "tangerine", "taurus", "taxi", "tea", "teacher", "teapot", "technologist", "telephone", "telescope", "tennis", "tent", "thermometer", "thread", "three", "ticket", "tiger", "tm", "toilet", "tomato", "tongue", "toolbox", "tooth", "toothbrush", "top", "tophat", "trackball", "tractor", "train", "tram", "trident", "triumph", "trolleybus", "trophy", "truck", "trumpet", "tulip", "turkey", "turtle", "tv", "two", "umbrella", "unamused", "underage", "unlock", "up", "vampire", "vhs", "violin", "virgo", "volcano", "volleyball", "vs", "waffle", "warning", "wastebasket", "watch", "watermelon", "wave", "wc", "weary", "wedding", "whale", "wheelchair", "window", "wink", "wolf", "woman", "womens", "wood", "worm", "worried", "wrench", "yarn", "yen", "yum", "zap", "zebra", "zero", "zombie", "zzz"];
+						const index = emojis.indexOf(name);
+						const row = Math.floor(index / 25);
+						const col = Math.floor(index % 25);
+						$('<img>').attr('src', "../HTML/img/Emoji/Emoji Grid.png")
+						.attr(`style`, `object-position: ${col * -54}px ${row * -54}px`)
+						.addClass("emoji").appendTo(div);
+						$(`<p>${name}</p>`).addClass("emoji").appendTo(div);
+						return div;
+					}
+					module.attemptNum = !module.attemptNum ? 1 : module.attemptNum + 1;
+					readLine();
+					let grid = readTaggedLine(1).split("|");
+					for(let i = 0; i < grid.length; i++) {
+						grid[i] = `${emojiNames[0][i]} ${grid[i]}`;
+					}
+					grid = `  ${emojiNames[1]}\n${grid.join("\n")}`;
+					const div = $('<div>').addClass('emoji');
+					getImage(emojiNames[0]).appendTo(div);
+					getImage(emojiNames[1]).appendTo(div);
+					module.currentDropdown = [`Attempt ${module.attemptNum}`, [{ label: "Puzzle", obj: div }, { label: "Grid:", obj: pre(grid) }]];
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{ 
+				regex: /.+/,
+				handler: function (matches, module) {
+					module.currentDropdown[1].push(matches[0]);
+					return true;
+				}
+			 }
+
+		]
+	},
+	{
 		displayName: "Emoticon Math",
 		moduleID: "emoticonMathModule",
 		loggingTag: "Emoticon Math",
