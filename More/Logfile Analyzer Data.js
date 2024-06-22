@@ -6245,6 +6245,27 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "ForgetMeMaybeModule",
+		loggingTag: "Forget Me Maybe",
+		matches: [
+			{
+				regex: /Stage (\d+): (\d+) (\d+) (\d+)/,
+				handler: function (matches, module) {
+					module.push([`Stage ${matches[1]} = ${matches[4]}`, [`Displayed Digit: ${matches[2]}`, `Added Digit ${matches[3]}`]])
+					return true;
+				}
+			},
+			{
+				regex: /Logging is done in the format: Current stage, displayed digit, added digit, calculated digit./,
+				handler: function (matches, module) {
+					return true;
+				}
+				
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Forget Perspective",
 		moduleID: "qkForgetPerspective",
 		loggingTag: "Forget Perspective",
