@@ -16125,6 +16125,28 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "SimonShrieksModule",
+		loggingTag: "Simon Shrieks",
+		matches: [
+			{
+				regex: /Stage (\d) ((?:flashing).+)/,
+				handler: function (matches, module) {
+					module.stageNum = matches[1];
+					module.currentDropdown = [`Stage ${matches[1]}`, [matches[2]]];
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					module.currentDropdown[1].push(matches[0])
+					return true;
+				}
+			}
+		]
+	},
+	{
 		moduleID: "simonServes",
 		loggingTag: "Simon Serves",
 		matches: [
