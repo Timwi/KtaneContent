@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>アヒルのなぞなぞ — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        let grid = $(".grid");
+        let chairsholder = $(".chairsholder");
+        let stageNumber = $(".controls .stage input");
+        let selected = null;
+        let saveStates = [];
+        let currentState = 0;
+        let currentStage = 0;
+        let itemID = 0;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+        const CHAIR_LEFT = true;
+        const CHAIR_RIGHT = false;
+        const CHAIRS = 6;
+
+        const colors = ["red", "yellow", "blue", "orange", "green", "purple", "brown"];
+        let squareColors = Array(colors.length);
+        Object.assign(squareColors, colors);
+        squareColors.unshift("none");
+
+        function hasWhichColor(elem) {
+            for (var i = 0; i < squareColors.length; i++) {
+                if (elem.hasClass(squareColors[i])) { return i; }
+            }
+            return -1;
+        }
+
+        function nextColor(elem) {
+            let c = hasWhichColor(elem);
+            removeColorClass(elem);
+            elem.addClass(squareColors[(c + 1) % squareColors.length]);
+        }
+
+        function removeColorClass(elem) {
+            elem.removeClass("none brown orange purple yellow red blue green");
+        }
+
+        const colorLetters = " xrybogpn";
+        const colorIndex = {
+            " ": 0,
+            "x": 0,
+            "r": 1,
+            "y": 2,
+            "b": 3,
+            "o": 4,
+            "g": 5,
+            "p": 6,
+            "n": 7,
+        };
+
+        function updateSelection() {
+            $("th.selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+        function selectNone() {
+            selected = null;
+            $("th.selected").removeClass("selected");
+        }
+
+        function stageDec() {
+            currentStage = Math.max(0, currentStage - 1);
+            stageNumber.val(currentStage);
+        }
+        function stageInc() {
+            currentStage += 1;
+            stageNumber.val(currentStage);
+        }
+        $(".stagetext.minus").click(function() {
+            stageDec();
+        });
+        $(".stagetext.plus").click(function() {
+            stageInc();
+        });
+
+        let down = false;
+        $(document).click(function() {
+            selectNone();
+        }).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if (k == "-" && NoSpecialKeys(event))
+                stageDec();
+            else if ((k == "=" || k == "+") && NoSpecialKeys(event))
+                stageInc();
+            else if (colorLetters.includes(k) && NoSpecialKeys(event)) {
+                if (selected) {
+                    removeColorClass(selected);
+                    selected.addClass(squareColors[ colorIndex[k] ]);
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            }
+            down = false;
+        });
+
+        function assignID(elem) {
+            let id = `item${itemID}`;
+            elem.attr("id", id);
+            itemID += 1;
+            return id;
+        }
+
+        function makeChairs() {
+            let cy = 350;
+            let cx = 250;
+            let r = 250;
+            let angle = Math.PI / 180 * 60;
+            let dTheta = 2 * Math.PI / CHAIRS;
+            for (let i = 0; i < CHAIRS; i++) {
+                let a = i*dTheta + angle;
+                let x = cx + r * Math.cos(a);
+                let y = cy + r* 1.3 * Math.sin(a);
+                makeChair(x, y, i, i == 3).appendTo(chairsholder);
+            }
+        }
+
+        function makeChair(x, y, idx, arm) {
+            let group = $("<div>").addClass("chair-group vstack").css({
+                left:`${x}px`, top:`${y}px`
+            });
+            let chairImage = $("<div>").addClass(`chair ${arm ? "armchair" : "plainchair"}`).appendTo(group);
+            let people = $("<div>").addClass("hstack between people").appendTo(group);
+            $(`<input type="radio" name="you-mark" value="you${idx}" id="you${idx}">`).appendTo(people);
+            $(`<label for="you${idx}"">あなた</label>`).appendTo(people);
+            $("<div>").addClass("hspace").appendTo(people);
+            $(`<input type="radio" name="duck-mark" value="duck${idx}" id="duck${idx}">`).appendTo(people);
+            $(`<label for="duck${idx}">アヒル</label>`).appendTo(people);
+
+            let clr = $('<table class="chaircolor color-table">'+
+                '<tr><th>座席</th><th class="none"></th></tr>'+
+                '<tr><th>足</th><th class="none"></th></tr>'+
+                '<tr><th>数字</th><td><input type="text"></td></tr>'+
+                '<tr><th>数字の色</th><th class="none"></th></tr>'+
+                '</table>').appendTo(group);
+
+            let whoopee = $("<div>").addClass("hstack whoopee").appendTo(group);
+            $(`<input type="radio" name="whoopee-mark" value="whoopee${idx}" id="whoopee${idx}">`).appendTo(whoopee);
+            $(`<label for="whoopee${idx}">ブーブークッション</label>`).appendTo(whoopee);
+
+            return group;
+        }
+        makeChairs();
+
+        let whoopeeValue = "";
+        $(".whoopee input").click(function(event) {
+            if (whoopeeValue == this.value) {
+                $(this).prop("checked", false);
+                whoopeeValue = "";
+            }
+            else
+                whoopeeValue = this.value;
+        });
+        let duckValue = "";
+        $(".people input:nth-child(1)").click(function(event) {
+            if (duckValue == this.value) {
+                $(this).prop("checked", false);
+                duckValue = "";
+            }
+            else
+                duckValue = this.value;
+        });
+        let youValue = "";
+        $(".people input:nth-child(4)").click(function(event) {
+            if (youValue == this.value) {
+                $(this).prop("checked", false);
+                youValue = "";
+            }
+            else
+                youValue = this.value;
+        });
+
+        let colorbuttons = $("<div>").addClass("colorbuttons hstack wrap controls").appendTo(chairsholder);
+        for (let i = 0; i < squareColors.length; i++) {
+            $("<button>").addClass(`clrbtn ${squareColors[i]}`).click(function(event) {
+                let c = hasWhichColor($(this));
+                if (selected && c >= 0) {
+                    removeColorClass(selected);
+                    selected.addClass(squareColors[c]);
+                }
+                event.preventDefault();
+                event.stopPropagation();
+            }).appendTo(colorbuttons);
+        }
+
+        let allColorable = $(".color-table th:nth-child(2)");
+        allColorable.click(function(event) {
+            selected = $(this);
+            updateSelection();
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        const bodyParts = ["none", "rfoot", "lfoot", "rhand", "lhand", "butt"];
+        function hasWhichBodyPart(elem) {
+            for (var i = 0; i < bodyParts.length; i++) {
+                if (elem.hasClass(bodyParts[i])) { return i; }
+            }
+            return -1;
+        }
+        function removeBodyPartClass(elem) {
+            elem.removeClass("none rfoot lfoot rhand lhand butt");
+        }
+        function nextBodyPart(elem) {
+            let c = hasWhichBodyPart(elem);
+            removeBodyPartClass(elem);
+            elem.addClass(bodyParts[(c + 1) % bodyParts.length]);
+        }
+        let hokeyBodyPart = $(".hokey tr:nth-child(4) td");
+        hokeyBodyPart.click(function() {
+            nextBodyPart($(this));
+        });
+
+        stageNumber.on("input", function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            let n = parseInt(this.value);
+            if (n) currentStage = n;
+        })
+
+        $(".reset-grid").click(function() {
+            removeBodyPartClass(hokeyBodyPart);
+            hokeyBodyPart.addClass("none");
+            allColorable.each(function(_, e) {
+                removeColorClass($(e));
+                $(e).addClass("none");
+            });
+            $(".hokey td input, .color-table td input").val("");
+            $(".forehead td input").val("0");
+            $("select.sitting").val("state1");
+            $(".whoopee input, .people input").prop("checked", false);
+        });
+
+        $(".reset-saves").click(function() {
+            if(!confirm("Are you sure you want to reset all saves?")) return;
+            $(".replace-save").prop('disabled', true);
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-future-saves").click(function() {
+            removeFutureSaves();
+        });
+
+        $(".reset-all").click(function() {
+            if(!confirm("Are you sure you want to reset everything?")) return;
+            $(".reset-grid").click();
+            $(".replace-save").prop('disabled', true);
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+            currentStage = 0;
+            stageNumber.val(currentStage);
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        let replaceID = `item${itemID}`;
+
+        $("button.new-save").click(function() {
+            let saveStateClass = Array.from($(".color-table th:nth-child(2), .hokey tr:nth-child(4) td")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateText = Array.from($(".hokey td input, .color-table td input, .forehead td input, select.sitting")).map(x => $(x)).map(x => x.val() || "");
+            let saveStateRadio = Array.from($(".whoopee input, .people input")).map(x => $(x)).map(x => x.prop("checked") || "");
+            //console.log(saveStates);
+            let stateNumber = saveStates.length;
+            let s = currentStage;
+            currentState = stateNumber;
+
+            let button = $("<button>").text(stateNumber).click(function() {
+                $(".color-table th:nth-child(2), .hokey tr:nth-child(4) td").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $(".hokey td input, .color-table td input, .forehead td input, select.sitting").each((i, x) => $(x).val(saveStateText[i]));
+                $(".whoopee input, .people input").each((i, x) => $(x).prop("checked", saveStateRadio[i]));
+                currentState = stateNumber;
+                currentStage = s;
+                stageNumber.val(s);
+                replaceID = this.id;
+                $(".replace-save").prop('disabled', false);
+                $(".saves button").removeClass("selected");
+                $(this).addClass("selected");
+            }).addClass("flash").appendTo(".saves");
+            let saveID = assignID(button);
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            $(".saves button").removeClass("selected");
+            $(".replace-save").prop('disabled', true);
+            saveStates.push(button);
+            currentStage += 1;
+            stageNumber.val(currentStage);
+        });
+
+        $("button.replace-save").click(function() {
+            let saveStateClass = Array.from($(".color-table th:nth-child(2), .hokey tr:nth-child(4) td")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveStateText = Array.from($(".hokey td input, .color-table td input, .forehead td input, select.sitting")).map(x => $(x)).map(x => x.val() || "");
+            let saveStateRadio = Array.from($(".whoopee input, .people input")).map(x => $(x)).map(x => x.prop("checked") || "");
+            //console.log(saveStates);
+            let stateNumber = currentState;
+            let s = currentStage;
+
+            let button = $("<button>").text(stateNumber).click(function() {
+                $(".color-table th:nth-child(2), .hokey tr:nth-child(4) td").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $(".hokey td input, .color-table td input, .forehead td input, select.sitting").each((i, x) => $(x).val(saveStateText[i]));
+                $(".whoopee input, .people input").each((i, x) => $(x).prop("checked", saveStateRadio[i]));
+                currentState = stateNumber;
+                currentStage = s;
+                stageNumber.val(s);
+                replaceID = this.id;
+                $(".replace-save").prop('disabled', false);
+                $(".saves button").removeClass("selected");
+                $(this).addClass("selected");
+            }).addClass("flash");
+            let saveID = assignID(button);
+            setTimeout(() => {
+                button.removeClass("flash");
+                button.addClass("selected");
+            }, 100);
+
+            if (saveStates.length > currentState) {
+                saveStates.splice(currentState, 1, button);
+                let oldButton = document.getElementById(replaceID);
+                oldButton.parentNode.replaceChild(button[0], oldButton);
+                replaceID = saveID;
+            }
+            else {
+                button.appendTo(".saves");
+                saveStates.push(button);
+            }
+        });
+
+        window.onbeforeunload = function() {
+            return true;
+        };
+    });
+    </script>
+    <style>
+        .hstack {
+            align-items: center;
+        }
+        .hstack.between {
+            justify-content: space-between;
+        }
+        .vstack {
+            align-items: center;
+        }
+        .wrap {
+            flex-wrap: wrap;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-right {
+            align-items: end;
+        }
+        .hspace { width: 4mm; }
+
+        .people {
+            height: 30px;
+            font-size: 18px;
+        }
+        .people input {
+            height: 20px;
+            margin-bottom: 7px;
+            cursor: pointer;
+        }
+        .people label {
+            line-height: 20px;
+            margin-left: 2px;
+            cursor: pointer;
+        }
+        .whoopee input {
+            width: 15px;
+            height: 15px;
+            margin-bottom: 7px;
+            margin-right: 3px;
+            cursor: pointer;
+        }
+        .whoopee label { cursor: pointer; }
+        .whoopee { margin-top: 2px; }
+
+        .appendix p {
+            font-size: 15px;
+        }
+
+        .armchair {
+            background-image: url("img/DuckKonundrum/Armchair.svg");
+        }
+        .plainchair {
+            background-image: url("img/DuckKonundrum/PlainChair.svg");
+        }
+        .chairsholder {
+            position: relative;
+            width: 672px;
+            height: 920px;
+        }
+        .chair-group, .controls {
+            position: absolute;
+        }
+        table.color-table th {
+            width: 70px;
+            padding: 4px 1px 0 1px;
+        }
+        table.color-table th:nth-child(2) {
+            cursor: pointer;
+        }
+        table.color-table td:nth-child(2), table.hokey td {
+            cursor: pointer;
+            padding: 0;
+        }
+        .chaircolor td input, .forehead td input, .stage td input {
+            width: 70px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .chaircolor tr:nth-child(4) th, .name tr:nth-child(3) th {
+            line-height: 1.1;
+        }
+        .stage td input { font-size: 25px; }
+        .name td input {
+            width: 120px;
+            text-align: center;
+        }
+        table.name td, .stage td { padding: 0; }
+
+        .hokey th, .hokey tr:nth-child(4) td, .name th {
+            padding: 4px 1px 0 1px;
+        }
+        .hokey td input {
+            width: 92px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+        }
+        table.hokey th { width: 92px; }
+        table.hokey td { text-align: center; }
+
+        th.selected { background-color: #888; }
+
+        .chair {
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 100%;
+            width: 100px;
+            height: 100px;
+        }
+
+        .smallcan {
+            left: 225px;
+            top: 380px;
+            width: 40px;
+        }
+        .medcan {
+            left: 385px;
+            top: 365px;
+            width: 60px;
+        }
+        .largecan {
+            left: 285px;
+            top: 475px;
+            width: 80px;
+        }
+        .can-table.small {
+            left: 170px;
+            top: 420px;
+        }
+        .can-table.med {
+            left: 340px;
+            top: 420px;
+        }
+        .can-table.large {
+            left: 250px;
+            top: 550px;
+        }
+
+        select { cursor: pointer; }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .tools button, button.save {
+            padding: 4px 3px 0 3px;
+            font-size: 14px;
+        }
+        .saves button.selected {
+            background-color: #EE0;
+        }
+        button:not([disabled], .clrbtn):hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        button[disabled] {
+            user-select: none;
+            background-color: #555;
+        }
+        .saves.hstack { width: 673px; }
+
+        .stagetext {
+            padding: 6px 8px 2px 8px;
+        }
+
+        .colorbuttons button {
+            width: 38px;
+            height: 38px;
+            margin: 0;
+        }
+        .colorbuttons {
+            width: 153px;
+            left: -10px;
+            top: 17px;
+        }
+        .red { background-color: #E93E3E; color: #FFF; }
+        .yellow { background-color: #FBF441; color: #000; }
+        .blue { background-color: #33F; color: #FFF; }
+        .green { background-color: #20DF28; color: #000; }
+        .purple { background-color: #6401DE; color: #FFF; }
+        .orange { background-color: #FF6532; color: #000; }
+        .brown { background-color: #6B3E2E; color: #FFF; }
+
+        .colorbuttons .red::after { content: 'R' }
+        .colorbuttons .yellow::after { content: 'Y' }
+        .colorbuttons .blue::after { content: 'B' }
+        .colorbuttons .green::after { content: 'G' }
+        .colorbuttons .purple::after { content: 'P' }
+        .colorbuttons .orange::after { content: 'O' }
+        .colorbuttons .brown::after { content: 'N' }
+        .colorbuttons .none { background-color: #888; color: transparent; }
+        .colorbuttons .none::after { content: '.' }
+
+        th.red::after { content: '赤' }
+        th.yellow::after { content: '黄' }
+        th.blue::after { content: '青' }
+        th.green::after { content: '緑' }
+        th.purple::after { content: '紫' }
+        th.orange::after { content: '橙' }
+        th.brown::after { content: '茶' }
+        th.none::after, td.none::after { content: 'なし' }
+
+        td.rfoot::after { content: '右足' }
+        td.lfoot::after { content: '左足' }
+        td.rhand::after { content: '右手' }
+        td.lhand::after { content: '左手' }
+        td.butt::after { content: 'お尻' }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+            background-size: 103%;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">アヒルのなぞなぞ</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Duck Konundrum.svg" class="diagram">
+                <h2>モジュール詳細：アヒルのなぞなぞ</h2>
+                <p class="flavour-text">「処理担当者にもマニュアルがある」モジュールに終止符を打つ。</p>
+                <ul>
+                    <li>用意するもの：肘掛けの無い椅子5脚、肘掛けのある椅子1脚、赤・黄・青の塗料が入った金属缶3個、大きさの異なるジョウロ3個、生きたアヒル1羽。どうか、いかなる場合でもアヒルの命を危険にさらさないように*。我々はこの爆弾を解除する際に、動物に危害を加えないことを望んでいる。</li>
+                    <li>開始する前にすべての椅子を円形に配置する。</li>
+                    <li>他のモジュールが解除されるたびに、新しい手順が画面に表示される。それに従う。</li>
+                    <li>爆弾にある他の<a href="../More/Ignore Table.html#mod=duckKonundrum">無視されないモジュール</a>がすべて解除されると、モジュールは部屋の状態について3つの質問を行う。</li>
+                    <li>不正解の選択肢を選んだ場合、ミスが記録されるが、質問が変わったり、ステージが表示されることはない。</li>
+                    <li>ルールの説明については<b>付録 DUCK</b>を参照する。</li>
+                </ul>
+                <p><i>* モジュールからの指示がない限り。</i></p>
+                <h3>インタラクティブ操作</h3>
+                <ul>
+                    <li><strong>項目</strong>を選択し、 <strong>スペース(X)/R/Y/B/O/G/P/N</strong>をキーボードで入力するか<strong>色ボタン</strong>を選択すると椅子、ジョウロ、体の部位などに色を付けられる。</li>
+                    <li><strong>ラジオボタン</strong>を使用して、自分、アヒルブーブークッションの位置を示すことができ、チェック済みのラジオボタンを再度押すと選択を解除できる。</li>
+                    <li>テキストボックスには任意の値を入れられる。</li>
+                    <li>体の部位の真下にある<strong>ドロップダウンメニュー</strong>は現在の姿勢を示せる。</li>
+                    <li><strong>ホーキー・ポーキー</strong>の下にあるボタンは、クリックすることで体の部位を切り替えることができる。</li>
+                    <li><b>-</b>や<b>+</b>ボタンを押したり、キーボードの<b>[-]</b>や<b>[+]</b>を押すと、ステージ数を変化させられる。</li>
+                    <li>その他のボタンは、現在の状態の保存、選択したデータへ上書き、現在の状態のリセット、保存データの削除、選択したデータ以降のデータ削除、すべてのデータリセットを行える。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ1/7</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">アヒルのなぞなぞ</span>
+            </div>
+            <div class="page-content">
+                <div class="chairsholder">
+                    <div class="vstack tools controls" style="left: -20px; top: 200px;">
+                        <button class="reset-grid">状態のリセット</button>
+                        <button class="reset-saves">保存データの削除</button>
+                        <button class="reset-future-saves">以降のデータの削除</button>
+                        <button class="reset-all">すべてリセット</button>
+                    </div>
+                    <table class="controls color-table forehead" style="left: 260px; top: -10px;white-space: nowrap;">
+                        <tr><th>額のLの数</th><td> <input type="text" value="0"> </td></tr>
+                        <tr><th>Lの色</th><th class="none"></th></tr>
+                    </table>
+                    <div class="controls vstack" style="left: 258px; top: 60px">
+                        <table class="stage">
+                            <tr><th>ステージ</th><td> <input type="text" value="0"> </td></tr>
+                        </table>
+                        <div class="hstack">
+                            <button class="stagetext minus">-</button>
+                            <button class="stagetext plus">+</button>
+                        </div>
+                    </div>
+                    <table class="controls color-table you-table" style="left: 520px; top: 0">
+                        <tr><th>右足</th><th class="none"></th></tr>
+                        <tr><th>左足</th><th class="none"></th></tr>
+                        <tr><th>右手</th><th class="none"></th></tr>
+                        <tr><th>左足</th><th class="none"></th></tr>
+                        <tr><th>お尻</th><th class="none"></th></tr>
+                    </table>
+                    <select style="left: 545px; top: 140px" class="controls sitting">
+                        <option value="state1">座っている</option>
+                        <option value="state2">立っている</option>
+                        <option value="state3">逆立ちをしている</option>
+                    </select>
+                    <table class="controls color-table name" style="left: 543px; top: 170px">
+                        <tr><th colspan="2">アヒルの名前</th></tr>
+                        <tr><td colspan="2"> <input type="text"> </td></tr>
+                        <tr><th>アヒルの足</th><th class="none"></th></tr>
+                    </table>
+
+                    <img src="img/DuckKonundrum/WateringCan.svg" class="controls smallcan">
+                    <img src="img/DuckKonundrum/WateringCan.svg" class="controls medcan">
+                    <img src="img/DuckKonundrum/WateringCan.svg" class="controls largecan">
+                    <table class="controls color-table can-table small">
+                        <tr><th>ジョウロ</th><th class="none"></th></tr>
+                        <tr><th>中身</th><th class="none"></th></tr>
+                    </table>
+                    <table class="controls color-table can-table med">
+                        <tr><th>ジョウロ</th><th class="none"></th></tr>
+                        <tr><th>中身</th><th class="none"></th></tr>
+                    </table>
+                    <table class="controls color-table can-table large">
+                        <tr><th>ジョウロ</th><th class="none"></th></tr>
+                        <tr><th>中身</th><th class="none"></th></tr>
+                    </table>
+
+                    <table class="controls hokey" style="left: 0; top: 680px">
+                        <tr><th>ホーキー・<br>ポーキー回数</th></tr>
+                        <tr><td> <input type="text"> </td></tr>
+                        <tr><th>ホーキー・<br>ポーキー部位</th></tr>
+                        <tr><td class="none"></td></tr>
+                    </table>
+                    <div class="controls savebuttons hstack wrap just-left" style="left: 540px; top: 680px">
+                        <button class="save replace-save gray" disabled>データの<br>上書き</button>
+                        <button class="save new-save">新しく保存</button>
+                    </div>
+                </div>
+                <div class="saves hstack wrap just-left"></div>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/7</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">アヒルのなぞなぞ</span>
+            </div>
+            <div class="page-content appendix">
+             <h4>付録 DUCK: 暗黙のルールと詳細の説明</h4>
+             <p class="appendix">すでに塗料が入っているジョウロに塗料を入れると、2つの塗料が混ざった状態となる。すでに塗られているものに塗った場合、新しい色に上書きされる。</p>
+             <p class="appendix">赤と黄の塗料を混ぜると、オレンジの塗料になる。黄と青の塗料を混ぜると、緑の塗料になる。青と赤の塗料を混ぜると、紫の塗料になる。赤、黄、青の塗料を混ぜると、茶色の塗料になる。</p>
+             <p class="appendix">2次色／3次色の塗料は、その1次成分として扱われる。例えば、オレンジは赤と黄として扱われるため、オレンジと黄色の塗料を混ぜるとまたオレンジの塗料となる。</p>
+             <p class="appendix">あるジョウロから別のジョウロに塗料を捨てることも、「ジョウロに塗料を入れる」ことにカウントされる。</p>
+             <p class="appendix">椅子の背もたれに数字を描くと、すでに書かれていた数字が隠される。</p>
+             <p class="appendix">何かを塗る際、必ず塗料が乾くまで待ってから次の手順に進むこと。</p>
+             <p class="appendix">ホーキー・ポーキーのやり方:</p>
+
+             <p class="appendix">1. 右足を 中に 右足を 外に
+             <br>2. 右足を 中に ぶらぶら揺らし
+             <br>3. オー ホーキー・ポーキー くるりと回るんだ
+             <br>4. これで おしまい！</p>
+
+             <p class="appendix">[「右足」を「左足」、「右手」、「左手」、「お尻」に変えて、これをあと4回繰り返す。それが終わったら、ホーキー・ポーキーをやめる。恥ずかしいから…。]</p>
+             <p class="appendix">「各ステージの間」に何かをする場合、最後のステージと質問の間も各ステージの間としてカウントされる。</p>
+
+             <p class="appendix">ブーブー・クッションによって引き起こされる指示は、ホーキー・ポーキーをすることによって引き起こされる指示よりも先に適用される。（ブーブー・クッションのルールが、ホーキーポーキーによって引き起こされる指示によってのみ有効である場合を除く。）</p>
+
+             <p class="appendix">別の椅子に移動する際、それまでしていたのであれば、新しい椅子の上でも座る、立つ、逆立ちを続ける。</p>
+             <p class="appendix">座っている際、お尻がイスに触れる。立っている際、両足が椅子に触れる。逆立ちをする際、両手がイスに触れる。</p>
+
+         </div>
+         <div class="page-footer relative-footer">ページ 3/7</div>
+     </div>
+     <div class="page page-bg-02">
+      <div class="page-header">
+          <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+          <span class="page-header-section-title">アヒルのなぞなぞ</span>
+      </div>
+      <div class="page-content">
+       <h3>なぞなぞリスト(一部)の訳</h3>
+       <p class="comment">クワックワッ！日本語に翻訳しても読み取るのが難しいぞ！できる限り網羅したつもりさ！</p>
+
+       <h4>命令文</h4>
+          <table class="translate-table">
+                  <tr>
+                  <th>原文</th>
+                  <th>和訳</th>
+                  </tr>
+                  <tr>
+                  <td>* You should sit on the chair 3 chair(s) clockwise from the armchair. The duck should sit on the chair 2 chair(s) counter-clockwise from you.</td>
+                  <td>* あなたは、肘掛けのある椅子から3個時計周りに進んだ椅子に座りましょう。アヒルは、あなたの席から2個反時計回りに進んだ椅子に座りましょう。</td>
+                  </tr>
+                  <tr>
+                  <td>* Press any button to enter submission mode.</td>
+                  <td>* いずれかのボタンを押して、送信モードにしてください。</td>
+                  </tr>
+                  <tr>
+                  <td>* You should sit on the armchair. The duck should sit on the same chair as you. Please hold the duck very carefully.</td>
+                  <td>* あなたは、肘掛けのある椅子に座りましょう。アヒルも、あなたと同じ椅子に座りましょう。非常に気を配りながらアヒルを抱いてください。</td>
+                  </tr>
+                  <tr>
+                  <td>* Move to the chair opposite from duck’s chair. </td>
+                  <td>* アヒルのいる椅子と反対側に(あなたが)移動しましょう。</td>
+                  </tr>
+                  <tr>
+                  <td>* Move the duck to the chair with 1 painted on the back of it.</td>
+                  <td>* 背もたれに1と記された椅子にアヒルを移動させましょう。</td>
+                  </tr>
+                  <tr>
+                  <td>* Fill the medium watering can with red paint.</td>
+                  <td>* 中くらいのジョウロに赤の塗料を入れましょう。</td>
+                  </tr>
+                  <tr>
+                  <td>* Fill the smallest watering can with some paint from the largest watering can (if that can is empty, do nothing).</td>
+                  <td>* 最も小さいジョウロに最も大きいジョウロの中の塗料を入れましょう(空の場合は、何もしない)。</td>
+                  </tr>
+                  <tr>
+                  <td>* Throw the duck at the smallest watering can to knock it over and empty it of all its paint. Then pick the duck back up, put it back where it was, and apologize.</td>
+                  <td>* アヒルに最も小さいジョウロを投げつけ、塗料を空にしましょう。そしてアヒルを拾い上げ、元の場所に戻し、謝りましょう。</td>
+                  </tr>
+                  <tr>
+                  <td>* Kick the medium watering can to knock it over and empty it of all its paint.</td>
+                  <td>* 中くらいのジョウロを蹴飛ばし、塗料を空にしましょう。</td>
+                  </tr>
+                  <tr>
+                  <td>* Drink all of the paint in the watering can that’s painted with the paint on the seat of the armchair.</td>
+                  <td>* 肘掛けのある椅子の座席の色で塗られている、塗料入りジョウロの中にある塗料を飲み干しましょう。</td>
+                  </tr>
+                  <tr>
+                  <td>* Wash the paint off of the largest watering can.</td>
+                  <td>* 最も大きいジョウロの塗料を洗い流しましょう。</td>
+                  </tr>
+                  </table>
+      </div>
+      <div class="page-footer relative-footer">ページ 4/7</div>
+  </div>
+  <div class="page page-bg-02">
+   <div class="page-header">
+       <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+       <span class="page-header-section-title">アヒルのなぞなぞ</span>
+   </div>
+   <div class="page-content">
+    <h4>命令文</h4>
+    <table>
+    <tr>
+     <td>* Dump all of the paint from the medium watering can into the smallest watering can.</td>
+     <td>* 中くらいのジョウロから最も小さい塗料へ、塗料をすべて移し替えましょう。</td>
+     </tr>
+     <tr>
+     <td>* Using red paint, paint the only watering can with paint in it.</td>
+     <td>* 赤色で、唯一塗料が入っているジョウロを塗りましょう。</td>
+     </tr>
+     <tr>
+     <td>* Paint your right foot with the paint inside the smallest watering can.</td>
+     <td>* 最も小さいジョウロに入っている塗料で、あなたの右足を塗りましょう。</td>
+     </tr>
+     <tr>
+     <td>* Using purple paint, paint the chair 2 chair(s) clockwise from the duck’s chair.</td>
+     <td>* 紫色で、アヒルの椅子から時計回りに2個進んだ椅子を塗りましょう。</td>
+     </tr>
+     <tr>
+    <td>* Using brown paint, paint the number N (where N is the number written on the back of the armchair) on the back of clockwise from the chair whose seat is painted with green paint (if there are multiple, use the first one clockwise from you).</td>
+    <td>* 茶色で、緑色に塗られた椅子から時計回りに2個進んだ椅子の後ろにN(Nは肘掛けのある椅子の背もたれに記された数字)を描きましょう。</td>
+    </tr>
+    <tr>
+    <td>* Do a handstand on your chair.</td>
+    <td>* 自分の椅子の上で逆立ちをしましょう。</td>
+    </tr>
+    <tr>
+    <td>* Let’s name the duck Username.</td>
+    <td>* アヒルに「Username」と名付けましょう。</td>
+    </tr>
+    <tr>
+    <td>* Add Jr. to the end of the duck’s name.</td>
+    <td>* アヒルの名前の末尾に「Jr.」を追加しましょう。</td>
+    </tr>
+    <tr>
+    <td>* Add Dr. to the start of the duck’s name.</td>
+    <td>* アヒルの名前の先頭に「Dr.」を追加しましょう。</td>
+    </tr>
+    <tr>
+    <td>* Remove all vowels from the duck’s name as punishment. (Y is not considered to be a vowel.)</td>
+    <td>* 罰としてアヒルの名前からすべての母音を削除しましょう(Yは母音とみなされません)。</td>
+    </tr>
+      </table>
+   </div>
+   <div class="page-footer relative-footer">ページ 5/7</div>
+</div>
+<div class="page page-bg-02">
+ <div class="page-header">
+     <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+     <span class="page-header-section-title">アヒルのなぞなぞ</span>
+ </div>
+ <div class="page-content">
+  <h4>命令文</h4>
+  <table>
+   <tr>
+    <td>* Find a whoopee cushion, and put it on the chair with a number painted with orange paint on the back of it Every time you or the duck move to the chair with the whoopee cushion, move to the chair across from you.</td>
+    <td>* ブーブークッションを探し、後ろにオレンジ色で数字が描かれた椅子の上に乗せましょう。</td>
+    </tr>
+    <tr>
+    <td>* Find a whoopee cushion, and put it on the chair with a number painted with orange paint on the back of it. Every time you or the duck move to the chair with the whoopee cushion, move to the chair across from you.</td>
+    <td>* ブーブークッションを探し、後ろにオレンジ色で数字が描かれた椅子の上に乗せましょう。あなたかアヒルがブーブークッションのある椅子に移動したら、毎回自身の向かいの椅子へ移動しましょう。</td>
+    </tr>
+    <tr>
+    <td>* Find a whoopee cushion, and put it on the chair whose seat is painted with blue paint (if there are multiple, use the first one clockwise from you) on the back of it. Every time you or the duck move to the chair with the whoopee cushion, move the duck 2 chair(s) counter-clockwise.</td>
+    <td>* ブーブークッションを探し、青色で座席が塗られた椅子(複数ある場合は、あなたから時計回りに進めた最初の椅子)の上に乗せましょう。あなたかアヒルがブーブークッションのある椅子に移動したら、毎回アヒルをそこから反時計回りに2つ進めた椅子へ移動させましょう。</td>
+    </tr>
+    <tr>
+    <td>* Find a whoopee cushion, and put it on the armchair. Every time you or the duck move to the chair with the whoopee cushion, paint the bottom of your chair with yellow paint.</td>
+    <td>* ブーブークッションを探し、肘掛けのある椅子の上に乗せましょう。あなたかアヒルがブーブークッションのある椅子に移動したら、毎回あなたの椅子の足を黄色で塗りましょう。</td>
+    </tr>
+    <tr>
+    <td>* Move the whoopee cushion to the armchair. If this causes the whoopee cushion to move to your/the duck’s chair, activate the whoopee cushion’s rule.</td>
+    <td>* ブーブークッションを肘掛けのある椅子へ移動させましょう。もしブーブークッションがあなた/アヒルのいる椅子へ移動した場合、ブーブークッションのルールが発動します。</td>
+    </tr>
+    <tr>
+    <td>* Now every time you or the duck move to the chair with the whoopee cushion, fill the smallest watering can with some paint from the middle watering can. (If that can is empty, do nothing.).</td>
+    <td>* これよりブーブークッションがあなた/アヒルのいる椅子へ移動したら、毎回塗料を中くらいのジョウロから最も小さいジョウロへ注いでください(空の場合は、何もしない)。</td>
+    </tr>
+    <tr>
+    <td>* From now on, every time you move to a different chair, paint an L on your forehead with red.</td>
+    <td>* ただいまから、あなたが違う椅子へ移動するたびに、毎回自身の額に赤色でLと描いてください。</td>
+    </tr>
+    <tr>
+    <td>* Paint 4 Ls on your forehead, in the color that you’re supposed to be painting them with.</td>
+    <td>* あなたの額にLを4つ、指示されていた色で描いてください。</td>
+    </tr>
+    <tr>
+    <td>* Do the Hokey Pokey very, very slowly. To be precise, one step between each stage. Every time you shake your butt cheeks all about, dip your left hand in the smallest watering can to paint it with whatever paint is in that can (unless the can is empty, then nothing happens).</td>
+    <td>* ホーキー・ポーキーを、ゆーっくり行いましょう。具体的には、各ステージごとに1ステップ行いましょう。あなたがお尻を振るたびに左手を最も小さいジョウロに突っ込み、そのジョウロの中にある色で塗ってください(ジョウロが空の場合は何もしない)。</td>
+    </tr>
+    </table>
+ </div>
+ <div class="page-footer relative-footer">ページ 6/7</div>
+</div>
+
+  <div class="page page-bg-02">
+         <div class="page-header">
+             <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+             <span class="page-header-section-title">アヒルのなぞなぞ</span>
+         </div>
+         <div class="page-content">
+          <h4>数字Nの説明</h4>
+          <table class="translate-table">
+             <tr>
+             <td>N (where N is the number written on the back of the chair you’re on)</td>
+             <td>N(Nは現在あなたがいる椅子の背もたれに記された数字)</td>
+             </tr>
+             <tr>
+             <td>N (where N is the only number written on the back of a chair in red)</td>
+             <td>N(Nは椅子の背もたれに唯一赤色で記されている数字)</td>
+             </tr>
+             <tr>
+             <td>N (where N is the number of chair(s) with paint on their seats)</td>
+             <td>N(Nは座席が塗られている色の数)</td>
+             </tr>
+             <tr>
+             <td>N (where N is the number of your body parts with paint on them, not including the forehead)</td>
+             <td>N(Nは額を除く塗られている体の一部の数)</td>
+             </tr>
+             <tr>
+             <td>N (where N is the number of letters in the duck’s name, modulo 10)</td>
+             <td>N(Nはアヒルの文字数を10で割った余り)</td>
+             </tr>
+             <tr>
+             <td>N (where N is the position of the first letter of the duck’s name in the alphabet)</td>
+             <td>N(Nはアヒルの頭文字のアルファベット上における位置)</td>
+             </tr>
+             <tr>
+             <td>N (where N is the digital root of all the numbers on the backs of chair(s))</td>
+             <td>N(Nは椅子の背もたれ上にある数字の数字根)</td>
+             </tr>
+             <tr>
+             <td>N (where N is the digital root of all the numbers on the backs of chair(s))</td>
+             <td>N(Nは椅子の背もたれ上にある数字の数字根)</td>
+             </tr>
+             <tr>
+             <td>N (where N is the digital root of all the numbers on the backs of chair(s))</td>
+             <td>N(Nはシリアルナンバーの数字の合計)<br><span style="font-size: 4px;">※ その他のエッジワークに関する説明は省略する</span></td>
+             </tr>
+          </table>
+          <h4>質問</h4>
+          <table class="translate-table">
+             <tr>
+             <th>原文</th>
+             <th>和訳</th>
+             </tr>
+             <tr>
+             <td>Is the chair that the duck is sitting in the same as the chair 2 chair(s) clockwise from the whoopee cushion?</td>
+             <td>アヒルはブーブークッションから時計回りに2つ進んだ椅子と同じ場所に座っていますか？</td>
+             </tr>
+             <tr>
+             <td>What are you doing? (sitting/standing/handstand/tap dancing)</td>
+             <td>あなたは何をしていますか？ (座っている/立っている/逆立ちをしている/タップダンスをしている)</td>
+             </tr>
+             <tr>
+             <td>Is there paint on the seat of the armchair?</td>
+             <td>肘掛けのある椅子の座席は塗られていますか？</td>
+             </tr>
+             <tr>
+             <td>What color is the bottom of duck’s chair?</td>
+             <td>アヒルのいる椅子の足は何色ですか？</td>
+             </tr>
+             <tr>
+             <td>What paint is inside the smallest watering can?</td>
+             <td>最も小さいジョウロの中の塗料は何色ですか？</td>
+             </tr>
+             <tr>
+             <td>What paint is the smallest watering can painted with?</td>
+             <td>最も小さいジョウロは何色で塗られていますか？</td>
+             </tr>
+             <tr>
+             <td>How many letters are in the duck’s name?</td>
+             <td>アヒルの名前は何文字ですか？</td>
+             </tr>
+             <tr>
+             <td>What is the duck’s name?</td>
+             <td>アヒルの名前は何ですか？</td>
+             </tr>
+             <tr>
+             <td>How many Ls are on your forehead?</td>
+             <td>額にLはいくつ描かれていますか？</td>
+             </tr>
+          </table>
+         </div>
+         <div class="page-footer relative-footer">ページ 7/7</div>
+     </div>
+ </div>
+
+</body>
+</html>
