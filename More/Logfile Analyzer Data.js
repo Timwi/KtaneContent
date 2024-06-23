@@ -15414,6 +15414,80 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "seededMazeModule",
+		loggingTag: "Seeded Maze",
+		matches: [
+			{
+				regex: /Maze:/,
+				handler: function (_, module) {
+					const lines = readTaggedLines(19);
+					let verticalLines = 0;
+					let horizontalLines = 0;
+					let emptyAbove = false;
+					let emptyBelow = false;
+					let emptyRight = false;
+					let emptyLeft = false;
+					for(let i = 1; i < 9; i++) {
+						const leftLine = lines.map(line => line[9 - i]);
+						const rightLine = lines.map(line => line[9 + i]);
+						const aboveLine = lines[9 - i].split("");
+						const belowLine = lines[9 + i].split("");
+						if(!emptyRight) {
+							emptyRight =  rightLine.every(char => char == 'x');
+						}
+						if(!emptyLeft) {
+							emptyLeft =  leftLine.every(char => char == 'x');
+						}
+						if(!emptyAbove) {
+							emptyAbove =  aboveLine.every(char => char == 'x');
+						}
+						if(!emptyBelow) {
+							emptyBelow =  belowLine.every(char => char == 'x');
+						}
+						if(!emptyAbove || !emptyBelow) {
+							verticalLines++;
+						}
+						if(!emptyRight || !emptyLeft) {
+							horizontalLines++;
+						}
+						if(emptyAbove && emptyBelow && emptyRight && emptyLeft) {
+							break;
+						}
+					}
+					verticalLines = verticalLines * 2 + 1;
+					horizontalLines = horizontalLines * 2 + 1
+					const dimension = 20;
+					const mazeSvg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 230'>").addClass("seeded-maze");
+					for(let row = 0; row < verticalLines; row++) {
+						for(let col = 0; col < horizontalLines; col++) {
+							const realRow = 9 - Math.floor(verticalLines / 2) + row;
+							const realCol = 9 - Math.floor(horizontalLines / 2) + col;
+							const char = lines[realRow][realCol];
+								const x = col * dimension;
+								const y = row * dimension;
+								$SVG("<rect>").addClass(`seeded-maze`)
+									.attr("width", dimension).attr("height", dimension)
+									.attr("x", x)
+									.attr("y", y)
+									.appendTo(mazeSvg);
+								if(char != 'x') {
+									$SVG("<text>")
+										.attr("x", x + Math.floor(dimension / 2))
+										.attr("y", y + dimension - Math.floor(dimension / 3))
+										.text(char)
+										.addClass("seeded-maze")
+										.appendTo(mazeSvg);
+								}
+						}
+					}
+					module.push({ label: "Maze", obj: mazeSvg });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "Semaphore",
 		loggingTag: "Semaphore",
 		matches: [
