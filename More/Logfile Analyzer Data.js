@@ -17950,16 +17950,78 @@ let parseData = [
 		loggingTag: "TetraVex",
 		matches: [
 			{
-				regex: /Intended solution:/,
+				regex: /Intended solution:|Submitted solution:/,
 				handler: function (matches, module) {
-					module.push({ label: "Solution:", obj: pre(readTaggedLines(11).join('\n')) });
-					return true;
-				}
-			},
-			{
-				regex: /Submitted solution:/,
-				handler: function (matches, module) {
-					module.push({ label: "Submitted:", obj: pre(readTaggedLines(11).join('\n')) });
+					const lines = readTaggedLines(11);
+					const grid = [{},{},{},{},{},{},{},{},{}];
+					for(let i = 0; i < lines.length; i++) {
+						const index = Math.floor(i / 4) * 3;
+						if(i === 3 || i == 7) {
+							continue;
+						}
+						if(i % 2 === 0) {
+							const m = lines[i].split("│").map(str => str.trim());
+							for(let j = 0; j < 3; j++) {
+								if(i % 4 === 0) {
+									grid[index + j].top = m[j];
+								}
+								else {
+									grid[index + j].bottom = m[j];
+								}
+							}
+						}
+						else {
+							const m = lines[i].split("│").map(arr => arr.split(" "));
+							for(let j = 0; j < 3; j++) {
+								grid[index + j].left = m[j][0];
+								grid[index + j].right = m[j][1];
+
+							}
+						}
+					}
+					const makePath = (index, rotation, grid) => {
+						const length = 5;
+						const number = rotation == "0" ? grid.left : rotation == "90" ? grid.top : rotation == "180" ? grid.right : grid.bottom;
+						const origin = [3 + (index % 3) * length * 2, 3 + Math.floor(index / 3) * length * 2 ];
+						const path = $SVG(`<path d='M${origin[0]} ${origin[1]} l ${length} ${length} l -${length} ${length} z'>`)
+									.attr("style", `transform-origin: ${origin[0] + length}px ${origin[1] + length}px; transform:rotate(${rotation}deg)`)
+									.addClass(`tetravex`)
+									.addClass(`tetravex-${number}`);
+						let x = 0;
+						let y = 0;
+						switch(rotation) {
+							case "0":
+								x = length + (index % 3) * (length * 2);
+								y = Math.floor(index / 3 + 1) * length * 2 - 1;
+								break;
+								case "90":
+								x = length + (index % 3) * (length * 2) + 3;
+								y = Math.floor(index / 3 + 1) * length * 2 - 4;
+								break;
+								case "180":
+								x = 2 * length + (index % 3) * (length * 2) + 1;
+								y = Math.floor(index / 3 + 1) * length * 2 - 1;
+								break;
+								case "270":
+								x = length + (index % 3) * (length * 2) + 3;
+								y = Math.floor(index / 3 + 1) * length * 2 + 2
+								break;
+						}
+						const text = $SVG("<text>")
+								.attr("x", x)
+								.attr("y", y)
+								.text(number)
+								.addClass("tetravex");
+						return [path, text];
+					}
+					const svg = $(`<svg viewbox="0 0 100 35">`)
+					for(let i = 0; i < 9; i++) {
+						makePath(i, "0", grid[i]).forEach(obj => obj.appendTo(svg));
+						makePath(i, "90", grid[i]).forEach(obj => obj.appendTo(svg));
+						makePath(i, "180", grid[i]).forEach(obj => obj.appendTo(svg));
+						makePath(i, "270", grid[i]).forEach(obj => obj.appendTo(svg));
+					}
+					module.push({ label: matches[0], obj: svg });
 					return true;
 				}
 			},
