@@ -1,0 +1,1031 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Math 'em — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/set-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        function ERange(start, count) {
+            return [...Array(count).keys()].map(x => x + start);
+        }
+
+        let grid = $(".grid");
+        const rows = 4;
+        const cols = 4;
+        let gameGrid = Array(rows).fill().map(() => Array(cols).fill(null));
+        let selectedStamp = null;
+        let selected = null;
+        let constants = ERange(0,10).map(x => `num${x}`);
+        let variables = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"].map(x => `var${x}`);;
+        let operators = ["Plus", "Diff", "Mod", "Xor"].map(x => `op${x}`);;
+        let colors = ["bronze", "silver", "gold", "white"];
+        let currX = 0, currY = 0;
+        let saveStates = [];
+        let currentState = 0;
+        let solvemode = 'place';
+        let swapSelection = null;
+        let rotateSelection = null;
+        const colorKey = {
+            " ": 3,
+            "enter": 3,
+            "w": 3,
+            "b": 0,
+            "s": 1,
+            "g": 2
+        }
+
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                gameGrid[x][y] = { type: "", value: "", color: 3 };
+            }
+        }
+
+        function updateGrid() {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    let tile = gameGrid[x][y];
+                    let element = $(`.netsq.x${x}.y${y}`);
+                    if (tile) {
+                        element.removeClass(`constant variable operator ${constants.join(" ")} ${variables.join(" ")} ${operators.join(" ")} ${colors.join(" ")}`)
+                        element.addClass(`${colors[tile.color]} ${tile.type} ${tile.value}`);
+                    } else {
+                        element.removeClass(`constant variable operator ${constants.join(" ")} ${variables.join(" ")} ${operators.join(" ")} ${colors.join(" ")}`)
+                    }
+                }
+            }
+            updateSelection();
+            updateTable();
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected) {
+                selected.addClass("selected");
+            }
+            if (selectedStamp) {
+                selectedStamp.elem.addClass("selected");
+            }
+        }
+
+        function resetGrid() {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    gameGrid[x][y].type = "";
+                    gameGrid[x][y].value = "";
+                    gameGrid[x][y].color = 3;
+                }
+            }
+            updateGrid();
+        }
+
+        function hasWhichColor(elem) {
+            for (var i = 0; i < colors.length; i++) {
+                if (elem.hasClass(colors[i])) return i;
+            }
+            return -1;
+        }
+
+        function nextColor(elem) {
+            let c = hasWhichColor(elem);
+            removeColorClass(elem);
+            elem.addClass(colors[(c + 1) % colors.length]);
+        }
+
+        function removeColorClass(elem) {
+            elem.removeClass(colors.join(" "));
+        }
+
+        function selectNone() {
+            selectedStamp = null;
+            selected = null;
+            swapSelection = null;
+            rotateSelection = null;
+            $('.rotate-highlight').removeClass('rotate-highlight');
+            updateSelection();
+        }
+
+        function selectNext() {
+            if (currX == cols - 1)
+                currY = (currY + 1) % cols;
+            currX = (currX + 1) % rows;
+            selected = $(`.netsq.x${currX}.y${currY}`);
+            updateSelection();
+        }
+
+        // Initialize stamp tools
+        let tools = $(".tools");
+        let namesTable = $("table.names");
+        let stampTools = $(".stamp-tools");
+        let constTools = $("<div>").addClass("stamps constant hstack alignc left").appendTo(stampTools);
+        let varTools = $("<div>").addClass("stamps variable hstack alignc left").appendTo(stampTools);
+        let opTools = $("<div>").addClass("stamps operator hstack alignc left").appendTo(stampTools);
+        $("<span>").text("Const: ").appendTo(constTools);
+        $("<span>").text("Var: ").appendTo(varTools);
+        $("<span>").text("Op: ").appendTo(opTools);
+        constants.forEach((c, i) => {
+            $("<div>").addClass(`stamp-tool constant ${c}`).click(function() {
+                if (solvemode !== 'place') return false;
+                if (selected) {
+                    let col = gameGrid[currX][currY].color;
+                    gameGrid[currX][currY] = { type: "constant", value: c, color: col };
+                    playNumberedSound(i);
+                    updateGrid();
+                    selectNext();
+                } else {
+                    selectedStamp = { type: "constant", value: c, elem:$(this) };
+                    updateSelection();
+                }
+                return false;
+            }).appendTo(constTools);
+        });
+
+        variables.forEach((v, i) => {
+            $("<div>").addClass(`stamp-tool variable ${v}`).click(function() {
+                if (solvemode !== 'place') return false;
+                if (selected) {
+                    let col = gameGrid[currX][currY].color;
+                    gameGrid[currX][currY] = { type: "variable", value: v, color: col };
+                    playNumberedSound(i);
+                    updateGrid();
+                    selectNext();
+                } else {
+                    selectedStamp = { type: "variable", value: v, elem:$(this) };
+                    updateSelection();
+                }
+                return false;
+            }).appendTo(varTools);
+        });
+
+        operators.forEach((o, i) => {
+            $("<div>").addClass(`stamp-tool operator ${o}`).click(function() {
+                if (solvemode !== 'place') return false;
+                if (selected) {
+                    let col = gameGrid[currX][currY].color;
+                    gameGrid[currX][currY] = { type: "operator", value: o, color: col };
+                    playNumberedSound(i);
+                    updateGrid();
+                    selectNext();
+                } else {
+                    selectedStamp = { type: "operator", value: o, elem:$(this) };
+                    updateSelection();
+                }
+                return false;
+            }).appendTo(opTools);
+        });
+
+        function updateTable() {
+            namesTable.empty(); // Clear existing content
+            $("table.names td").removeClass("logic");
+
+            for (let y = 0; y < rows; y++) {
+                let row = $("<tr>");
+                for (let x = 0; x < cols; x++) {
+                    let cell = $("<td>");
+                    let tile = gameGrid[x][y];
+                    if (tile.type === "constant") {
+                        cell.text(tile.value.replace("num", ""));
+                    } else if (tile.type === "variable") {
+                        cell.text(tile.value.replace("var", ""));
+                    } else if (tile.type === "operator") {
+                        switch(tile.value) {
+                            case "opPlus": cell.text("+"); break;
+                            case "opDiff": cell.text("-"); break;
+                            case "opMod": cell.text("%"); break;
+                            case "opXor": cell.text("⊻").addClass("logic"); break;
+                        }
+                    }
+                    else {
+                        cell.html("&nbsp");
+                    }
+                    row.append(cell);
+                }
+                namesTable.append(row);
+            }
+        }
+
+        // Initialize color buttons
+        let colorButtons = $("<div>").addClass("color-buttons hstack left").appendTo(stampTools);
+        for (let i = 0; i < colors.length; i++) {
+            let button = $("<button>").addClass("color-button " + colors[i]).click(function() {
+                if (solvemode === 'place' && selected && selected.hasClass("netsq")) {
+                    gameGrid[currX][currY].color = i;
+                    selected.removeClass(colors.join(" ")).addClass(colors[i])
+                    playNumberedSound(i);
+                    if (currX == cols - 1)
+                        currY = (currY + 1) % cols;
+                    currX = (currX + 1) % rows;
+                    selected = $(`.netsq.x${currX}.y${currY}`);
+                    updateSelection();
+                }
+                return false;
+            });
+            colorButtons.append(button);
+        }
+
+        // Add header row with letters
+        let row = $("<div>").addClass("square-row letters").appendTo(grid);
+        $("<div>").addClass("square").appendTo(row);
+        for (var i = 0; i < cols; i++) {
+            $("<div>").addClass("square netsquare letter").text(String.fromCharCode(65 + i)).appendTo(row);
+        }
+
+        // Add grid rows with numbers and cells
+        for (let y = 1; y <= rows; y++) {
+            row = $("<div>").addClass("square-row").appendTo(grid);
+            $("<div>").addClass("square numbers netsquare").text(y).appendTo(row);
+            for (let x = 1; x <= cols; x++) {
+                let square = $("<div>").addClass(`netsquare square netsq x${x-1} y${y-1} white`).click(function(event) {
+                    if (solvemode === 'rotate') {
+                        if (!rotateSelection) {
+                            rotateSelection = square;
+                            selected = square;
+                            updateSelection();
+                        } else {
+                            rotateRectangle(rotateSelection, square);
+                        }
+                        return false;
+                    } else if (solvemode === 'swap') {
+                        if (swapSelection) {
+                            performSwap(swapSelection, square);
+                            selectNone();
+                        } else {
+                            swapSelection = square;
+                            selected = square;
+                            updateSelection();
+                        }
+                        return false;
+                    } else if (selectedStamp) {
+                        let col = gameGrid[x-1][y-1].color;
+                        gameGrid[x-1][y-1] = { type: selectedStamp.type, value: selectedStamp.value, color: col };
+                        updateGrid();
+                    } else {
+                        selected = square;
+                        updateSelection();
+                    }
+                    currX = x-1;
+                    currY = y-1;
+                    return false;
+                }).contextmenu(function(event) {
+                    if (solvemode === 'rotate' && rotateSelection) {
+                        event.preventDefault();
+                        rotateRectangle(rotateSelection, square, false);
+                        return false;
+                    }
+                }).hover(function() {
+                    if (solvemode === 'rotate' && rotateSelection) {
+                        highlightRotateRect(rotateSelection, square);
+                    }
+                }, function() {
+                    if (solvemode === 'rotate') {
+                        $('.rotate-highlight').removeClass('rotate-highlight');
+                    }
+                }).appendTo(row);
+            }
+        }
+
+        $('.square.letter, .square.numbers').click(function(event) {
+            let elem = $(this);
+            if (solvemode === 'swap') {
+                if (swapSelection) {
+                    performSwap(swapSelection, elem);
+                    swapSelection = null;
+                } else {
+                    swapSelection = elem;
+                    $('.selected').removeClass('selected');
+                    elem.addClass('selected');
+                }
+                return false;
+            } else if (solvemode === 'shift') {
+                $('.selected').removeClass('selected');
+                elem.addClass('selected');
+                performShift(elem, event.which === 3); // 3 is right-click
+                return false;
+            }
+        });
+
+
+        function highlightRotateRect(firstCorner, otherCorner) {
+            $('.rotate-highlight').removeClass('rotate-highlight');
+            if (firstCorner && otherCorner) {
+                let x1 = parseInt(firstCorner.attr('class').match(/x(\d+)/)[1]);
+                let y1 = parseInt(firstCorner.attr('class').match(/y(\d+)/)[1]);
+                let x2 = parseInt(otherCorner.attr('class').match(/x(\d+)/)[1]);
+                let y2 = parseInt(otherCorner.attr('class').match(/y(\d+)/)[1]);
+                if (x1 !== x2 && y1 !== y2) {
+                    $(`.netsq.x${x1}.y${y1}, .netsq.x${x2}.y${y1}, .netsq.x${x1}.y${y2}, .netsq.x${x2}.y${y2}`).addClass('rotate-highlight');
+                }
+            }
+        }
+
+        function rotateRectangle(firstCorner, otherCorner, isClockwise = true) {
+            let x1 = parseInt(firstCorner.attr('class').match(/x(\d+)/)[1]);
+            let y1 = parseInt(firstCorner.attr('class').match(/y(\d+)/)[1]);
+            let x2 = parseInt(otherCorner.attr('class').match(/x(\d+)/)[1]);
+            let y2 = parseInt(otherCorner.attr('class').match(/y(\d+)/)[1]);
+
+            if (x1 === x2 || y1 === y2) return;
+
+            // Ensure x1,y1 is always the top-left corner and x2,y2 is always the bottom-right corner
+            let xMin = Math.min(x1, x2);
+            let xMax = Math.max(x1, x2);
+            let yMin = Math.min(y1, y2);
+            let yMax = Math.max(y1, y2);
+
+            if (isClockwise) {
+                let temp = gameGrid[xMin][yMin];
+                gameGrid[xMin][yMin] = gameGrid[xMin][yMax];
+                gameGrid[xMin][yMax] = gameGrid[xMax][yMax];
+                gameGrid[xMax][yMax] = gameGrid[xMax][yMin];
+                gameGrid[xMax][yMin] = temp;
+            } else {
+                let temp = gameGrid[xMin][yMin];
+                gameGrid[xMin][yMin] = gameGrid[xMax][yMin];
+                gameGrid[xMax][yMin] = gameGrid[xMax][yMax];
+                gameGrid[xMax][yMax] = gameGrid[xMin][yMax];
+                gameGrid[xMin][yMax] = temp;
+            }
+
+            updateGrid();
+        }
+
+        function performShift(elem, isReverse) {
+            if (elem.hasClass('numbers')) {
+                shiftRow(elem.text() - 1, isReverse);
+            } else if (elem.hasClass('letter')) {
+                shiftColumn(elem.index() - 1, isReverse);
+            }
+            updateGrid();
+        }
+
+        function shiftRow(row, isReverse) {
+            if (isReverse) {
+                let temp = gameGrid[0][row];
+                for (let i = 0; i < rows - 1; i++) {
+                    gameGrid[i][row] = gameGrid[i + 1][row];
+                }
+                gameGrid[rows - 1][row] = temp;
+            } else {
+                let temp = gameGrid[rows - 1][row];
+                for (let i = rows - 1; i > 0; i--) {
+                    gameGrid[i][row] = gameGrid[i - 1][row];
+                }
+                gameGrid[0][row] = temp;
+            }
+        }
+
+        function shiftColumn(col, isReverse) {
+            if (isReverse) {
+                let temp = gameGrid[col][0];
+                for (let i = 0; i < rows - 1; i++) {
+                    gameGrid[col][i] = gameGrid[col][i + 1];
+                }
+                gameGrid[col][rows - 1] = temp;
+            } else {
+                let temp = gameGrid[col][rows - 1];
+                for (let i = rows - 1; i > 0; i--) {
+                    gameGrid[col][i] = gameGrid[col][i - 1];
+                }
+                gameGrid[col][0] = temp;
+            }
+        }
+
+        // Add right-click event handler for shift mode
+        $('.square.letter, .square.numbers').on('contextmenu', function(e) {
+            if (solvemode === 'shift') {
+                e.preventDefault();
+                performShift($(this), true);
+            }
+        });
+
+        function performSwap(elem1, elem2) {
+            if (elem1.hasClass('numbers') && elem2.hasClass('numbers')) {
+                swapRows(elem1.text() - 1, elem2.text() - 1);
+            } else if (elem1.hasClass('letter') && elem2.hasClass('letter')) {
+                swapColumns(elem1.index() - 1, elem2.index() - 1);
+            } else if (elem1.hasClass('netsq') && elem2.hasClass('netsq')) {
+                swapCells(elem1, elem2);
+            }
+            updateGrid();
+        }
+
+        function swapRows(row1, row2) {
+            for (let x = 0; x < cols; x++) {
+                [gameGrid[x][row1], gameGrid[x][row2]] = [gameGrid[x][row2], gameGrid[x][row1]];
+            }
+        }
+
+        function swapColumns(col1, col2) {
+            [gameGrid[col1], gameGrid[col2]] = [gameGrid[col2], gameGrid[col1]];
+        }
+
+        function swapCells(cell1, cell2) {
+            let x1 = cell1.attr('class').match(/x(\d+)/)[1];
+            let y1 = cell1.attr('class').match(/y(\d+)/)[1];
+            let x2 = cell2.attr('class').match(/x(\d+)/)[1];
+            let y2 = cell2.attr('class').match(/y(\d+)/)[1];
+            [gameGrid[x1][y1], gameGrid[x2][y2]] = [gameGrid[x2][y2], gameGrid[x1][y1]];
+        }
+
+        function playNumberedSound(n) {
+            if ($("button.sound").hasClass("play") && !isNaN(n) && n >= 0 && n < 10) {
+                let aud = audioNumbers[n][0].cloneNode();
+                aud.volume = 0.5;
+                aud.play();
+            }
+        }
+
+        let audioNumbers = [
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 3.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 2.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 1.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sim 4.wav")
+                .appendTo(grid)
+                .prop("volume", 0.5),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sim 3.wav")
+                .appendTo(grid)
+                .prop("volume", 0.5),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sends 4.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sends 2.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sends 1.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Colored Squares 3.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Colored Squares 4.wav")
+                .appendTo(grid),
+        ];
+
+        let down = false;
+        let radioButtons = $('input[name="mode"]');
+        $(document).click(function(event) {
+            selectNone();
+        }).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+
+            if (solvemode === 'place' && selected && selected.hasClass("netsq") && ["w", "b", "s", "g", " ", "enter"].includes(k)) {
+                let tile = gameGrid[currX][currY];
+                gameGrid[currX][currY] = { type: tile.type, value: tile.value, color: colorKey[k] };
+                updateGrid();
+                playNumberedSound(colorKey[k]);
+                if (currX == cols - 1)
+                    currY = (currY + 1) % cols;
+                currX = (currX + 1) % rows;
+                selected = $(`.netsq.x${currX}.y${currY}`);
+                updateSelection();
+
+                if ([" ", "enter"].includes(k)) {
+                    down = false;
+                    return false;
+                }
+            }
+            else {
+                let index = parseInt(k);
+                if (index > 0 && index - 1 < radioButtons.length) {
+                    radioButtons.eq(index - 1).prop('checked', true).change();
+                }
+            }
+
+            down = false;
+        });
+
+        $('input[name="mode"]').change(function() {
+            solvemode = $(this).val();
+            $("body").removeClass("place swap shift rotate").addClass(solvemode);
+            selectNone();
+        });
+
+        $("<button>").addClass("reset-grid").text("Clear").appendTo(tools).click(function() {
+            resetGrid();
+        });
+
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-all").click(function() {
+            $("body").removeClass("swap shift rotate").addClass("place");
+            solvemode = "place";
+
+            resetGrid();
+            $('input[name="mode"][value="place"]').prop("checked", true);
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".netsquare, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let bodyClass = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_gameGrid = JSON.stringify(gameGrid);
+            let s_selectedStamp = selectedStamp ? { type: selectedStamp.type, value: selectedStamp.value } : null;
+            let s_selected = selected;
+            let s_currX = currX;
+            let s_currY = currY;
+            let s_solvemode = solvemode;
+
+            let button = $("<button>").text(stateNumber+1).click(function() {
+                $(".netsquare, .tools button").each((i,x) => $(x).attr("class", saveStateClass[i]));
+                $("body").each((i,x) => $(x).attr("class", bodyClass[i]));
+                currentState = stateNumber;
+
+                gameGrid = JSON.parse(s_gameGrid);
+                selectedStamp = s_selectedStamp ? { type: s_selectedStamp.type, value: s_selectedStamp.value, elem: $(`.stamp-tool.${s_selectedStamp.type}.${s_selectedStamp.value}`) } : null;
+                selected = s_selected;
+                currX = s_currX;
+                currY = s_currY;
+                solvemode = s_solvemode;
+
+                $(`input[name="mode"][value="${solvemode}"]`).prop("checked", true);
+
+                updateGrid();
+                updateSelection();
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        table { margin: 0 auto; }
+        .hstack table {
+            width: 49%;
+            line-height: 1.2;
+        }
+        .hstack.f2 table { font-size: 14px; }
+        th img { width: 40px; }
+        html {
+            --sqsize: 58px;
+            --sqsizew: 64px;
+            --tsize: 50px;
+        }
+
+        .stamp-tools {
+            margin-left: 20px;
+        }
+
+        .stamp-tools button, .color-buttons button {
+            margin: 5px;
+        }
+
+        .square-row {
+            height: var(--sqsize);
+            margin: 1px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .square {
+            margin: 1px;
+            width: var(--sqsizew);
+            height: var(--sqsize);
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            transition: background-color 0.2s, color 0.2s;
+            box-sizing: border-box;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .square.numbers, .letters .square {
+            padding-top: 4px;
+            border-width: 0;
+            width: var(--sqsizew);
+            height: var(--sqsize);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .netsquare {
+            height: var(--sqsize);
+            width: var(--sqsizew);
+        }
+        .netsquare.netsq {
+            line-height: 57px;
+            cursor: pointer;
+            color: #000;
+            position: relative;
+            border: #808080 1px solid;
+            text-align: left;
+        }
+        body.rotate .netsq:hover,
+        body.swap .netsquare:hover,
+        body.shift .square.letter:hover,
+        body.shift .square.numbers:hover {
+            background-color: #888;
+        }
+        body.rotate .netsq.rotate-highlight {
+            background-color: #339933;
+        }
+
+        .netsquare.selected {
+            border: 3px solid #00F;
+        }
+        .stamp-tool.selected {
+            border: 3px solid #F00;
+        }
+
+        :not(rect).white { background-color: #FFF; }
+        :not(rect).bronze { background-color: #CD7F32; }
+        :not(rect).silver { background-color: #BCC6CC; }
+        :not(rect).gold { background-color: #FFE873; }
+
+        rect.white { fill: #FFF; }
+        rect.bronze { fill: #CD7F32; }
+        rect.silver { fill: #BCC6CC; }
+        rect.gold { fill: #FFE873; }
+
+        :is(button.white, .square.white .label)::after { content: 'W'; }
+        :is(button.bronze, .square.bronze .label)::after { content: 'B'; }
+        :is(button.silver, .square.silver .label)::after { content: 'S'; }
+        :is(button.gold, .square.gold .label)::after { content: 'G'; }
+
+        :is(.netsq.white)::after { content: 'W'; }
+        :is(.netsq.bronze)::after { content: 'B'; }
+        :is(.netsq.silver)::after { content: 'S'; }
+        :is(.netsq.gold)::after { content: 'G'; }
+        .netsq::after {
+            white-space: pre;
+            font-size: 13px;
+        }
+
+        .stamp-tool {
+            width: var(--tsize);
+            height: calc(var(--tsize) + 8px);
+            border: 3px solid transparent;
+            margin: 3px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .stamps > span { width: 50px; }
+
+        .constant.num0 { background-image: url('img/Math em/0.svg'); }
+        .constant.num1 { background-image: url('img/Math em/1.svg'); }
+        .constant.num2 { background-image: url('img/Math em/2.svg'); }
+        .constant.num3 { background-image: url('img/Math em/3.svg'); }
+        .constant.num4 { background-image: url('img/Math em/4.svg'); }
+        .constant.num5 { background-image: url('img/Math em/5.svg'); }
+        .constant.num6 { background-image: url('img/Math em/6.svg'); }
+        .constant.num7 { background-image: url('img/Math em/7.svg'); }
+        .constant.num8 { background-image: url('img/Math em/8.svg'); }
+        .constant.num9 { background-image: url('img/Math em/9.svg'); }
+
+        .variable.varA { background-image: url('img/Math em/A.svg'); }
+        .variable.varB { background-image: url('img/Math em/B.svg'); }
+        .variable.varC { background-image: url('img/Math em/C.svg'); }
+        .variable.varD { background-image: url('img/Math em/D.svg'); }
+        .variable.varE { background-image: url('img/Math em/E.svg'); }
+        .variable.varF { background-image: url('img/Math em/F.svg'); }
+        .variable.varG { background-image: url('img/Math em/G.svg'); }
+        .variable.varH { background-image: url('img/Math em/H.svg'); }
+        .variable.varI { background-image: url('img/Math em/I.svg'); }
+        .variable.varJ { background-image: url('img/Math em/J.svg'); }
+
+        .operator.opPlus { background-image: url('img/Math em/Plus.svg'); }
+        .operator.opDiff { background-image: url('img/Math em/Diff.svg'); }
+        .operator.opMod { background-image: url('img/Math em/Mod.svg'); }
+        .operator.opXor { background-image: url('img/Math em/Xor.svg'); }
+
+        .tools {
+            width: 95px;
+        }
+
+        table.names {
+            max-width: 200px;
+            min-width: 200px;
+            min-height: 200px;
+            max-height: 200px;
+            position: relative;
+            margin: 61px 0 auto 10px;
+        }
+        table.names td {
+            height: 25%;
+            width: 25%;
+            text-align: center;
+            font-weight: bold;
+            font-size: 25px;
+        }
+        td.logic {
+            font-family: 'Logic-round';
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        body:is(.square6, .square7, .square8) button.read-solve {
+            width: 77px;
+        }
+
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body class="place">
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Math 'em</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Math 'em.svg" class="diagram">
+                <h2>On the Subject of Math 'em</h2>
+                <p class="flavour-text">Don’t lose your brain in the shuffle.</p>
+                <p>On this module is a board with 16 tiles arranged into four rows.<br>
+                Each tile can be one of four colours: White, Bronze, Silver, and Gold and one of three types: Constant, Variable, and Operator.</p>
+                <ul>
+                    <li>Substitute in the values of each variable and read the tiles from left to right, top to bottom, to form a mathematical equation.</li>
+                    <li>Concatenate the digits of the tiles between each pair of operators to form a sequence of numbers.</li>
+                    <li>If any starting value exceeds 99999999, take only its first eight digits.</li>
+                    <li>Sequentially apply each operator to each pair of numbers in reading order, taking the output of the previous operation as an input of the next, until left with a single number.
+                    <ul>
+                        <li>If two or more operator tiles appear consecutively, the first and last of them form a <em>Combined Operator.</em></li>
+                        <li>If the first tile is an operator, apply it to the first and last numbers of the sequence.</li>
+                        <li>If the last tile is an operator, apply it to the result of the previous operation and the first number of the sequence.</li>
+                    </ul></li>
+                    <li>Enter the output of the last operator into the keypad and submit it.
+                    <ul>
+                        <li>Pressing the back key will remove the last entered digit.</li>
+                        <li>If the final value exceeds 99999999, enter only its last eight digits.</li>
+                    </ul></li>
+                </ul>
+                <p>If the submission is correct, the hatch will open, revealing a button. Pressing this button will flip over the tiles and shuffle them five times. Each shuffle is one of the following:</p>
+                <ul>
+                    <li>Swapping two rows/columns of tiles.</li>
+                    <li>Shifting a row/column one space.</li>
+                    <li>Cycling four tiles at the corners of a rectangle.</li>
+                </ul>
+                <p>Once all five shuffles are complete, repeat the steps above, this time with the shuffled grid of tiles.</p>
+                <ul>
+                    <li>Variables that are dependent on the position of tiles on the board are updated according to their new arrangement.</li>
+                    <li>Variables that are dependent on time are updated according to the time that the last shuffle was completed.</li>
+                </ul>
+                <p>If an incorrect value is submitted at this stage, the board will reset and a new sequence of shuffles will begin once the button is pressed.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Math 'em</span>
+            </div>
+            <div class="page-content">
+                <h3>Constants</h3>
+                <table>
+                    <tr><th><img src="img/Math em/0.svg"></th><th><img src="img/Math em/1.svg"></th><th><img src="img/Math em/2.svg"></th><th><img src="img/Math em/3.svg"></th><th><img src="img/Math em/4.svg"></th></tr>
+                    <tr><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr>
+                    <tr><th><img src="img/Math em/5.svg"></th><th><img src="img/Math em/6.svg"></th><th><img src="img/Math em/7.svg"></th><th><img src="img/Math em/8.svg"></th><th><img src="img/Math em/9.svg"></th></tr>
+                    <tr><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>
+                </table>
+                <h3>Variables</h3>
+                <p>The value of any variable must lie in the range 0–9, take the last digit of any value greater than or equal to ten.</p>
+                <div class="hstack f2 gap">
+                <table>
+                    <tr><th><img src="img/Math em/A.svg"></th><td>The number of other tiles of the same colour.</td></tr>
+                    <tr><th><img src="img/Math em/B.svg"></th><td>If there are no constants of the same colour, the value is 0.<br>Otherwise, it has the same value as the first constant of the same colour to appear after it in reading order, wrapping around to the first tile if necessary.</td></tr>
+                    <tr><th><img src="img/Math em/C.svg"></th>
+                        <td>If the tile belongs to the section of the board according to its colour, its value is the first numeric digit of the serial number, otherwise its value is the last digit of the serial number:
+                        <ul>
+                            <li>White- Top half</li>
+                            <li>Bronze- Odd row</li>
+                            <li>Silver- Left half</li>
+                            <li>Gold- Odd column</li>
+                        </ul></td>
+                    </tr>
+                    <tr><th><img src="img/Math em/D.svg"></th>
+                        <td>The position of the tile in reading order. The colour determines the reading direction:
+                        <ul>
+                            <li>White- Left to right, top to bottom.</li>
+                            <li>Bronze- Top to bottom, right to left.</li>
+                            <li>Silver- Left to right, bottom to top.</li>
+                            <li>Gold- Bottom to top, left to right.</li>
+                        </ul>
+                        </td>
+                    </tr>
+                    <tr><th><img src="img/Math em/E.svg"></th>
+                        <td>The sum of the orthogonally adjacent constants, wrapping around the edges of the board.</td>
+                    </tr>
+                </table>
+                <table>
+                    <tr><th><img src="img/Math em/F.svg"></th>
+                        <td>The sum of the constants in a column of the board given by its colour:
+                        <ul>
+                            <li>White- First column.</li>
+                            <li>Bronze- Second column.</li>
+                            <li>Silver- Third column.</li>
+                            <li>Gold- Fourth column.</li>
+                        </ul></td>
+                    </tr>
+                    <tr><th><img src="img/Math em/G.svg"></th>
+                        <td>The time of activation, the unit of time is given by its colour:
+                        <ul>
+                            <li>White- The number of minutes remaining on the bomb timer.</li>
+                            <li>Bronze- The minute of the hour.</li>
+                            <li>Silver- The hour of the day. (24h)</li>
+                            <li>Gold- The day of the month.</li>
+                        </ul></td>
+                    </tr>
+                    <tr><th><img src="img/Math em/H.svg"></th>
+                        <td>Edgework:
+                        <ul>
+                            <li>White- The number of batteries.</li>
+                            <li>Bronze- The number of ports.</li>
+                            <li>Silver- The number of indicators.</li>
+                            <li>Gold- The number of indicator label consonants.</li>
+                        </ul></td>
+                    </tr>
+                    <tr><th><img src="img/Math em/I.svg"></th><td>The sum of the constants that do not share this tile’s row, column, or colour.</td></tr>
+                    <tr><th><img src="img/Math em/J.svg"></th><td>The sum of the constants that are smaller than the largest numeric serial number digit.</td></tr>
+                </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 4</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Math 'em</span>
+            </div>
+            <div class="page-content">
+                <h3>Operators</h3>
+                <table>
+                    <tr><th><img src="img/Math em/Plus.svg"></th><td>The sum of the inputs.</td></tr>
+                    <tr><th><img src="img/Math em/Diff.svg"></th><td>The difference between the inputs.</td></tr>
+                    <tr><th><img src="img/Math em/Mod.svg"></th><td>The larger of the two inputs modulo the smaller.</td></tr>
+                    <tr><th><img src="img/Math em/Xor.svg"></th><td>Convert both inputs into binary.<br>Perform a XOR operation on each bit of the two inputs.<br>Convert the result into decimal.</td></tr>
+                </table>
+                <h3>Combined Operators</h3>
+                <div class="hstack f2 gap">
+                <table>
+                    <tr><th><img src="img/Math em/Plus.svg"><img src="img/Math em/Plus.svg"></th><td>Twice the square root of the sum of the squares of the inputs.</td></tr>
+                    <tr><th><img src="img/Math em/Diff.svg"><img src="img/Math em/Diff.svg"></th><td>Take D to be the difference between the two inputs.<br>Take the square root of the difference between the square of the smaller input and the square of D.</td></tr>
+                    <tr><th><img src="img/Math em/Mod.svg"><img src="img/Math em/Diff.svg"></th><td>The sum of the squares of the numbers of digits in the inputs.</td></tr>
+                    <tr><th><img src="img/Math em/Xor.svg"><img src="img/Math em/Plus.svg"></th><td>Convert both inputs into binary.<br>Perform an OR operation on each bit of the two inputs.<br>Convert the result into decimal.</td></tr>
+                    <tr><th><img src="img/Math em/Xor.svg"><img src="img/Math em/Mod.svg"></th><td>Convert both inputs into binary.<br>Take the product of the number of ones in each of the binary strings.</td></tr>
+                </table>
+                <table>
+                    <tr><th><img src="img/Math em/Plus.svg"><img src="img/Math em/Diff.svg"></th><td>Convert both inputs into balanced ternary.<br>Take the product of each digit of the two inputs.<br>Convert the result into decimal and take its absolute value.</td></tr>
+                    <tr><th><img src="img/Math em/Mod.svg"><img src="img/Math em/Plus.svg"></th><td>The harmonic mean of the two inputs.</td></tr>
+                    <tr><th><img src="img/Math em/Mod.svg"><img src="img/Math em/Mod.svg"></th><td>Take R to be the larger of the two inputs modulo the smaller.<br>Take the smaller input modulo R.</td></tr>
+                    <tr><th><img src="img/Math em/Xor.svg"><img src="img/Math em/Diff.svg"></th><td>Convert both inputs into binary.<br>Perform an AND operation on each bit of the two inputs.<br>Convert the result into decimal.</td></tr>
+                    <tr><th><img src="img/Math em/Xor.svg"><img src="img/Math em/Xor.svg"></th><td>Convert both inputs into binary.<br>Perform a XOR operation on each bit of the two inputs.<br>Apply <a href="https://mathworld.wolfram.com/Rule30.html">Rule 30</a>, with wrapping, to the resulting string of bits, taking 1 and 0 to be the respective on/off states of the cells.<br>Convert the result into decimal.</td></tr>
+                </table>
+                </div>
+                <p style="font-size:14px">Note: -Round down any non-integer outputs.<br>-If a division operator is applied to zero, the result is zero.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Math 'em</span>
+            </div>
+            <div class="page-content">
+                <div class="stamp-tools vstack left"></div>
+                <div class="hstack wrap left">
+                    <div class="tools vstack alignc"></div>
+                    <div class="grid vstack left"></div>
+                    <table class="names"></table>
+                </div>
+                <div style="height:5mm"></div>
+                <div class="mode-selector hstack left gap2">
+                    <label><input type="radio" name="mode" value="place" checked> Place Tile</label>
+                    <label><input type="radio" name="mode" value="swap"> Swap</label>
+                    <label><input type="radio" name="mode" value="shift"> Shift</label>
+                    <label><input type="radio" name="mode" value="rotate"> Rotate</label>
+                </div>
+                <div style="height:5mm"></div>
+                <div class="saves hstack wrap left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack left" style="margin-top:5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>Type <strong>1, 2, 3, 4</strong> to quickly switch between modes.</li>
+                    <li>
+                        In <strong>Place Tile</strong> mode:
+                        <ul>
+                            <li><strong>Select a tile stamp</strong>, then <strong>click a cell</strong> to place the selected tile.</li>
+                            <li>Or <strong>select a cell</strong> first, then <strong>click a tile stamp</strong> to place that tile and select the next cell.</li>
+                            <li>Type <strong>W, B, S, G</strong> or use <strong>color buttons</strong> to set the selected cell color.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Swap</strong> mode:
+                        <ul>
+                            <li><strong>Click on two cells, rows, or columns</strong> to swap their contents.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Shift</strong> mode:
+                        <ul>
+                            <li><strong>Left-click a row or column</strong> to shift contents right or down.</li>
+                            <li><strong>Right-click a row or column</strong> to shift contents left or up.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Rotate</strong> mode:
+                        <ul>
+                            <li><strong>Click to select</strong> one corner of the rectangle to rotate.</li>
+                            <li><strong>Left-click</strong> on the opposite corner of the rectangle to rotate clockwise.</li>
+                            <li><strong>Right-click</strong> to rotate counter-clockwise.</li>
+                        </ul>
+                    </li>
+                    <li>The <strong>Clear</strong> button resets the grid.</li>
+                    <li>The <strong>Save</strong> button creates a new save state.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>Use <strong>Reset Saves</strong> to clear all saved states.</li>
+                    <li>The <strong>Reset All</strong> button resets the entire interactive.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 4 of 4</div>
+        </div>
+    </div>
+</body>
+</html>
