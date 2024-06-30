@@ -340,7 +340,7 @@ const everything = {
 			'CSS': 'zoo',
 			'DelayShowWrongLeft': 3,
 			'DelayShowWrongRight': 4,
-			'RandomzieRight': true,
+			'RandomizeRight': true,
 			'Groups': ['names', 'spots'],
 			'Items': [
 				[
@@ -470,7 +470,7 @@ const everything = {
 		},
 		'Dragon Energy': {
 			'CSS': 'flags',
-			'RandomzieRight': true,
+			'RandomizeRight': true,
 			'Groups': ['names', 'characters'],
 			'Items': [
 				[
