@@ -8,9 +8,147 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        let defaultRules = null;
+        let curRules = [];
+        function getDefaultRules()
+        {
+
+            let rsItems = $(".rs");
+            defaultRules = [];
+            for (var x = 0; x < rsItems.length; x++)
+                defaultRules.push(rsItems[x].innerText);
+            // console.log(defaultRules);
+        }
+
+        function UpdateManual()
+        {
+            let rsItems = $(".rs");
+            for (var x = 0; x < rsItems.length; x++)
+                rsItems[x].innerText = curRules[x];
+        }
+
+        function setDefaultRules()
+        {
+            if (defaultRules == null)
+                getDefaultRules();
+            curRules = defaultRules.slice(0);
+            UpdateManual();
+        }
+
+        function setRules(rng)
+        {
+            if (defaultRules == null)
+                getDefaultRules();
+            // Section for constructing the rule templates.
+            let constructedRules = [];
+            let idxConstructedRules = [];
+            let idxRuleRestrictions = [[0],
+            [0, 1, 3, 4, 5, 6],
+            [0, 1, 2, 3, 4, 5, 6],
+            [0, 1, 2, 3, 4, 5, 6],
+            [0, 1, 2, 3, 4, 5, 6],
+            [2],
+            ];
+            let possibleOptions = [
+                ["PLBT", "1234" ],
+                ["PLBT", "S", "12345" ],
+                ["A", "S", "12345" ],
+                ["P", "LBT", "1234", "S", "12345" ],
+                ["L", "PBT", "1234", "S", "12345" ],
+                ["B", "PLT", "1234", "S", "12345" ],
+                ["T", "PLB", "1234", "S", "12345" ],
+            ];
+            let idxProcessInstructionsDisplay = [
+                [0,1],
+                [0,2],
+                [2],
+                [1,2,4],
+                [1,2,4],
+                [1,2,4],
+                [1,2,4],
+            ];
+            for (let s = 0; s < 6; s++)
+            {
+                let curRestriction = idxRuleRestrictions[s];
+                let itemsInRest = curRestriction.length;
+                for (let y = 0; y < 6; y++)
+                {
+                    let pickedIdxRest = rng.next(0, itemsInRest);
+                    let pickedRuleFormat = possibleOptions[curRestriction[pickedIdxRest]];
+                    idxConstructedRules.push(curRestriction[pickedIdxRest]);
+                    let generatedInstruction = "";
+                    let stageDetected = false;
+                    for (let z = 0; z < pickedRuleFormat.length; z++)
+                    {
+                        let allowedStr = pickedRuleFormat[z];
+                        if (stageDetected)
+                            allowedStr = allowedStr.substr(0, s);
+                        let pickedChr = allowedStr.charAt(rng.next(0, allowedStr.length));
+                        if (pickedChr == 'S')
+                            stageDetected = true;
+                        generatedInstruction += pickedChr;
+                    }
+                    constructedRules.push(generatedInstruction);
+                }
+            }
+            //console.log(idxConstructedRules);
+            //console.log(constructedRules);
+            //curRules = constructedRules;
+            // Section for interpreting the rule templates, and using them to form cohesive instructions.
+            curRules.splice(0);
+            let colorNames = [ "red", "yellow", "green", "blue" ];
+            let positions = [ "first", "second", "third", "fourth" ];
+            let instructionsPartialGroup = [
+                [["Press the button in the XXX position.","Press the button labeled XXX.","Press the button colored XXX.","Press the button with a XXX label."],["1","2","3","4"]],
+                [["Press the button in the same position as the button you pressed in XXX","Press the button with the same label as the button you pressed in XXX","Press the button with the same button color as the button you pressed in XXX","Press the button with the same label color as the button you pressed in XXX"],["stage XXX."],["1","2","3","4","5"]],
+                [["Follow the same rule as you did in XXX"], ["stage XXX."],["1","2","3","4","5"]],
+                [["Press the button in the same position as the button in XXX"],["ZZZ that was labeled XXX.","ZZZ that was colored XXX.","ZZZ with a XXX label."],["1","2","3","4"],["stage XXX"], ["1","2","3","4","5"]],
+                [["Press the button with the same label number as the button in XXX"],["ZZZ that was in the XXX position.","ZZZ that was colored XXX.","ZZZ with a XXX label."],["1","2","3","4"],["stage XXX"], ["1","2","3","4","5"]],
+                [["Press the button with the same button color as the button in XXX"],["ZZZ that was in the XXX position.","ZZZ that was labeled XXX.","ZZZ with a XXX label."],["1","2","3","4"],["stage XXX"], ["1","2","3","4","5"]],
+                [["Press the button with the same label color as the button in XXX"],["ZZZ that was in the XXX position.","ZZZ that was labeled XXX.","ZZZ that was colored XXX."],["1","2","3","4"],["stage XXX"], ["1","2","3","4","5"]],
+            ];
+            for (let x = 0; x < constructedRules.length; x++)
+            {
+                let curIdxConstructedRules = idxConstructedRules[x];
+                let instructionsPartial = instructionsPartialGroup[curIdxConstructedRules];
+                let curInstructionEncoded = constructedRules[x];
+                let resultingInstruction = "XXX";
+                let idxOverrideState = -1;
+                for (let y = 0; y < curInstructionEncoded.length; y++)
+                {
+                    let curChar = curInstructionEncoded.charAt(y);
+                    let idxFound = possibleOptions[curIdxConstructedRules][y].indexOf(curChar);
+                    //console.log(idxFound);
+                    let idxIntVal = "1234".indexOf(curChar);
+                    if (idxIntVal == -1) // We need to make sure that this is a valid digit to override otherwise, it will cause weird sentences like "Press the button with the same label color as the button in red"
+                        idxOverrideState = -1;
+                    switch (idxOverrideState)
+                    {
+                        default:
+                            resultingInstruction = resultingInstruction.replace("XXX", instructionsPartial[y][idxFound]);
+                            break;
+                        case 0: // Position
+                            resultingInstruction = resultingInstruction.replace("XXX", positions[idxFound]);
+                            break;
+                        case 1: // Color of Button
+                        case 2: // Color of Label
+                            resultingInstruction = resultingInstruction.replace("XXX", colorNames[idxFound]);
+                            break;
+                    }
+                    resultingInstruction = resultingInstruction.replace("YYY","XXX").replace("ZZZ","YYY");
+                    idxOverrideState = "PBT".indexOf(curChar);
+                }
+                curRules.push(resultingInstruction);
+            }
+            UpdateManual();
+        }
+    </script>
     <style>
         .page-footer::before { content: 'Page '; }
-        .page-footer::after { content: ' of 2'; }
+        .page-footer::after { content: ' of 3'; }
         p span { line-height: 1.6; }
         h3 { line-height: 1; }
     </style>
@@ -35,75 +173,82 @@
 
                 <h3>STAGE 1</h3>
                 <p>
-                    <span class="highlightable"><b>Red:</b> Press the button in the first position.</span><br>
-                    <span class="highlightable"><b>Orange:</b> Press the button labeled 4.</span><br>
-                    <span class="highlightable"><b>Yellow:</b> Press the button colored yellow.</span><br>
-                    <span class="highlightable"><b>Green:</b> Press the button with a yellow label.</span><br>
-                    <span class="highlightable"><b>Blue:</b> Press the button in the third position.</span><br>
-                    <span class="highlightable"><b>Purple:</b> Press the button labeled 4.</span>
+                    <span class="highlightable"><b>Red:</b> <span class="rs">Press the button in the first position.</span></span><br>
+                    <span class="highlightable"><b>Orange:</b> <span class="rs">Press the button labeled 4.</span></span><br>
+                    <span class="highlightable"><b>Yellow:</b> <span class="rs">Press the button colored yellow.</span></span><br>
+                    <span class="highlightable"><b>Green:</b> <span class="rs">Press the button with a yellow label.</span></span><br>
+                    <span class="highlightable"><b>Blue:</b> <span class="rs">Press the button in the third position.</span></span><br>
+                    <span class="highlightable"><b>Purple:</b> <span class="rs">Press the button labeled 4.</span></span>
                 </p>
 
                 <h3>STAGE 2</h3>
                 <p>
-                    <span class="highlightable"><b>Red:</b> Press the button with the same label number as the button you pressed in stage 1.</span><br>
-                    <span class="highlightable"><b>Orange:</b> Press the button with the same button color as the button in stage 1 that was labeled 4.</span><br>
-                    <span class="highlightable"><b>Yellow:</b> Press the button in the first position.</span><br>
-                    <span class="highlightable"><b>Green:</b> Press the button colored green.</span><br>
-                    <span class="highlightable"><b>Blue:</b> Press the button in the same position as the button you pressed in stage 1.</span><br>
-                    <span class="highlightable"><b>Purple:</b> Press the button in the same position as the button in stage 1 with a green label.</span>
-                </p>
-
-                <h3>STAGE 3</h3>
-                <p>
-                    <span class="highlightable"><b>Red:</b> Press the button with the same label color as the button you pressed in stage 1.</span><br>
-                    <span class="highlightable"><b>Orange:</b> Press the button with the same button color as the button in stage 1 that was labeled 4.</span><br>
-                    <span class="highlightable"><b>Yellow:</b> Press the button with the same button color as the button you pressed in stage 2.</span><br>
-                    <span class="highlightable"><b>Green:</b> Follow the same rule as you did in stage 1.</span><br>
-                    <span class="highlightable"><b>Blue:</b> Follow the same rule as you did in stage 2.</span><br>
-                    <span class="highlightable"><b>Purple:</b> Follow the same rule as you did in stage 2.</span>
+                    <span class="highlightable"><b>Red:</b> <span class="rs">Press the button with the same label number as the button you pressed in stage 1.</span></span><br>
+                    <span class="highlightable"><b>Orange:</b> <span class="rs">Press the button with the same button color as the button in stage 1 that was labeled 4.</span></span><br>
+                    <span class="highlightable"><b>Yellow:</b> <span class="rs">Press the button in the first position.</span></span><br>
+                    <span class="highlightable"><b>Green:</b> <span class="rs">Press the button colored green.</span></span><br>
+                    <span class="highlightable"><b>Blue:</b> <span class="rs">Press the button in the same position as the button you pressed in stage 1.</span></span><br>
+                    <span class="highlightable"><b>Purple:</b> <span class="rs">Press the button in the same position as the button in stage 1 with a green label.</span></span>
                 </p>
 
             </div>
             <div class="page-footer relative-footer">1</div>
         </div>
-
         <div class="page page-bg-02">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
                 <span class="page-header-section-title">Memory Buster</span>
             </div>
             <div class="page-content">
-                <h3>STAGE 4</h3>
+                <h3>STAGE 3</h3>
                 <p>
-                    <span class="highlightable"><b>Red:</b> Press the button with the same label number as the button in stage 3 with a green label.</span><br>
-                    <span class="highlightable"><b>Orange:</b> Press the button in the same position as the button in stage 3 that was colored green.</span><br>
-                    <span class="highlightable"><b>Yellow:</b> Press the button with the same button color as the button you pressed in stage 3.</span><br>
-                    <span class="highlightable"><b>Green:</b> Press the button in the third position.</span><br>
-                    <span class="highlightable"><b>Blue:</b> Press the button with the same label color as the button you pressed in stage 3.</span><br>
-                    <span class="highlightable"><b>Purple:</b> Press the button labeled 3.</span>
+                    <span class="highlightable"><b>Red:</b> <span class="rs">Press the button with the same label color as the button you pressed in stage 1.</span></span><br>
+                    <span class="highlightable"><b>Orange:</b> <span class="rs">Press the button with the same button color as the button in stage 1 that was labeled 4.</span></span><br>
+                    <span class="highlightable"><b>Yellow:</b> <span class="rs">Press the button with the same button color as the button you pressed in stage 2.</span></span><br>
+                    <span class="highlightable"><b>Green:</b> <span class="rs">Follow the same rule as you did in stage 1.</span></span><br>
+                    <span class="highlightable"><b>Blue:</b> <span class="rs">Follow the same rule as you did in stage 2.</span></span><br>
+                    <span class="highlightable"><b>Purple:</b> <span class="rs">Follow the same rule as you did in stage 2.</span></span>
                 </p>
 
+                <h3>STAGE 4</h3>
+                <p>
+                    <span class="highlightable"><b>Red:</b> <span class="rs">Press the button with the same label number as the button in stage 3 with a green label.</span></span><br>
+                    <span class="highlightable"><b>Orange:</b> <span class="rs">Press the button in the same position as the button in stage 3 that was colored green.</span></span><br>
+                    <span class="highlightable"><b>Yellow:</b> <span class="rs">Press the button with the same button color as the button you pressed in stage 3.</span></span><br>
+                    <span class="highlightable"><b>Green:</b> <span class="rs">Press the button in the third position.</span></span><br>
+                    <span class="highlightable"><b>Blue:</b> <span class="rs">Press the button with the same label color as the button you pressed in stage 3.</span></span><br>
+                    <span class="highlightable"><b>Purple:</b> <span class="rs">Press the button labeled 3.</span></span>
+                </p>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Memory Buster</span>
+            </div>
+            <div class="page-content">
                 <h3>STAGE 5</h3>
                 <p>
-                    <span class="highlightable"><b>Red:</b> Follow the same rule as you did in stage 4.</span><br>
-                    <span class="highlightable"><b>Orange:</b> Follow the same rule as you did in stage 2.</span><br>
-                    <span class="highlightable"><b>Yellow:</b> Press the button labeled 4.</span><br>
-                    <span class="highlightable"><b>Green:</b> Press the button in the second position.</span><br>
-                    <span class="highlightable"><b>Blue:</b> Press the button in the same position as the button you pressed in stage 4.</span><br>
-                    <span class="highlightable"><b>Purple:</b> Press the button with the same label as the button you pressed in stage 2.</span>
+                    <span class="highlightable"><b>Red:</b> <span class="rs">Follow the same rule as you did in stage 4.</span></span><br>
+                    <span class="highlightable"><b>Orange:</b> <span class="rs">Follow the same rule as you did in stage 2.</span></span><br>
+                    <span class="highlightable"><b>Yellow:</b> <span class="rs">Press the button labeled 4.</span></span><br>
+                    <span class="highlightable"><b>Green:</b> <span class="rs">Press the button in the second position.</span></span><br>
+                    <span class="highlightable"><b>Blue:</b> <span class="rs">Press the button in the same position as the button you pressed in stage 4.</span></span><br>
+                    <span class="highlightable"><b>Purple:</b> <span class="rs">Press the button with the same label as the button you pressed in stage 2.</span></span>
                 </p>
 
                 <h3>STAGE 6</h3>
                 <p>
-                    <span class="highlightable"><b>Red:</b> Follow the same rule as you did in stage 5.</span><br>
-                    <span class="highlightable"><b>Orange:</b> Follow the same rule as you did in stage 3.</span><br>
-                    <span class="highlightable"><b>Yellow:</b> Follow the same rule as you did in stage 1.</span><br>
-                    <span class="highlightable"><b>Green:</b> Follow the same rule as you did in stage 1.</span><br>
-                    <span class="highlightable"><b>Blue:</b> Follow the same rule as you did in stage 5.</span><br>
-                    <span class="highlightable"><b>Purple:</b> Follow the same rule as you did in stage 3.</span>
+                    <span class="highlightable"><b>Red:</b> <span class="rs">Follow the same rule as you did in stage 5.</span></span><br>
+                    <span class="highlightable"><b>Orange:</b> <span class="rs">Follow the same rule as you did in stage 3.</span></span><br>
+                    <span class="highlightable"><b>Yellow:</b> <span class="rs">Follow the same rule as you did in stage 1.</span></span><br>
+                    <span class="highlightable"><b>Green:</b> <span class="rs">Follow the same rule as you did in stage 1.</span></span><br>
+                    <span class="highlightable"><b>Blue:</b> <span class="rs">Follow the same rule as you did in stage 5.</span></span><br>
+                    <span class="highlightable"><b>Purple:</b> <span class="rs">Follow the same rule as you did in stage 3.</span></span>
                 </p>
             </div>
-            <div class="page-footer relative-footer">2</div>
+            <div class="page-footer relative-footer">3</div>
         </div>
     </div>
 </body>
