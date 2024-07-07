@@ -1786,6 +1786,87 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "babaIsWho",
+		loggingTag: "Baba Is Who?",
+		matches: [
+			{
+				regex: /The subjects are (.+)/,
+				handler: function (matches, module) {
+					const getCollection = (str, removeText = false) => {
+						let collection = str.split(', ');
+						collection[5] = collection[5].substring(4);
+						if(removeText) {
+							return collection.map(word => word.substring(0, word.indexOf("Text")));
+						}
+						return collection;
+					}
+					let subjects = getCollection(matches[1], true);
+					const attributes = getCollection(readTaggedLine().match(/The attributes are (.+)/)[1]);
+					const characters = getCollection(readTaggedLine().match(/The characters are (.+)/)[1]);
+					const table = $("<table>");
+					for(let row = 0; row < 3; row++) {
+						const tr = $('<tr>').appendTo(table);
+						for(let col = 0; col < 2; col++) {
+							const ix = row * 2 + col;
+							const td = $('<td>').appendTo(tr);
+							const div = $('<div>').addClass('baba').appendTo(td);
+							$('<img>').attr('src', `../HTML/img/Baba Is Who/${characters[ix]}.png`).addClass('baba').appendTo(div);
+							$(`<p>${characters[ix]}</p>`).addClass('baba').appendTo(div);
+						}
+					}
+					module.push({ obj: table, label: "Characters" });
+					const dropdown = ["Attributes", [], true]
+					for(let i = 0; i < 6; i++) {
+						dropdown[1].push(`${subjects[i]} is ${attributes[i]}`);
+					}
+					module.push(dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /The bomb info is (\d+), (\d+), (\d+), (\d+), (\d+), and (\d+)/,
+				handler: function (matches, module) {
+					const dropdown = ["Bomb Info", [], true]
+					dropdown[1].push(`number of batteries: ${matches[1]}`);
+					dropdown[1].push(`last digit of the serial number: ${matches[2]}`);
+					dropdown[1].push(`number of ports % 10: ${matches[3]}`);
+					dropdown[1].push(`number of indicators % 10: ${matches[4]}`);
+					dropdown[1].push(`alphabetical position of the fourth character in the serial number: ${matches[5]}`);
+					dropdown[1].push(`number of modules % 10: ${matches[6]}`);
+					module.push(dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /(?:.+) is (?:.+) is correct rule\./,
+				handler: function (matches, module) {
+					const lines = [];
+					linen--;
+					let line = "";
+					do
+					{
+						line = readTaggedLine();
+						lines.push(line);
+					} while(!line.includes("The correct character is"));
+					const dropdown = ["Solution", [], true]
+					for (let l of lines) {
+						dropdown[1].push(l);
+					}
+					module.push(dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /(You pressed (?:.+)) \(Instance\)/,
+				handler: function (matches, module) {
+					module.push(`${matches[1]}`);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Badugi",
 		moduleID: "ksmBadugi",
 		loggingTag: "Badugi",
