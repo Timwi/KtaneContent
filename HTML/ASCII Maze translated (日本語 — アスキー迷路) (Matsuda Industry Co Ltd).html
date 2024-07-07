@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>アスキー迷路 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .clearfix::after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+        .op-table-left {
+            float: left;
+            margin-right: 24px;
+            margin-bottom: 24px;
+        }
+
+        .op-table-right {
+            float: left;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">アスキー迷路</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/ASCII Maze.svg" class="diagram">
+                <h2>モジュール詳細：アスキー迷路</h2>
+                <p class="flavour-text">(╯°□°)╯︵ ┻━┻</p>
+                <p>モジュール下部の画面には、12文字の長さのシーケンスのうち、置換文字(&#xfffd;)で区切られた3つの（拡張）アスキー文字が表示される。<br>
+                   画面の左右にある矢印を使用して、ディスプレーの表示を切り替える。</p>
+                <p>アスキー文字の列を96桁の二進数の列に変換する:</p>
+                   <ul><li>最初の6桁は八進数に変換され、開始する位置を決定するために使用される。</li>
+                       <li>最後の6桁は八進数に変換され、出口の位置を決定するために使用される。</li>
+                       <li>残りの84桁は、7×7の迷路内の壁の存在に対応する（迷路の端は含まない）:</li>
+                       <ul>84桁を2つのグループに分ける:
+                            <li>最初の42桁(第一グループ)は垂直の壁に対応する。</li>
+                            <li>残りの42桁(第二グループ)は水平の壁に対応する。</li></ul>
+                </ul>
+                <p>4つのLEDの色は、それぞれの数列と組み合わせて使用される。<br>
+                   色の赤、緑、青の要素の有無は、それぞれの数列がどのように使用されているかを示している:</p>
+                <h4>左上 LED</h4>
+                <ol><li>青の要素がある場合、八進数の1桁目と2桁目が入れ替わる。</li>
+                    <li>赤の要素がある場合、八進数の1桁目は、右端と開始位置の間のスペース数より1大きい数となる。<br>
+                        それ以外の場合、八進数の1桁目は、左端と開始位置の間のスペース数となる。</li>
+                    <li>緑の要素がある場合、八進数の2桁目は、下端と開始位置の間のスペース数より1大きい数となる。<br>
+                        それ以外の場合、八進数の2桁目は、上端と開始位置の間のスペース数となる。</li></ol>
+                <p>同じルールが、出口の位置を示す<strong>右下 LED</strong>にも適用される。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">アスキー迷路</span>
+            </div>
+            <div class="page-content">
+            <h4>右上 LED</h4>
+            <p>水平方向に隣接する2つのスペース間の垂直方向の分割ごとに、42桁からなる第一グループの対応する桁が1である場合、壁が存在することになる。</p>
+               <ol>右上のLEDの色は読み取る順序に影響する:
+               <li>赤の要素がある場合、分割は右から左に読み込まれる。<br>
+                   それ以外の場合、分割は左から右に読み込まれる。</li>
+                <li>緑の要素がある場合、分割は段ごとに、下から上に読み込まれる。<br>
+                   それ以外の場合、分割は段ごとに、上から下に読み込まれる。</li>
+                <li>青の要素がある場合、読み込まれる方向は段ごとに交互に変わる。</li></ol>
+            <p>同じルールが、迷路の水平な壁の存在を示す<strong>左下 LED</strong>と、42桁からなる第二グループにも適用される。</p>
+            <p>迷路が完成したとき、すべてのスペースは他のすべてのスペースから到達可能でなければならず、ループがあってはならない。</p>
+            <p>方向矢印を使用して、壁を避けながら迷路を移動する。</p>
+            <p>出口に到着したら、「&#x25ce;」ボタンを押して現在地を送信する。<br>
+               現在地が出口ではない場合、ミスが記録され、モジュールはあなたの位置を開始地点にリセットさせる。</p>
+            <p>迷路のどの位置からでも「!」ボタンを押せば、ミスなしで開始地点にリセットすることができる。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">アスキー迷路</span>
+            </div>
+            <div class="page-content clearfix">
+                <h3>ASCII 表</h3>
+                <table class = "op-table-left" style="font-size: 9.5px;">
+                    <tr><th>ASCII</th><th>索引</th><th>二進数</th></tr>
+                    <tr><th>NUL</th><th>000</th><th>00000000</th></tr>
+                    <tr><th>SOH</th><th>001</th><th>00000001</th></tr>
+                    <tr><th>STX</th><th>002</th><th>00000010</th></tr>
+                    <tr><th>ETX</th><th>003</th><th>00000011</th></tr>
+                    <tr><th>EOT</th><th>004</th><th>00000100</th></tr>
+                    <tr><th>ENQ</th><th>005</th><th>00000101</th></tr>
+                    <tr><th>ACK</th><th>006</th><th>00000110</th></tr>
+                    <tr><th>BEL</th><th>007</th><th>00000111</th></tr>
+                    <tr><th>BS</th><th>008</th><th>00001000</th></tr>
+                    <tr><th>HT</th><th>009</th><th>00001001</th></tr>
+                    <tr><th>LF</th><th>010</th><th>00001010</th></tr>
+                    <tr><th>VT</th><th>011</th><th>00001011</th></tr>
+                    <tr><th>FF</th><th>012</th><th>00001100</th></tr>
+                    <tr><th>CR</th><th>013</th><th>00001101</th></tr>
+                    <tr><th>SO</th><th>014</th><th>00001110</th></tr>
+                    <tr><th>SI</th><th>015</th><th>00001111</th></tr>
+                    <tr><th>DLE</th><th>016</th><th>00010000</th></tr>
+                    <tr><th>DC1</th><th>017</th><th>00010001</th></tr>
+                    <tr><th>DC2</th><th>018</th><th>00010010</th></tr>
+                    <tr><th>DC3</th><th>019</th><th>00010011</th></tr>
+                    <tr><th>DC4</th><th>020</th><th>00010100</th></tr>
+                    <tr><th>NAK</th><th>021</th><th>00010101</th></tr>
+                    <tr><th>SYN</th><th>022</th><th>00010110</th></tr>
+                    <tr><th>ETB</th><th>023</th><th>00010111</th></tr>
+                    <tr><th>CAN</th><th>024</th><th>00011000</th></tr>
+                    <tr><th>EM</th><th>025</th><th>00011001</th></tr>
+                    <tr><th>SUB</th><th>026</th><th>00011010</th></tr>
+                    <tr><th>ESC</th><th>027</th><th>00011011</th></tr>
+                    <tr><th>FS</th><th>028</th><th>00011100</th></tr>
+                    <tr><th>GS</th><th>029</th><th>00011101</th></tr>
+                    <tr><th>RS</th><th>030</th><th>00011110</th></tr>
+                    <tr><th>US</th><th>031</th><th>00011111</th></tr>
+                </table>
+                <table class = "op-table-left" style="font-size: 9.5px">
+                    <tr><th>ASCII</th><th>索引</th><th>二進数</th></tr>
+                    <tr><th>(空白)</th><th>032</th><th>00100000</th></tr>
+                    <tr><th>!</th><th>033</th><th>00100001</th></tr>
+                    <tr><th>"</th><th>034</th><th>00100010</th></tr>
+                    <tr><th>#</th><th>035</th><th>00100011</th></tr>
+                    <tr><th>$</th><th>036</th><th>00100100</th></tr>
+                    <tr><th>%</th><th>037</th><th>00100101</th></tr>
+                    <tr><th>&#038;</th><th>038</th><th>00100110</th></tr>
+                    <tr><th>'</th><th>039</th><th>00100111</th></tr>
+                    <tr><th>&#040;</th><th>040</th><th>00101000</th></tr>
+                    <tr><th>&#041;</th><th>041</th><th>00101001</th></tr>
+                    <tr><th>*</th><th>042</th><th>00101010</th></tr>
+                    <tr><th>+</th><th>043</th><th>00101011</th></tr>
+                    <tr><th>,</th><th>044</th><th>00101100</th></tr>
+                    <tr><th>-</th><th>045</th><th>00101101</th></tr>
+                    <tr><th>.</th><th>046</th><th>00101110</th></tr>
+                    <tr><th>/</th><th>047</th><th>00101111</th></tr>
+                    <tr><th>0</th><th>048</th><th>00110000</th></tr>
+                    <tr><th>1</th><th>049</th><th>00110001</th></tr>
+                    <tr><th>2</th><th>050</th><th>00110010</th></tr>
+                    <tr><th>3</th><th>051</th><th>00110011</th></tr>
+                    <tr><th>4</th><th>052</th><th>00110100</th></tr>
+                    <tr><th>5</th><th>053</th><th>00110101</th></tr>
+                    <tr><th>6</th><th>054</th><th>00110110</th></tr>
+                    <tr><th>7</th><th>055</th><th>00110111</th></tr>
+                    <tr><th>8</th><th>056</th><th>00111000</th></tr>
+                    <tr><th>9</th><th>057</th><th>00111001</th></tr>
+                    <tr><th>:</th><th>058</th><th>00111010</th></tr>
+                    <tr><th>;</th><th>059</th><th>00111011</th></tr>
+                    <tr><th>&#060;</th><th>060</th><th>00111100</th></tr>
+                    <tr><th>=</th><th>061</th><th>00111101</th></tr>
+                    <tr><th>&#062;</th><th>062</th><th>00111110</th></tr>
+                    <tr><th>?</th><th>063</th><th>00111111</th></tr>
+                </table>
+                <table class = "op-table-left" style="font-size: 9.5px">
+                    <tr><th>ASCII</th><th>索引</th><th>二進数</th></tr>
+                    <tr><th>@</th><th>064</th><th>01000000</th></tr>
+                    <tr><th>A</th><th>065</th><th>01000001</th></tr>
+                    <tr><th>B</th><th>066</th><th>01000010</th></tr>
+                    <tr><th>C</th><th>067</th><th>01000011</th></tr>
+                    <tr><th>D</th><th>068</th><th>01000100</th></tr>
+                    <tr><th>E</th><th>069</th><th>01000101</th></tr>
+                    <tr><th>F</th><th>070</th><th>01000110</th></tr>
+                    <tr><th>G</th><th>071</th><th>01000111</th></tr>
+                    <tr><th>H</th><th>072</th><th>01001000</th></tr>
+                    <tr><th>I</th><th>073</th><th>01001001</th></tr>
+                    <tr><th>J</th><th>074</th><th>01001010</th></tr>
+                    <tr><th>K</th><th>075</th><th>01001011</th></tr>
+                    <tr><th>L</th><th>076</th><th>01001100</th></tr>
+                    <tr><th>M</th><th>077</th><th>01001101</th></tr>
+                    <tr><th>N</th><th>078</th><th>01001110</th></tr>
+                    <tr><th>O</th><th>079</th><th>01001111</th></tr>
+                    <tr><th>P</th><th>080</th><th>01010000</th></tr>
+                    <tr><th>Q</th><th>081</th><th>01010001</th></tr>
+                    <tr><th>R</th><th>082</th><th>01010010</th></tr>
+                    <tr><th>S</th><th>083</th><th>01010011</th></tr>
+                    <tr><th>T</th><th>084</th><th>01010100</th></tr>
+                    <tr><th>U</th><th>085</th><th>01010101</th></tr>
+                    <tr><th>V</th><th>086</th><th>01010110</th></tr>
+                    <tr><th>W</th><th>087</th><th>01010111</th></tr>
+                    <tr><th>X</th><th>088</th><th>01011000</th></tr>
+                    <tr><th>Y</th><th>089</th><th>01011001</th></tr>
+                    <tr><th>Z</th><th>090</th><th>01011010</th></tr>
+                    <tr><th>&#091;</th><th>091</th><th>01011011</th></tr>
+                    <tr><th>\</th><th>092</th><th>01011100</th></tr>
+                    <tr><th>&#093;</th><th>093</th><th>01011101</th></tr>
+                    <tr><th>^</th><th>094</th><th>01011110</th></tr>
+                    <tr><th>_</th><th>095</th><th>01011111</th></tr>
+                </table>
+                <table class = "op-table-right" style="font-size: 9.5px">
+                    <tr><th>ASCII</th><th>索引</th><th>二進数</th></tr>
+                    <tr><th>`</th><th>096</th><th>01100000</th></tr>
+                    <tr><th>a</th><th>097</th><th>01100001</th></tr>
+                    <tr><th>b</th><th>098</th><th>01100010</th></tr>
+                    <tr><th>c</th><th>099</th><th>01100011</th></tr>
+                    <tr><th>d</th><th>100</th><th>01100100</th></tr>
+                    <tr><th>e</th><th>101</th><th>01100101</th></tr>
+                    <tr><th>f</th><th>102</th><th>01100110</th></tr>
+                    <tr><th>g</th><th>103</th><th>01100111</th></tr>
+                    <tr><th>h</th><th>104</th><th>01101000</th></tr>
+                    <tr><th>i</th><th>105</th><th>01101001</th></tr>
+                    <tr><th>j</th><th>106</th><th>01101010</th></tr>
+                    <tr><th>k</th><th>107</th><th>01101011</th></tr>
+                    <tr><th>l</th><th>108</th><th>01101100</th></tr>
+                    <tr><th>m</th><th>109</th><th>01101101</th></tr>
+                    <tr><th>n</th><th>110</th><th>01101110</th></tr>
+                    <tr><th>o</th><th>111</th><th>01101111</th></tr>
+                    <tr><th>p</th><th>112</th><th>01110000</th></tr>
+                    <tr><th>q</th><th>113</th><th>01110001</th></tr>
+                    <tr><th>r</th><th>114</th><th>01110010</th></tr>
+                    <tr><th>s</th><th>115</th><th>01110011</th></tr>
+                    <tr><th>t</th><th>116</th><th>01110100</th></tr>
+                    <tr><th>u</th><th>117</th><th>01110101</th></tr>
+                    <tr><th>v</th><th>118</th><th>01110110</th></tr>
+                    <tr><th>w</th><th>119</th><th>01110111</th></tr>
+                    <tr><th>x</th><th>120</th><th>01111000</th></tr>
+                    <tr><th>y</th><th>121</th><th>01111001</th></tr>
+                    <tr><th>z</th><th>122</th><th>01111010</th></tr>
+                    <tr><th>&#123;</th><th>123</th><th>01111011</th></tr>
+                    <tr><th>&#124;</th><th>124</th><th>01111100</th></tr>
+                    <tr><th>&#125;</th><th>125</th><th>01111101</th></tr>
+                    <tr><th>~</th><th>126</th><th>01111110</th></tr>
+                    <tr><th>DEL</th><th>127</th><th>01111111</th></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">アスキー迷路</span>
+            </div>
+            <div class="page-content clearfix">
+                <h3>拡張 ASCII 表</h3>
+                <table class = "op-table-left" style="font-size: 9.5px">
+                    <tr><th>ASCII</th><th>索引</th><th>二進数</th></tr>
+                    <tr><th>Ç</th><th>128</th><th>10000000</th></tr>
+                    <tr><th>ü</th><th>129</th><th>10000001</th></tr>
+                    <tr><th>é</th><th>130</th><th>10000010</th></tr>
+                    <tr><th>â</th><th>131</th><th>10000011</th></tr>
+                    <tr><th>ä</th><th>132</th><th>10000100</th></tr>
+                    <tr><th>à</th><th>133</th><th>10000101</th></tr>
+                    <tr><th>å</th><th>134</th><th>10000110</th></tr>
+                    <tr><th>ç</th><th>135</th><th>10000111</th></tr>
+                    <tr><th>ê</th><th>136</th><th>10001000</th></tr>
+                    <tr><th>ë</th><th>137</th><th>10001001</th></tr>
+                    <tr><th>è</th><th>138</th><th>10001010</th></tr>
+                    <tr><th>ï</th><th>139</th><th>10001011</th></tr>
+                    <tr><th>î</th><th>140</th><th>10001100</th></tr>
+                    <tr><th>ì</th><th>141</th><th>10001101</th></tr>
+                    <tr><th>Ä</th><th>142</th><th>10001110</th></tr>
+                    <tr><th>Å</th><th>143</th><th>10001111</th></tr>
+                    <tr><th>É</th><th>144</th><th>10010000</th></tr>
+                    <tr><th>æ</th><th>145</th><th>10010001</th></tr>
+                    <tr><th>Æ</th><th>146</th><th>10010010</th></tr>
+                    <tr><th>ô</th><th>147</th><th>10010011</th></tr>
+                    <tr><th>ö</th><th>148</th><th>10010100</th></tr>
+                    <tr><th>ò</th><th>149</th><th>10010101</th></tr>
+                    <tr><th>û</th><th>150</th><th>10010110</th></tr>
+                    <tr><th>ù</th><th>151</th><th>10010111</th></tr>
+                    <tr><th>ÿ</th><th>152</th><th>10011000</th></tr>
+                    <tr><th>Ö</th><th>153</th><th>10011001</th></tr>
+                    <tr><th>Ü</th><th>154</th><th>10011010</th></tr>
+                    <tr><th>ø</th><th>155</th><th>10011011</th></tr>
+                    <tr><th>£</th><th>156</th><th>10011100</th></tr>
+                    <tr><th>Ø</th><th>157</th><th>10011101</th></tr>
+                    <tr><th>×</th><th>158</th><th>10011110</th></tr>
+                    <tr><th>ƒ</th><th>159</th><th>10011111</th></tr>
+                </table>
+                <table class = "op-table-left" style="font-size: 9.5px">
+                    <tr><th>ASCII</th><th>索引</th><th>二進数</th></tr>
+                    <tr><th>á</th><th>160</th><th>10100000</th></tr>
+                    <tr><th>í</th><th>161</th><th>10100001</th></tr>
+                    <tr><th>ó</th><th>162</th><th>10100010</th></tr>
+                    <tr><th>ú</th><th>163</th><th>10100011</th></tr>
+                    <tr><th>ñ</th><th>164</th><th>10100100</th></tr>
+                    <tr><th>Ñ</th><th>165</th><th>10100101</th></tr>
+                    <tr><th>ª</th><th>166</th><th>10100110</th></tr>
+                    <tr><th>º</th><th>167</th><th>10100111</th></tr>
+                    <tr><th>¿</th><th>168</th><th>10101000</th></tr>
+                    <tr><th>®</th><th>169</th><th>10101001</th></tr>
+                    <tr><th>¬</th><th>170</th><th>10101010</th></tr>
+                    <tr><th>½</th><th>171</th><th>10101011</th></tr>
+                    <tr><th>¼</th><th>172</th><th>10101100</th></tr>
+                    <tr><th>¡</th><th>173</th><th>10101101</th></tr>
+                    <tr><th>«</th><th>174</th><th>10101110</th></tr>
+                    <tr><th>»</th><th>175</th><th>10101111</th></tr>
+                    <tr><th>░</th><th>176</th><th>10110000</th></tr>
+                    <tr><th>▒</th><th>177</th><th>10110001</th></tr>
+                    <tr><th>▓</th><th>178</th><th>10110010</th></tr>
+                    <tr><th>│</th><th>179</th><th>10110011</th></tr>
+                    <tr><th>┤</th><th>180</th><th>10110100</th></tr>
+                    <tr><th>Á</th><th>181</th><th>10110101</th></tr>
+                    <tr><th>Â</th><th>182</th><th>10110110</th></tr>
+                    <tr><th>À</th><th>183</th><th>10110111</th></tr>
+                    <tr><th>©</th><th>184</th><th>10111000</th></tr>
+                    <tr><th>╣</th><th>185</th><th>10111001</th></tr>
+                    <tr><th>║</th><th>186</th><th>10111010</th></tr>
+                    <tr><th>╗</th><th>187</th><th>10111011</th></tr>
+                    <tr><th>╝</th><th>188</th><th>10111100</th></tr>
+                    <tr><th>¢</th><th>189</th><th>10111101</th></tr>
+                    <tr><th>¥</th><th>190</th><th>10111110</th></tr>
+                    <tr><th>┐</th><th>191</th><th>10111111</th></tr>
+                </table>
+                <table class = "op-table-left" style="font-size: 9.5px">
+                    <tr><th>ASCII</th><th>索引</th><th>二進数</th></tr>
+                    <tr><th>└</th><th>192</th><th>11000000</th></tr>
+                    <tr><th>┴</th><th>193</th><th>11000001</th></tr>
+                    <tr><th>┬</th><th>194</th><th>11000010</th></tr>
+                    <tr><th>├</th><th>195</th><th>11000011</th></tr>
+                    <tr><th>─</th><th>196</th><th>11000100</th></tr>
+                    <tr><th>┼</th><th>197</th><th>11000101</th></tr>
+                    <tr><th>ã</th><th>198</th><th>11000110</th></tr>
+                    <tr><th>Ã</th><th>199</th><th>11000111</th></tr>
+                    <tr><th>╚</th><th>200</th><th>11001000</th></tr>
+                    <tr><th>╔</th><th>201</th><th>11001001</th></tr>
+                    <tr><th>╩</th><th>202</th><th>11001010</th></tr>
+                    <tr><th>╦</th><th>203</th><th>11001011</th></tr>
+                    <tr><th>╠</th><th>204</th><th>11001100</th></tr>
+                    <tr><th>═</th><th>205</th><th>11001101</th></tr>
+                    <tr><th>╬</th><th>206</th><th>11001110</th></tr>
+                    <tr><th>¤</th><th>207</th><th>11001111</th></tr>
+                    <tr><th>ð</th><th>208</th><th>11010000</th></tr>
+                    <tr><th>Ð</th><th>209</th><th>11010001</th></tr>
+                    <tr><th>Ê</th><th>210</th><th>11010010</th></tr>
+                    <tr><th>Ë</th><th>211</th><th>11010011</th></tr>
+                    <tr><th>È</th><th>212</th><th>11010100</th></tr>
+                    <tr><th>ı</th><th>213</th><th>11010101</th></tr>
+                    <tr><th>Í</th><th>214</th><th>11010110</th></tr>
+                    <tr><th>Î</th><th>215</th><th>11010111</th></tr>
+                    <tr><th>Ï</th><th>216</th><th>11011000</th></tr>
+                    <tr><th>┘</th><th>217</th><th>11011001</th></tr>
+                    <tr><th>┌</th><th>218</th><th>11011010</th></tr>
+                    <tr><th>█</th><th>219</th><th>11011011</th></tr>
+                    <tr><th>▄</th><th>220</th><th>11011100</th></tr>
+                    <tr><th>¦</th><th>221</th><th>11011101</th></tr>
+                    <tr><th>Ì</th><th>222</th><th>11011110</th></tr>
+                    <tr><th>▀</th><th>223</th><th>11011111</th></tr>
+                </table>
+                <table class = "op-table-right" style="font-size: 9.5px">
+                    <tr><th>ASCII</th><th>索引</th><th>二進数</th></tr>
+                    <tr><th>Ó</th><th>224</th><th>11100000</th></tr>
+                    <tr><th>ß</th><th>225</th><th>11100001</th></tr>
+                    <tr><th>Ô</th><th>226</th><th>11100010</th></tr>
+                    <tr><th>Ò</th><th>227</th><th>11100011</th></tr>
+                    <tr><th>õ</th><th>228</th><th>11100100</th></tr>
+                    <tr><th>Õ</th><th>229</th><th>11100101</th></tr>
+                    <tr><th>µ</th><th>230</th><th>11100110</th></tr>
+                    <tr><th>þ</th><th>231</th><th>11100111</th></tr>
+                    <tr><th>Þ</th><th>232</th><th>11101000</th></tr>
+                    <tr><th>Ú</th><th>233</th><th>11101001</th></tr>
+                    <tr><th>Û</th><th>234</th><th>11101010</th></tr>
+                    <tr><th>Ù</th><th>235</th><th>11101011</th></tr>
+                    <tr><th>ý</th><th>236</th><th>11101100</th></tr>
+                    <tr><th>Ý</th><th>237</th><th>11101101</th></tr>
+                    <tr><th>¯</th><th>238</th><th>11101110</th></tr>
+                    <tr><th>´</th><th>239</th><th>11101111</th></tr>
+                    <tr><th>≡</th><th>240</th><th>11110000</th></tr>
+                    <tr><th>±</th><th>241</th><th>11110001</th></tr>
+                    <tr><th>‗</th><th>242</th><th>11110010</th></tr>
+                    <tr><th>¾</th><th>243</th><th>11110011</th></tr>
+                    <tr><th>¶</th><th>244</th><th>11110100</th></tr>
+                    <tr><th>§</th><th>245</th><th>11110101</th></tr>
+                    <tr><th>÷</th><th>246</th><th>11110110</th></tr>
+                    <tr><th>¸</th><th>247</th><th>11110111</th></tr>
+                    <tr><th>°</th><th>248</th><th>11111000</th></tr>
+                    <tr><th>¨</th><th>249</th><th>11111001</th></tr>
+                    <tr><th>·</th><th>250</th><th>11111010</th></tr>
+                    <tr><th>¹</th><th>251</th><th>11111011</th></tr>
+                    <tr><th>³</th><th>252</th><th>11111100</th></tr>
+                    <tr><th>²</th><th>253</th><th>11111101</th></tr>
+                    <tr><th>■</th><th>254</th><th>11111110</th></tr>
+                    <tr><th>NBSP</th><th>255</th><th>11111111</th></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/4</div>
+        </div>
+    </div>
+</body>
+</html>
