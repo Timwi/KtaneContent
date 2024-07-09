@@ -18102,6 +18102,7 @@ let parseData = [
 						makePath(i, "180", grid[i]).forEach(obj => obj.appendTo(svg));
 						makePath(i, "270", grid[i]).forEach(obj => obj.appendTo(svg));
 					}
+					console.log(svg)
 					module.push({ label: matches[0], obj: svg });
 					return true;
 				}
