@@ -44,6 +44,22 @@
         button.write-swap:not(.swap)::before {
             content: 'Mode: Write';
         }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 9px 10px 5px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
     </style>
     <script>
         $(function() {
@@ -82,6 +98,9 @@
             else {
                 //enable highlight
                 $(`#t-${highlightedTextId}`).addClass('highlight')
+                //disable selection
+                selectedBlockId = null;
+                selectionBlock.style.visibility = 'hidden';
             }
         });
 
@@ -92,13 +111,10 @@
                     return;
                 const newNumber = event.key;
                 if(newNumber == 8 || newNumber == 9)
-                return
-                const text = $(`#t-${highlightedTextId}`);
-                const oldNumber = text.text();
-                const group = text.parent();
-                const path = group.find('path')
-                changeNumber(text, path, newNumber)
-                text.removeClass('highlight')
+                    return;
+                const object = getObject(highlightedTextId);
+                changeNumber(object.text, object.path, newNumber, object.text.text())
+                object.text.removeClass('highlight')
                 highlightedTextId = (parseInt(highlightedTextId) + 1) % 36;
                 $(`#t-${highlightedTextId}`).addClass('highlight');
             })
@@ -137,7 +153,6 @@
                 const id = $(group).attr('id').substring(2);
                 //deselect the block if already selected
                 if(selectedBlockId == id) {
-                    console.log('deselect')
                     selectionBlock.style.visibility = 'hidden';
                     selectedBlockId = null;
                     return;
@@ -145,7 +160,6 @@
 
                 //select the block if there hasn't been a selection
                 if(selectedBlockId === null) {
-                    console.log('select')
                     selectedBlockId = id;
                     let x = 7.5 + 10 * (id % 3);
                     let y = 7.5 + 10 * Math.floor(id / 3);
@@ -153,28 +167,35 @@
                     $(selectionBlock).attr('x', x).attr('y', y)
                 }
 
+                //swap
                 else {
-                    swap(id, selectedBlockId)
-                    console.log('swap')
+                    swap(selectedBlockId, id)
                     selectionBlock.style.visibility = 'hidden';
                     selectedBlockId = null;
                 }
             }
             function swap(id1, id2) {
-                    const group1 = ids.slice(id1 * 4, id1 * 4 + 4);
-                    const group2 = ids.slice(id2 * 4, id2 * 4 + 4);
-                    const g1Text = group1.map(id => $(`#t-${id}`))
-                    const group1Tag = g1Text[0].parent();
-                    const path = group1Tag.find('path')
-                    console.log(path)
-                    const oldNumbers = g1Text.map(text => $(text).text())
-
-                    // const g2Text = group2.map(id => $(`#t-${id}`))
-
+                    const group1 = ids.slice(id1 * 4, id1 * 4 + 4).map(id => getObject(id));
+                    const group2 = ids.slice(id2 * 4, id2 * 4 + 4).map(id => getObject(id));
+                    const oldNumbers = group1.map(obj => $(obj.text).text())
+                    for(let i = 0; i < 4; i++) {
+                        const g1 = group1[i];
+                        const g1OldNumber = oldNumbers[i];
+                        const g2 = group2[i];
+                        const g2OldNumber = group2[i].text.text();
+                        changeNumber(g1.text, g1.path, g2.text.text(), g1OldNumber)
+                        changeNumber(g2.text, g2.path, oldNumbers[i], g2OldNumber)
+                    }
                 }
-            function changeNumber(text, path, newNumber) {
+            function getObject(textId) {
+                const text = $(`#t-${textId}`);
+                const group = text.parent()
+                const path = group.find('path')
+                return {text: text, group: group, path: path }
+            }
+            function changeNumber(text, path, newNumber, oldNumber) {
                 text.text(newNumber);
-                path.removeClass(`tetravex-${text.text()}`)
+                path.removeClass(`tetravex-${oldNumber}`)
                 path.addClass(`tetravex-${newNumber}`)
             }
 
