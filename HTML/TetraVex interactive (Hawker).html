@@ -24,6 +24,10 @@
             stroke: black;
             stroke-width: .2;
         }
+        
+        path.selected {
+            stroke: red;
+        }
 
         path.tetravex-0 { fill: #1d1b1a; }
         path.tetravex-1 { fill: #a80907; }
@@ -43,26 +47,42 @@
     </style>
     <script>
         $(function() {
-            const mode = 'write';
+            let mode = 'write';
+            let selectedBlockId = null;
+            let highlightedTextId = 0;
             const ids = [3, 0, 4, 9, 5, 1, 6, 10, 7, 2, 8, 11, 15, 12, 16, 21, 17, 13, 18, 22, 19, 14, 20, 23, 27, 24, 28, 33, 29, 25, 30, 34, 31, 26, 32, 35]
-            let highligtedTextId = 0;
             const svg = $('#svg');
-            console.log(svg)
             const length = 10
             for(let row = 0; row < 3; row++) {
                 for(let col = 0; col < 3; col++) {
                     const ix = row * 3 + col
                     idChuck = ids.slice(ix * 4, ix * 4 + 4);
-                    $(addSquare({x: col * 10, y: row * 10}, [0, 0, 0, 0], idChuck)).appendTo($(svg));
+                    $(addSquare({x: col * 10, y: row * 10}, [0, 0, 0, 0], idChuck, ix)).appendTo($(svg));
                 }
             }
+            //make selection square
+            const selectionBlock = MakeSvgElem("rect", {x:0, y:0, width:1, height:1, fill:"red"})
+            selectionBlock.style.visibility = 'hidden'
+            svg.append(selectionBlock)
+
             //highlight first triangle
-            $('#0').addClass('highlight');
+            $('#t-0').addClass('highlight');
 
             // toggle write/swap
             $("<button>").addClass("write-swap").appendTo(tools).click(function() {
             $(this).toggleClass("swap");
             $("body").toggleClass("swap", $(this).hasClass("swap"));
+            
+            const swapMode = $(this).hasClass("swap")
+            mode = swapMode ? 'swap' : 'write';
+            if($(this).hasClass("swap")) {
+                //disable highlight
+                $('.highlight').removeClass('highlight')
+            }
+            else {
+                //enable highlight
+                $(`#t-${highlightedTextId}`).addClass('highlight')
+            }
         });
 
         //keypress
@@ -73,25 +93,18 @@
                 const newNumber = event.key;
                 if(newNumber == 8 || newNumber == 9)
                 return
-            const text = $(`#${highligtedTextId}`);
-            const oldNumber = text.text();
-            text.text(newNumber);
-            const group = text.parent();
-            const path = group.find('path')
-            
-            path.removeClass(`tetravex-${oldNumber}`)
-            path.addClass(`tetravex-${newNumber}`)
-            text.removeClass('highlight')
-            console.log(highligtedTextId);
-                highligtedTextId = (parseInt(highligtedTextId) + 1) % 36;
-                console.log(highligtedTextId);
-                $(`#${highligtedTextId}`).addClass('highlight');
-
-                console.log(path)
+                const text = $(`#t-${highlightedTextId}`);
+                const oldNumber = text.text();
+                const group = text.parent();
+                const path = group.find('path')
+                changeNumber(text, path, newNumber)
+                text.removeClass('highlight')
+                highlightedTextId = (parseInt(highlightedTextId) + 1) % 36;
+                $(`#t-${highlightedTextId}`).addClass('highlight');
             })
-            function addSquare(translate, labels, ids) {
-                const g = MakeSvgElem("g", {style: `transform: translate(${translate.x}px, ${translate.y}px)`});
-                $(g).click(blockClick);
+            function addSquare(translate, labels, ids, gID) {
+                const g = MakeSvgElem("g", {id: `g-${gID}`, style: `transform: translate(${translate.x}px, ${translate.y}px)`});
+                $(g).click(function() { blockClick($(this)); });
                 for(let i = 0; i < 4; i++) {
                     g.append(addTriangle(labels[i], 90 * i, ids[i]));
                 }
@@ -102,7 +115,7 @@
                 const currentCoordinates = coordinates[Math.floor(rotation / 90)];
                 const g = MakeSvgElem("g");
                 g.append(MakeSvgElem("path", { d: "M3 3 l 5 5 l -5 5 z", class: `tetravex tetravex-${label}`, style: `transform-origin: 8px 8px; transform:rotate(${rotation}deg)` }));
-                const text = MakeSvgElem("text", {id: id, class: "tetravex", x: currentCoordinates.x, y: currentCoordinates.y});
+                const text = MakeSvgElem("text", {id: `t-${id}`, class: "tetravex", x: currentCoordinates.x, y: currentCoordinates.y});
                 $(text).click(textClick)
                 text.innerHTML = label;
                 g.append(text)
@@ -111,21 +124,58 @@
 
             //clicking
             function textClick(e) {
-                e.stopPropagation();
-                if(mode != 'write' || $(e.target).attr('id') == highligtedTextId)
+                if(mode != 'write' || $(e.target).attr('id') == `t-${highlightedTextId}`)
                     return;
-                $(`#${highligtedTextId}`).removeClass('highlight');
+                $(`#t-${highlightedTextId}`).removeClass('highlight');
                 $(e.target).addClass("highlight");
-                highligtedTextId = $(e.target).attr('id');
-                console.log(highligtedTextId)
-                console.log(e.target)
+                highlightedTextId = $(e.target).attr('id').substring(2);
             }
 
-            function blockClick(e) {
+            function blockClick(group) {
                 if(mode != 'swap')
                     return;
+                const id = $(group).attr('id').substring(2);
+                //deselect the block if already selected
+                if(selectedBlockId == id) {
+                    console.log('deselect')
+                    selectionBlock.style.visibility = 'hidden';
+                    selectedBlockId = null;
+                    return;
+                }
 
-                console.log('a')
+                //select the block if there hasn't been a selection
+                if(selectedBlockId === null) {
+                    console.log('select')
+                    selectedBlockId = id;
+                    let x = 7.5 + 10 * (id % 3);
+                    let y = 7.5 + 10 * Math.floor(id / 3);
+                    selectionBlock.style.visibility = 'visible'
+                    $(selectionBlock).attr('x', x).attr('y', y)
+                }
+
+                else {
+                    swap(id, selectedBlockId)
+                    console.log('swap')
+                    selectionBlock.style.visibility = 'hidden';
+                    selectedBlockId = null;
+                }
+            }
+            function swap(id1, id2) {
+                    const group1 = ids.slice(id1 * 4, id1 * 4 + 4);
+                    const group2 = ids.slice(id2 * 4, id2 * 4 + 4);
+                    const g1Text = group1.map(id => $(`#t-${id}`))
+                    const group1Tag = g1Text[0].parent();
+                    const path = group1Tag.find('path')
+                    console.log(path)
+                    const oldNumbers = g1Text.map(text => $(text).text())
+
+                    // const g2Text = group2.map(id => $(`#t-${id}`))
+
+                }
+            function changeNumber(text, path, newNumber) {
+                text.text(newNumber);
+                path.removeClass(`tetravex-${text.text()}`)
+                path.addClass(`tetravex-${newNumber}`)
             }
 
         });
