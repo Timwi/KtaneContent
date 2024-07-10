@@ -12007,9 +12007,27 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "notSymbolicCoordinates",
+		loggingTag: "Not Symbolic Coordinates",
+		matches: [
+			{
+				regex: /The displayed symbols are the (\d+)(?:st|nd|rd|th), (\d+)(?:st|nd|rd|th), and (\d+)(?:st|nd|rd|th) symbols in the manual, from the top/,
+				handler: function(matches, module) {
+					const str = ".ABCDEFGHIJKLMNOPQRST"
+					const div = $('<div>').addClass('not-symbolic-coordinates');
+					for(let i = 1; i < 4; i++) {
+						$('<img>').attr('src', `../HTML/img/Not Symbolic Coordinates/${str[matches[i]]}.svg`).addClass('not-symbolic-coordinates').appendTo(div);
+					}
+					module.push({ label:'Displayed Symbols', obj: div });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "notes",
 		loggingTag: "Notes",
-		displayName: "Notes",
 		matches: [
 			{
 				regex: /Encrypted Message: (.+)/,
