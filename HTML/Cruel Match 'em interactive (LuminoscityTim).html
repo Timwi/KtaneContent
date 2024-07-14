@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Cruel Match 'em — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/set-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script>
+    $(function() {
+        const rows = 5;
+        const cols = 5;
+        let grid = $("div.grid");
+        let gameGrid = Array(rows).fill().map(() => Array(cols).fill(null));
+        let currX = 0, currY = 0;
+        let saveStates = [];
+        let currentState = 0;
+        let solvemode = 'place';
+        let selected = null;
+        let swapSelection = null;
+        let shiftSelection = null;
+        let rotateSelection = null;
+        let pairs = {};
+        let selectedLetter = 'A';
+
+        function updateGrid() {
+            let filledCount = 0;
+            let lastEmptyCell = null;
+
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    let tile = gameGrid[x][y];
+                    let element = $(`.netsq.x${x}.y${y}`);
+                    if (tile && tile.letter) {
+                        element.text(tile.letter);
+                        filledCount++;
+                    } else {
+                        element.text('');
+                        lastEmptyCell = element;
+                    }
+                }
+            }
+
+            if (filledCount === 24 && lastEmptyCell) {
+                lastEmptyCell.text('*');
+            }
+
+            updateSelection();
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected) {
+                selected.addClass("selected");
+            }
+        }
+
+        function resetGrid() {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    gameGrid[x][y] = null;
+                }
+            }
+            updateGrid();
+        }
+
+        function selectNone() {
+            selected = null;
+            swapSelection = null;
+            shiftSelection = null;
+            rotateSelection = null;
+            $('.rotate-highlight').removeClass('rotate-highlight');
+            updateSelection();
+        }
+
+        function selectNext() {
+            if (currX == cols - 1)
+                currY = (currY + 1) % cols;
+            currX = (currX + 1) % rows;
+            selected = $(`.netsq.x${currX}.y${currY}`);
+            updateSelection();
+        }
+
+        // Initialize tools
+        let tools = $(".tools");
+        let namesTable = $("table.names");
+        let pairSelect = $("select.pair-select");
+        pairSelect.empty(); // Clear existing options
+        for (let i = 0; i < 12; i++) {
+            let letter = String.fromCharCode(65 + i);
+            $("<option>").val(letter).text(letter).appendTo(pairSelect);
+        }
+        pairSelect.val('A'); // Start with A selected
+
+        pairSelect.change(function() {
+            selectedLetter = $(this).val();
+            updateSelection();
+        });
+
+        // Initialize card table
+        let cardTable = $("table.card-table");
+        $("#clearHighlights").click(function() {
+            cardTable.find('.highlight, .mirror-highlight').removeClass('highlight mirror-highlight');
+        });
+
+        cardTable.find("th, td").hover(
+            function() { // mouseenter
+                highlightMirrorCells($(this), 'temp-highlight');
+            },
+            function() { // mouseleave
+                cardTable.find('.temp-highlight').removeClass('temp-highlight');
+            }
+        ).click(function(event) {
+            if (NoSpecialKeys(event)) {
+                cardTable.find('.highlight, .mirror-highlight').removeClass('highlight mirror-highlight');
+                highlightMirrorCells($(this), 'mirror-highlight');
+                $(this).removeClass('mirror-highlight').addClass('highlight');
+            }
+        });
+
+        function highlightMirrorCells(cell, highlightClass) {
+            let row = cell.parent().index();
+            let col = cell.index();
+            let totalRows = cardTable.find('tr').length;
+            let totalCols = cardTable.find('tr:first-child').children().length;
+
+            let mirrorCells = [
+                {row: row, col: col},
+                {row: row, col: totalCols - 1 - col},
+                {row: totalRows - 1 - row, col: col},
+                {row: totalRows - 1 - row, col: totalCols - 1 - col}
+            ];
+
+            mirrorCells.forEach(function(pos) {
+                cardTable.find(`tr:eq(${pos.row}) td:eq(${pos.col}), tr:eq(${pos.row}) th:eq(${pos.col})`)
+                    .addClass(highlightClass);
+            });
+        }
+
+        function placeLetter(x, y, letter) {
+            let count = 0;
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    if (gameGrid[i][j] && gameGrid[i][j].letter === letter) {
+                        count++;
+                    }
+                }
+            }
+            if (count >= 2) {
+                // Remove all instances of this letter
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        if (gameGrid[i][j] && gameGrid[i][j].letter === letter) {
+                            gameGrid[i][j] = null;
+                        }
+                    }
+                }
+            }
+            gameGrid[x][y] = { letter: letter };
+            updateGrid();
+        }
+
+        // Add header row with letters
+        let row = $("<div>").addClass("square-row letters").appendTo(grid);
+        $("<div>").addClass("square").appendTo(row);
+        for (var i = 0; i < cols; i++) {
+            $("<div>").addClass("square netsquare letter").text(String.fromCharCode(65 + i)).appendTo(row);
+        }
+
+        // Add grid rows and cells
+        for (let y = 1; y <= rows; y++) {
+            row = $("<div>").addClass("square-row").appendTo(grid);
+            $("<div>").addClass("square numbers netsquare").text(y).appendTo(row);
+            for (let x = 1; x <= cols; x++) {
+                let square = $("<div>").addClass(`netsquare square netsq x${x-1} y${y-1}`).click(function(event) {
+                    if (solvemode === 'rotate') {
+                        rotateHighlightedCells(true);
+                        return false;
+                     } else if (solvemode === 'swap') {
+                        if (swapSelection) {
+                            performSwap(swapSelection, $(this));
+                            selectNone();
+                        } else {
+                            swapSelection = $(this);
+                            selected = $(this);
+                            updateSelection();
+                        }
+                        return false;
+                    } else if (solvemode === 'shift') {
+                        if (shiftSelection) {
+                            performShift(shiftSelection, square);
+                            selectNone();
+                        } else {
+                            shiftSelection = square;
+                            selected = square;
+                            updateSelection();
+                        }
+                        return false;
+                    } else if (solvemode === 'place') {
+                        placeLetter(x-1, y-1, selectedLetter);
+                        playNumberedSound(selectedLetter.charCodeAt(0) - 65);
+                    }
+                    currX = x-1;
+                    currY = y-1;
+                    return false;
+                }).contextmenu(function(event) {
+                    if (solvemode === 'rotate') {
+                        event.preventDefault();
+                        rotateHighlightedCells(false);
+                        return false;
+                    }
+                }).hover(function() {
+                    if (solvemode === 'rotate') {
+                        highlightRotateCells($(this));
+                    }
+                }, function() {
+                    if (solvemode === 'rotate') {
+                        $('.rotate-highlight').removeClass('rotate-highlight');
+                    }
+                }).appendTo(row);
+            }
+        }
+
+        function highlightRotateCells(cell) {
+            $('.rotate-highlight').removeClass('rotate-highlight');
+            let x = parseInt(cell.attr('class').match(/x(\d+)/)[1]);
+            let y = parseInt(cell.attr('class').match(/y(\d+)/)[1]);
+            let centerX = Math.floor(cols / 2);
+            let centerY = Math.floor(rows / 2);
+
+            let rotationSets = [
+                [[0,0], [0,4], [4,0], [4,4]],
+                [[0,1], [1,4], [4,3], [3,0]],
+                [[0,2], [2,4], [4,2], [2,0]],
+                [[0,3], [3,4], [4,1], [1,0]],
+                [[1,1], [1,3], [3,3], [3,1]],
+                [[1,2], [2,3], [3,2], [2,1]]
+            ];
+
+            for (let set of rotationSets) {
+                if (set.some(([dx, dy]) => x === centerX + dx - 2 && y === centerY + dy - 2)) {
+                    set.forEach(([dx, dy]) => $(`.netsq.x${centerX+dx-2}.y${centerY+dy-2}`).addClass('rotate-highlight'));
+                    return;
+                }
+            }
+        }
+
+        function rotateHighlightedCells(isClockwise) {
+            let highlightedCells = $('.rotate-highlight');
+            if (highlightedCells.length !== 4) return;
+
+            let coords = highlightedCells.map(function() {
+                return {
+                    x: parseInt($(this).attr('class').match(/x(\d+)/)[1]),
+                    y: parseInt($(this).attr('class').match(/y(\d+)/)[1])
+                };
+            }).get();
+
+            // Determine if it's a corner pattern or a diamond pattern
+            let isCornerPattern = coords[1].y >= coords[0].y && coords[1].x > coords[0].x && coords[1].y != coords[2].y;
+
+            let temp;
+            if (isClockwise) {
+                if (isCornerPattern) {
+                    temp = gameGrid[coords[3].x][coords[3].y];
+                    gameGrid[coords[3].x][coords[3].y] = gameGrid[coords[1].x][coords[1].y];
+                    gameGrid[coords[1].x][coords[1].y] = gameGrid[coords[0].x][coords[0].y];
+                    gameGrid[coords[0].x][coords[0].y] = gameGrid[coords[2].x][coords[2].y];
+                    gameGrid[coords[2].x][coords[2].y] = temp;
+                } else {
+                    temp = gameGrid[coords[3].x][coords[3].y];
+                    gameGrid[coords[3].x][coords[3].y] = gameGrid[coords[2].x][coords[2].y];
+                    gameGrid[coords[2].x][coords[2].y] = gameGrid[coords[0].x][coords[0].y];
+                    gameGrid[coords[0].x][coords[0].y] = gameGrid[coords[1].x][coords[1].y];
+                    gameGrid[coords[1].x][coords[1].y] = temp;
+                }
+            } else {
+                if (isCornerPattern) {
+                    temp = gameGrid[coords[2].x][coords[2].y];
+                    gameGrid[coords[2].x][coords[2].y] = gameGrid[coords[0].x][coords[0].y];
+                    gameGrid[coords[0].x][coords[0].y] = gameGrid[coords[1].x][coords[1].y];
+                    gameGrid[coords[1].x][coords[1].y] = gameGrid[coords[3].x][coords[3].y];
+                    gameGrid[coords[3].x][coords[3].y] = temp;
+                } else {
+                    temp = gameGrid[coords[2].x][coords[2].y];
+                    gameGrid[coords[2].x][coords[2].y] = gameGrid[coords[3].x][coords[3].y];
+                    gameGrid[coords[3].x][coords[3].y] = gameGrid[coords[1].x][coords[1].y];
+                    gameGrid[coords[1].x][coords[1].y] = gameGrid[coords[0].x][coords[0].y];
+                    gameGrid[coords[0].x][coords[0].y] = temp;
+                }
+            }
+
+            updateGrid();
+        }
+
+        $('.square.letter, .square.numbers').click(function(event) {
+            let elem = $(this);
+            if (solvemode === 'swap') {
+                if (swapSelection) {
+                    performSwap(swapSelection, elem);
+                    selectNone();
+                } else {
+                    swapSelection = elem;
+                    $('.selected').removeClass('selected');
+                    elem.addClass('selected');
+                }
+                return false;
+            } else if (solvemode === 'shift') {
+                $('.selected').removeClass('selected');
+                elem.addClass('selected');
+                performShift(elem, event.which === 3); // 3 is right-click
+                return false;
+            }
+        }).on('contextmenu', function(e) {  // Add right-click event handler for shift mode
+            if (solvemode === 'shift') {
+                e.preventDefault();
+                performShift($(this), true);
+            }
+        });
+
+        function performShift(elem, isReverse) {
+            if (elem.hasClass('numbers')) {
+                shiftRow(elem.text() - 1, isReverse);
+            } else if (elem.hasClass('letter')) {
+                shiftColumn(elem.index() - 1, isReverse);
+            }
+            updateGrid();
+        }
+
+        function shiftRow(row, isReverse) {
+            if (isReverse) {
+                let temp = gameGrid[0][row];
+                for (let i = 0; i < cols - 1; i++) {
+                    gameGrid[i][row] = gameGrid[i + 1][row];
+                }
+                gameGrid[cols - 1][row] = temp;
+            } else {
+                let temp = gameGrid[cols - 1][row];
+                for (let i = cols - 1; i > 0; i--) {
+                    gameGrid[i][row] = gameGrid[i - 1][row];
+                }
+                gameGrid[0][row] = temp;
+            }
+        }
+
+        function shiftColumn(col, isReverse) {
+            if (isReverse) {
+                let temp = gameGrid[col][0];
+                for (let i = 0; i < rows - 1; i++) {
+                    gameGrid[col][i] = gameGrid[col][i + 1];
+                }
+                gameGrid[col][rows - 1] = temp;
+            } else {
+                let temp = gameGrid[col][rows - 1];
+                for (let i = rows - 1; i > 0; i--) {
+                    gameGrid[col][i] = gameGrid[col][i - 1];
+                }
+                gameGrid[col][0] = temp;
+            }
+        }
+
+        function performSwap(elem1, elem2) {
+            if (elem1.hasClass('numbers') && elem2.hasClass('numbers')) {
+                swapRows(elem1.text() - 1, elem2.text() - 1);
+            } else if (elem1.hasClass('letter') && elem2.hasClass('letter')) {
+                swapColumns(elem1.index() - 1, elem2.index() - 1);
+            } else if (elem1.hasClass('netsq') && elem2.hasClass('netsq')) {
+                swapCells(elem1, elem2);
+            }
+            updateGrid();
+        }
+
+        function swapRows(row1, row2) {
+            for (let x = 0; x < cols; x++) {
+                [gameGrid[x][row1], gameGrid[x][row2]] = [gameGrid[x][row2], gameGrid[x][row1]];
+            }
+        }
+
+        function swapColumns(col1, col2) {
+            [gameGrid[col1], gameGrid[col2]] = [gameGrid[col2], gameGrid[col1]];
+        }
+
+        function swapCells(cell1, cell2) {
+            let x1 = cell1.attr('class').match(/x(\d+)/)[1];
+            let y1 = cell1.attr('class').match(/y(\d+)/)[1];
+            let x2 = cell2.attr('class').match(/x(\d+)/)[1];
+            let y2 = cell2.attr('class').match(/y(\d+)/)[1];
+            [gameGrid[x1][y1], gameGrid[x2][y2]] = [gameGrid[x2][y2], gameGrid[x1][y1]];
+        }
+
+        function playNumberedSound(n) {
+            if ($("button.sound").hasClass("play") && !isNaN(n) && n >= 0 && n < 12) {
+                let aud = audioNumbers[n][0].cloneNode();
+                aud.volume = 0.5;
+                aud.play();
+            }
+        }
+
+        let audioNumbers = [
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 3.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 2.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 1.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sim 4.wav")
+                .appendTo(grid)
+                .prop("volume", 0.5),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sim 3.wav")
+                .appendTo(grid)
+                .prop("volume", 0.5),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sends 4.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sends 2.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Sends 1.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Colored Squares 3.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Colored Squares 2.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Colored Squares 4.wav")
+                .appendTo(grid),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Tasha Squeals 4.wav")
+                .appendTo(grid),
+        ];
+
+        let down = false;
+        let radioButtons = $('input[name="mode"]');
+        $(document).click(function(event) {
+            selectNone();
+        }).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toUpperCase();
+
+            if (solvemode === 'place' && /^[A-L]$/.test(k)) {
+                selectedLetter = k;
+                pairSelect.val(k);
+                updateSelection();
+                down = false;
+                return false;
+            }
+            else {
+                let index = parseInt(k);
+                if (index > 0 && index - 1 < radioButtons.length) {
+                    radioButtons.eq(index - 1).prop('checked', true).change();
+                }
+            }
+
+            down = false;
+        });
+
+        $('input[name="mode"]').change(function() {
+            solvemode = $(this).val();
+            $("body").removeClass("place swap shift rotate").addClass(solvemode);
+            selectNone();
+        });
+
+        $("<button>").addClass("reset-grid").text("Clear").appendTo(tools).click(function() {
+            resetGrid();
+        });
+
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-all").click(function() {
+            $("body").removeClass("swap shift rotate").addClass("place");
+            solvemode = "place";
+
+            resetGrid();
+            $('input[name="mode"][value="place"]').prop("checked", true);
+            $('.highlight, .mirror-highlight').removeClass('highlight mirror-highlight');
+
+            selectedLetter = 'A';
+            pairSelect.val(selectedLetter);
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".netsquare, .card-table th, .tools button")).map(x => $(x)).map(x => x.attr("class") || "");
+            let bodyClass = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_gameGrid = JSON.stringify(gameGrid);
+            let s_currX = currX;
+            let s_currY = currY;
+            let s_solvemode = solvemode;
+            let s_selectedLetter = selectedLetter;
+
+            let button = $("<button>").text(stateNumber+1).click(function() {
+                $(".netsquare, .card-table th, .tools button").each((i,x) => $(x).attr("class", saveStateClass[i]));
+                $("body").each((i,x) => $(x).attr("class", bodyClass[i]));
+                currentState = stateNumber;
+
+                gameGrid = JSON.parse(s_gameGrid);
+                currX = s_currX;
+                currY = s_currY;
+                solvemode = s_solvemode;
+                selectedLetter = s_selectedLetter;
+                pairSelect.val(selectedLetter);
+
+                $(`input[name="mode"][value="${solvemode}"]`).prop("checked", true);
+
+                updateGrid();
+                updateSelection();
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        th img { width: 35px; }
+        html {
+            --sqsize: 58px;
+            --sqsizew: 64px;
+            --tsize: 50px;
+        }
+
+        .stamp-tools {
+            margin-left: 20px;
+        }
+
+        .stamp-tools button, .color-buttons button {
+            margin: 5px;
+        }
+
+        .square-row {
+            height: var(--sqsize);
+            margin: 1px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .square {
+            margin: 1px;
+            width: var(--sqsizew);
+            height: var(--sqsize);
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            transition: background-color 0.2s, color 0.2s;
+            box-sizing: border-box;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .square.numbers, .letters .square {
+            padding-top: 4px;
+            border-width: 0;
+            width: var(--sqsizew);
+            height: var(--sqsize);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .netsquare {
+            height: var(--sqsize);
+            width: var(--sqsizew);
+        }
+        .netsquare.netsq {
+            line-height: 57px;
+            cursor: pointer;
+            color: #000;
+            position: relative;
+            border: #808080 1px solid;
+        }
+        .dark .netsquare.netsq {
+            color: #DDD;
+        }
+        body.rotate .netsq:hover,
+        body.swap .netsquare:hover,
+        body.shift .square.letter:hover,
+        body.shift .square.numbers:hover {
+            background-color: #888;
+        }
+        body.rotate .netsq.rotate-highlight {
+            background-color: #33BB33;
+        }
+
+        .temp-highlight {
+            background-color: #CCCCCC; /* Light gray */
+        }
+
+        .highlight {
+            background-color: #CCCCCC; /* Light gray */
+        }
+
+        .mirror-highlight {
+            background-color: #90FF90; /* Light green */
+        }
+
+        .netsquare.selected {
+            border: 3px solid #00F;
+        }
+        .stamp-tool.selected {
+            border: 3px solid #F00;
+        }
+
+        .netsq::after {
+            white-space: pre;
+            font-size: 13px;
+        }
+
+        .stamp-tool {
+            width: var(--tsize);
+            height: calc(var(--tsize) + 8px);
+            border: 3px solid transparent;
+            margin: 3px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .stamps > span { width: 50px; }
+
+        .tools {
+            width: 95px;
+        }
+
+        table.card-table {
+            position: relative;
+            margin: 20px 0 auto 10px;
+        }
+        table.card-table td, table.card-table th {
+            height: 50px;
+            width: 50px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 25px;
+            padding: 0;
+        }
+        table.card-table td.hover {
+            background-color: #888;
+        }
+        table.card-table td.highlight {
+            background-color: #339933;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        body:is(.square6, .square7, .square8) button.read-solve {
+            width: 77px;
+        }
+
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body class="place">
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Cruel Match 'em</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Cruel Match 'em.svg" class="diagram">
+                <h2>On the Subject of Cruel Match 'em</h2>
+                <p class="flavour-text">Matchmaker, matchmaker, give me a break.</p>
+                <p>
+                    On this module is a playfield with 25 cards arranged into five rows.<br>
+                    Each card can be one of twelve suits: Chevrons, Clubs, Coins, Cups, Diamonds, Eyes, Hearts, Pentacles, Shields, Six point stars, Spades,
+                    and Swords and one of twelve colours: Red, Orange, Yellow, Lime, Forest, Blue, Cyan, Violet, Pink, White, Bronze, and Silver.<br>
+                    Amongst the cards are twelve pairs and one remaining unpaired "joker" card.
+                </p>
+                <p>
+                    None of the 25 cards on the playfield are identical.<br>
+                    Use the table on page two to find the matching pairs of cards and press the start button to flip the cards over.<br>
+                    The backs of the cards are identical.
+                </p>
+                <p>With the cards flipped, the screen displays the number of remaining shuffles.<br> Initially, this number will always be 8.</p>
+                <p>Press the button to shuffle the cards. Each shuffle combines two of the following transformations:</p>
+                <ul>
+                    <li>Swapping two rows/columns of cards.</li>
+                    <li>Shifting a row/column one space.</li>
+                    <li>Rotating four cards around the center of the playfield.</li>
+                    <li>Swapping two cards.</li>
+                </ul>
+                <p>
+                    Once there are no shuffles remaining, the cards can now be selected, flipping them back over.<br>
+                    When two cards are selected, the module will check for a match.<br>
+                    If the two selected cards match, they will remain face up.<br>
+                    Otherwise, a strike will be incurred and the selected pair of cards will be flipped face down.
+                </p>
+                <p>The module is solved once only the joker is left face down.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Cruel Match 'em</span>
+            </div>
+            <div class="page-content">
+                <p>
+                    The table below contains every possible card.<br>
+                    Every card other than the joker is paired with either its vertical, horizontal, or diametric opposite in the table.
+                </p>
+                <p><strong>Hover</strong> or <strong>click</strong> on a cell to highlight it and its opposites.</p>
+                <button id="clearHighlights">Clear Highlights</button>
+                <table style="width: 100%" class="card-table">
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/W Ch.svg"></th><th><img src="img/Cruel Match 'em/S P.svg"></th>
+                        <th><img src="img/Cruel Match 'em/C Sh.svg"></th><th><img src="img/Cruel Match 'em/V Ch.svg"></th>
+                        <th><img src="img/Cruel Match 'em/R E.svg"></th><th><img src="img/Cruel Match 'em/V Cu.svg"></th>
+                        <th><img src="img/Cruel Match 'em/O H.svg"></th><th><img src="img/Cruel Match 'em/B P.svg"></th>
+                        <th><img src="img/Cruel Match 'em/B Ch.svg"></th><th><img src="img/Cruel Match 'em/W D.svg"></th>
+                        <th><img src="img/Cruel Match 'em/O Si.svg"></th><th><img src="img/Cruel Match 'em/W Cu.svg"></th>
+                    </tr>
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/F P.svg"></th><th><img src="img/Cruel Match 'em/C H.svg"></th>
+                        <th><img src="img/Cruel Match 'em/L P.svg"></th><th><img src="img/Cruel Match 'em/Z E.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Z P.svg"></th><th><img src="img/Cruel Match 'em/W Sp.svg"></th>
+                        <th><img src="img/Cruel Match 'em/O D.svg"></th><th><img src="img/Cruel Match 'em/L Sw.svg"></th>
+                        <th><img src="img/Cruel Match 'em/W E.svg"></th><th><img src="img/Cruel Match 'em/V P.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Y Sh.svg"></th><th><img src="img/Cruel Match 'em/O Cl.svg"></th>
+                    </tr>
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/Z Sp.svg"></th><th><img src="img/Cruel Match 'em/Y Sp.svg"></th>
+                        <th><img src="img/Cruel Match 'em/O Cu.svg"></th><th><img src="img/Cruel Match 'em/Y Sw.svg"></th>
+                        <th><img src="img/Cruel Match 'em/C Si.svg"></th><th><img src="img/Cruel Match 'em/R Cu.svg"></th>
+                        <th><img src="img/Cruel Match 'em/P Sp.svg"></th><th><img src="img/Cruel Match 'em/R Cl.svg"></th>
+                        <th><img src="img/Cruel Match 'em/L Sh.svg"></th><th><img src="img/Cruel Match 'em/P P.svg"></th>
+                        <th><img src="img/Cruel Match 'em/F H.svg"></th><th><img src="img/Cruel Match 'em/S Cn.svg"></th>
+                    </tr>
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/R H.svg"></th><th><img src="img/Cruel Match 'em/P Si.svg"></th>
+                        <th><img src="img/Cruel Match 'em/B Si.svg"></th><th><img src="img/Cruel Match 'em/S D.svg"></th>
+                        <th><img src="img/Cruel Match 'em/V Cl.svg"></th><th><img src="img/Cruel Match 'em/O Sw.svg"></th>
+                        <th><img src="img/Cruel Match 'em/F Sh.svg"></th><th><img src="img/Cruel Match 'em/V E.svg"></th>
+                        <th><img src="img/Cruel Match 'em/C E.svg"></th><th><img src="img/Cruel Match 'em/R P.svg"></th>
+                        <th><img src="img/Cruel Match 'em/L Sp.svg"></th><th><img src="img/Cruel Match 'em/L Cu.svg"></th>
+                    </tr>
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/P Ch.svg"></th><th><img src="img/Cruel Match 'em/P Cn.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Z Cn.svg"></th><th><img src="img/Cruel Match 'em/V Si.svg"></th>
+                        <th><img src="img/Cruel Match 'em/F Cu.svg"></th><th><img src="img/Cruel Match 'em/B H.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Z Sh.svg"></th><th><img src="img/Cruel Match 'em/O P.svg"></th>
+                        <th><img src="img/Cruel Match 'em/L Si.svg"></th><th><img src="img/Cruel Match 'em/R Si.svg"></th>
+                        <th><img src="img/Cruel Match 'em/F D.svg"></th><th><img src="img/Cruel Match 'em/C Cn.svg"></th>
+                    </tr>
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/S Sw.svg"></th><th><img src="img/Cruel Match 'em/Y Cn.svg"></th>
+                        <th><img src="img/Cruel Match 'em/F Si.svg"></th><th><img src="img/Cruel Match 'em/B Sw.svg"></th>
+                        <th><img src="img/Cruel Match 'em/R Sw.svg"></th><th><img src="img/Cruel Match 'em/O Ch.svg"></th>
+                        <th><img src="img/Cruel Match 'em/L Cn.svg"></th><th><img src="img/Cruel Match 'em/S Si.svg"></th>
+                        <th><img src="img/Cruel Match 'em/F Cn.svg"></th><th><img src="img/Cruel Match 'em/Z Cl.svg"></th>
+                        <th><img src="img/Cruel Match 'em/S Cu.svg"></th><th><img src="img/Cruel Match 'em/P D.svg"></th>
+                    </tr>
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/F Ch.svg"></th><th><img src="img/Cruel Match 'em/C Cu.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Y P.svg"></th><th><img src="img/Cruel Match 'em/P H.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Z Ch.svg"></th><th><img src="img/Cruel Match 'em/P Sw.svg"></th>
+                        <th><img src="img/Cruel Match 'em/W Si.svg"></th><th><img src="img/Cruel Match 'em/B Sp.svg"></th>
+                        <th><img src="img/Cruel Match 'em/W H.svg"></th><th><img src="img/Cruel Match 'em/Y E.svg"></th>
+                        <th><img src="img/Cruel Match 'em/S H.svg"></th><th><img src="img/Cruel Match 'em/Z Cu.svg"></th>
+                    </tr>
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/C Sp.svg"></th><th><img src="img/Cruel Match 'em/W Cl.svg"></th>
+                        <th><img src="img/Cruel Match 'em/S Ch.svg"></th><th><img src="img/Cruel Match 'em/Z D.svg"></th>
+                        <th><img src="img/Cruel Match 'em/R Sh.svg"></th><th><img src="img/Cruel Match 'em/W Sh.svg"></th>
+                        <th><img src="img/Cruel Match 'em/B E.svg"></th><th><img src="img/Cruel Match 'em/B Cl.svg"></th>
+                        <th><img src="img/Cruel Match 'em/O E.svg"></th><th><img src="img/Cruel Match 'em/Z Sw.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Z Si.svg"></th><th><img src="img/Cruel Match 'em/L E.svg"></th>
+                    </tr>
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/F Sp.svg"></th><th><img src="img/Cruel Match 'em/L Cl.svg"></th>
+                        <th><img src="img/Cruel Match 'em/O Cn.svg"></th><th><img src="img/Cruel Match 'em/W P.svg"></th>
+                        <th><img src="img/Cruel Match 'em/B Sh.svg"></th><th><img src="img/Cruel Match 'em/S E.svg"></th>
+                        <th><img src="img/Cruel Match 'em/V D.svg"></th><th><img src="img/Cruel Match 'em/W Sw.svg"></th>
+                        <th><img src="img/Cruel Match 'em/S Sp.svg"></th><th><img src="img/Cruel Match 'em/C D.svg"></th>
+                        <th><img src="img/Cruel Match 'em/W Cn.svg"></th><th><img src="img/Cruel Match 'em/C Ch.svg"></th>
+                    </tr>
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/F Sw.svg"></th><th><img src="img/Cruel Match 'em/L Ch.svg"></th>
+                        <th><img src="img/Cruel Match 'em/F E.svg"></th><th><img src="img/Cruel Match 'em/P Sh.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Z H.svg"></th><th><img src="img/Cruel Match 'em/V Cn.svg"></th>
+                        <th><img src="img/Cruel Match 'em/V H.svg"></th><th><img src="img/Cruel Match 'em/C P.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Y Ch.svg"></th><th><img src="img/Cruel Match 'em/B Cn.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Y Cu.svg"></th><th><img src="img/Cruel Match 'em/S SH.svg"></th>
+                    </tr>
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/S Cl.svg"></th><th><img src="img/Cruel Match 'em/V Sp.svg"></th>
+                        <th><img src="img/Cruel Match 'em/P Cl.svg"></th><th><img src="img/Cruel Match 'em/O Sh.svg"></th>
+                        <th><img src="img/Cruel Match 'em/R Cn.svg"></th><th><img src="img/Cruel Match 'em/L D.svg"></th>
+                        <th><img src="img/Cruel Match 'em/C Cl.svg"></th><th><img src="img/Cruel Match 'em/L H.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Y Cl.svg"></th><th><img src="img/Cruel Match 'em/Y Si.svg"></th>
+                        <th><img src="img/Cruel Match 'em/F Cl.svg"></th><th><img src="img/Cruel Match 'em/P Cu.svg"></th>
+                    </tr>
+                    <tr>
+                        <th><img src="img/Cruel Match 'em/R Sp.svg"></th><th><img src="img/Cruel Match 'em/V Sh.svg"></th>
+                        <th><img src="img/Cruel Match 'em/V Sw.svg"></th><th><img src="img/Cruel Match 'em/R D.svg"></th>
+                        <th><img src="img/Cruel Match 'em/C Sw.svg"></th><th><img src="img/Cruel Match 'em/Y H.svg"></th>
+                        <th><img src="img/Cruel Match 'em/Y D.svg"></th><th><img src="img/Cruel Match 'em/R Ch.svg"></th>
+                        <th><img src="img/Cruel Match 'em/P E.svg"></th><th><img src="img/Cruel Match 'em/O Sp.svg"></th>
+                        <th><img src="img/Cruel Match 'em/B Cu.svg"></th><th><img src="img/Cruel Match 'em/B D.svg"></th>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Cruel Match 'em</span>
+            </div>
+            <div class="page-content">
+                <div class="stamp-tools hstack left alignc gap1">
+                    <span>Select Letter:</span>
+                    <select class="pair-select"></select>
+                </div>
+                <div class="hstack wrap left">
+                    <div class="tools vstack alignc"></div>
+                    <div class="grid vstack left"></div>
+                </div>
+                <div style="height:5mm"></div>
+                <div class="mode-selector hstack left gap2">
+                    <label><input type="radio" name="mode" value="place" checked> Place Letter</label>
+                    <label><input type="radio" name="mode" value="swap"> Swap</label>
+                    <label><input type="radio" name="mode" value="shift"> Shift</label>
+                    <label><input type="radio" name="mode" value="rotate"> Rotate</label>
+                </div>
+                <div style="height:5mm"></div>
+                <div class="saves hstack wrap left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack left" style="margin-top:5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>Type <strong>1, 2, 3, 4</strong> to quickly switch between modes.</li>
+                    <li>
+                        In <strong>Place Letter</strong> mode:
+                        <ul>
+                            <li>Type <strong>A - L</strong> or use the <strong>Select Letter</strong> dropdown to choose a letter.</li>
+                            <li><strong>Click a cell</strong> to place the selected letter pair. An asterisk (*) is placed in the last cell automatically.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Swap</strong> mode:
+                        <ul>
+                            <li><strong>Click on two cells, rows, or columns</strong> to swap their contents.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Shift</strong> mode:
+                        <ul>
+                            <li><strong>Left-click a row or column</strong> to shift contents right or down.</li>
+                            <li><strong>Right-click a row or column</strong> to shift contents left or up.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Rotate</strong> mode:
+                        <ul>
+                            <li><strong>Hover over</strong> the cells to highlight the cells that will rotate.</li>
+                            <li><strong>Left-click</strong> to rotate clockwise.</li>
+                            <li><strong>Right-click</strong> to rotate counter-clockwise.</li>
+                        </ul>
+                    </li>
+                    <li>The <strong>Clear</strong> button resets the grid.</li>
+                    <li>The <strong>Save</strong> button creates a new save state.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>Use <strong>Reset Saves</strong> to clear all saved states.</li>
+                    <li>The <strong>Reset All</strong> button resets the entire interactive.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
