@@ -19147,7 +19147,7 @@ let parseData = [
 					let grid = '';
 					let keyword = matches[1] + 'ABCDEFGHIKLMNOPQRSTUVWXYZ';
 					for (let ch of keyword)
-						if (!grid.includes(ch))
+						if (!(grid + "J").includes(ch))
 							grid += ch;
 					let table = "<table class='playfair-cipher'>";
 					for (let row = 0; row < 5; row++) {
