@@ -24,9 +24,13 @@
             stroke: black;
             stroke-width: .2;
         }
-        
+
         path.selected {
             stroke: red;
+        }
+        svg > g.selected rect.selector {
+            stroke-width: .5px;
+            stroke: #44F;
         }
 
         path.tetravex-0 { fill: #1d1b1a; }
@@ -39,10 +43,10 @@
         path.tetravex-7 { fill: #b700a2; }
 
         button.write-swap::before {
-            content: 'Mode: Swap';
-        }
-        button.write-swap:not(.swap)::before {
             content: 'Mode: Write';
+        }
+        button.write-swap.swap::before {
+            content: 'Mode: Swap';
         }
 
         button {
@@ -60,152 +64,236 @@
             background-color: black;
             color: white;
         }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .saves {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        body:not(.mobile) .mobile-keyboard {
+            display: none;
+        }
+        svg text {
+            user-select: none;
+        }
+        body:not(.swap) svg text,
+        body.swap svg > g {
+            cursor: pointer;
+        }
     </style>
     <script>
-        $(function() {
-            let mode = 'write';
-            let selectedBlockId = null;
-            let highlightedTextId = 0;
-            const ids = [3, 0, 4, 9, 5, 1, 6, 10, 7, 2, 8, 11, 15, 12, 16, 21, 17, 13, 18, 22, 19, 14, 20, 23, 27, 24, 28, 33, 29, 25, 30, 34, 31, 26, 32, 35]
-            const svg = $('#svg');
-            const length = 10
-            for(let row = 0; row < 3; row++) {
-                for(let col = 0; col < 3; col++) {
-                    const ix = row * 3 + col
-                    idChuck = ids.slice(ix * 4, ix * 4 + 4);
-                    $(addSquare({x: col * 10, y: row * 10}, [0, 0, 0, 0], idChuck, ix)).appendTo($(svg));
-                }
+    $(function() {
+        if (/mobi/i.test(navigator.userAgent)) {
+            $("body").addClass("mobile");
+        }
+
+        let saveStates = [];
+        let currentState = 0;
+        let selectedBlockId = null;
+        let highlightedTextId = 0;
+        const ids = [3, 0, 4, 9, 5, 1, 6, 10, 7, 2, 8, 11, 15, 12, 16, 21, 17, 13, 18, 22, 19, 14, 20, 23, 27, 24, 28, 33, 29, 25, 30, 34, 31, 26, 32, 35];
+        const svg = $('#svg');
+        const length = 10;
+        for(let row = 0; row < 3; row++) {
+            for(let col = 0; col < 3; col++) {
+                const ix = row * 3 + col;
+                idChuck = ids.slice(ix * 4, ix * 4 + 4);
+                $(addSquare({x: col * 10, y: row * 10}, [0, 0, 0, 0], idChuck, ix)).appendTo($(svg));
             }
-            //make selection square
-            const selectionBlock = MakeSvgElem("rect", {x:0, y:0, width:1, height:1, fill:"red"})
-            selectionBlock.style.visibility = 'hidden'
-            svg.append(selectionBlock)
+        }
+        function mode() {
+            return $("button.write-swap").hasClass("swap") ? 'swap' : 'write';
+        }
 
-            //highlight first triangle
-            $('#t-0').addClass('highlight');
+        //highlight first triangle
+        $('#t-0').addClass('highlight');
 
-            // toggle write/swap
-            $("<button>").addClass("write-swap").appendTo(tools).click(function() {
+        // toggle write/swap
+        $("<button>").addClass("write-swap").appendTo(tools).click(function() {
             $(this).toggleClass("swap");
             $("body").toggleClass("swap", $(this).hasClass("swap"));
-            
-            const swapMode = $(this).hasClass("swap")
-            mode = swapMode ? 'swap' : 'write';
+
             if($(this).hasClass("swap")) {
                 //disable highlight
-                $('.highlight').removeClass('highlight')
+                $('.highlight').removeClass('highlight');
             }
             else {
                 //enable highlight
-                $(`#t-${highlightedTextId}`).addClass('highlight')
+                $(`#t-${highlightedTextId}`).addClass('highlight');
                 //disable selection
                 selectedBlockId = null;
-                selectionBlock.style.visibility = 'hidden';
+                $('.selected').removeClass('selected');
             }
         });
-        $("<button>").text('Reset').appendTo(tools).click(function() {
+
+        function resetGrid() {
             for(let i = 0; i < 36; i++) {
-                const object = getObject(i)
-                changeNumber(object.text, object.path, 0, object.text.text())
+                const object = getObject(i);
+                changeNumber(object.text, object.path, 0, object.text.text());
             }
-        })
+        }
+
+        $("<button>").text('Reset').appendTo(tools).click(resetGrid);
 
         //keypress
-        $(document).click(function() {
-            }).keyup(function(event) {
-                if(mode != 'write' || !Number.isInteger(parseInt(event.key)))
-                    return;
-                const newNumber = event.key;
-                if(newNumber == 8 || newNumber == 9)
-                    return;
-                const object = getObject(highlightedTextId);
-                changeNumber(object.text, object.path, newNumber, object.text.text())
-                object.text.removeClass('highlight')
-                highlightedTextId = (parseInt(highlightedTextId) + 1) % 36;
-                $(`#t-${highlightedTextId}`).addClass('highlight');
-            })
-            function addSquare(translate, labels, ids, gID) {
-                const g = MakeSvgElem("g", {id: `g-${gID}`, style: `transform: translate(${translate.x}px, ${translate.y}px)`});
-                $(g).click(function() { blockClick($(this)); });
-                for(let i = 0; i < 4; i++) {
-                    g.append(addTriangle(labels[i], 90 * i, ids[i]));
-                }
-                return g;
-            }
-            function addTriangle(label, rotation, id) {
-                const coordinates = [{x: 5, y: 9}, {x: 8, y: 6}, {x: 11, y: 9}, {x: 8, y: 12}];
-                const currentCoordinates = coordinates[Math.floor(rotation / 90)];
-                const g = MakeSvgElem("g");
-                g.append(MakeSvgElem("path", { d: "M3 3 l 5 5 l -5 5 z", class: `tetravex tetravex-${label}`, style: `transform-origin: 8px 8px; transform:rotate(${rotation}deg)` }));
-                const text = MakeSvgElem("text", {id: `t-${id}`, class: "tetravex", x: currentCoordinates.x, y: currentCoordinates.y});
-                $(text).click(textClick)
-                text.innerHTML = label;
-                g.append(text)
-                return g;
-            }
-
-            //clicking
-            function textClick(e) {
-                if(mode != 'write' || $(e.target).attr('id') == `t-${highlightedTextId}`)
-                    return;
-                $(`#t-${highlightedTextId}`).removeClass('highlight');
-                $(e.target).addClass("highlight");
-                highlightedTextId = $(e.target).attr('id').substring(2);
-            }
-
-            function blockClick(group) {
-                if(mode != 'swap')
-                    return;
-                const id = $(group).attr('id').substring(2);
-                //deselect the block if already selected
-                if(selectedBlockId == id) {
-                    selectionBlock.style.visibility = 'hidden';
-                    selectedBlockId = null;
-                    return;
-                }
-
-                //select the block if there hasn't been a selection
-                if(selectedBlockId === null) {
-                    selectedBlockId = id;
-                    let x = 7.5 + 10 * (id % 3);
-                    let y = 7.5 + 10 * Math.floor(id / 3);
-                    selectionBlock.style.visibility = 'visible'
-                    $(selectionBlock).attr('x', x).attr('y', y)
-                }
-
-                //swap
-                else {
-                    swap(selectedBlockId, id)
-                    selectionBlock.style.visibility = 'hidden';
-                    selectedBlockId = null;
-                }
-            }
-            function swap(id1, id2) {
-                    const group1 = ids.slice(id1 * 4, id1 * 4 + 4).map(id => getObject(id));
-                    const group2 = ids.slice(id2 * 4, id2 * 4 + 4).map(id => getObject(id));
-                    const oldNumbers = group1.map(obj => $(obj.text).text())
-                    for(let i = 0; i < 4; i++) {
-                        const g1 = group1[i];
-                        const g1OldNumber = oldNumbers[i];
-                        const g2 = group2[i];
-                        const g2OldNumber = group2[i].text.text();
-                        changeNumber(g1.text, g1.path, g2.text.text(), g1OldNumber)
-                        changeNumber(g2.text, g2.path, oldNumbers[i], g2OldNumber)
-                    }
-                }
-            function getObject(textId) {
-                const text = $(`#t-${textId}`);
-                const group = text.parent()
-                const path = group.find('path')
-                return {text: text, group: group, path: path }
-            }
-            function changeNumber(text, path, newNumber, oldNumber) {
-                text.text(newNumber);
-                path.removeClass(`tetravex-${oldNumber}`)
-                path.addClass(`tetravex-${newNumber}`)
-            }
-
+        $(document).keyup(function(event) {
+            if(mode() != 'write' || !Number.isInteger(parseInt(event.key)))
+                return;
+            const newNumber = event.key;
+            if(newNumber == 8 || newNumber == 9)
+                return;
+            const object = getObject(highlightedTextId);
+            changeNumber(object.text, object.path, newNumber, object.text.text());
+            object.text.removeClass('highlight');
+            highlightedTextId = (parseInt(highlightedTextId) + 1) % 36;
+            $(`#t-${highlightedTextId}`).addClass('highlight');
         });
+        $(".mobile-keyboard").on("input", function() {
+            $(this).val("");
+        });
+
+        function addSquare(translate, labels, ids, gID) {
+            const g = MakeSvgElem("g", {id: `g-${gID}`, style: `transform: translate(${translate.x}px, ${translate.y}px)`});
+            $(g).click(function() { blockClick($(this)); });
+            for(let i = 0; i < 4; i++) {
+                g.append(addTriangle(labels[i], 90 * i, ids[i]));
+            }
+            g.append(MakeSvgElem("rect", {width: 9.4, height: 9.4, x: 3.3, y: 3.3, class: "selector", fill: "none", stroke: "none"}));
+            return g;
+        }
+
+        function addTriangle(label, rotation, id) {
+            const coordinates = [{x: 5, y: 9}, {x: 8, y: 6}, {x: 11, y: 9}, {x: 8, y: 12}];
+            const currentCoordinates = coordinates[Math.floor(rotation / 90)];
+            const g = MakeSvgElem("g");
+            g.append(MakeSvgElem("path", { d: "M3 3 l 5 5 l -5 5 z", class: `tetravex tetravex-${label}`, style: `transform-origin: 8px 8px; transform:rotate(${rotation}deg)` }));
+            const text = MakeSvgElem("text", {id: `t-${id}`, class: "tetravex", x: currentCoordinates.x, y: currentCoordinates.y});
+            $(text).click(textClick);
+            text.innerHTML = label;
+            g.append(text);
+            return g;
+        }
+
+        function textClick(e) {
+            if(mode() != 'write' || $(e.target).attr('id') == `t-${highlightedTextId}`)
+                return;
+            $(`#t-${highlightedTextId}`).removeClass('highlight');
+            $(e.target).addClass("highlight");
+            highlightedTextId = $(e.target).attr('id').substring(2);
+        }
+
+        function blockClick(group) {
+            if(mode() != 'swap')
+                return;
+            const id = $(group).attr('id').substring(2);
+
+            if(selectedBlockId == id) {
+                group.removeClass('selected');
+                selectedBlockId = null;
+                return;
+            }
+
+            //select the block if there hasn't been a selection
+            if(selectedBlockId === null) {
+                selectedBlockId = id;
+                group.addClass('selected');
+            }
+            else {  //swap
+                swap(selectedBlockId, id);
+                $('.selected').removeClass('selected');
+                selectedBlockId = null;
+            }
+        }
+
+        function swap(id1, id2) {
+            const group1 = ids.slice(id1 * 4, id1 * 4 + 4).map(id => getObject(id));
+            const group2 = ids.slice(id2 * 4, id2 * 4 + 4).map(id => getObject(id));
+            const oldNumbers = group1.map(obj => $(obj.text).text());
+            for(let i = 0; i < 4; i++) {
+                const g1 = group1[i];
+                const g1OldNumber = oldNumbers[i];
+                const g2 = group2[i];
+                const g2OldNumber = g2.text.text();
+                changeNumber(g1.text, g1.path, g2.text.text(), g1OldNumber);
+                changeNumber(g2.text, g2.path, oldNumbers[i], g2OldNumber);
+            }
+        }
+
+        function getObject(textId) {
+            const text = $(`#t-${textId}`);
+            const group = text.parent();
+            const path = group.find('path');
+            return {text: text, group: group, path: path };
+        }
+
+        function changeNumber(text, path, newNumber, oldNumber) {
+            text.text(newNumber);
+            path.removeClass(`tetravex-${oldNumber}`);
+            path.addClass(`tetravex-${newNumber}`);
+        }
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        function saveCurrentState() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".tools button, svg > g, svg path, svg text")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveLabels = Array.from($("svg text")).map(x => $(x)).map(x => x.text() || "");
+            let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+
+            let s_selectedBlockId = selectedBlockId;
+            let s_highlightedTextId = highlightedTextId;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".tools button, svg > g, svg path, svg text").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $("svg text").each((i, x) => $(x).text(saveLabels[i]));
+                $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
+                currentState = stateNumber;
+
+                selectedBlockId = s_selectedBlockId;
+                highlightedTextId = s_highlightedTextId;
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        }
+
+        $("button.save").click(saveCurrentState);
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-all").click(function() {
+            $("body").removeClass("swap");
+            $("button.write-swap").removeClass("swap");
+            resetGrid();
+            $('svg text').removeClass('highlight');
+            $('#t-0').addClass('highlight');
+            highlightedTextId = 0;
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+    });
     </script>
 </head>
 <body>
@@ -239,10 +327,17 @@
                 <span class="page-header-section-title">TetraVex</span>
             </div>
             <div class="page-content">
+                    <input type="text" class="mobile-keyboard" placeholder="Input the grid here">
                     <svg  id="svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 35 35">
                     </svg>
                     <div id="tools"></div>
-                    
+                    <div class="saves hstack wrap left">
+                        <button class="save">Save</button>
+                    </div>
+                    <div class="hstack left" style="margin-top: 5mm">
+                        <button class="reset-saves">Reset Saves</button>
+                        <button class="reset-all">Reset All</button>
+                    </div>
             </div>
             <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
