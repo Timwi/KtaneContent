@@ -90,11 +90,29 @@
             margin-bottom: 1%;
         }
         .gold { background-color: gold; }
+        .saves {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
     </style>
     <script>
     $(function() {
+        let saveStates = [];
+        let currentState = 0;
         let highlightedSuspect;
         let tmplPerson = $("#person")[0].content;
+        const roomNames = ["Ballroom", "Billiard Room", "Conservatory", "Dining Room", "Hall", "Kitchen", "Library", "Lounge", "Study"];
+        const weapons = ["Candlestick", "Dagger", "Lead Pipe", "Revolver", "Rope", "Spanner"];
         function clickEventHandler(arr) {
             function handleClick(e) {
                 e.target.innerText = arr[(parseInt(arr.indexOf(e.target.innerText)) + 1) % arr.length];
@@ -105,7 +123,7 @@
         function suspectClick(e) {
             e.stopPropagation()
             if (highlightedSuspect) {
-                $(highlightedSuspect).removeClass("gold");
+                $("img.gold").removeClass("gold");
                 if (highlightedSuspect == e.target) {
                     highlightedSuspect = undefined;
                     return;
@@ -129,7 +147,7 @@
                 const faceImage = person.find("img");
                 faceImage[0].src = highlightedSuspect.src;
                 faceImage.click(suspectClick);
-                person.find(".item-text").click(clickEventHandler(["Candlestick", "Dagger", "Lead Pipe", "Revolver", "Rope", "Spanner"]));
+                person.find(".item-text").click(clickEventHandler(weapons));
                 $(e.target).find('.people-container').append(person);
                 clearHighlightedSuspect();
             }
@@ -142,7 +160,7 @@
         function resetClick(e) {
             if (highlightedSuspect)
                 clearHighlightedSuspect()
-            $(".people-container").html("");
+            $(".people-container .person").remove();
         }
         function deleteClick(e) {
             if (highlightedSuspect && highlightedSuspect.parentNode.id.includes("clone")) {
@@ -151,19 +169,116 @@
             }
         }
         function clearHighlightedSuspect() {
-            $(highlightedSuspect).removeClass("gold");
+            $("img.gold").removeClass("gold");
             highlightedSuspect = undefined;
         }
         //select room
         $("#interactive-table tr > td > div").click(roomClick);
         //room name interactions
-        $(".room-name").click(clickEventHandler(["Ballroom", "Billiard Room", "Conservatory", "Dining Room", "Hall", "Kitchen", "Library", "Lounge", "Study"]));
+        $(".room-name").click(clickEventHandler(roomNames));
         //highlight picture
         $("#console img").click(suspectClick);
         //reset button
         $("#reset").click(resetClick);
         //delete button
         $("#delete").click(deleteClick);
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-all").click(function() {
+            resetClick();
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            // Save the current state
+            let savedState = {
+                rooms: [],
+                highlightedSuspect: highlightedSuspect ? 
+                    (highlightedSuspect.parentNode.id.includes("clone") ? 
+                        highlightedSuspect.parentNode.id : 
+                        highlightedSuspect.id) 
+                    : null
+            };
+
+            // Save each room's state
+            $("#interactive-table tr > td > div").each(function() {
+                let room = {
+                    name: $(this).find('.room-name').text(),
+                    people: []
+                };
+
+                $(this).find('.people-container .person').each(function() {
+                    room.people.push({
+                        id: this.id,
+                        src: $(this).find('img')[0].src,
+                        item: $(this).find('.item-text').text()
+                    });
+                });
+
+                savedState.rooms.push(room);
+            });
+
+            let button = $("<button>").text(stateNumber+1).click(function() {
+                // Restore the saved state
+                $("#interactive-table tr > td > div").each(function(index) {
+                    let room = savedState.rooms[index];
+                    $(this).find('.room-name').text(room.name);
+                    
+                    let peopleContainer = $(this).find('.people-container');
+                    peopleContainer.empty();
+
+                    room.people.forEach(function(person) {
+                        let newPerson = $(tmplPerson.cloneNode(true));
+                        newPerson.find(".person")[0].id = person.id;
+                        newPerson.find("img")[0].src = person.src;
+                        newPerson.find(".item-text").text(person.item);
+                        
+                        // Reattach event handlers
+                        newPerson.find("img").click(suspectClick);
+                        newPerson.find(".item-text").click(clickEventHandler(weapons));
+
+                        peopleContainer.append(newPerson);
+                    });
+                });
+
+                // Restore highlighted suspect
+                if (savedState.highlightedSuspect) {
+                    highlightedSuspect = $(`#${savedState.highlightedSuspect}${savedState.highlightedSuspect.includes("clone") ? " img" : ""}`)[0];
+                    $(highlightedSuspect).addClass("gold");
+                } else {
+                    highlightedSuspect = undefined;
+                }
+
+                currentState = stateNumber;
+            }).addClass("flash").appendTo(".saves");
+
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
     });
     </script>
 </head>
@@ -287,7 +402,7 @@
             </div>
             <div class="page-footer relative-footer">2</div>
         </div>
-        <div class="page page-bg-03">
+        <div class="page page-bg-04">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
                 <span class="page-header-section-title">Not Murder</span>
@@ -342,7 +457,7 @@
             </div>
             <div class="page-footer relative-footer">3</div>
         </div>
-        <div class="page page-bg-04">
+        <div class="page page-bg-03">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
                 <span class="page-header-section-title">Not Murder</span>
@@ -435,6 +550,13 @@
                     <img id="white" src="img/Not Murder/Mrs White.svg" alt="Mrs White">
                     <button id="delete">Delete</button>
                     <button id="reset">Reset</button>
+                </div>
+                <div class="saves hstack wrap left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack left" style="margin-top:5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
                 </div>
             </div>
             <div class="page-footer relative-footer">4</div>
