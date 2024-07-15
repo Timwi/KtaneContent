@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Flash de Couleurs Dépigmenté — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        .page-content {
+            position: relative;
+        }
+
+        .dark text {
+            color: #FFF;
+        }
+    </style>
+    <style>
+        .squeeze {
+            position: absolute;
+            white-space: nowrap;
+            transform: scaleX(.990);
+            transform-origin: left;
+            text-decoration: inherit;
+        }
+    </style>
+    <script>
+        function setRules(rnd) {
+            // Random spread to make Rule Seed 1 reasonably spread-out (no same-color clumps)
+            rnd.next(0, 2);
+            rnd.next(0, 2);
+
+            let hexes = [
+                [0, -3], [1, -3], [2, -3], [3, -3], [-1, -2], [0, -2], [1, -2], [2, -2], [3, -2], [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], [3, -1], [-3, 0], [-2, 0], [-1, 0], [1, 0], [2, 0], [3, 0], [-3, 1], [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1], [-3, 2], [-2, 2], [-1, 2], [0, 2], [1, 2], [-3, 3], [-2, 3], [-1, 3], [0, 3]
+            ];
+
+            let colors = '#4af,#4f6,#f46,#f6f,#fd4,#eee'.split(',');
+            let names = 'BLE,V,R,M,J,BLA'.split(',');
+
+            let grid = [];
+            function findGrid() {
+                if (grid.length === hexes.length)
+                    return true;
+
+                let ofs = rnd.next(0, 36);
+                for (let combR = 0; combR < 36; combR++) {
+                    let comb = (combR + ofs) % 36;
+                    if (grid.includes(comb))
+                        continue;
+                    let valid = true;
+                    for (let prevIx = 0; prevIx < grid.length && valid; prevIx++)
+                        if (adjacent(hexes[prevIx], hexes[grid.length]) && (grid[prevIx] % 6 === comb % 6 || ((grid[prevIx] / 6) | 0) === ((comb / 6) | 0)))
+                            valid = false;
+                    if (!valid)
+                        continue;
+
+                    grid.push(comb);
+                    let success = findGrid();
+                    if (success)
+                        return true;
+                    grid.pop();
+                }
+                return false;
+            }
+
+            findGrid();
+
+            for (let i = 0; i < hexes.length; i++) {
+                let gElem = document.getElementById(`hex-${hexes[i][0]}-${hexes[i][1]}`);
+                gElem.querySelector('path').setAttribute('fill', colors[grid[i] % 6]);
+                gElem.querySelector('text').textContent = names[(grid[i] / 6) | 0];
+            }
+        }
+
+        function adjacent(hex1, hex2) {
+            let q = hex1[0] - hex2[0];
+            let r = hex1[1] - hex2[1];
+            return Math.max(Math.abs(q), Math.abs(r), Math.abs(-q - r)) === 1;
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Flash de Couleurs Dépigmenté</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Colour Flash.svg" class="diagram">
+                <div class='heading'>
+                    <h2>À&nbsp;<span class='squeeze'>propos&nbsp;<span
+                        class='squeeze'>du&nbsp;<span
+                        class='squeeze'>Flash&nbsp;<span
+                        class='squeeze'>de&nbsp;<span
+                        class='squeeze'>Couleurs&nbsp;<span
+                        class='squeeze'>Dépigmenté</span></span></span></span></span></span></h2>
+                    <p class="flavour-text">Que vous vous demandiez si vous allez réussir ou non, vous perdrez forcément trop de temps à y réfléchir.</p>
+                    <ul>
+                        <li>Un module Flash de Couleurs Dépigmenté affiche trois paires mot/couleur à la suite avec une pause indiquant la fin de la séquence. Chaque paire représente une position dans le diagramme hexagonal ci-dessous. La couleur de la paire représente la couleur de la cellule correspondante et le mot représente son abréviation.</li>
+                        <li>Noter ces trois positions ; les <em>points d'arrivée</em>. Puis presser n'importe quel bouton.</li>
+                        <li>L'écran affichera maintenant trois paires sans aucune pause. Ces nouvelles positions représentent les trois sommets d'un triangle dans le diagramme.</li>
+                        <li>Presser le bouton libellé «&nbsp;NO&nbsp;» pour retirer du triangle le sommet actuellement affiché et ajouter un nouveau sommet qui formerait un nouveau triangle avec les deux autres sommets restants, déplaçant donc la position dans le diagramme.</li>
+                        <li>Atteindre les trois <em>points d'arrivée</em> dans l'ordre. Presser le bouton libellé «&nbsp;YES&nbsp;» lorsqu'un point d'arrivée est affiché.</li>
+                        <li>Après avoir atteint les trois points d'arrivée, se déplacer jusqu'à la cellule centrale du diagramme afin de désamorcer le module.</li>
+                        <li>Essayer de se déplacer en dehors du diagramme, presser «&nbsp;YES&nbsp;» sur une paire incorrecte ou se déplacer vers la cellule centrale sans avoir validé les trois points d'arrivée résultera en l'enregistrement d'une erreur.</li>
+                        <li>Maintenir «&nbsp;NO&nbsp;» durant au moins une seconde pour revenir à la séquence originelle. Ceci réinitialisera la progression du module et la position à l'intérieur du diagramme.</li>
+                    </ul>
+                </div>
+                <svg style="height:10cm; display: block; margin: 0 auto;" viewBox="-1 0 57 62" font-family="Special Elite" font-size="4" text-anchor="middle">
+                    <g id="hex-0--3" transform="translate(27.5 5)">   <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#fd4" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLA</text></g>
+                    <g id="hex-1--3" transform="translate(35 9.25)">  <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f6f" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">V</text></g>
+                    <g id="hex-2--3" transform="translate(42.5 13.5)"><path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f46" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLA</text></g>
+                    <g id="hex-3--3" transform="translate(50 17.75)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4f6" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">R</text></g>
+                    <g id="hex--1--2" transform="translate(20 9.25)">  <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f6f" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">J</text></g>
+                    <g id="hex-0--2" transform="translate(27.5 13.5)"><path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#eee" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">M</text></g>
+                    <g id="hex-1--2" transform="translate(35 17.75)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4af" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLE</text></g>
+                    <g id="hex-2--2" transform="translate(42.5 22)">  <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f6f" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">M</text></g>
+                    <g id="hex-3--2" transform="translate(50 26.25)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4af" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLA</text></g>
+                    <g id="hex--2--1" transform="translate(12.5 13.5)"><path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4f6" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">M</text></g>
+                    <g id="hex--1--1" transform="translate(20 17.75)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f46" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLE</text></g>
+                    <g id="hex-0--1" transform="translate(27.5 22)">  <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#fd4" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">J</text></g>
+                    <g id="hex-1--1" transform="translate(35 26.25)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4f6" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLA</text></g>
+                    <g id="hex-2--1" transform="translate(42.5 30.5)"><path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#fd4" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLE</text></g>
+                    <g id="hex-3--1" transform="translate(50 34.75)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4f6" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">J</text></g>
+                    <g id="hex--3-0" transform="translate(05 17.75)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f6f" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLA</text></g>
+                    <g id="hex--2-0" transform="translate(12.5 22)">  <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4af" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">J</text></g>
+                    <g id="hex--1-0" transform="translate(20 26.25)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#eee" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLA</text></g>
+                    <g id="centre" transform="translate(27.5 30.5)"><path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#aaa" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">*</text></g>
+                    <g id="hex-1-0" transform="translate(35 34.75)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4af" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">V</text></g>
+                    <g id="hex-2-0" transform="translate(42.5 39)">  <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f46" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">R</text></g>
+                    <g id="hex-3-0" transform="translate(50 43.25)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f6f" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLE</text></g>
+                    <g id="hex--3-1" transform="translate(05 26.25)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f46" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">M</text></g>
+                    <g id="hex--2-1" transform="translate(12.5 30.5)"><path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f6f" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">R</text></g>
+                    <g id="hex--1-1" transform="translate(20 34.75)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4f6" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLE</text></g>
+                    <g id="hex-0-1" transform="translate(27.5 39)">  <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#fd4" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">R</text></g>
+                    <g id="hex-1-1" transform="translate(35 43.25)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#eee" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">BLE</text></g>
+                    <g id="hex-2-1" transform="translate(42.5 47.5)"><path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#fd4" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">V</text></g>
+                    <g id="hex--3-2" transform="translate(05 34.75)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#eee" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">V</text></g>
+                    <g id="hex--2-2" transform="translate(12.5 39)">  <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#fd4" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">M</text></g>
+                    <g id="hex--1-2" transform="translate(20 43.25)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#eee" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">J</text></g>
+                    <g id="hex-0-2" transform="translate(27.5 47.5)"><path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4f6" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">V</text></g>
+                    <g id="hex-1-2" transform="translate(35 51.75)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f46" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">J</text></g>
+                    <g id="hex--3-3" transform="translate(05 43.25)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4af" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">R</text></g>
+                    <g id="hex--2-3" transform="translate(12.5 47.5)"><path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#f46" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">V</text></g>
+                    <g id="hex--1-3" transform="translate(20 51.75)"> <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#4af" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">M</text></g>
+                    <g id="hex-0-3" transform="translate(27.5 56)">  <path d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" fill="#eee" stroke="black" stroke-width=".01cm"></path><text x="0" y="1.5">R</text></g>
+
+                    <path transform="translate(27.5 5)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(20 9.25)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(35 9.25)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(12.5 13.5)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(27.5 13.5)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(42.5 13.5)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(05 17.75)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(20 17.75)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(35 17.75)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(50 17.75)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(12.5 22)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(27.5 22)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(42.5 22)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(05 26.25)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(20 26.25)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(35 26.25)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(50 26.25)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(12.5 30.5)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(27.5 30.5)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(42.5 30.5)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(05 34.75)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(20 34.75)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(35 34.75)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(50 34.75)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(12.5 39)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(27.5 39)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(42.5 39)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(05 43.25)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(20 43.25)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(35 43.25)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(50 43.25)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(12.5 47.5)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(27.5 47.5)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(42.5 47.5)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(20 51.75)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(35 51.75)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                    <path transform="translate(27.5 56)" d="M -5 0 L -2.5 -4.25 L 2.5 -4.25 L 5 0  L 2.5 4.25 L -2.5 4.25 z" class="highlightable" fill="transparent"></path>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">Page 1 sur 1</div>
+        </div>
+    </div>
+</body>
+</html>
