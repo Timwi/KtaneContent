@@ -3157,6 +3157,169 @@ let parseData = [
 		loggingTag: "ChordQualities"
 	},
 	{
+		moduleID: "cityPlanning",
+		loggingTag: "City Planning",
+		matches: [
+			{
+				regex: /Pre-placed housing complexes are at ([ABCDEF][123456]) and ([ABCDEF][123456])/,
+				handler: function (matches, module) {
+					module.shops = [];
+					module.houses = [matches[1], matches[2]];
+					module.libraries = [];
+					module.parkCenters = [];
+					module.schools = [];
+
+
+					module.sameRow = (row, str) => { return str.charAt(1) - 1 == row; };
+					module.sameCol = (col, str) => { return "ABCDEF".indexOf(str.charAt(0)) == col; };
+					module.makeImage = (row, col, image, rotate = false) => {
+						const rowPosition = 33 * row + 8; 
+						const colPosition = 33 * col + 44;
+						return $('<img>').attr('style', `top: ${rowPosition}px; left: ${colPosition}px; ${rotate ? "transform: rotate(90deg);" : ""}`).attr('src', `../HTML/img/City Planning/${image}.png`).addClass("city-planning");
+					}
+					module.makeSvg = (module) => {
+						const matchCoordinate = (row, col, str) => {
+							return module.sameCol(col, str) && module.sameRow(row, str);
+						}
+						const svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 1000 610'>").addClass("city-planning");
+						$SVG("<path d='M5 5 h600 v600 h-600z'>").addClass("city-planning").appendTo(svg);
+						for (let row = 0; row < 6; row++) {
+							for (let col = 0; col < 6; col++) {
+								//roads
+								if(module.road && (module.sameCol(col, module.road) || module.sameRow(row, module.road)))
+								{
+									continue;
+								}
+
+								const arr = module.shops.concat(module.houses).concat(module.libraries).concat(module.parkCenters).concat(module.schools);
+								if((arr.some(s => matchCoordinate(row, col, s))))
+								{
+									continue;
+								}
+
+								const validRoad = module.validRoads && module.validRoads.some(coor => matchCoordinate(row, col, coor))
+								const validShop = module.validShops && module.validShops.some(coor => matchCoordinate(row, col, coor))
+								const validHouse = module.validHouses && module.validHouses.some(coor => matchCoordinate(row, col, coor))
+								const validParkCenter = module.validParkCenters && module.validParkCenters.some(coor => matchCoordinate(row, col, coor))
+								const validLibrary = module.validLibraries && module.validLibraries.some(coor => matchCoordinate(row, col, coor))
+								const validSchool = module.validSchools && module.validSchools.some(coor => matchCoordinate(row, col, coor))
+
+								$SVG(`<path d='M${55 + col * 100} ${55 + row * 100} l-15 -15 h30 v30 h-30 v-30z'>`)
+									.addClass(validRoad ? "city-planning-cell-road" :
+										      validShop ? "city-planning-cell-shop" : 
+										      validHouse ? "city-planning-cell-house" : 
+										      validParkCenter ? "city-planning-cell-park-center" : 
+										      validLibrary ? "city-planning-cell-library" : 
+										      validSchool ? "city-planning-cell-school" : "city-planning-cell")
+									.appendTo(svg);
+							}
+						}
+						return $(`<div>`).addClass('city-planning').append(svg);
+					}
+					
+					const svg = module.makeSvg(module);
+					module.houses.forEach(h => {module.makeImage(h[1] - 1, "ABCDEF".indexOf(h.charAt(0)), "HousingComplex").appendTo(svg)});
+					module.push(["Pre-placed Housing Complexes", [{ nobullet: true, obj: svg }], true]);
+					return true;
+				}
+			},
+			{
+				regex: /Your valid positions for a Road Intersection are: (.+)/,
+				handler: function(matches, module) {
+					module.validRoads = matches[1].split(", ");
+					const div = module.makeSvg(module);
+					module.houses.forEach(h => {module.makeImage(h[1] - 1, "ABCDEF".indexOf(h.charAt(0)), "HousingComplex").appendTo(div)});
+					module.push(["Possible Road Intersection", [{ nobullet: true, obj: div }], true]);
+					module.validRoads = null;
+					return true;
+				}
+			},
+			{
+				regex: /A (.+) at (.+) has been placed successfully./,
+				handler: function(matches, module) {
+					switch(matches[1])
+					{
+						case "Road Intersection":
+							module.road = matches[2];
+						break;
+						case "Shopping Market":
+							module.shops.push(matches[2]);
+						break;
+						case "Housing Complex":
+							module.houses.push(matches[2]);
+						break;
+						case "Library":
+							module.libraries.push(matches[2]);
+						break;
+						case "Park Center":
+							module.parkCenters.push(matches[2]);
+						break;
+						case "School":
+							module.schools.push(matches[2]);
+						break;
+					}
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /The next building to place is a (.+), which can be placed at: (.+)/,
+				handler: function(matches, module) {
+					switch(matches[1])
+					{
+						case "Shopping Market":
+							module.validShops = matches[2].split(", ");
+							break;
+						case "Housing Complex":
+							module.validHouses = matches[2].split(", ");
+							break;
+						case "Library":
+							module.validLibraries = matches[2].split(", ");
+							break;
+						case "Park Center":
+							module.validParkCenters = matches[2].split(", ");
+						break;
+						case "School":
+							module.validSchools = matches[2].split(", ");
+						break;
+					}
+					const div = $(`<div>`).addClass("city-planning");
+					module.makeSvg(module).appendTo(div);
+					for(let row = 0; row < 6; row++) {
+						for(let col = 0; col < 6; col++) {
+							if(module.sameRow(row, module.road) || module.sameCol(col, module.road)) {
+								module.makeImage(row, col, "RoadIntersection").appendTo(div);
+							}
+							else if(module.shops.some(s => module.sameRow(row, s) && module.sameCol(col, s))) {
+								module.makeImage(row, col, "ShoppingMarket").appendTo(div);
+							}
+							else if(module.houses.some(s => module.sameRow(row, s) && module.sameCol(col, s))) {
+								module.makeImage(row, col, "HousingComplex").appendTo(div);
+							}
+							else if(module.libraries.some(s => module.sameRow(row, s) && module.sameCol(col, s))) {
+								module.makeImage(row, col, "Library").appendTo(div);
+							}
+							else if(module.parkCenters.some(s => module.sameRow(row, s) && module.sameCol(col, s))) {
+								module.makeImage(row, col, "ParkCenter").appendTo(div);
+							}
+							else if(module.schools.some(s => module.sameRow(row, s) && module.sameCol(col, s))) {
+								module.makeImage(row, col, "School").appendTo(div);
+							}
+						}
+					}
+					module.push([`Possible ${matches[1]}`, [{ nobullet: true, obj: div }], true]);
+					module.validShops = null;
+					module.validHouses = null;
+					module.validLibraries = null;
+					module.validParkCenters = null;
+					module.validSchools = null;
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "colorGrid",
 		loggingTag: "Color Grid",
 		matches: [
