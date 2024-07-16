@@ -13,7 +13,7 @@
     <script src="js/Utilities/math-utils.js"></script>
     <style>
         table {
-            margin: 0 auto; 
+            margin: 0 auto;
             text-align: center;
         }
         .dark canvas { filter: invert(90%); }
@@ -48,7 +48,7 @@
         #codeWheels td, .bonus-wheels td {
             position: relative;
         }
-        :is(#codeWheels td, .bonus-wheels td) span {
+        :is(#codeWheels td, .bonus-wheels td) span.corner-number {
             position: absolute;
             top: 2px; left: 4px;
         }
@@ -90,6 +90,7 @@
             white-space: nowrap;
             border: .5px solid #888;
         }
+        p.sh { margin: 0; }
         div.wheelsymbol {
             width: 100%;
             text-align: center;
@@ -108,6 +109,25 @@
         }
         span.rotation {
             margin-left: 5px;
+        }
+
+        circle.alignment {
+            transition: opacity 0.5s;
+            fill: #0C0;
+            stroke: none;
+        }
+
+        .wheel-search {
+            width: 105px;
+        }
+        .wheel-text {
+            font-size: 14px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
         }
     </style>
 </head>
@@ -137,22 +157,7 @@
                         "bonus wheel"). It otherwise acts like the normal wheels, and you must align the rest of the
                         wheels to agree with it.</li>
                 </ul>
-
-                <h3>Possible Code Wheels</h3>
-                <br>
-                <!-- This table gets filled by JS! -->
-                <div class="hstack sel-wheels"><span>Selected:</span></div>
-                <table id="codeWheels"></table>
-            </div>
-            <div class="page-footer relative-footer">Page 1 of 3</div>
-        </div>
-
-        <div class="page page-bg-02">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Thread the Needle</span>
-            </div>
-            <div class="page-content">
+    
                 <h3>Determining the Bonus Wheel</h3>
                 <ul>
                     <li>Let <strong>U</strong> be equal to the number of odd digits in the serial number plus double
@@ -160,7 +165,46 @@
                     <li>Let <strong>W</strong> be equal to the number of batteries on the bomb, minus the number of
                         lit indicators.</li>
                 </ul>
-                <div class="hstack sel-bonus"><span>Selected:</span></div>
+    
+                <ul><li>The bonus wheel will turn counter-clockwise one position after each strike and clockwise one
+                    position each time a module is solved. It starts in the position printed on page 3 with the top facing the front of the module.</li></ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Thread the Needle</span>
+            </div>
+            <div class="page-content">
+                <h3>Possible Code Wheels</h3>
+                <br>
+                <!-- This table gets filled by JS! -->
+                <div class="hstack left sel-wheels"><span>Select:</span></div>
+                <table id="codeWheels"></table>
+                <br>
+                <div class="grid"><div class="hstack rotations"></div></div>
+                <br>
+                <b>Tips:</b><br>
+                <ul>
+                    <li>Indicators near the center of the wheel show how many circular and triangular holes line up at every position.</li>
+                    <li>Symbols on each wheel are not unique, be careful to set the module wheels to the right positions based on the adjacent symbols.</li>
+                    <li>Clockwise rotation is equivalent to down on the module.</li>
+                    <li>Rotations are reset when you change the selected code wheels.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+    
+        <div class="page">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Thread the Needle</span>
+            </div>
+            <div class="page-content">
+                <div class="hstack sel-bonus"><span>Select Bonus Wheel:</span></div>
                 <table class="borderless bonus-wheels">
                     <tr>
                         <th class="corner"></th>
@@ -193,28 +237,6 @@
                         <td id="bonus-4-3"></td>
                     </tr>
                 </table>
-
-                <ul><li>The bonus wheel will turn counter-clockwise one position after each strike and clockwise one
-                    position each time a module is solved. It starts in the position printed above with the top facing the front of the module.</li></ul>
-            </div>
-            <div class="page-footer relative-footer">Page 2 of 3</div>
-        </div>
-
-        <div class="page">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Thread the Needle</span>
-            </div>
-            <div class="page-content">
-                <div class="grid"><div class="hstack rotations"></div></div>
-                <br>
-                <b>Tips:</b><br>
-                <ul>
-                    <li>Count how many circles are overlapping (or triangles) by clicking plus and minus and watching for a shape emerging from the overlapping region.</li>
-                    <li>Symbols on each wheel are not unique, be careful to set the module wheels to the right positions based on the adjacent symbols.</li>
-                    <li>Clockwise rotation is equivalent to down on the module.</li>
-                    <li>Rotations are reset when you change the selected code wheels.</li>
-                </ul>
             </div>
             <div class="page-footer relative-footer">Page 3 of 3</div>
         </div>
@@ -267,21 +289,14 @@
         const plMnTitle = [ "Wheel", "Wheel", "Wheel", "Wheel", "Wheel", "Bonus" ];
 
         let rotations = Array(NUM_W).fill(0);
-        let selectedW = Array(NUM_W).fill(0);
+        let selectedW = Array(NUM_W).fill(-1);
         const NUM_ROT = wheels[0][0].length;
-        selectedW[NUM_CODEW] = NUM_WHEELS;
 
         function removeVal(arr, val) {
             let idx = arr.indexOf(val);
             if (val >= 0) arr.splice(idx, 1);
         }
 
-        /**
-        * this is to make VS code know what type it is
-        * @param {CanvasRenderingContext2D} ctx the drawing context
-        * @param {Number} size the size of the enclosing square in pixels
-        * @param {Array<String>} wheel the wheel data. [0] is the labels, [1] is the holes.
-        */
         function doWheel(svgl, wheel, w, g = null, bonus = false) {
             // Draw the circle
             let size = SVG_SIZE;
@@ -383,6 +398,27 @@
         let rotControls = $(".hstack.rotations");
         let svg = MakeSvgTag(SVG_SIZE+100, SVG_SIZE+100, -50, -50, { class:"interactive centered-img" }).appendTo(grid);
 
+        function checkAlignments() {
+            const alignments = {circles: [], triangles: []};
+            for (let i = 0; i < NUM_ROT; i++) {
+                let circleCount = 0;
+                let triangleCount = 0;
+                let symbols = [];
+                selectedW.forEach((wheelIndex, idx) => {
+                    if (wheelIndex === -1) return;
+                    const wheel = wheelIndex >= NUM_WHEELS ? bonus_wheels[Math.floor((wheelIndex - NUM_WHEELS) / 3)][(wheelIndex - NUM_WHEELS) % 3] : wheels[wheelIndex][1];
+                    const rotPos = UMod(i - rotations[idx], NUM_ROT);
+                    if (wheel[rotPos] === 'O') circleCount++;
+                    if (wheel[rotPos] === '^') triangleCount++;
+                    symbols.push(wheel[rotPos]);
+                });
+                // console.log(`Rotation ${i}: ${symbols.join("")}`);
+                alignments.circles.push(circleCount);
+                alignments.triangles.push(triangleCount);
+            }
+            return alignments;
+        }
+
         function setRotation(rot, i) {
             let l = selectedW.length;
             if (l < i) return;
@@ -397,40 +433,56 @@
                 $(`.wheelsymbol.middle.w${i}`).html(wheels[ selectedW[i] ][0][ UMod(-rotations[i], NUM_ROT) ]);
                 $(`.wheelsymbol.right.w${i}`).html(wheels[ selectedW[i] ][0][ UMod(-rotations[i] + 1, NUM_ROT) ]);
             }
+
+
+            // Show alignments
+            const alignments = checkAlignments();
+            alignments.circles.forEach((count, pos) => {
+                if (count == NUM_W) console.log(`Circular hole alignment at position ${pos}`);
+                $(`text.countC-${pos}`).text(count);
+            });
+            alignments.triangles.forEach((count, pos) => {
+                if (count == NUM_W) console.log(`Triangular hole alignment at position ${pos}`);
+                $(`text.countT-${pos}`).text(count);
+            });
         }
 
         function updateRotations() {
+            $("span.wheelsymbol").text("");
             $(".wheeltitle").html("");
             $("span.rotation").html("");
             $("g.wgroup, g.wgroup text").css("transform", 'rotate(0deg)');
             for (let c = 0; c < NUM_CODEW; c++) rotations[c] = 0;
             selectedW.forEach((val,idx) => {
-                if (val >= NUM_WHEELS) {
-                    $(".wheeltitle.w5").html(val - NUM_WHEELS + 1);
-                    setRotation(rotations[NUM_CODEW], NUM_CODEW);
-                }
-                else {
-                    $(`.wheeltitle.w${idx}`).html(val + 1);
-                    setRotation(0, idx);
+                if (val >= 0) {
+                    if (val >= NUM_WHEELS) {
+                        $(".wheeltitle.w5").html(val - NUM_WHEELS + 1);
+                        setRotation(rotations[NUM_CODEW], NUM_CODEW);
+                    }
+                    else {
+                        $(`.wheeltitle.w${idx}`).html(val + 1);
+                        setRotation(0, idx);
+                    }
                 }
             });
         }
 
         plMnTitle.forEach((title, i) => {
             let gr = $("<div>").addClass("rot-group").appendTo(rotControls);
-            $(`<b><u>${title} <span class="wheeltitle w${i}"></span></u>:</b><span class="rotation r${i}"></span><br>`).appendTo(gr);
+            $(`<p class="centered sh"><b><u>${title} <span class="wheeltitle w${i}"></span></u>:</b><span class="rotation r${i}"></span></p>`).appendTo(gr);
+            let hstack = $("<div>").addClass("hstack").appendTo(gr);
             $(`<button class="rotinc r${i} minus">-</button>`).click(function() {
                 if (rotations[i] <= -MAX_ROT) return false;
                 rotations[i] -= 1;
                 setRotation(rotations[i], i);
                 console.log("Rot: " + rotations);
-            }).appendTo(gr);
+            }).appendTo(hstack);
             $(`<button class="rotinc r${i} plus">+</button>`).click(function() {
                 if (rotations[i] >= MAX_ROT) return false;
                 rotations[i] += 1;
                 setRotation(rotations[i], i);
                 console.log("Rot: " + rotations);
-            }).appendTo(gr);
+            }).appendTo(hstack);
             if (i < NUM_CODEW) {
                 let groupDiv = $("<div>").addClass("wheelsymbol").appendTo(gr);
                 $(`<span class="wheelsymbol small left w${i}"></span>`).appendTo(groupDiv);
@@ -442,24 +494,26 @@
         let selWheels = $(".sel-wheels");
         function makeWheelOptions(select, bonus) {
             let title = bonus ? "Bonus" : "Wheel";
+            $("<option>").val("").html("No selection").appendTo(select);
             for (let w = 1; w <= NUM_WHEELS; w++) {
                 $("<option>").val(w-1 + (bonus ? NUM_WHEELS : 0)).html(`${title} ${w}`).appendTo(select);
             }
         }
         $(".sel-bonus").each((i, el) => {
             let select = $("<select>").change(function() {
-                selectedW[NUM_CODEW] = parseInt(this.value);
+                selectedW[NUM_CODEW] = this.value == "" ? -1 : parseInt(this.value);
                 updateSelectedWheels();
             }).appendTo(el);
             makeWheelOptions(select, true);
         });
         for (let c = 0; c < NUM_CODEW; c++) {
             let select = $("<select>").change(function() {
-                selectedW[c] = parseInt(this.value);
+                selectedW[c] = this.value == "" ? -1 : parseInt(this.value);
                 updateSelectedWheels();
             }).appendTo(selWheels);
             makeWheelOptions(select, false);
         }
+
         $(".bonus-wheels td").each((i, el) => {
             $(el).addClass(`codewheel w${i + NUM_WHEELS}`);
         });
@@ -475,8 +529,10 @@
             $(".codewheel").removeClass("highlighted");
             $("g.wgroup").addClass("invisible");
             selectedW.forEach((val,idx) => {
-                $(`.codewheel.w${val}`).addClass("highlighted");
-                getWheel(val, idx).removeClass("invisible");
+                if (val >= 0) {
+                    $(`.codewheel.w${val}`).addClass("highlighted");
+                    getWheel(val, idx).removeClass("invisible");
+                }
             });
             updateRotations();
             console.log("Selected: " + selectedW);
@@ -492,12 +548,13 @@
             const cell = $("<td>").addClass(`codewheel w${c}`);
             row.append(cell);
 
-            $("<span>").html(c+1).appendTo(cell);
+            $("<span>").addClass("corner-number").html(c+1).appendTo(cell);
             const svgl = MakeSvgTag(SVG_SIZE+20, SVG_SIZE+20, -10, -10, { class:"cell centered-img" }).appendTo(cell);
             let g = MakeSvgElem("g", {
                 "transform-origin":`${SVG_SIZE / 2} ${SVG_SIZE / 2}`, class:`wheel wgroup w${c} invisible`
             });
             doWheel(svgl, wheel, c, g, false);
+            $("<span>").addClass("wheel-text").text(wheels[c][0] + wheels[c][0].slice(0, -1)).appendTo(cell);
         }
 
         // Bonus wheels!
@@ -505,13 +562,29 @@
             for (let w = 0; w < 4; w++) {
                 const cell = $(`#bonus-${w + 1}-${u + 1}`);
                 let i = w * 3 + u;
-                $("<span>").html(i+1).appendTo(cell);
+                $("<span>").addClass("corner-number").html(i+1).appendTo(cell);
                 const svgl = MakeSvgTag(SVG_SIZE, SVG_SIZE, 0, 0, { class:"cell centered-img" }).appendTo(cell);
                 let g = MakeSvgElem("g", {
                     "transform-origin":`${SVG_SIZE / 2} ${SVG_SIZE / 2}`, class:`bonus wgroup w${i + NUM_WHEELS} invisible`
                 });
                 doWheel(svgl, ["·".repeat(8), bonus_wheels[w][u]], i, g, true);
             }
+        }
+        const INDICATOR_RADIUS = 0.2;
+        for (let i = 0; i < NUM_ROT; i++) {
+            const theta = (i / NUM_ROT) * TAU - TAU / 4;
+
+            const indX = Math.cos(theta) * SVG_SIZE * INDICATOR_RADIUS + SVG_SIZE / 2;
+            const indY = Math.sin(theta) * SVG_SIZE * INDICATOR_RADIUS + SVG_SIZE / 2;
+
+            let cirText = MakeSvgElem("text", {
+                "font-size":40, "text-anchor":"middle", x:indX, y:indY, class:`countC-${i}`
+            }, 0);
+            let triText = MakeSvgElem("text", {
+                "font-size":40, "text-anchor":"middle", x:indX, y:(indY + 40), class:`countT-${i}`
+            }, 0);
+            svg.append(cirText);
+            svg.append(triText);
         }
         updateSelectedWheels();
     </script>
