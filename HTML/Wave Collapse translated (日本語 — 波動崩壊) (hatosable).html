@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>波動崩壊 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        const PARTICLES_COUNT = 5;
+        const SCHEMES_COUNT = 10;
+        const PARTICLES = ["e", 0xb5, 0x03bd, "g", 0x03b3, "u", "c", "t", "d", "s", "b", 0x03c4, "Z", "W", "H"];
+
+        function particleToString(p) {
+            return typeof p === "string" ? p : String.fromCharCode(p);
+        }
+
+        function getSchemaUrlAndRotation(i) {
+            const res = (s, i) => [`img/Wave Collapse/Diagram_${s}.svg`, i];
+            if (i < 1) return res("0-0", 0);
+            if (i < 5) return res("1-4", (i - 1) % 4);
+            if (i < 7) return res("5-6", (i - 1) % 2);
+            if (i < 9) return res("7-8", (i - 1) % 2);
+            return res("9-9", 0);
+        }
+
+        function pickRandom(arr, rnd) {
+            return arr[rnd.nextMax(arr.length)];
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        function setRules(rnd) {
+            const particles = rnd.seed === 1 ? PARTICLES : rnd.shuffleArray(PARTICLES);
+            const grid = new Array(PARTICLES_COUNT).fill(0).map(() => new Array(PARTICLES_COUNT).fill(0));
+            const schemes = new Array(SCHEMES_COUNT).fill(0).map((_, i) => i);
+            const rowsParticles = new Array(PARTICLES_COUNT).fill(0).map(() => new Set());
+            const diagSchemes = rnd.shuffleArray(schemes);
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                const schema = diagSchemes[i];
+                grid[i][i] = schema;
+                rowsParticles[i].add(schema);
+            }
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                for (let j = 0; j < i; j++) {
+                    const schema = pickRandom(schemes.filter((s) => !rowsParticles[i].has(s) && !rowsParticles[j].has(s)), rnd);
+                    grid[j][i] = grid[i][j] = schema;
+                    rowsParticles[i].add(schema);
+                    rowsParticles[j].add(schema);
+                }
+            }
+            console.log(grid.map((col) => col.join(",")).join("\n"));
+            const table = document.getElementById("diagram-table-content");
+            table.innerHTML = "";
+            const firstTr = table.appendChild(document.createElement("tr"));
+            firstTr.appendChild(document.createElement("td"));
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                const td = firstTr.appendChild(document.createElement("td"));
+                td.innerText = particleToString(particles[i]);
+            }
+            for (let i = 0; i < PARTICLES_COUNT; i++) {
+                const tr = table.appendChild(document.createElement("tr"));
+                const firstTd = tr.appendChild(document.createElement("td"));
+                firstTd.innerText = particleToString(particles[i]);
+                for (let j = 0; j < PARTICLES_COUNT; j++) {
+                    const td = tr.appendChild(document.createElement("td"));
+                    const img = td.appendChild(document.createElement("img"));
+                    const [url, rot] = getSchemaUrlAndRotation(grid[i][j]);
+                    img.src = url;
+                    if (rot > 0) img.classList.add(`r${rot}`);
+                }
+            }
+        }
+    </script>
+    <style>
+        table {
+            float: right;
+            text-align: center;
+            width: 68%;
+        }
+
+        p {
+            font-size: 14px;
+        }
+
+        #values-table {
+            margin-left: 8px;
+        }
+
+        #values-table tr:first-child td {
+            border-bottom: 3px solid;
+        }
+
+        #diagram-table {
+            margin: 32px 0 0 8px;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        #diagram-table td {
+            border: none;
+            padding: 4px;
+        }
+
+        #diagram-table img {
+            width: 64px;
+        }
+
+        .r1 {
+            transform: rotate(90deg);
+        }
+
+        .r2 {
+            transform: rotate(180deg);
+        }
+
+        .r3 {
+            transform: rotate(270deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">波動崩壊</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Wave Collapse.svg" class="diagram">
+                <h2>モジュール詳細：波動崩壊</h2>
+                <p class="flavour-text">シュレーディンガーの猫に関するあらゆるジョークは、滑稽であると同時に滑稽でない。</p>
+                <p>
+                    モジュールには5x7のグリッドがあり、その右側に8つのボタンがある。
+                    これら8つのボタンはそれぞれ、グリッドのどこかにある粒子1つと、その種類を表すシンボルが結びついている。
+                </p>
+                <p>
+                    右側にあるいずれかのボタンを押すと粒子の波動関数を見ることができる。波動関数とは、粒子が配置可能な2x2の正方形グリッドである。
+                </p>
+                <p>各粒子の順番、種類、各粒子の波動関数を覚えておくこと。これらは破壊後に利用できなくなる。</p>
+                <table id="values-table">
+                    <tr>
+                        <td>値</td>
+                        <td>倍率</td>
+                    </tr>
+                    <tr>
+                        <td>ポートプレート</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td>モジュール数</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>シリアルナンバーの最初の数字</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>開始分数</td>
+                        <td>7</td>
+                    </tr>
+                    <tr>
+                        <td>母音がないインジケーター</td>
+                        <td>5</td>
+                    </tr>
+                </table>
+                <p>
+                    右の表を各段ごとに結果を求めて合計し、結果が1-8の範囲に入るまで8を引く。
+                    読み順でこの位置にある右側のボタンを1秒より長く押し続ける。
+                    これにより、このボタンに接続された粒子の波動関数が崩壊し、
+                    粒子は4つのうちいずれか1つの位置を選んで、グリッド上に表示される。
+                </p>
+                <table id="diagram-table">
+                    <tbody id="diagram-table-content"></tbody>
+                </table>
+                <p>モジュールを解除するには、ボタンの読み順でその他の粒子の位置を押す。</p>
+                <p>
+                    もし2つの粒子の波動関数が交差した場合、それらの粒子はもつれる。
+                    崩壊後の粒子の位置を求めるには、最初に崩壊した粒子から始める。
+                    残りの粒子のうち、この粒子ともつれる粒子を調べる。
+                    そのようなもつれた粒子について、一方の粒子の種類ともう一方の粒子の種類を参照して図を獲得し、
+                    判明済みの波動関数における粒子の位置を図の対応する位置に合わせる。
+                    その位置に点が含まれる場合、粒子の位置は変わらない。
+                    そうでなければ、その位置に線が含まれる場合、もつれた粒子は線のもう一方の端で崩壊する。
+                    判明していない波動関数におけるこの位置が、その粒子の目標位置となる。
+                </p>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
+        </div>
+    </div>
+</body>
+</html>
