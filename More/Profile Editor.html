@@ -11,6 +11,9 @@
 			font-family: "Trebuchet MS";
 			margin: 0;
 		}
+		:root.dark-mode body {
+			background: rgb(50, 50, 50);
+		}
 
 		#editor {
 			margin-bottom: 9.36px;
@@ -57,6 +60,7 @@
 			padding-bottom: 10px;
 			border-bottom: gray 1px dashed;
 		}
+		:root.dark-mode div.title, :root.dark-mode div.header { color: rgb(150, 150, 150); }
 		.hstack {
 			justify-content: center;
 			display: flex;
@@ -76,6 +80,7 @@
 		.wbox { background-color: white; }
 		.rbox { background-color: rgb(255, 170, 170); }
 		.bbox { background-color: rgb(140, 140, 255); }
+		:root.dark-mode .rbox { background-color: rgb(60, 20, 20); }
 
 		div.header {
 			display: flex;
@@ -130,17 +135,17 @@
 			text-decoration: none;
 			position: relative;
 		}
+		:root.dark-mode .mod, :root.dark-mode .wbox, :root.dark-mode div.title-container {
+			background-color: rgb(40, 40, 40);
+		}
 
 		.mod > div {
 			padding: 5px;
 		}
 
-		.mod.disabled {
-			background: rgb(255, 200, 200);
-		}
-		.mod.enabled {
-			background: rgb(170, 170, 255);
-		}
+		.mod.disabled { background: rgb(255, 200, 200); }
+		:root.dark-mode .mod.disabled { background: rgb(60, 20, 20); }
+		.mod.enabled { background: rgb(170, 170, 255); }
 
 		.mod-id {
 			color: gray;
@@ -196,6 +201,7 @@
 			cursor: pointer;
 			text-decoration: underline;
 		}
+		:root.dark-mode .clickable, :root.dark-mode h3.section, :root.dark-mode .mod{ color: rgb(170, 170, 170); }
 	</style>
 	<script src="js/vue.min.js"></script>
 	<script src="js/vue-toastr-2.min.js"></script>
@@ -305,6 +311,11 @@
 			{ name: "Tutorial Gameplay Room", id: "TutorialGameplayRoom", type: "Room" }
 		];
 		/// MOD DATA ///
+
+		if (localStorage.getItem("theme") == "dark") {
+    		document.documentElement.classList.add("dark-mode");
+			console.log("DM CLASS ON");
+		}
 
 		const sortingMethods = [
 			{
@@ -505,6 +516,20 @@
 						this.mods = this.mods.filter(m => !m.Unknown);
 					}
 				}
+			});
+
+			$(document).on("keydown", function(event) {
+				if (!event.altKey || event.shiftKey || event.ctrlKey || event.metaKey)
+            		return;
+				let k = event.key.toLowerCase();
+				if (k == "w" || event.keyCode === 87) {
+					if (!confirm("Refresh to toggle dark mode?")) return;
+					if (document.documentElement.classList.contains("dark-mode"))
+						localStorage.removeItem('theme');
+					else
+						localStorage.setItem('theme', "dark");
+					location.reload();
+        }
 			});
 
 			function getModuleCount(caseMod) {
