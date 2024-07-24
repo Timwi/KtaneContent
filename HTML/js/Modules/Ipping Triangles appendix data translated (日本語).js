@@ -55,5 +55,14 @@ const appendixEntries = [
             name: "チョキチョキ三角形",
             link: "Clipping Triangles translated (日本語 — チョキチョキ三角形) (hatosable).html"
         }
+    },
+    {
+        name: "Shipping",
+        explanation: "すべての三角形が赤、緑、青のいずれかである",
+        translation: {
+            name: "フネフネ三角形",
+            link: "Shipping Triangles translated (日本語 — フネフネ三角形) (alpha8404).html"
+        }
     }
+    
 ];
