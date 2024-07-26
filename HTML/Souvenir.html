@@ -7,56 +7,9 @@
     <link rel='stylesheet' type='text/css' href='css/font.css'>
     <link rel='stylesheet' type='text/css' href='css/normalize.css'>
     <link rel='stylesheet' type='text/css' href='css/main.css'>
+    <link rel='stylesheet' type='text/css' href='css/Modules/Souvenir.css'>
     <script src='js/ktane-utils.js'></script>
-    <style id='souvenir-style'>
-        .souvenir {
-            clear: both;
-            font-family: 'Agency FB';
-            border: none;
-            column-count: 4;
-            column-gap: .25em;
-        }
-
-            .souvenir .module {
-                break-inside: avoid;
-            }
-
-                .souvenir .module .name {
-                    font-family: 'Trebuchet MS';
-                    font-weight: bold;
-                    line-height: 1.1;
-                }
-
-                    .souvenir .module .name .the {
-                        font-weight: normal;
-                        font-size: 10pt;
-                    }
-
-            .souvenir ul {
-                margin: 0 0 .2cm;
-                padding-left: 0;
-            }
-
-            .souvenir li {
-                list-style-type: none;
-                line-height: 1.2;
-                margin: .05cm 0;
-            }
-
-        .continued {
-            text-align: right;
-            font-style: italic;
-            font-size: 10pt;
-        }
-
-        @media screen and (max-width: 900px) {
-            .souvenir {
-                column-count: 1;
-            }
-        }
-        .page-footer::before { content: 'Page '; }
-        .page-footer::after { content: ' of 12'; }
-    </style>
+    <script src='js/Modules/Souvenir.js'></script>
 </head>
 <body>
     <div class='section'>
@@ -797,9 +750,18 @@
             {
                 for (let mq of pastedText.split('\n'))
                     if (m = /^\s*(.*):\s+(.*?)\s*$/s.exec(mq))
+                    {
                         pages[0].insertAdjacentHTML("beforeend", `<div class="module"><div class="name">${m[1].replace(/^The /, '').trim()}${m[1].startsWith('The ') ? '<span class="the">&nbsp;(The)</span>' : ''}<${''}/div><ul class="questions">${m[2].split(/(?<=\?)\s+/).map(q => `<li>${q.trim()}<${''}/li>`).join('')}<${''}/ul><${''}/div>`);
+                        SouvenirModuleData.push({ name: m[1].trim(), id: '?', questions: m[2].split(/(?<=\?)\s+/).map(q => q.trim()) });
+                    }
             }
 
+            SouvenirModuleData.sort((a, b) =>
+            {
+                let aa = a.name.toUpperCase().replace(/^THE /, '').trim();
+                let bb = b.name.toUpperCase().replace(/^THE /, '').trim();
+                return aa > bb ? 1 : aa < bb ? -1 : 0;
+            });
             let allModules = Array.from(document.querySelectorAll('div.module'));
 
             function getSortKey(obj) {
@@ -869,8 +831,9 @@
     <link rel='stylesheet' type='text/css' href='css/font.css'>
     <link rel='stylesheet' type='text/css' href='css/normalize.css'>
     <link rel='stylesheet' type='text/css' href='css/main.css'>
+    <link rel='stylesheet' type='text/css' href='css/Modules/Souvenir.css'>
     <script src='js/ktane-utils.js'><${''}/script>
-    <style id='souvenir-style'>${document.getElementById('souvenir-style').innerHTML.replace(/<br>/g, '\n')}<${''}/style>
+    <script src='js/Modules/Souvenir.js'><${''}/script>
 <${''}/head>
 <body>
     <div class='section'>${document.querySelector('div.section').innerHTML}<${''}/div>
@@ -881,8 +844,14 @@
             window.requestAnimationFrame(async function()
             {
                 let handle = await showSaveFilePicker({ suggestedName: 'Souvenir.html' });
-                const blob = new Blob([newHtml]);
-                const writableStream = await handle.createWritable();
+                let blob = new Blob([newHtml]);
+                let writableStream = await handle.createWritable();
+                await writableStream.write(blob);
+                await writableStream.close();
+
+                handle = await showSaveFilePicker({ suggestedName: 'Souvenir.js' });
+                blob = new Blob([`let SouvenirModuleData = [\n\t${SouvenirModuleData.map(dat => `{ name: ${JSON.stringify(dat.name)},\tid: ${JSON.stringify(dat.id)},\tquestions: ${JSON.stringify(dat.questions)} },`).join("\n\t")}\n];`]);
+                writableStream = await handle.createWritable();
                 await writableStream.write(blob);
                 await writableStream.close();
             });
