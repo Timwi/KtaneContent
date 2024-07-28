@@ -15,90 +15,61 @@
         }
     </style>
     <script>
-    function setDefaultRules(rnd)
-    {
-        setRules(rnd);
-    }
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
 
-    function setRules(rnd)
-    {
-        let conditions = [  'The button is blue',
-                            'The button is green',
-                            'The button is yellow',
-                            'The button is magenta',
-                            'The button is orange',
-                            'The button is red',
-                            'The button is not blue',
-                            'The button is not green',
-                            'The button is not yellow',
-                            'The button is not magenta',
-                            'The button is not orange',
-                            'The button is not red',
-                            'The button is either blue or green',
-                            'The button is either blue or yellow',
-                            'The button is either blue or magenta',
-                            'The button is either blue or orange',
-                            'The button is either blue or red',
-                            'The button is either green or yellow',
-                            'The button is either green or magenta',
-                            'The button is either green or orange',
-                            'The button is either green or red',
-                            'The button is either yellow or magenta',
-                            'The button is either yellow or orange',
-                            'The button is either yellow or red',
-                            'The button is either magenta or orange',
-                            'The button is either magenta or red',
-                            'The button is either orange or red',
-                            'The button is neither blue nor green',
-                            'The button is neither blue nor yellow',
-                            'The button is neither blue nor magenta',
-                            'The button is neither blue nor orange',
-                            'The button is neither blue nor red',
-                            'The button is neither green nor yellow',
-                            'The button is neither green nor magenta',
-                            'The button is neither green nor orange',
-                            'The button is neither green nor red',
-                            'The button is neither yellow nor magenta',
-                            'The button is neither yellow nor orange',
-                            'The button is neither yellow nor red',
-                            'The button is neither magenta nor orange',
-                            'The button is neither magenta nor red',
-                            'The button is neither orange nor red',
-                            'The button’s color is warm',
-                            'The button’s color isn’t warm',
-                            'The button’s color is cold',
-                            'The button’s color isn’t cold',
-                            'The button is labeled ‘Yes’',
-                            'The button is not labeled ‘Yes’',
-                            'The button is labeled ‘No’',
-                            'The button is not labeled ‘No’'];
-        let ix = [...Array(conditions.length).keys()];
+        function setRules(rnd)
+        {
+            function makeButtonRules(leftOrRight)
+            {
+                let colors = ['red', 'orange', 'yellow', 'green', 'blue', 'magenta'];
+                let rules = [];
 
-        rnd.shuffleFisherYates(ix);
+                function makeSingleColorRule()
+                {
+                    // Rule with a single color
+                    let c = rnd.next(0, colors.length);
+                    rules.push(`The button is ${colors[c]}`);
+                    colors.splice(c, 1);
+                }
 
-        document.getElementById('rule-left-first').innerHTML = conditions[ix[0]];
-        document.getElementById('rule-left-value-first').innerHTML = rnd.next(1, 5).toString();
-        document.getElementById('rule-right-first').innerHTML = conditions[ix[1]];
-        document.getElementById('rule-right-value-first').innerHTML = rnd.next(1, 5).toString();
+                function makeTwoColorRule()
+                {
+                    // Rule with two possible colors
+                    let c1 = rnd.next(0, colors.length), color1 = colors[c1];
+                    colors.splice(c1, 1);
+                    let c2 = rnd.next(0, colors.length);
+                    rules.push(`The button is either ${color1} or ${colors[c2]}`);
+                    colors.splice(c2, 1);
+                };
 
-        document.getElementById('rule-left-second').innerHTML = conditions[ix[2]];
-        document.getElementById('rule-left-value-second').innerHTML = rnd.next(1, 5).toString();
-        document.getElementById('rule-right-second').innerHTML = conditions[ix[3]];
-        document.getElementById('rule-right-value-second').innerHTML = rnd.next(1, 5).toString();
+                makeSingleColorRule();
+                makeTwoColorRule();
+                if (rnd.next(0, 2) != 0)
+                    makeSingleColorRule();
+                else
+                    makeTwoColorRule();
 
-        document.getElementById('rule-left-third').innerHTML = conditions[ix[4]];
-        document.getElementById('rule-left-value-third').innerHTML = rnd.next(1, 5).toString();
-        document.getElementById('rule-right-third').innerHTML = conditions[ix[5]];
-        document.getElementById('rule-right-value-third').innerHTML = rnd.next(1, 5).toString();
+                // Insert yes/no label rule
+                let label = rnd.next(0, 2) != 0 ? 'Yes' : 'No';
+                let condition = rnd.next(0, 2) != 0 ? 'is not labeled' : 'is labeled';
+                rules.splice(rnd.next(0, rules.length), 0, [`The button ${condition} ‘${label}’`]);
 
-        document.getElementById('rule-left-fourth').innerHTML = conditions[ix[6]];
-        document.getElementById('rule-left-value-fourth').innerHTML = rnd.next(1, 5).toString();
-        document.getElementById('rule-right-fourth').innerHTML = conditions[ix[7]];
-        document.getElementById('rule-right-value-fourth').innerHTML = rnd.next(1, 5).toString();
+                let numbers = [1, 2, 3, 4];
+                rnd.shuffleFisherYates(numbers);
+                numbers.splice(rnd.next(0, numbers.length), 0, [rnd.next(1, 5)]);
 
-        document.getElementById('rule-left-value-fifth').innerHTML = rnd.next(1, 5).toString();
-        document.getElementById('rule-right-value-fifth').innerHTML = rnd.next(1, 5).toString();
-    }
+                for (let i = 0; i < 4; i++)
+                    document.getElementById(`rule-${leftOrRight}-${i}`).innerHTML = rules[i];
+                for (let i = 0; i < 5; i++)
+                    document.getElementById(`rule-${leftOrRight}-value-${i}`).innerHTML = numbers[i];
+            }
+
+            makeButtonRules('left');
+            makeButtonRules('right');
+        }
     </script>
 </head>
 <body>
@@ -119,19 +90,19 @@
                 <p>The buttons switch their functions after a certain amount of presses on any given button occurred. After said amount is reached, the buttons switch their functions and the press counter for the button that triggered the switch is reset.</p>
                 <p>The amount of presses needed for a switch on the left button:</p>
                 <ul>
-                    <li><span class="rule" id="rule-left-first">The button is either blue or orange</span>: <span class="rule" id="rule-left-value-first">1</span></li>
-                    <li><span class="rule" id="rule-left-second">The button is either green or orange</span>: <span class="rule" id="rule-left-value-second">4</span></li>
-                    <li><span class="rule" id="rule-left-third">The button is not yellow</span>: <span class="rule" id="rule-left-value-third">1</span></li>
-                    <li><span class="rule" id="rule-left-fourth">The button is not labeled ‘No’</span>: <span class="rule" id="rule-left-value-fourth">1</span></li>
-                    <li>Otherwise: <span class="rule" id="rule-left-value-fifth">4</span></li>
+                    <li><span class="rule" id="rule-left-0">The button is either blue or orange</span>: <span class="rule" id="rule-left-value-0">1</span></li>
+                    <li><span class="rule" id="rule-left-1">The button is either green or orange</span>: <span class="rule" id="rule-left-value-1">4</span></li>
+                    <li><span class="rule" id="rule-left-2">The button is not yellow</span>: <span class="rule" id="rule-left-value-2">1</span></li>
+                    <li><span class="rule" id="rule-left-3">The button is not labeled ‘No’</span>: <span class="rule" id="rule-left-value-3">1</span></li>
+                    <li>Otherwise: <span class="rule" id="rule-left-value-4">4</span></li>
                 </ul>
                 <p>The amount of presses needed for a switch on the right button:</p>
                 <ul>
-                    <li><span class="rule" id="rule-right-first">The button is neither green nor yellow</span>: <span class="rule" id="rule-right-value-first">3</span></li>
-                    <li><span class="rule" id="rule-right-second">The button is either green or yellow</span>: <span class="rule" id="rule-right-value-second">1</span></li>
-                    <li><span class="rule" id="rule-right-third">The button is yellow</span>: <span class="rule" id="rule-right-value-third">4</span></li>
-                    <li><span class="rule" id="rule-right-fourth">The button is green</span>: <span class="rule" id="rule-right-value-fourth">4</span></li>
-                    <li>Otherwise: <span class="rule" id="rule-right-value-fifth">4</span></li>
+                    <li><span class="rule" id="rule-right-0">The button is neither green nor yellow</span>: <span class="rule" id="rule-right-value-0">3</span></li>
+                    <li><span class="rule" id="rule-right-1">The button is either green or yellow</span>: <span class="rule" id="rule-right-value-1">1</span></li>
+                    <li><span class="rule" id="rule-right-2">The button is yellow</span>: <span class="rule" id="rule-right-value-2">4</span></li>
+                    <li><span class="rule" id="rule-right-3">The button is green</span>: <span class="rule" id="rule-right-value-3">4</span></li>
+                    <li>Otherwise: <span class="rule" id="rule-right-value-4">4</span></li>
                 </ul>
                 <p>The small button on the bottom of the module is a reset button. Hold it until the module says “Reset done” to reset the module back to the beginning in case you lost track.</p>
                 <p>Each correctly answered question will light up an LED on the progress bar at the top.</p>
