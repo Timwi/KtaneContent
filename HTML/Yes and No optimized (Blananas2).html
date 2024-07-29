@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <style>
         table {
             margin: 1em auto;
@@ -22,6 +23,63 @@
         .col-b { background: #0000ab; color: white; }
         .col-m { background: #b81fc9; color: white; }
     </style>
+    <script>
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+
+        function setRules(rnd)
+        {
+            function makeButtonRules(tds)
+            {
+                let colors = [0, 1, 2, 3, 4, 5];
+                let rules = [];
+
+                function makeSingleColorRule()
+                {
+                    // Rule with a single color
+                    let c = rnd.next(0, colors.length);
+                    rules.push(colors[c]);
+                    colors.splice(c, 1);
+                }
+
+                function makeTwoColorRule()
+                {
+                    // Rule with two possible colors
+                    let c1 = rnd.next(0, colors.length), color1 = colors[c1];
+                    colors.splice(c1, 1);
+                    let c2 = rnd.next(0, colors.length);
+                    rules.push([color1, colors[c2]]);
+                    colors.splice(c2, 1);
+                };
+
+                makeSingleColorRule();
+                makeTwoColorRule();
+                if (rnd.next(0, 2) != 0)
+                    makeSingleColorRule();
+                else
+                    makeTwoColorRule();
+
+                // Insert yes/no label rule
+                let labelIsYes = rnd.next(0, 2) != 0;
+                let condition = rnd.next(0, 2) != 0;
+                rules.splice(rnd.next(0, rules.length), 0, !(labelIsYes ^ condition));
+
+                let numbers = [1, 2, 3, 4];
+                rnd.shuffleFisherYates(numbers);
+                numbers.splice(rnd.next(0, numbers.length), 0, rnd.next(1, 5));
+
+                rules.push(null);
+                for (let c = 0; c < 6; c++)
+                    for (let l of [false, true])
+                        tds[c + (l ? 6 : 0)].innerText = numbers[rules.findIndex(r => r === null || r === c || r === l || (Array.isArray(r) && r.includes(c)))];
+            }
+
+            makeButtonRules(document.querySelectorAll('#btn-rules-left tr.rules td'));
+            makeButtonRules(document.querySelectorAll('#btn-rules-right tr.rules td'));
+        }
+    </script>
 </head>
 <body>
     <div class="section">
@@ -35,18 +93,20 @@
                 <h2>On the Subject of Answering Yes and No</h2>
                 <p class="flavour-text">Don’t even get me started on whether water is wet...</p>
 
-                <p>Keep track of how many times the left and right button are pressed. Once the <b>limit</b> is reached on either button, switch the function of both buttons (yes becomes no and vice versa) and reset the count for that button back to 0. These limits can be determined below for ruleseed 1. Hold the middle button to reset the module.</p>
+                <p>Keep track of how many times the left and right button are pressed. Once the <b>limit</b> is reached on either button, switch the function of both buttons (yes becomes no and vice versa) and reset the count for that button back to 0. These limits can be determined below. Hold the middle button to reset the module.</p>
 
                 <h3>Left button</h3>
-                <table class='btn-rules'>
+                <table class="btn-rules" id="btn-rules-left">
                     <tr><th>Color</th><td class="col-r">Red</td><td class="col-o">Orange</td><td class="col-y">Yellow</td><td class="col-g">Green</td><td class="col-b">Blue</td><td class="col-m">Magenta</td></tr>
-                    <tr><th>Number</th><td>YES: 3<br>NO: 4</td><td>4</td><td>1</td><td>YES: 2<br>NO: 4</td><td>YES: 3<br>NO: 4</td><td>4</td></tr>
+                    <tr class="rules"><th>If labeled ‘yes’</th><td>3</td><td>4</td><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+                    <tr class="rules"><th>If labeled ‘no’</th><td>4</td><td>4</td><td>1</td><td>4</td><td>4</td><td>4</td></tr>
                 </table>
 
                 <h3>Right button</h3>
-                <table class='btn-rules'>
+                <table class="btn-rules" id="btn-rules-right">
                     <tr><th>Color</th><td class="col-r">Red</td><td class="col-o">Orange</td><td class="col-y">Yellow</td><td class="col-g">Green</td><td class="col-b">Blue</td><td class="col-m">Magenta</td></tr>
-                    <tr><th>Number</th><td>YES: 2<br>NO: 4</td><td>2</td><td>1</td><td>YES: 2<br>NO: 4</td><td>3</td><td>1</td></tr>
+                    <tr class="rules"><th>If labeled ‘yes’</th><td>2</td><td>2</td><td>1</td><td>2</td><td>3</td><td>1</td></tr>
+                    <tr class="rules"><th>If labeled ‘no’</th><td>4</td><td>2</td><td>1</td><td>4</td><td>3</td><td>1</td></tr>
                 </table>
 
             </div>
