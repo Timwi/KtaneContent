@@ -11,98 +11,66 @@
     <script src="js/ktane-utils.js"></script>
     <script src="js/ruleseed.js"></script>
     <style>
-        table{
-            margin: 1%;
-            font-size: 9pt;
-            float: left;
-            width: 48%;
+        table {
+            margin: 1em auto;
         }
     </style>
     <script>
-    function setDefaultRules(rnd)
-    {
-        setRules(rnd);
-    }
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
 
-    function setRules(rnd)
-    {
-        let conditions = [  'ボタンの色は青',
-                            'ボタンの色は緑',
-                            'ボタンの色は黄',
-                            'ボタンの色はマゼンタ',
-                            'ボタンの色はオレンジ',
-                            'ボタンの色は赤',
-                            'ボタンの色は青ではない',
-                            'ボタンの色は緑ではない',
-                            'ボタンの色は黄ではない',
-                            'ボタンの色はマゼンタではない',
-                            'ボタンの色はオレンジではない',
-                            'ボタンの色は赤ではない',
-                            'ボタンの色は青か緑のいずれか',
-                            'ボタンの色は青か黄のいずれか',
-                            'ボタンの色は青かマゼンタのいずれか',
-                            'ボタンの色は青かオレンジのいずれか',
-                            'ボタンの色は青か赤のいずれか',
-                            'ボタンの色は緑か黄のいずれか',
-                            'ボタンの色は緑かマゼンタのいずれか',
-                            'ボタンの色は緑かオレンジのいずれか',
-                            'ボタンの色は緑か赤のいずれか',
-                            'ボタンの色は黄かマゼンタのいずれか',
-                            'ボタンの色は黄かオレンジのいずれか',
-                            'ボタンの色は黄か赤のいずれか',
-                            'ボタンの色はマゼンタかオレンジのいずれか',
-                            'ボタンの色はマゼンタか赤のいずれか',
-                            'ボタンの色はオレンジか赤のいずれか',
-                            'ボタンの色は青でも緑でもない',
-                            'ボタンの色は青でも黄でもない',
-                            'ボタンの色は青でもマゼンタでもない',
-                            'ボタンの色は青でもオレンジでもない',
-                            'ボタンの色は青でも赤でもない',
-                            'ボタンの色は緑でも黄でもない',
-                            'ボタンの色は緑でもマゼンタでもない',
-                            'ボタンの色は緑でもオレンジでもない',
-                            'ボタンの色は緑でも赤でもない',
-                            'ボタンの色は黄色でもマゼンタでもない',
-                            'ボタンの色は黄色でもオレンジでもない',
-                            'ボタンの色は黄色でも赤でもない',
-                            'ボタンの色はマゼンタでもオレンジでもない',
-                            'ボタンの色はマゼンタでも赤でもない',
-                            'ボタンの色はオレンジでも赤でもない',
-                            'ボタンの色は暖色',
-                            'ボタンの色は暖色ではない',
-                            'ボタンの色は寒色',
-                            'ボタンの色は寒色ではない',
-                            'ボタンのラベルは「YES」',
-                            'ボタンのラベルは「YES」ではない',
-                            'ボタンのラベルは「NO」',
-                            'ボタンのラベルは「NO」ではない'];
-        let ix = [...Array(conditions.length).keys()];
+        function setRules(rnd)
+        {
+            function makeButtonRules(leftOrRight)
+            {
+                let colors = ['赤', 'オレンジ', '黄', '緑', '青', 'マゼンタ'];
+                let rules = [];
 
-        rnd.shuffleFisherYates(ix);
+                function makeSingleColorRule()
+                {
+                    // Rule with a single color
+                    let c = rnd.next(0, colors.length);
+                    rules.push(`ボタンの色は${colors[c]}`);
+                    colors.splice(c, 1);
+                }
 
-        document.getElementById('rule-left-first').innerHTML = conditions[ix[0]];
-        document.getElementById('rule-left-value-first').innerHTML = rnd.next(1, 5).toString();
-        document.getElementById('rule-right-first').innerHTML = conditions[ix[1]];
-        document.getElementById('rule-right-value-first').innerHTML = rnd.next(1, 5).toString();
+                function makeTwoColorRule()
+                {
+                    // Rule with two possible colors
+                    let c1 = rnd.next(0, colors.length), color1 = colors[c1];
+                    colors.splice(c1, 1);
+                    let c2 = rnd.next(0, colors.length);
+                    rules.push(`ボタンの色は${color1}か${colors[c2]}のいずれか`);
+                    colors.splice(c2, 1);
+                };
 
-        document.getElementById('rule-left-second').innerHTML = conditions[ix[2]];
-        document.getElementById('rule-left-value-second').innerHTML = rnd.next(1, 5).toString();
-        document.getElementById('rule-right-second').innerHTML = conditions[ix[3]];
-        document.getElementById('rule-right-value-second').innerHTML = rnd.next(1, 5).toString();
+                makeSingleColorRule();
+                makeTwoColorRule();
+                if (rnd.next(0, 2) != 0)
+                    makeSingleColorRule();
+                else
+                    makeTwoColorRule();
 
-        document.getElementById('rule-left-third').innerHTML = conditions[ix[4]];
-        document.getElementById('rule-left-value-third').innerHTML = rnd.next(1, 5).toString();
-        document.getElementById('rule-right-third').innerHTML = conditions[ix[5]];
-        document.getElementById('rule-right-value-third').innerHTML = rnd.next(1, 5).toString();
+                // Insert yes/no label rule
+                let label = rnd.next(0, 2) != 0 ? 'YES' : 'NO';
+                let condition = rnd.next(0, 2) != 0 ? 'ではない' : 'である';
+                rules.splice(rnd.next(0, rules.length), 0, [`ボタンのラベルは「${label}」${condition}`]);
 
-        document.getElementById('rule-left-fourth').innerHTML = conditions[ix[6]];
-        document.getElementById('rule-left-value-fourth').innerHTML = rnd.next(1, 5).toString();
-        document.getElementById('rule-right-fourth').innerHTML = conditions[ix[7]];
-        document.getElementById('rule-right-value-fourth').innerHTML = rnd.next(1, 5).toString();
+                let numbers = [1, 2, 3, 4];
+                rnd.shuffleFisherYates(numbers);
+                numbers.splice(rnd.next(0, numbers.length), 0, [rnd.next(1, 5)]);
 
-        document.getElementById('rule-left-value-fifth').innerHTML = rnd.next(1, 5).toString();
-        document.getElementById('rule-right-value-fifth').innerHTML = rnd.next(1, 5).toString();
-    }
+                for (let i = 0; i < 4; i++)
+                    document.getElementById(`rule-${leftOrRight}-${i}`).innerHTML = rules[i];
+                for (let i = 0; i < 5; i++)
+                    document.getElementById(`rule-${leftOrRight}-value-${i}`).innerHTML = numbers[i];
+            }
+
+            makeButtonRules('left');
+            makeButtonRules('right');
+        }
     </script>
 </head>
 <body>
@@ -123,157 +91,26 @@
                 <p>各ボタンを一定回数押すと、機能が入れ替わる。この回数に達すると、ボタンの機能が切り替わり、切り替わった要因となったボタンを押した回数がリセットされる。</p>
                 <p>左ボタンが切り替わるのに必要な回数:</p>
                 <ul>
-                    <li><span class="rule" id="rule-left-first">ボタンの色は青かオレンジのいずれか</span>: <span class="rule" id="rule-left-value-first">1</span></li>
-                    <li><span class="rule" id="rule-left-second">ボタンの色は緑かオレンジのいずれか</span>: <span class="rule" id="rule-left-value-second">4</span></li>
-                    <li><span class="rule" id="rule-left-third">ボタンの色は黄ではない</span>: <span class="rule" id="rule-left-value-third">1</span></li>
-                    <li><span class="rule" id="rule-left-fourth">ボタンのラベルは「NO」ではない</span>: <span class="rule" id="rule-left-value-fourth">1</span></li>
-                    <li>上記のいずれにも当てはまらない: <span class="rule" id="rule-left-value-fifth">4</span></li>
+                    <li><span class="rule" id="rule-left-0">ボタンの色は青かオレンジのいずれか</span>: <span class="rule" id="rule-left-value-0">1</span></li>
+                    <li><span class="rule" id="rule-left-1">ボタンの色は緑かオレンジのいずれか</span>: <span class="rule" id="rule-left-value-1">4</span></li>
+                    <li><span class="rule" id="rule-left-2">ボタンの色は黄ではない</span>: <span class="rule" id="rule-left-value-2">1</span></li>
+                    <li><span class="rule" id="rule-left-3">ボタンのラベルは「NO」ではない</span>: <span class="rule" id="rule-left-value-3">1</span></li>
+                    <li>上記のいずれにも当てはまらない: <span class="rule" id="rule-left-value-4">4</span></li>
                 </ul>
                 <p>右ボタンが切り替わるのに必要な回数:</p>
                 <ul>
-                    <li><span class="rule" id="rule-right-first">ボタンの色は緑でも黄でもない</span>: <span class="rule" id="rule-right-value-first">3</span></li>
-                    <li><span class="rule" id="rule-right-second">ボタンの色は緑か黄のいずれか</span>: <span class="rule" id="rule-right-value-second">1</span></li>
-                    <li><span class="rule" id="rule-right-third">ボタンの色は黄</span>: <span class="rule" id="rule-right-value-third">4</span></li>
-                    <li><span class="rule" id="rule-right-fourth">ボタンの色は緑</span>: <span class="rule" id="rule-right-value-fourth">4</span></li>
-                    <li>上記のいずれにも当てはまらない: <span class="rule" id="rule-right-value-fifth">4</span></li>
+                    <li><span class="rule" id="rule-right-0">ボタンの色は緑でも黄でもない</span>: <span class="rule" id="rule-right-value-0">3</span></li>
+                    <li><span class="rule" id="rule-right-1">ボタンの色は緑か黄のいずれか</span>: <span class="rule" id="rule-right-value-1">1</span></li>
+                    <li><span class="rule" id="rule-right-2">ボタンの色は黄</span>: <span class="rule" id="rule-right-value-2">4</span></li>
+                    <li><span class="rule" id="rule-right-3">ボタンの色は緑</span>: <span class="rule" id="rule-right-value-3">4</span></li>
+                    <li>上記のいずれにも当てはまらない: <span class="rule" id="rule-right-value-4">4</span></li>
                 </ul>
                 <p>モジュールの下側にある小さなボタンはリセットボタンである。分からなくなった場合に備え、これを「Reset done(リセット完了)」と表示されるまで長押しすると、モジュールがリセットされる。</p>
                 <p>質問に正しく回答すると、上部にあるプログレスバーのLEDが1つずつ点灯する。</p>
                 <p>ボタンを押した回数と切り替わった回数は、ミスが記録された時にリセットされる。</p>
             </div>
-           <div class="page-footer relative-footer">ページ 1/3</div>
+           <div class="page-footer relative-footer">ページ 1/1</div>
         </div>
-        <div class="page page-bg-02">
-         <div class="page-header">
-             <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-             <span class="page-header-section-title">可否</span>
-         </div>
-         <div class="page-content">
-             <h3>質問表</h3>
-             <table>
-              <tr><th><b>英文</b></th><th><b>和文</b></th></tr>
-              <tr><td>+</td><td>プラス(肯定的表現)</td></tr>
-              <tr><td>-</td><td>マイナス(否定的表現)</td></tr>
-              <tr><td>Are all bombs explosives?</td><td>すべての爆弾は爆発しやすい？</td></tr>
-              <tr><td>Are all explosives bombs?</td><td>すべての爆発物は爆弾か？</td></tr>
-              <tr><td>Are beetles insects?</td><td>カブトムシはインセクト(昆虫)？</td></tr>
-              <tr><td>Are beetles in sects?</td><td>カブトムシはセクト(派閥)にインしている？</td></tr>
-              <tr><td>Are dragonflies flies?</td><td>トンボは空を飛ぶ？</td></tr>
-              <tr><td>Are pencil leads lead?</td><td>鉛筆には鉛が含まれている？</td></tr>
-              <tr><td>Are you affected by gravity?</td><td>あなたは重力の影響を受けている？</td></tr>
-              <tr><td>Are you human?</td><td>あなたは人間？</td></tr>
-              <tr><td>Are you currently sleeping?</td><td>あなたは現在寝ている？</td></tr>
-              <tr><td>Do any modules present begin with a Y?</td><td>Yから始まるモジュールがある？</td></tr>
-              <tr><td>Do cows drink water?</td><td>乳牛は水を飲む？</td></tr>
-              <tr><td>Do cows drink milk?</td><td>乳牛は牛乳を飲む？</td></tr>
-              <tr><td>Do cows eat grass?</td><td>乳牛は草を食べる？</td></tr>
-              <tr><td>Do cows smoke grass?</td><td>乳牛はハッパをキメる？</td></tr>
-              <tr><td>Do cows give milk?</td><td>乳牛は牛乳を与える？</td></tr>
-              <tr><td>Do onions have layers?</td><td>玉ねぎにはレイヤー(層)がある？</td></tr>
-              <tr><td>Do onions have lawyers?</td><td>玉ねぎにはロイヤー(法律家)がいる？</td></tr>  
-              <tr><td>Do penguins wear a tuxedo?</td><td>ペンギンはタキシードを着ている？</td></tr>
-              <tr><td>Do pigs fly?</td><td>ブタは空を飛ぶ？</td></tr>
-              <tr><td>Does Santa Claus have a beard?</td><td>サンタクロースには髭がある？</td></tr>
-             </table>
-             <table>
-              <tr><th><b>英文</b></th><th><b>和文</b></th></tr>
-              <tr><td>Do submarines breathe?</td><td>潜水艦は呼吸する？</td></tr>
-              <tr><td>Does nothing start with n and end with g?</td><td>nothingはnから始まりgで終わる？</td></tr>
-              <tr><td>Does the government levy taxes?</td><td>政府はタックス(税)を徴収する？</td></tr>
-              <tr><td>Does the government levy taxis?</td><td>政府はタクシーを徴収する？</td></tr>   
-              <tr><td>Don’t not press NO</td><td>NOを押さないままにしないで</td></tr>
-              <tr><td>Don’t not press YES</td><td>YESを押さないままにしないで</td></tr>
-              <tr><td>Don’t not press not NO</td><td>NOではない方を押さないままにしないで</td></tr>
-              <tr><td>Don’t not press not YES</td><td>YESではない方を押さないままにしないで</td></tr>
-              <tr><td>Don’t press NO</td><td>NOを押さないで</td></tr>         
-              <tr><td>Don’t press YES</td><td>YESを押さないで</td></tr>
-              <tr><td>Ds ths qustn hv ny vwls?※</td><td>stmn n bin g hkmrtr?</td></tr>
-              <tr><td>Ds ths qstn hv ny vwls?※</td><td>stmn n bn g hkmrtr?</td></tr>
-              <tr><td>I pressed NO, do the same</td><td>NOを押した。同じことをして</td></tr>
-              <tr><td>I pressed NO, don’t do the same</td><td>NOを押した。同じことをしないで</td></tr>
-              <tr><td>I pressed YES, do the same</td><td>YESを押した。同じことをして</td></tr>
-              <tr><td>I pressed YES, don’t do the same</td><td>YESを押した。同じことをしないで</td></tr>
-              <tr><td>I don’t say the truth - press YES</td><td>私は本当のことを言わない。YESを押して</td></tr>
-              <tr><td>I say the truth - press YES</td><td>私は本当のことを言う。YESを押して</td></tr>
-              <tr><td>I tre - press YES</td><td>お前は私の大事な――、YESを押して</td></tr>
-              <tr><td>I’m not lying - press YES</td><td>私は嘘をつかない。YESを押して</td></tr>
-              <tr><td>Is a word in this question mispelled?</td><td>この質問文内の単語は正しい綴り？</td></tr>
-              <tr><td>Words this in question any misordered are?</td><td>正しいこの単語の順番は質問文内？</td></tr>                
-             </table>
-             <p class="comment">※ <a href="./Mssngv Wls translated (日本語 — 欠落母音) (alpha8404).html">このモジュール</a>がヒントとなる。</p>
-         </div>
-         <div class="page-footer relative-footer">ページ 2/3</div>
-     </div>
-     <div class="page page-bg-02">
-      <div class="page-header">
-          <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-          <span class="page-header-section-title">可否</span>
-      </div>
-      <div class="page-content">
-          <h3>質問表(続き)</h3>
-          <table>
-           <tr><th><b>英文</b></th><th><b>和文</b></th></tr>
-           <tr><td>Is fire hot?</td><td>火は熱い？</td></tr>
-           <tr><td>Is the sun hot?</td><td>太陽は熱い？</td></tr>
-           <tr><td>Is fish vegan?/Are fish vegan?</td><td>魚は菜食主義者？</td></tr>
-           <tr><td>Is a dog a reptile?</td><td>犬は爬虫類？</td></tr>
-           <tr><td>Is wood a liquid?</td><td>木材は液体？</td></tr>
-           <tr><td>Is friendship magic?※1</td><td>トモダチは魔法？</td></tr>
-           <tr><td>Is Hakuna Matata a wonderful phrase?※2</td><td>ハクナ・マタタはいい響き？</td></tr>
-           <tr><td>Is Hakuna Matata a passing craze?※2</td><td>ハクナ・マタタは愛のないメッセージ？</td></tr>
-           <tr><td>Is human blood red?</td><td>人間の血は赤い？</td></tr>
-           <tr><td>Is the skin an organ?</td><td>肌は臓器の一つ？</td></tr>
-           <tr><td>Is Italy a country?</td><td>イタリアは国？</td></tr>
-           <tr><td>Is Italy a county?</td><td>イタリアは群？</td></tr>
-           <tr><td>Is Chile in China?</td><td>中国にチリはある？</td></tr>
-           <tr><td>Is The Hypercube five-dimensional?</td><td>超立方体は5次元？</td></tr>
-           <tr><td>Is The Hypercube four-dimensional?</td><td>超立方体は4次元？</td></tr>
-           <tr><td>Is The Ultracube five-dimensional?</td><td>極立方体は5次元？</td></tr>
-           <tr><td>Is The Ultracube four-dimensional?</td><td>極立方体は4次元？</td></tr>     
-           <tr><td>Is grass green?</td><td>草は緑色？</td></tr>
-           <tr><td>Is grass blue?</td><td>草は青色？</td></tr>
-           <tr><td>Is the sky blue?</td><td>空は青色？</td></tr>
-           <tr><td>Is the sky green?</td><td>空は緑色？</td></tr>
-           <tr><td>Is blue a cold color?</td><td>青は寒色？</td></tr>
-           <tr><td>Is green a warm color?</td><td>緑は暖色？</td></tr>
-           <tr><td>Is it 2019?</td><td>今は2019年？</td></tr>
-           <tr><td>Is it Feb 30?</td><td>今は2月30日？</td></tr>
-           <tr><td>Is it the year 1992?</td><td>今は西暦1992年？</td></tr>
-           <tr><td>Press YES</td><td>YESを押して</td></tr>
-           <tr><td>SEY sserP</td><td>てし押をSEY</td></tr>
-           <tr><td>ON sserP</td><td>NOを押して</td></tr>
-           <tr><td>Press NO</td><td>てし押をON</td></tr> 
-          </table>
-          <table>
-           <tr><th><b>英文</b></th><th><b>和文</b></th></tr>
-           <tr><td>Is the earth flat?</td><td>地球は平面？</td></tr>
-           <tr><td>Is there a manual for this?</td><td>専用のマニュアルがある？</td></tr>
-           <tr><td>Is this KTaNE?</td><td>これはKTaNE？</td></tr> 
-           <tr><td>Is this Keep Speaking and Nobody Explodes?</td><td>これはKeep Speaking and Nobody Explodes？</td></tr>
-           <tr><td>Is this Keep Talking and Nobody Implodes?</td><td>これはKeep Talking and Nobody Implodes？</td></tr>
-           <tr><td>Is this Keep Talking and Nopony Explodes?</td><td>これはKeep Talking and Nopony Explodes？</td></tr>
-           <tr><td>Is this Keep Talking and Nobody Explodes?</td><td>これはKeep Talking and Nobody Explodes？</td></tr>
-           <tr><td>Is this Minecraft?</td><td>これはMinecraft？</td></tr>
-           <tr><td>Is this Yes and No?</td><td>これは「可否」？</td></tr>
-           <tr><td>Is this Left and Right?</td><td>これは「左右」？</td></tr>
-           <tr><td>Is this a module?</td><td>これはモジュール？</td></tr>
-           <tr><td>Is this thing solvable?</td><td>これは解除可能？</td></tr>
-           <tr><td>Is true or true true?</td><td>真 or 真は真？</td></tr>
-           <tr><td>Is true xor true true?</td><td>真 xor 真は真？</td></tr>
-           <tr><td>Is 1 &lt; 1?</td><td>1 &lt; ？</td></tr>
-           <tr><td>Is this bomb entirely vanilla?</td><td>爆弾にはバニラモジュールしかない？</td></tr> 
-           <tr><td>Is this module solved yet?</td><td>このモジュールはもう解除された？</td></tr>
-           <tr><td>Is a solved Forget Me Not on this bomb?</td><td>爆弾には解除済の「我忘る勿かれ」がある？</td></tr>
-           <tr><td>Is the bomb timer &lt; 0?</td><td>カウントダウンタイマーの時間 &lt; 0？</td></tr>
-           <tr><td>Is the bomb timer > 0?</td><td>カウントダウンタイマーの時間 > 0？</td></tr>
-           <tr><td>Is KTaNE something to eat?</td><td>KTaNEは食べられるもの？</td></tr>
-           <tr><td>Should you press the display?</td><td>ディスプレーを押すべき？</td></tr>
-          </table>
-          <p class="comment">※1 <a href="https://ja.wikipedia.org/wiki/マイリトルポニー〜トモダチは魔法〜">このWebページ</a>がヒントとなる。</p>
-          <p class="comment">※2 <a href="https://www.kkbox.com/jp/ja/song/OtHCUi293DzwYTdfYt">このWebページ</a>がヒントとなる。</p>
-      </div>
-      <div class="page-footer relative-footer">ページ 3/3</div>
-  </div>
     </div>
 </body>
 </html>
