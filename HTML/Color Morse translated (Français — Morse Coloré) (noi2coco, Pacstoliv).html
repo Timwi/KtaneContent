@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Morse Coloré — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules()
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'none';
+
+            let rules = [
+                'Si le nombre est impair, le doubler. Sinon, le diviser par deux.',
+                'Si le nombre est divisible par 3, le diviser par 3. Sinon, ajouter le nombre de lumières qui clignotent en rouge, jaune ou bleu.',
+                'Élever le nombre au carré.',
+                'Déplacer les parenthèses autour de la deuxième et troisième lumière si elles sont autour de la première et de la deuxième et vice versa.',
+                'Tripler le nombre et prendre sa racine numérique additionnelle.',
+                'Soustraire le nombre à 10.'
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            for (let i = 0; i <= 5; i++)
+                tds[i].innerHTML = rules[i];
+        }
+
+        function setRules(rnd)
+        {
+            document.getElementById('rule-seeded-explanation').style.display = 'block';
+
+            let rules = [
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    return `Si le nombre est divisible par ${m}, le diviser par ${m}; sinon, le multiplier par ${m}.`;
+                },
+                rnd => {
+                    let m = rnd.next(2, 6);
+                    let colors = rnd.shuffleFisherYates(Array(7).fill(null).map((_, c) => c)).slice(0, 3);
+                    let colorNames = [ "rouge", "orange", "jaune", "vert", "bleu", "violet", "blanc" ];
+                    return `Si le nombre est divisible par ${m}, le diviser par ${m}. Sinon, ajouter le nombre de lumières qui clignotent en ${colorNames[colors[0]]}, ${colorNames[colors[1]]} ou ${colorNames[colors[2]]}.`;
+                },
+                rnd => `Élever ce nombre au carré.`,
+                rnd => `Déplacer les parenthèses autour de la deuxième et troisième lumière si elles sont autour de la première et de la deuxième et vice versa.`,
+                rnd => {
+                    let which = rnd.next(1, 3);
+                    return `Remplacer les ${which === 1
+                        ? '« + » avec des « - » (et vice versa) et les « × » avec des « / » (et vice versa)'
+                        : '« + » avec des « × » (et vice versa) et les « - » avec des « / » (et vice versa)'}.`;
+                },
+                rnd => {
+                    let m = rnd.next(1, 9);
+                    return `Multiplier le nombre par ${m} et prendre sa racine numérique additionnelle.`;
+                },
+                rnd => {
+                    let m = rnd.next(10, 36);
+                    return `Soustraire le nombre à ${m}.`;
+                },
+                rnd => `Multiplier le nombre par <var>n<${''}/var> + 1, où <var>n<${''}/var> est égal au nombre de ports qui contiennent ce caractère.`,
+                rnd => {
+                    let m = rnd.next(5, 11);
+                    return `Prendre le nombre modulo ${m}, et utiliser sa factorielle.`;
+                },
+                rnd => {
+                    let indMode = rnd.next(0, 3);
+                    return `Remplacer le nombre par le nombre d'indicateurs ${['allumés ', 'éteints ', ''][indMode]}qui contiennent ce caractère.`;
+                },
+                rnd => `Multiplier le nombre par <var>n<${''}/var>, où <var>n<${''}/var> est le nombre de caractères distincts dans le numéro de série.`,
+                rnd => `Remplacer le nombre par le nombre de 1 qui apparaît dans la conversion binaire de ce nombre.`,
+                rnd => {
+                    let whichDigits = rnd.next(0, 3);
+                    return `Remplacer le nombre avec le nombre de ${['1', '2', '1 et de 2'][whichDigits]} qui apparaît dans la conversion ternaire de ce nombre.`;
+                },
+                rnd => {
+                    let op = rnd.next(0, 2);    // 0 = add; 1 = multiply
+                    let whichEdgework = rnd.next(0, 3);
+                    return `${[`Multiplier le nombre par <var>n<${''}/var> + 1, où <var>n<${''}/var> est`, 'Ajouter'][op]} le nombre de ${['plaques de ports', 'types de ports distincts', 'porte-piles'][whichEdgework]} sur la bombe.`;
+                },
+                rnd => `Remplacer le caractère par le nombre de points qui apparaît dans la représentation <a href='https://ktane.timwi.de/HTML/Braille&20translated&20(Français&20—&20Braille).html'>braille<${''}/a> de ce caractère. (1..9 = A..H, 0 = J)`,
+                rnd => `Remplacer le caractère par le nombre de régions colorées dans le <a href='https://ktane.timwi.de/HTML/Maritime&20Flags&20translated&20(Français&20—&20Drapeaux Maritimes)&20(Pacstoliv).html'>drapeau maritime<${''}/a> de ce caractère.`,
+                rnd => `Remplacer le caractère par le nombre de formes qui apparaît dans le symbole <a href='https://ktane.timwi.de/HTML/Zoni&20translated&20(Français&20—&20Zoni)&20(Pacstoliv).html'>Zoni<${''}/a> de ce caractère.`,
+                rnd => `Remplacer le caractère par <var>d<${''}/var> + 3×<var>s<${''}/var>, où <var>d<${''}/var> est le nombre de points et <var>s<${''}/var> est le nombre de tirets dans la représentation morse de ce caractère.`,
+                rnd => {
+                    let useOn = rnd.next(0, 2);
+                    return `Remplacer le caractère par le nombre de segments qui serait affiché dans l'${['off', 'on'][useOn]} in the <a href='https://ktane.timwi.de/HTML/14&20translated&20(Français&20—&2014)&20(Pacstoliv).html'>affichage à 14 segments<${''}/a> de ce caractère.`;
+                },
+                rnd => {
+                    let append = rnd.next(0, 2);
+                    let snValue = rnd.next(0, 2);
+                    return `${['Attacher', 'Ajouter'][append]} le ${['6ᵉ', '3ᵉ'][snValue]} caractère du numéro de série au nombre.`;
+                },
+                rnd => `Ajouter le nombre au nombre total de lettres à travers toutes les couleurs affichées.`,
+                rnd => {
+                    let m = rnd.next(2, 8);
+                    return `Si le caractère apparaît dans le numéro de série, le diviser par <var>n<${''}/var> + 1, où <var>n<${''}/var> est le nombre de fois qu'il apparaît dans le numéro de série. Sinon, le multiplier par ${m}.`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `Si le caractère en code morse inversé est un nombre de 0 à 9 ou une lettre de A à Z, utiliser la valeur en base 36 du caractère à la place. Sinon, utiliser le nombre plus le nombre de ${['ports', 'plaques de ports', 'piles', 'porte-piles', 'indicateurs', 'indicateurs allumés', 'indicateurs éteints'][which]}.`;
+                },
+                rnd => {
+                    let which = rnd.next(0, 7);
+                    return `Si le caractère est un chiffre, ajouter le nombre de ${['ports', 'plaques de ports', 'piles', 'porte-piles', 'indicateurs', 'indicateurs allumés', 'indicateurs éteints'][which]}. Sinon, remplacer le nombre par <var>d<${''}/var> + 3×<var>s<${''}/var>, où <var>d<${''}/var> est le nombre de points et <var>s<${''}/var> le nombre de tirets dans la représentation en chiffre des francs-maçons du caractère.`;
+                },
+                rnd => {
+                    let letters = rnd.next(0, 2);
+                    return `Multiplier le nombre par le nombre de ${['chiffres', 'lettres'][letters]} dans le numéro de série.`;
+                },
+                rnd => `Ajouter le dernier chiffre de la graine de génération.`,
+                rnd => `Remplacer la valeur par 1 + le nombre de fois le caractère apparaît dans les noms des couleurs de toutes les DELs.`,
+                rnd => {
+                    let which = rnd.next(0, 3);
+                    return `Ajouter l'${['actuel jour', 'actuel mois', 'actuelle année'][which]} quand la bombe a été activée.`;
+                },
+                rnd => `Remplacer la valeur par l'index de la première apparition du caractère dans le texte suivant : « 0 THE 1 QUICK 2 BROWN 3 FOX 4 JUMPS 5 OVER 6 THE 7 LAZY 8 DOG 9 » (sans compter les espaces).`,
+                rnd => `Si le caractère est une lettre, le remplacer par son score au <a href='http://ktane.timwi.de/HTML/Scrabble&20Scramble&20translated&20(Français&20—&20Mélange&20Scrabble)&20(Pacstoliv).html'>Scrabble anglophone<${''}/a>.`,
+                rnd => `Remplacer le nombre par son <a href='https://ktane.timwi.de/HTML/Übermodule&20translated&20(Français&20—&20Übermodule)&20(Pacstoliv).html'>code frappé agrandi<${''}/a> comme un nombre à deux chiffres.`,
+                rnd => `Remplacer le caractère par le nombre de modules dont le nom anglais contient le caractère.`,
+            ];
+
+            let tds = Array.from(document.querySelectorAll(`.color-morse td.color-morse-rules`));
+            let shuffledRules = rnd.shuffleFisherYates(rules.map(rule => rule(rnd)));
+            for (let i = 0; i <= 5; i++)
+                tds[i].innerHTML = shuffledRules[i];
+        }
+    </script>
+    <style>
+        .small-font {
+            font-size: 11pt;
+        }
+        .dark .ondark { filter: invert(85%); }
+        th { text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Morse Coloré</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Color Morse.svg" class="diagram">
+                <h2>À propos du Morse Coloré</h2>
+                <p class="flavour-text">-.-.&nbsp;.----.&nbsp;.&nbsp;...&nbsp;-&nbsp;/&nbsp;..-.&nbsp;..-&nbsp;-.&nbsp;/&nbsp;.-..&nbsp;.&nbsp;...&nbsp;/&nbsp;--&nbsp;.-&nbsp;-&nbsp;....&nbsp;...&nbsp;!</p>
+                <div class="small-font">
+                    <ul>
+                        <li>Il y a plusieurs lumières clignotantes de différentes couleurs avec des opérations et des parenthèses les entourrant.</li>
+                        <li>Chaque lumière affiche une lettre ou un nombre en morse. S'il s'agit d'une lettre, considérer le nombre obtenu comme égal à la position numérique de la lettre obtenue dans l'alphabet plus 9 (A=10, B=11, etc.).</li>
+                        <li>Pour chaque nombre, appliquer l'opération spéciale de couleur trouvée dans le tableau ci-dessous qui correspond à la couleur de la lumière ayant affiché ce nombre. Si la couleur est blanche, ne rien faire avec ce nombre.</li>
+                        <li>Utiliser les nouveaux nombres (potentiels) à la place des lumières dans l'expression pour obtenir le résultat.
+                            <ul>
+                                <li>Si le résultat n'est pas entier, considérer seulement la partie entière du résultat. </li>
+                                <li>Si le résultat est négatif, s'assurer de saisir un trait d'union avant le résultat. (-0 devient 0.)</li>
+                                <li>Si la valeur absolue du résultat est supérieure à 999, considérer seulement les trois chiffres les moins significatifs du résultat.</li>
+                                <li>Si plus d'une des règles précédentes s'applique, les appliquer dans l'ordre.</li>
+                                <li>Ignorer tout zéro inutile.</li>
+                            </ul>
+                        </li>
+                        <li>En utilisant les boutons, entrer le résultat en morse en utilisant le bouton sans libellé pour séparer les caractères.</li>
+                        <li>Après une erreur, tous les caractères saisis jusqu'à présent sont réinitialisés.</li>
+                    </ul>
+                    <p id='rule-seeded-explanation'>Si une règle fait référence à un <em>nombre</em>, il s'agit de la valeur en base 36 (A=10, ..., Z=35).
+                        Si une règle fait référence à un <em>caractère</em>, il s'agit du nombre ou de la lettre affichée en morse.</p>
+                    <table class="color-morse">
+                        <thead><tr>
+                            <th>Couleur</th>
+                            <th>Opération</th>
+                        </tr></thead>
+                        <tbody><tr>
+                            <td>Rouge</td>
+                            <td class="color-morse-rules">Si le nombre est impair, le doubler. Sinon, le diviser par deux.</td>
+                        </tr>
+                        <tr>
+                            <td>Orange</td>
+                            <td class="color-morse-rules">Si le nombre est divisible par 3, le diviser par 3. Sinon, ajouter le nombre de lumières qui clignotent avec une couleur primaire.</td>
+                        </tr>
+                        <tr>
+                            <td>Jaune</td>
+                            <td class="color-morse-rules">Élever ce nombre au carré.</td>
+                        </tr>
+                        <tr>
+                            <td>Vert</td>
+                            <td class="color-morse-rules">Déplacer les parenthèses autour de la deuxième et troisième lumière si elles sont autour de la première et de la deuxième et vice versa.</td>
+                        </tr>
+                        <tr>
+                            <td>Bleu</td>
+                            <td class="color-morse-rules">Tripler le nombre et en prendre la racine numérique additionnelle.</td>
+                        </tr>
+                        <tr>
+                            <td>Violet</td>
+                            <td class="color-morse-rules">Soustraire le nombre à 10.</td>
+                        </tr>
+                    </tbody></table>
+                </div>
+            </div>
+           <div class="page-footer relative-footer">Page 1 sur 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Morse Coloré</span>
+            </div>
+            <div class="page-content">
+                <h3><b>Référence d'identification du morse</b></h3>
+                <img style="width:75%" class="centered-img ondark" src="img/Color Morse/Morse Reference.svg">
+            </div>
+           <div class="page-footer relative-footer">Page 2 sur 2</div>
+        </div>
+    </div>
+</body>
+</html>
