@@ -18442,7 +18442,7 @@ let parseData = [
 						}
 						maze.push(mazeRow);
 					}
-					let table = $('<table>').css('border-collapse', 'collapse');
+					let table = $('<table>').addClass('tile-maze');
 					for (let i = 0; i < 7; i++) {
 						let tr = $('<tr>').appendTo(table);
 						for (let j = 0; j < 7; j++) {
@@ -18538,6 +18538,7 @@ let parseData = [
 						.attr('src', `img/The Tile Maze/${tile}.png`)
 						.css('transform', `rotate(${rotation}deg)`)
 						.css('width', '50px').css('height', '50px')
+
 						.appendTo(div);
 
 					$('<div>')
