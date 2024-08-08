@@ -20370,6 +20370,54 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "WireSequenceSequence",
+		loggingTag: "Wire Sequence Sequence",
+		matches: [
+			{
+				regex: /^Page (\d+) wires \((\d+)\):$/,
+				handler: (matches, module) => {
+					const wires = readMultiple(matches[2]).split(/\r?\n/g).map(line => line.match(/ (\d+) -> (red|blue|black) -> ([ABC]) \((should cut|x)\)/));
+					const svg = [];
+
+					const anchors = [29, 64, 99],
+					letters = ["A", "B", "C"];
+					
+					for (let p = 0; p < 4; p++) {
+						let text = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="25%">`;
+
+						text += `<rect x="0" y="0" width="128" height="128" stroke-width="4" stroke="#000" fill="none" />`;
+
+						for (let i = 0; i < 3; i++)
+							for (let j = 0; j < 2; j++)
+								text += `<text x="${j ? 128 - 15 : 15}" y="${anchors[i]}" text-anchor="middle" alignment-baseline="middle" font-weight="bold">${j ? letters[i] : (p * 3 + i + 1)}</text>`;
+
+						for (const wire of wires) {
+							const [, num, color, letter, cut] = wire;
+							for (let i = 0; i < 3; i++)
+								if (num == (p * 3 + i + 1))
+									text += `<line x1="35" y1="${anchors[i]}" x2="${128 - 35}" y2="${anchors[letters.indexOf(letter)]}" stroke-width="6" stroke-linecap="round" stroke="${color}" />`;
+						}
+
+						text += `</svg>`;
+						svg.push(text);
+					}
+
+					module.push({
+						label: `Page ${matches[1]} panels:`,
+						obj: svg.map(text => $(text).css("min-width", "128px")),
+						expandable: true,
+						expanded: matches[1] === "1",
+					});
+
+					return true;
+				},
+			},
+			{
+				regex: /.+/,
+			},
+		],
+	},
+	{
 		moduleID: "WordSearchModule",
 		loggingTag: "Word Search",
 		matches: [
