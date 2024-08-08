@@ -8,42 +8,147 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
-    <script src="js/jquery.3.7.0.min.js"></script>
-    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <script>
-    $(function() {
-        let mazesvg = $("svg.maze");
+        const SIZE = 10;
+        let visited = [];
+        let maze = "";
 
-        for (let r = 0; r < 10; r++) {
-            for (let c = 0; c < 10; c++) {
-                let cell = MakeSvgElem("rect", {
-                    class: "highlightable", x:(c*100), y:(r*100),
-                    width:100, height:100, fill:"transparent"
-                });
-                mazesvg.append(cell);
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+        function setRules(rnd) {
+            if (rnd.seed !== 1) {
+                maze = generateMaze(rnd).join("");
+                let dec = checkValidity(maze);
+                while (dec.length < 10) {
+                    maze = generateMaze(rnd).join("");
+                    dec = checkValidity(maze);
+                }
+
+                rnd.shuffleFisherYates(dec);
+                for (let i = 0; i < 10; i++) {
+                    let pos = (((dec[i] / SIZE) | 0) * (SIZE * 2 + 1) * 2) + (dec[i] % SIZE * 2) + SIZE * 2 + 2;
+                    maze = maze.substring(0, pos) + i + maze.substring(pos + 1);
+                }
+            }
+            else {
+                maze = "██████████████████████       █ █        0██ ███ █ █ █ ███ ██████ █   █   █   █     ██ █ █████ █ █ █████ ██1█ █  4█   █ █   █6████ █ ███ █████ █ ████   █           █   ██ █████████ ███████ ██  9█     █ █    3█ ██████ ███ █ █ █████ ██   █ █5█   █       ██ █ █ █ ███████████ ██ █   █       █7    ██ ███████████ █████ ██ █     █  8█     █ ██ █ ███ █ ███████ █ ██ █ █   █       █   ██ █ █ █████████ ███ ██   █      2█       ██████████████████████";
+            }
+
+            let d = document.getElementsByClassName("red-maze");
+            d[0].innerHTML = ToSVG(maze);
+        }
+
+        function checkValidity(maze) {
+            let deadEnds = [];
+            for (let i = 0; i < SIZE; i++) {
+                for (let j = 0; j < SIZE; j++) {
+                    let wallCount = 0;
+                    let curPos = (i * (SIZE * 2 + 1) * 2) + (j * 2) + (SIZE * 2 + 2);
+                    if (maze[curPos - 1] === '█')
+                        wallCount++;
+                    if (maze[curPos - (SIZE * 2 + 1)] === '█')
+                        wallCount++;
+                    if (maze[curPos + 1] === '█')
+                        wallCount++;
+                    if (maze[curPos + (SIZE * 2 + 1)] === '█')
+                        wallCount++;
+                    if (wallCount === 3)
+                        deadEnds.push(i * 10 + j);
+                }
+            }
+            return deadEnds;
+        }
+
+        function ToSVG(maze) {
+            let svg = "";
+            for (let i = 0; i < SIZE; i++) {
+                for (let j = 0; j < SIZE; j++) {
+                    let curPos = (j * (SIZE * 2 + 1) * 2) + (i * 2) + (SIZE * 2 + 2);
+                    let x = i * 50;
+                    let y = j * 50;
+                    if (maze[curPos - (SIZE * 2 + 1)] === '█')
+                        svg += `<line x1='${x}' y1='${y}' x2='${x + 50}' y2='${y}' fill='none' />`;
+                    if (maze[curPos - 1] === '█')
+                        svg += `<line x1='${x}' y1='${y}' x2='${x}' y2='${y + 50}' fill='none' />`;
+                    if (i === SIZE - 1)
+                        svg += `<line x1='${x + 50}' y1='${y}' x2='${x + 50}' y2='${y + 50}' fill='none' />`;
+                    if (j === SIZE - 1)
+                        svg += `<line x1='${x}' y1='${y + 50}' x2='${x + 50}' y2='${y + 50}' fill='none' />`;
+                    if (maze[curPos] !== ' ' && maze[curPos] !== '█')
+                        svg += `<text x='${x + 25}' y='${y + 32}'>${maze[curPos]}</text>`
+                }
+            }
+            for (let i = 0; i < SIZE; i++)
+                for (let j = 0; j < SIZE; j++)
+                    svg += `<rect class='highlightable' width='50' height='50' x='${i * 50}' y='${j * 50}' />`;
+            let s = `<svg viewBox='-5 -5 510 510' text-anchor='middle' font-size='25'>${svg}</svg>`
+            return s;
+        }
+
+        function generateMaze(rnd) {
+            visited = Array(SIZE);
+            for (let i = 0; i < SIZE; i++)
+                visited[i] = Array(SIZE).fill(false);
+            let charArr = Array((SIZE * 2 + 1) * (SIZE*2+1)).fill('█');
+            for (let a = 0; a < SIZE; a++)
+                for (let b = 0; b < SIZE; b++)
+                    charArr[(a * (SIZE * 2 + 1) * 2) + (b * 2) + SIZE * 2 + 2] = ' ';
+            let x = rnd.next(0, SIZE);
+            let y = rnd.next(0, SIZE);
+            generate(x, y, rnd, charArr);
+            return charArr;
+        }
+
+        function generate(x, y, rnd, charArr) {
+            visited[x][y] = true;
+            let arr = [0, 1, 2, 3];
+            rnd.shuffleFisherYates(arr);
+            let curPos = (x * (SIZE * 2 + 1) * 2) + (y * 2) + (SIZE * 2 + 2);
+            for (let i = 0; i < 4; i++) {
+                if (arr[i] === 0)
+                    if (y !== 0 && !visited[x][y - 1]) {
+                        charArr[curPos - 1] = ' ';
+                        generate(x, y - 1, rnd, charArr);
+                    }
+                if (arr[i] === 1)
+                    if (x !== SIZE - 1 && !visited[x + 1][y]) {
+                        charArr[curPos + (SIZE * 2 + 1)] = ' ';
+                        generate(x + 1, y, rnd, charArr);
+                    }
+                if (arr[i] === 2)
+                    if (y !== SIZE - 1 && !visited[x][y + 1]) {
+                        charArr[curPos + 1] = ' ';
+                        generate(x, y + 1, rnd, charArr);
+                    }
+                if (arr[i] === 3)
+                    if (x !== 0 && !visited[x - 1][y]) {
+                        charArr[curPos - (SIZE * 2 + 1)] = ' ';
+                        generate(x - 1, y, rnd, charArr);
+                    }
             }
         }
-    });
     </script>
     <style>
-        svg.maze {
-            width: 150mm;
-            height: 150mm;
-            display: block;
-            margin: auto;
+        svg rect.highlightable {
+            fill: transparent;
         }
-        svg path {
-            fill: none;
-            stroke: #000;
-            stroke-width: 13;
+        svg line {
+            stroke-width: 5pt;
+            stroke-linecap: square;
         }
-        svg text {
+        .red-maze svg {
+            width: 570px;
+            display: flex;
+            margin: 0em auto;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .red-maze svg text {
             font-weight: bold;
-            font-size: 50px;
-            fill: #222;
         }
-        .dark svg path { stroke: #DDD; }
-        .dark svg text { fill: #DDD; }
+        .red-maze svg line { stroke: black; }
     </style>
 </head>
 <body>
@@ -66,36 +171,7 @@
 
                 <p>To solve the module, use the buttons to navigate the maze toward the last digit of the Serial Number.</p>
 
-                <svg class="maze" viewbox="-10 -10 1020 1020" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0 0h1000v1000h-1000v-1005"/>
-                    <path d="M0 300h100v-200h100"/>
-                    <path d="M400 0v100"/>
-                    <path d="M500 0v200"/>
-                    <path d="M800 100h200"/>
-                    <path d="M0 500h200v100v-400h100v-100v100h100v100h-100"/>
-                    <path d="M100 400h400v100"/>
-                    <path d="M600 100h100v200h-100v-100v100h-100"/>
-                    <path d="M700 200h200v100h100"/>
-                    <path d="M800 300v100h100v100h-200"/>
-                    <path d="M800 400h-200v200h100v100h200v100"/>
-                    <path d="M100 600v300"/>
-                    <path d="M300 700v-200h100v100h505"/>
-                    <path d="M100 700h500v100"/>
-                    <path d="M500 800h300v100h100"/>
-                    <path d="M400 700v200h300"/>
-                    <path d="M300 900h300v100"/>
-                    <path d="M200 1000v-200h100"/>
-                    <text x="935" y="65">0</text>
-                    <text x="35" y="265">1</text>
-                    <text x="535" y="965">2</text>
-                    <text x="835" y="465">3</text>
-                    <text x="335" y="265">4</text>
-                    <text x="335" y="565">5</text>
-                    <text x="935" y="265">6</text>
-                    <text x="735" y="665">7</text>
-                    <text x="535" y="765">8</text>
-                    <text x="135" y="465">9</text>
-                </svg>
+                <div class="red-maze"></div>
             </div>
            <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
