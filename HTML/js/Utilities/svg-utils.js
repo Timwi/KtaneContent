@@ -37,7 +37,7 @@ function MakeSvgTag(w, h, xOff = 0, yOff = 0, attrs = null) {
 }
 
 /**
- * Makes a perfect regular polygon with verticies all lying on a circle.
+ * Makes a perfect regular polygon with vertices all lying on a circle.
  * @param {float} radius - Radius of the invisible circle (and the polygon).
  * @param {float} cx - x coordinate of center of polygon.
  * @param {float} cy - y coordinate of center of polygon.
