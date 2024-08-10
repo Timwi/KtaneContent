@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang='de'>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Gelbe Pfeile — Keep Talking and Nobody Explodes-Modul</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules()
+        {
+            let rules = [
+                'Hoch/Die Hoch-Taste ist vorhanden/Einen Schraubenzieher essen',
+                'Runter/Vorherige Eingabe war Links/Rechts',
+                'Links/Seriennummer endet in einer 3/Hoch',
+                'Hoch/Dies ist die Startreihe/Runter',
+                'Rechts/Leuchtender SIG-Indikator vorhanden/Links',
+                'Runter/Kein PS/2-Anschluss vorhanden/Egal',
+                'Hoch/Runter hasn’t been pressed yet/Runter',
+                'Egal/Serieller Anschluss vorhanden/Rechts',
+                'Runter/Kein Quengelmodul vorhanden/Egal',
+                'Links/Vorherige Eingabe war Runter/Hoch',
+                'Runter/9 ist ungerade/Zum Kindergarten gehen',
+                'Hoch/Keine Batterien vorhanden/Runter',
+                'Rechts/Weniger als 3 Batteriefächer vorhanden/Links',
+                'Egal/Dies ist die Startreihe/Rechts',
+                'Links/Seriennummer enthält den Buchstaben O/Runter',
+                'Runter/Seriennummer enthält 4 Buchstaben/Hoch',
+                'Runter/Vorherige Eingabe war Rechts/Links',
+                'Hoch/Nicht leuchtender CLR-Indikator vorhanden/Runter',
+                'Links/Heute ist nicht der 42. Juni/Das Spiel beenden',
+                'Links/Anzahl Batterien ist gerade/Runter',
+                'Egal/Kein Modul vorhanden, dessen englischer Name mit Y anfängt/Egal',
+                'Hoch/Vorherige Eingabe war Hoch/Runter',
+                'Rechts/Keine Anschlussbuchse vorhanden/Egal',
+                'Hoch/Dies ist die Startreihe/Links',
+                'Egal/Hoch wurde noch nicht gedrückt/Hoch',
+                'Rechts/Rechts ist Rechts ODER ist auf der rechten Seite/Rechts'
+            ];
+
+            let tds = Array.from(document.querySelectorAll('.rules td:nth-child(2)'));
+            for (let i = 0; i < tds.length; i++)
+                tds[i].innerText = rules[i];
+        }
+
+        function setRules(rnd)
+        {
+            // To translators: Put whatever jokes you’d like.
+            let jokeConditions = [
+                'Eine Hoch-Taste ist vorhanden',
+                '9 ist ungerade',
+                'Heute ist nicht der 42. Juni',
+                'Kein Modul vorhanden, dessen englischer Name mit Y anfängt',
+                'Rechts ist Rechts ODER ist auf der rechten Seite',
+                'Die Batterieanzahl ist eine Ganzzahl',
+                'Mindestens -4 Anschlüsse vorhanden',
+                '2+2=4',
+                'Ein ungelöstes Gelbe-Pfeile-Modul ist vorhanden',
+                'Anzahl Module größer als 0',
+                'Countdown-Timer (in Sekunden) ist positiv',
+                'Der Raum enthält eine ungelöste Bombe',
+                'Detonation ist unerwünscht',
+                'Q ist ein Konsonant',
+                'T ist kein Vokal',
+                '3 oder mehr Pfeile auf dem Modul',
+                'Der rechte Pfeil ist nicht violett',
+                'Der angezeigte Buchstabe ist im englischen Alphabet',
+                'Die Erde ist rund',
+                'Der Himmel ist blau',
+                'Bananen sind gelb',
+                'Der Boden besteht aus Boden',
+                'Dies ist lesbar',
+                'Dönerstände verkaufen Döner',
+                'Belgische Waffeln kommen aus Belgien',
+                'Der linke Pfeil ist nicht rechts'
+            ];
+            let jokeFalses = [
+                'Einen Schraubenzieher essen',
+                'Zum Kindergarten gehen',
+                'Das Spiel beenden',
+                'Einen Felsen verzehren',
+                'Nicht mehr reden, damit alle explodieren',
+                'Mao spielen',
+                'Steuern hinterziehen',
+                'Die Bombe verschärfen',
+                'Fußball gucken',
+                'Den Rasen mähen',
+                'Gut abschneiden',
+                'Genauer hinsehen',
+                '26 Reihen nach unten gehen',
+                'Die Simpsons einschalten',
+                'Eine Toilette kaufen',
+                'TikTok öffnen',
+                'SYSTEM32 löschen',
+                'In den Bundesnachrichtendienst hacken',
+                'In den Spiegel schauen',
+                'Topfschlagen spielen',
+                'Nach Azerbaijan fliegen',
+                'Ein KTaNE-Modul erstellen',
+                'Windeln wechseln',
+                'Die Kardashians verfolgen',
+                'Eine echte Bombe anzünden',
+                'Hilfe! Ich bin in einer Handbuchfabrik gefangen!',
+                'Textfarbe in Schwarz ändern',
+                'Bitcoins kaufen',
+                'Schlafen gehen',
+                'Alt+F4 drücken',
+                'Dem Entschärfer alles Gute wünschen',
+                'Einen Drachen zähmen',
+                'Nach Mornington Crescent reisen',
+                'Wählen gehen',
+                'Zur Wahl antreten',
+                'Bei eXish beschweren'
+            ];
+
+            let allDirections = ['Hoch', 'Rechts', 'Runter', 'Links', 'Egal'];
+
+            function GenerateDirections()
+            {
+                return rnd.shuffleFisherYates(allDirections.slice(0));
+            }
+
+            function Rule(condition)
+            {
+                let rands = GenerateDirections(rnd);
+                return `${rands[0]}/${condition}/${rands[1]}`;
+            }
+
+            function ParametrizedRule(getRnd, fnc)
+            {
+                let rands = GenerateDirections(rnd);
+                let randPrev = getRnd(rnd);
+                return `${rands[0]}/${fnc(randPrev)}/${rands[1]}`;
+            }
+
+            let rules = rnd.shuffleFisherYates([
+                () => `Up/#/%`,
+                () => `Right/#/%`,
+                () => `Down/#/%`,
+                () => `Left/#/%`,
+                () => `Any/#/%`,
+                () => Rule('Hoch wurde noch nicht gedrückt'),
+                () => Rule('Rechts wurde noch nicht gedrückt'),
+                () => Rule('Runter wurde noch nicht gedrückt'),
+                () => Rule('Links wurde noch nicht gedrückt'),
+                () => ParametrizedRule(rnd => allDirections[rnd.next(0, 4)], prev => `Vorherige Eingabe war ${prev}`),
+                () => ParametrizedRule(rnd => allDirections[rnd.next(0, 4)], prev => `Vorherige Eingabe war nicht ${prev}`),
+                () => Rule('Dies ist die Startreihe'),
+                () => Rule('Anzahl der Batterien ist gerade'),
+                () => Rule('Keine Batterien vorhanden'),
+                () => Rule('Genau 1 Batterie vorhanden'),
+                () => Rule('Genau 2 Batterien vorhanden'),
+                () => Rule('Genau 3 Batterien vorhanden'),
+                () => Rule('Bis zu 3 Batterien vorhanden'),
+                () => Rule('4 oder mehr Batterien vorhanden'),
+                () => Rule('Anzahl der Batteriefächer ist gerade'),
+                () => Rule('Keine Batteriefächer vorhanden'),
+                () => Rule('Genau 1 Batteriefach vorhanden'),
+                () => Rule('Genau 2 Batteriefächer vorhanden'),
+                () => Rule('Genau 3 Batteriefächer vorhanden'),
+                () => Rule('Bis zu 3 Batteriefächer vorhanden'),
+                () => Rule('4 oder mehr Batteriefächer vorhanden'),
+                () => Rule('Anzahl der Indikatoren ist gerade'),
+                () => Rule('SND-Indikator vorhanden'),
+                () => Rule('CLR-Indikator vorhanden'),
+                () => Rule('CAR-Indikator vorhanden'),
+                () => Rule('IND-Indikator vorhanden'),
+                () => Rule('FRQ-Indikator vorhanden'),
+                () => Rule('SIG-Indikator vorhanden'),
+                () => Rule('NSA-Indikator vorhanden'),
+                () => Rule('MSA-Indikator vorhanden'),
+                () => Rule('TRN-Indikator vorhanden'),
+                () => Rule('BOB-Indikator vorhanden'),
+                () => Rule('FRK-Indikator vorhanden'),
+                () => Rule('Anzahl der leuchtenden Indikatoren ist gerade'),
+                () => Rule('Leuchtender SND-Indikator vorhanden'),
+                () => Rule('Leuchtender CLR-Indikator vorhanden'),
+                () => Rule('Leuchtender CAR-Indikator vorhanden'),
+                () => Rule('Leuchtender IND-Indikator vorhanden'),
+                () => Rule('Leuchtender FRQ-Indikator vorhanden'),
+                () => Rule('Leuchtender SIG-Indikator vorhanden'),
+                () => Rule('Leuchtender NSA-Indikator vorhanden'),
+                () => Rule('Leuchtender MSA-Indikator vorhanden'),
+                () => Rule('Leuchtender TRN-Indikator vorhanden'),
+                () => Rule('Leuchtender BOB-Indikator vorhanden'),
+                () => Rule('Leuchtender FRK-Indikator vorhanden'),
+                () => Rule('Anzahl der nicht leuchtenden Indikatoren ist gerade'),
+                () => Rule('Nicht leuchtender SND-Indikator vorhanden'),
+                () => Rule('Nicht leuchtender CLR-Indikator vorhanden'),
+                () => Rule('Nicht leuchtender CAR-Indikator vorhanden'),
+                () => Rule('Nicht leuchtender IND-Indikator vorhanden'),
+                () => Rule('Nicht leuchtender FRQ-Indikator vorhanden'),
+                () => Rule('Nicht leuchtender SIG-Indikator vorhanden'),
+                () => Rule('Nicht leuchtender NSA-Indikator vorhanden'),
+                () => Rule('Nicht leuchtender MSA-Indikator vorhanden'),
+                () => Rule('Nicht leuchtender TRN-Indikator vorhanden'),
+                () => Rule('Nicht leuchtender BOB-Indikator vorhanden'),
+                () => Rule('Nicht leuchtender FRK-Indikator vorhanden'),
+                () => Rule('Anzahl der Anschlüsse ist gerade'),
+                () => Rule('Parallel-Anschluss vorhanden'),
+                () => Rule('Seriell-Anschluss vorhanden'),
+                () => Rule('PS/2-Anschluss vorhanden'),
+                () => Rule('DVI-D-Anschluss vorhanden'),
+                () => Rule('Stereo-RCA-Anschluss vorhanden'),
+                () => Rule('RJ-45-Anschluss vorhanden'),
+                () => Rule('Anschluss mehrfach vorhanden'),
+                () => Rule('Kein Anschluss vorhanden'),
+                () => Rule('Genau 1 Anschluss vorhanden'),
+                () => Rule('Genau 2 Anschlüsse vorhanden'),
+                () => Rule('Genau 3 Anschlüsse vorhanden'),
+                () => Rule('Bis zu 3 Anschlüsse vorhanden'),
+                () => Rule('4 oder mehr Anschlüsse vorhanden'),
+                () => Rule('Anzahl der Anschlussbuchsen ist gerade'),
+                () => Rule('Keine Anschlussbuchse vorhanden'),
+                () => Rule('Genau 1 Anschlussbuchse vorhanden'),
+                () => Rule('Genau 2 Anschlussbuchsen vorhanden'),
+                () => Rule('Genau 3 Anschlussbuchsen vorhanden'),
+                () => Rule('Bis zu 3 Anschlussbuchsen vorhanden'),
+                () => Rule('4 oder mehr Anschlussbuchsen vorhanden'),
+                () => Rule('Seriennummer enthält 2 Buchstaben'),
+                () => Rule('Seriennummer enthält 3 Buchstaben'),
+                () => Rule('Seriennummer enthält 4 Buchstaben'),
+                () => ParametrizedRule(rnd => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[rnd.next(0, 36)], ch => `Erstes Zeichen der Seriennummer ist ${ch}`),
+                () => ParametrizedRule(rnd => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[rnd.next(0, 36)], ch => `Zweites Zeichen der Seriennummer ist ${ch}`),
+                () => ParametrizedRule(rnd => "0123456789"[rnd.next(0, 10)], ch => `Drittes Zeichen der Seriennummer ist ${ch}`),
+                () => ParametrizedRule(rnd => "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rnd.next(0, 26)], ch => `Viertes Zeichen der Seriennummer ist ${ch}`),
+                () => ParametrizedRule(rnd => "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rnd.next(0, 26)], ch => `Fünftes Zeichen der Seriennummer ist ${ch}`),
+                () => ParametrizedRule(rnd => "0123456789"[rnd.next(0, 10)], ch => `Seriennummer endet mit ${ch}`),
+                () => Rule('Kein Quengelmodul vorhanden')
+            ])
+                .map(rule => rule());
+
+            let tds = Array.from(document.querySelectorAll('.rules td:nth-child(2)'));
+            for (let i = 0; i < tds.length; i++)
+                tds[i].innerText = rules[i].replace('#', jokeConditions[rnd.next(0, jokeConditions.length)]).replace('%', jokeFalses[rnd.next(0, jokeFalses.length)]);
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes-Modul</span>
+                <span class="page-header-section-title">Gelbe Pfeile</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Yellow Arrows.svg" class="diagram">
+                <h2>Betrifft: Gelbe Pfeile</h2>
+                <p class="flavour-text">Punkte!</p>
+
+                <p>Das Modul präsentiert 4 Richtungstasten und ein Display in der Mitte.</p>
+
+                <p>Wenn die Tasten nicht gelb sind, ist ein anderes Handbuch erforderlich.</p>
+
+                <p>Das Display zeigt einen Buchstaben des Alphabets. Dieser gibt die <strong>Startreihe</strong> an.
+                    Die letzte Ziffer der Seriennummer plus eins gibt die Schrittweite an.
+                    Beginnend mit der Startreihe muss erst in der Tabelle nach unten geschritten werden
+                    und danach die dortige Anweisung befolgt werden. Beim Erreichen von Z ist von
+                    oben fortzufahren. Danach ist von dort entsprechend der Schrittweise weiter nach unten
+                    zu schreiten und dort die nächste Anweisung zu befolgen. Nach 5 korrekten
+                    Eingaben ist das Modul entschärft.</p>
+
+                <p>Bei einem falschen Tastendruck wird ein Fehler verzeichnet und eine neue
+                    <strong>Startreihe</strong> festgelegt. Es muss nun wieder von vorne begonnen werden.</p>
+
+                <table class="rules">
+                    <tr>
+                        <th>Buchstabe</th>
+                        <th>Zu drücken ist.../Wenn.../Sonst...</th>
+                    </tr>
+                    <tr>
+                        <td>A</td>
+                        <td>Hoch/Die Hoch-Taste ist vorhanden/Einen Schraubenzieher essen</td>
+                    </tr>
+                    <tr>
+                        <td>B</td>
+                        <td>Runter/Vorherige Eingabe war Links/Rechts</td>
+                    </tr>
+                    <tr>
+                        <td>C</td>
+                        <td>Links/Seriennummer endet in einer 3/Hoch</td>
+                    </tr>
+                    <tr>
+                        <td>D</td>
+                        <td>Hoch/Dies ist die Startreihe/Runter</td>
+                    </tr>
+                    <tr>
+                        <td>E</td>
+                        <td>Rechts/Leuchtender SIG-Indikator vorhanden/Links</td>
+                    </tr>
+                    <tr>
+                        <td>F</td>
+                        <td>Runter/Kein PS/2-Anschluss vorhanden/Egal</td>
+                    </tr>
+                    <tr>
+                        <td>G</td>
+                        <td>Hoch/Runter hasn’t been pressed yet/Runter</td>
+                    </tr>
+                    <tr>
+                        <td>H</td>
+                        <td>Egal/Serieller Anschluss vorhanden/Rechts</td>
+                    </tr>
+                    <tr>
+                        <td>I</td>
+                        <td>Runter/Kein Quengelmodul vorhanden/Egal</td>
+                    </tr>
+                    <tr>
+                        <td>J</td>
+                        <td>Links/Vorherige Eingabe war Runter/Hoch</td>
+                    </tr>
+                    <tr>
+                        <td>K</td>
+                        <td>Runter/9 ist ungerade/Zum Kindergarten gehen</td>
+                    </tr>
+                    <tr>
+                        <td>L</td>
+                        <td>Hoch/Keine Batterien vorhanden/Runter</td>
+                    </tr>
+                    <tr>
+                        <td>M</td>
+                        <td>Rechts/Weniger als 3 Batteriefächer vorhanden/Links</td>
+                    </tr>
+                    <tr>
+                        <td>N</td>
+                        <td>Egal/Dies ist die Startreihe/Rechts</td>
+                    </tr>
+                    <tr>
+                        <td>O</td>
+                        <td>Links/Seriennummer enthält den Buchstaben O/Runter</td>
+                    </tr>
+                </table>
+            </div>
+           <div class="page-footer relative-footer">Seite 1 von 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes-Modul</span>
+                <span class="page-header-section-title">Gelbe Pfeile</span>
+            </div>
+            <div class="page-content">
+                <table class="rules">
+                    <tr>
+                        <th>Buchstabe</th>
+                        <th>Zu drücken ist.../Wenn.../Sonst...</th>
+                    </tr>
+                    <tr>
+                        <td>P</td>
+                        <td>Runter/Seriennummer enthält 4 Buchstaben/Hoch</td>
+                    </tr>
+                    <tr>
+                        <td>Q</td>
+                        <td>Runter/Vorherige Eingabe war Rechts/Links</td>
+                    </tr>
+                    <tr>
+                        <td>R</td>
+                        <td>Hoch/Nicht leuchtender CLR-Indikator vorhanden/Runter</td>
+                    </tr>
+                    <tr>
+                        <td>S</td>
+                        <td>Links/Heute ist nicht der 42. Juni/Quit Game</td>
+                    </tr>
+                    <tr>
+                        <td>T</td>
+                        <td>Links/Anzahl Batterien ist gerade/Runter</td>
+                    </tr>
+                    <tr>
+                        <td>U</td>
+                        <td>Egal/Kein Modul vorhanden, dessen englischer Name mit Y anfängt/Egal</td>
+                    </tr>
+                    <tr>
+                        <td>V</td>
+                        <td>Hoch/Vorherige Eingabe war Hoch/Runter</td>
+                    </tr>
+                    <tr>
+                        <td>W</td>
+                        <td>Rechts/Keine Anschlussbuchse vorhanden/Egal</td>
+                    </tr>
+                    <tr>
+                        <td>X</td>
+                        <td>Hoch/Dies ist die Startreihe/Links</td>
+                    </tr>
+                    <tr>
+                        <td>Y</td>
+                        <td>Egal/Hoch wurde noch nicht gedrückt/Hoch</td>
+                    </tr>
+                    <tr>
+                        <td>Z</td>
+                        <td>Rechts/Rechts ist Rechts ODER ist auf der rechten Seite/Rechts</td>
+                    </tr>
+                </table>
+            </div>
+           <div class="page-footer relative-footer">Seite 2 von 2</div>
+        </div>
+    </div>
+</body>
+</html>
