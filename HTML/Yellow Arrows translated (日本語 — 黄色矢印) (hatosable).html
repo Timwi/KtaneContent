@@ -9,6 +9,235 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules() {
+            let rules = [
+                '上/上ボタンが存在する/ドライバーを食べる',
+                '下/前回の入力が左/右',
+                '左/シリアルナンバーが3で終わる/上',
+                '上/開始段である/下',
+                '右/点灯したSIGインジケーターが存在する/左',
+                '下/爆弾にPS/2ポートが存在しない/任意',
+                '上/下ボタンがまだ押されていない/下',
+                '任意/シリアルポートが存在する/右',
+                '下/特殊モジュールが存在しない/任意',
+                '左/前回の入力が下/上',
+                '下/9が奇数である/幼稚園からやり直す',
+                '上/爆弾にバッテリーがない/下',
+                '右/バッテリーホルダーが3つより少ない/左',
+                '任意/開始段である/右',
+                '左/シリアルナンバーにOの文字が存在する/下',
+                '下/シリアルナンバーに英字が4つ含まれる/上',
+                '下/前回の入力が右/左',
+                '上/点灯していないCLRインジケーターが存在する/下',
+                '左/現在6月42日ではない/ゲームをやめる',
+                '左/バッテリーが偶数個ある/下',
+                '任意/Yから始まるモジュールが存在しない/任意',
+                '上/前回の入力が上/下',
+                '右/ポートプレートが存在しない/任意',
+                '上/開始段である/左',
+                '任意/上ボタンがまだ押されていない/上',
+                '右/右が右であるか右手にある/右'
+            ];
+
+            let tds = Array.from(document.querySelectorAll('.rules td:nth-child(2)'));
+            for (let i = 0; i < tds.length; i++)
+                tds[i].innerText = rules[i];
+        }
+
+        function setRules(rnd) {
+            // To translators: Put whatever jokes and however many jokes you’d like.
+            let jokeConditions = [
+                'The Up button is present',
+                '9 is an odd number',
+                'You’re not on the 42nd of June',
+                'No modules on bomb starts with a Y',
+                'Right is Right OR is on the Right',
+                'The battery count is a real number',
+                'At least -4 ports on the bomb',
+                '2+2=4',
+                'There is an unsolved Yellow Arrows',
+                'Module count is not 0',
+                'Number of seconds on timer is positive',
+                'There is an unsolved bomb in the room',
+                'You do not want to detonate',
+                'Q is a consonant',
+                'T is not a vowel',
+                '3 or more arrows on the module',
+                'The right arrow is not chartreuse',
+                'The displayed letter is in the English alphabet',
+                'The earth is round',
+                'The sky is blue',
+                'Bananas are yellow',
+                'The wheels on the bus go round and round',
+                'The floor is made of floor',
+                'You can read this',
+                'Taco Bell sells tacos',
+                'Belgian waffles are from Belgium',
+                'The left arrow is not on the right'
+            ];
+            let jokeFalses = [
+                'Eat a screwdriver',
+                'Go back to kindergarten',
+                'Quit game',
+                'Consume a boulder',
+                'Stop talking so everyone explodes',
+                'Play Mao',
+                'Commit tax fraud',
+                'Diffuse the bomb',
+                'Watch the footy game',
+                'Touch grass',
+                'Sled fast',
+                'Look again',
+                'Go down 26 rows',
+                'Watch The Simpsons',
+                'Purchase a toilet',
+                'Open TikTok',
+                'Delete SYSTEM32',
+                'Hack into the Pentagon',
+                'Take a look in the mirror',
+                'Play Raid: Shadow Legends™',
+                'Fly to Azerbaijan',
+                'Make a KTaNE module',
+                'Change your diaper',
+                'Keep up with the Kardashians',
+                'Light an actual bomb',
+                'Help! I’m stuck in the manual factory!',
+                'Change text color to black',
+                'Purchase bitcoin',
+                'Go to sleep',
+                'Press Alt+F4',
+                'Bid your defuser farewell',
+                'Train a dragon',
+                'Go to Mornington Crescent',
+                'Vote in the election',
+                'Run in the election',
+                'Go to jail',
+                'Do not pass GO',
+                'Do not collect $200',
+                'Complain to eXish'
+            ];
+
+            let allDirections = ['上', '右', '下', '左', '任意'];
+
+            function GenerateDirections() {
+                return rnd.shuffleFisherYates(allDirections.slice(0));
+            }
+
+            function Rule(condition) {
+                let rands = GenerateDirections(rnd);
+                return `${rands[0]}/${condition}/${rands[1]}`;
+            }
+
+            function ParametrizedRule(getRnd, fnc) {
+                let rands = GenerateDirections(rnd);
+                let randPrev = getRnd(rnd);
+                return `${rands[0]}/${fnc(randPrev)}/${rands[1]}`;
+            }
+
+            let rules = rnd.shuffleFisherYates([
+                () => `上/#/%`,
+                () => `右/#/%`,
+                () => `下/#/%`,
+                () => `左/#/%`,
+                () => `任意/#/%`,
+                () => Rule('Up hasn’t been pressed yet'),
+                () => Rule('Right hasn’t been pressed yet'),
+                () => Rule('Down hasn’t been pressed yet'),
+                () => Rule('Left hasn’t been pressed yet'),
+                () => ParametrizedRule(rnd => allDirections[rnd.next(0, 4)], prev => `Previous input was ${prev}`),
+                () => ParametrizedRule(rnd => allDirections[rnd.next(0, 4)], prev => `Previous input was not ${prev}`),
+                () => Rule('This is the Starting Row'),
+                () => Rule('Number of batteries is even'),
+                () => Rule('No batteries on bomb'),
+                () => Rule('Exactly 1 battery on bomb'),
+                () => Rule('Exactly 2 batteries on bomb'),
+                () => Rule('Exactly 3 batteries on bomb'),
+                () => Rule('At most 3 batteries on bomb'),
+                () => Rule('At least 4 batteries on bomb'),
+                () => Rule('Number of batteries is even'),
+                () => Rule('No battery holders on bomb'),
+                () => Rule('Exactly 1 battery holder on bomb'),
+                () => Rule('Exactly 2 battery holders on bomb'),
+                () => Rule('Exactly 3 battery holders on bomb'),
+                () => Rule('At most 3 battery holders on bomb'),
+                () => Rule('At least 4 battery holders on bomb'),
+                () => Rule('Number of indicators is even'),
+                () => Rule('SND indicator present'),
+                () => Rule('CLR indicator present'),
+                () => Rule('CAR indicator present'),
+                () => Rule('IND indicator present'),
+                () => Rule('FRQ indicator present'),
+                () => Rule('SIG indicator present'),
+                () => Rule('NSA indicator present'),
+                () => Rule('MSA indicator present'),
+                () => Rule('TRN indicator present'),
+                () => Rule('BOB indicator present'),
+                () => Rule('FRK indicator present'),
+                () => Rule('Number of lit indicators is even'),
+                () => Rule('Lit SND indicator present'),
+                () => Rule('Lit CLR indicator present'),
+                () => Rule('Lit CAR indicator present'),
+                () => Rule('Lit IND indicator present'),
+                () => Rule('Lit FRQ indicator present'),
+                () => Rule('Lit SIG indicator present'),
+                () => Rule('Lit NSA indicator present'),
+                () => Rule('Lit MSA indicator present'),
+                () => Rule('Lit TRN indicator present'),
+                () => Rule('Lit BOB indicator present'),
+                () => Rule('Lit FRK indicator present'),
+                () => Rule('Number of unlit indicators is even'),
+                () => Rule('Unlit SND indicator present'),
+                () => Rule('Unlit CLR indicator present'),
+                () => Rule('Unlit CAR indicator present'),
+                () => Rule('Unlit IND indicator present'),
+                () => Rule('Unlit FRQ indicator present'),
+                () => Rule('Unlit SIG indicator present'),
+                () => Rule('Unlit NSA indicator present'),
+                () => Rule('Unlit MSA indicator present'),
+                () => Rule('Unlit TRN indicator present'),
+                () => Rule('Unlit BOB indicator present'),
+                () => Rule('Unlit FRK indicator present'),
+                () => Rule('Number of ports is even'),
+                () => Rule('Parallel port on bomb'),
+                () => Rule('Serial port on bomb'),
+                () => Rule('PS/2 port on bomb'),
+                () => Rule('DVI-D port on bomb'),
+                () => Rule('Stereo RCA port on bomb'),
+                () => Rule('RJ-45 port on bomb'),
+                () => Rule('Duplicate port on bomb'),
+                () => Rule('No ports on bomb'),
+                () => Rule('Exactly 1 port on bomb'),
+                () => Rule('Exactly 2 ports on bomb'),
+                () => Rule('Exactly 3 ports on bomb'),
+                () => Rule('At most 3 ports on bomb'),
+                () => Rule('At least 4 ports on bomb'),
+                () => Rule('Number of port plates is even'),
+                () => Rule('No port plates on bomb'),
+                () => Rule('Exactly 1 port plate on bomb'),
+                () => Rule('Exactly 2 port plates on bomb'),
+                () => Rule('Exactly 3 port plates on bomb'),
+                () => Rule('At most 3 port plates on bomb'),
+                () => Rule('At least 4 port plates on bomb'),
+                () => Rule('Serial number has 2 letters'),
+                () => Rule('Serial number has 3 letters'),
+                () => Rule('Serial number has 4 letters'),
+                () => ParametrizedRule(rnd => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[rnd.next(0, 36)], ch => `First serial number character is ${ch}`),
+                () => ParametrizedRule(rnd => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[rnd.next(0, 36)], ch => `Second serial number character is ${ch}`),
+                () => ParametrizedRule(rnd => "0123456789"[rnd.next(0, 10)], ch => `Third serial number character is ${ch}`),
+                () => ParametrizedRule(rnd => "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rnd.next(0, 26)], ch => `Fourth serial number character is ${ch}`),
+                () => ParametrizedRule(rnd => "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rnd.next(0, 26)], ch => `Fifth serial number character is ${ch}`),
+                () => ParametrizedRule(rnd => "0123456789"[rnd.next(0, 10)], ch => `The serial number ends with a ${ch}`),
+                () => Rule('No Needy present')
+            ])
+                .map(rule => rule());
+
+            let tds = Array.from(document.querySelectorAll('.rules td:nth-child(2)'));
+            for (let i = 0; i < tds.length; i++)
+                tds[i].innerText = rules[i].replace('#', jokeConditions[rnd.next(0, jokeConditions.length)]).replace('%', jokeFalses[rnd.next(0, jokeFalses.length)]);
+        }
+    </script>
 </head>
 <body>
     <div class="section">
@@ -32,7 +261,7 @@
                 <p>間違ったボタンを押すとミスが記録され、モジュールが新しい<strong>開始段</strong>と共にリセットされ、やり直さなければならない。
                 </p>
 
-                <table>
+                <table class='rules'>
                     <tr>
                         <th>文字</th>
                         <th>押す矢印は…/…に当てはまる場合/そうでなければ…</th>
