@@ -1487,6 +1487,20 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "abuttoningMazes",
+		loggingTag: "A-button-ing Mazes",
+		matches: [
+			{
+				regex: /(Up|Right|Down|Left) maze:/,
+				handler: function (matches, module) {
+					module.push({ label: matches[0], obj: pre(readTaggedLines(11).join('\n')) });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "AquariumModule",
 		loggingTag: "Aquarium",
 		matches: [
