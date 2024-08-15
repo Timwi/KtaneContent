@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <meta property="og:title" content="Bartending">
+    <title>Bartending — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://ktane.timwi.de/Icons/Bartending.png">
+    <meta property="og:url" content="https://ktane.timwi.de/HTML/Bartending.html">
+    <meta property="og:description" content="Prepare drinks for patrons per the recipes in a Drinktionary.">
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        .drinks td, .drinks th {
+            padding: .3em .3em .25em .3em;
+            text-align: center;
+        }
+
+        .drinks img {
+            height: 75px;
+        }
+
+        .drinks {
+            margin: 1em auto;
+            font-size: 10pt;
+        }
+
+            .drinks.not-bottled {
+                width: 100%;
+            }
+
+        body:not(.dark) .page-bg-01 {
+            background-image: url("img/Bartending/page-bg-noise-01.png");
+        }
+        body:not(.dark) .page-bg-02 {
+            background-image: url("img/Bartending/page-bg-noise-02.png");
+        }
+        body:not(.dark) .page-bg-03 {
+            background-image: url("img/Bartending/page-bg-noise-03.png");
+        }
+        .page-bg-01, .page-bg-02, .page-bg-03 {
+            position: relative;
+            overflow: hidden;
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+        .dark .page-bg-01::before {
+            content: "";
+            position: absolute;
+            /* top: 0; left: 0;
+            width: 100%; height: 100%; */
+            top: -42mm; left: -35mm;
+            width: 310mm; height: 375mm;
+            background-image: url("img/Bartending/page-bg-noise-01.png");
+            filter: invert(85%);
+            transform: scale(0.775);
+        }
+        .dark .page-bg-02::before {
+            content: "";
+            position: absolute;
+            top: -42mm; left: -35mm;
+            width: 310mm; height: 365mm;
+            background-image: url("img/Bartending/page-bg-noise-02.png");
+            filter: invert(85%);
+            transform: scale(0.775);
+        }
+        .dark .page-bg-03::before {
+            content: "";
+            position: absolute;
+            top: -45mm; left: -35mm;
+            width: 310mm; height: 402mm;
+            background-image: url("img/Bartending/page-bg-noise-03.png");
+            filter: invert(85%);
+            transform: scale(0.775);
+        }
+        .page-content, .page-header, .page-footer {
+        /* This will make it stack on top of the ::before */
+            position: relative;
+        }
+
+        #chaser-o, #chaser-0, #chaser-o0, #big-o, #big-0, #big-o0 {
+            display: none;
+        }
+
+        @media screen and (min-width: 900px) {
+            body.dark, body {
+                background: url('img/Bartending/web-background.jpg');
+            }
+        }
+        @media print {
+            .drinks td, .drinks th  {
+                padding: .2em .3em;
+            }
+
+        }
+
+        .red {
+            background-color : #FF000040
+        }
+
+        .green {
+            background-color : #00FF0040
+        }
+        .blue {
+            background-color : #0000FF40
+        }
+        .yellow {
+            background-color : #FFFF0040
+        }
+        .white {
+            background-color : #80808040
+        }
+    </style>
+    <script>
+        // Bottled Drinks
+        let Absinthe = { Name: "Absinthe", SpriteIndex: 0, Bottled: true };
+        let Rum = { Name: "Rum", SpriteIndex: 1, Bottled: true };
+        let MulanTea = { Name: "Mulan Tea", SpriteIndex: 2, Bottled: true };
+        let AFedora = { Name: "A Fedora", SpriteIndex: 3, Bottled: true };
+
+        // Non-bottled Drinks
+        let BadTouch = { Name: "Bad Touch", SpriteIndex: 17 };
+        let Beer = { Name: "Beer", SpriteIndex: 6 };
+        let BleedingJane = { Name: "Bleeding Jane", SpriteIndex: 8 };
+        let BloomLight = { Name: "Bloom Light", SpriteIndex: 7 };
+        let BlueFairy = { Name: "Blue Fairy", SpriteIndex: 16 };
+        let Brandtini = { Name: "Brandtini", SpriteIndex: 7 };
+        let CobaltVelvet = { Name: "Cobalt Velvet", SpriteIndex: 18 };
+        let CreviceSpike = { Name: "Crevice Spike", SpriteIndex: 19 };
+        let FlamingMoai = { Name: "Flaming Moai", SpriteIndex: 20 };
+        let FluffyDream = { Name: "Fluffy Dream", SpriteIndex: 9 };
+        let FringeWeaver = { Name: "Fringe Weaver", SpriteIndex: 15 };
+        let FrothyWater = { Name: "Frothy Water", SpriteIndex: 6 };
+        let GrizzlyTemple = { Name: "Grizzly Temple", SpriteIndex: 10 };
+        let GutPunch = { Name: "Gut Punch", SpriteIndex: 21 };
+        let Marsblast = { Name: "Marsblast", SpriteIndex: 22 };
+        let Mercuryblast = { Name: "Mercuryblast", SpriteIndex: 23 };
+        let Moonblast = { Name: "Moonblast", SpriteIndex: 11 };
+        let PianoMan = { Name: "Piano Man", SpriteIndex: 12 };
+        let PianoWoman = { Name: "Piano Woman", SpriteIndex: 13 };
+        let Piledriver = { Name: "Pile driver", SpriteIndex: 24 };
+        let SparkleStar = { Name: "Sparkle Star", SpriteIndex: 25 };
+        let SugarRush = { Name: "Sugar Rush", SpriteIndex: 14 };
+        let SunshineCloud = { Name: "Sunshine Cloud", SpriteIndex: 26 };
+        let Suplex = { Name: "Suplex", SpriteIndex: 27 };
+        let ZenStar = { Name: "Zen Star", SpriteIndex: 28 };
+
+        let AllDrinks = [ AFedora, Absinthe, BadTouch, Beer, BleedingJane, BloomLight, BlueFairy, Brandtini, CobaltVelvet, CreviceSpike, FlamingMoai, FluffyDream, FringeWeaver, FrothyWater, GrizzlyTemple, GutPunch, Marsblast, Mercuryblast, Moonblast, MulanTea, PianoMan, PianoWoman, Piledriver, Rum, SparkleStar, SugarRush, SunshineCloud, Suplex, ZenStar ];
+
+        let _patronNames = [ "Barbara", "Patricia", "Karl", "Konrad", "Vivi", "Angelika", "Donna", "Gabe", "Clayton", "Chip" ];
+        let _ingNames = [ "Powdered<br>Delta", "Flaner-<br>gide", "Adel-<br>hyde", "Bronson<br>Ext.", "Karmo-<br>trine" ];
+
+        function setDefaultRules()
+        {
+            setIngredientValues([ 0, 1, 2, 3, 4 ]);
+            setDrinktionary([
+                { Drink: Beer, Ingredients: [ 1, 2, 1, 2, 4 ], State: 'Mixed' },
+                { Drink: FluffyDream, Ingredients: [ 3, 0, 3, 0, 2 ], Aged: true, State: 'Mixed' },
+                { Drink: BleedingJane, Ingredients: [ 3, 3, 0, 1, 4 ], State: 'Blended' },
+                { Drink: SugarRush, Ingredients: [ 1, 0, 2, 0, 4 ], State: 'Mixed' },
+                { Drink: PianoMan, Ingredients: [ 1, 1, 6, 3, 2 ], Iced: true, State: 'Blended' },
+                { Drink: Moonblast, Ingredients: [ 1, 1, 6, 0, 2 ], Iced: true, State: 'Blended' },
+                { Drink: FringeWeaver, Ingredients: [ 0, 0, 1, 0, 9 ], Aged: true, State: 'Mixed' },
+                { Drink: BlueFairy, Ingredients: [ 0, 1, 4, 0, 5 ], Aged: true, State: 'Mixed' },
+                { Drink: GrizzlyTemple, Ingredients: [ 3, 0, 3, 3, 1 ], State: 'Blended' },
+                { Drink: BloomLight, Ingredients: [ 1, 2, 4, 0, 3 ], Aged: true, Iced: true, State: 'Mixed' },
+                { Drink: FrothyWater, Ingredients: [ 1, 1, 1, 1, 0 ], Aged: true, State: 'Mixed' },
+                { Drink: PianoWoman, Ingredients: [ 2, 3, 5, 5, 3 ], Aged: true, State: 'Mixed' }
+            ], [ 0, 1, 2, 3, 4 ]);
+            setLetterRule('chaser-rule', 'chaser-o', 'chaser-0', 'chaser-o0', "CH4S3R");
+            setLetterRule('big-rule', 'big-o', 'big-0', 'big-o0', "B1G");
+        }
+
+        function setRules(rnd)
+        {
+            let _drinktionary = [];
+            let nonBottledDrinks = rnd.shuffleFisherYates(AllDrinks.filter(d => !d.Bottled));
+            for (let dr = 0; dr < 12; dr++)
+            {
+                let ingredients;
+                let iter = 0, valid;
+                do
+                {
+                    iter++;
+                    ingredients = [];
+                    for (let ing = 0; ing < 5; ing++)
+                        // Cube the random number to allow lower numbers to occur more frequently and high numbers less frequently
+                        ingredients.push(Math.floor(10 * Math.pow(rnd.nextDouble(), 3)));
+                    if (iter > 1000)
+                    {
+                        console.log("iteration fail");
+                        return;
+                    }
+
+                    valid = true;
+                    for (let i = 0; i < dr && valid; i++)
+                    {
+                        let isSame = true;
+                        for (let j = 0; j < 5 && isSame; j++)
+                            if (_drinktionary[i].Ingredients[j] !== ingredients[j])
+                                isSame = false;
+                        if (isSame)
+                            valid = false;
+                    }
+                }
+                while (!valid);
+
+                _drinktionary.push({ Drink: nonBottledDrinks[dr], Ingredients: ingredients, Aged: rnd.next(0, 2) !== 0, Iced: rnd.next(0, 2) !== 0, State: rnd.next(0, 2) !== 0 ? 'Blended' : 'Mixed' });
+                console.log(`Drinktionary entry ${dr + 1}: ${_drinktionary[dr].Drink.Name} [${_drinktionary[dr].Ingredients.join(", ")}] Aged=${_drinktionary[dr].Aged}, Iced=${_drinktionary[dr].Iced}, ${_drinktionary[dr].State}`);
+            }
+
+            let allDrinks = nonBottledDrinks.slice(0, _drinktionary.length);
+            allDrinks.splice(allDrinks.length, 0, ...AllDrinks.filter(d => d.Bottled));
+            let prefs = document.getElementsByClassName('pref');
+            for (let c = 0; c < _patronNames.length; c++)
+            {
+                rnd.shuffleFisherYates(allDrinks);
+                for (let pref = 0; pref < 6; pref++)
+                    prefs[6*c + pref].innerText = allDrinks[pref].Name;
+            }
+            let ingValues = rnd.shuffleFisherYates([ 0, 1, 2, 3, 4 ]);
+            console.log(`Ingredient values = [${ingValues.map(i => i+1).join(", ")}]`);
+            setIngredientValues(ingValues);
+            setDrinktionary(_drinktionary, ingValues);
+
+            let chars = rnd.shuffleFisherYates("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('')).join("");
+            setLetterRule('chaser-rule', 'chaser-o', 'chaser-0', 'chaser-o0', chars.substr(0, 6));
+            setLetterRule('big-rule', 'big-o', 'big-0', 'big-o0', chars.substr(6, 3));
+        }
+
+        function setDrinktionary(drinktionary, ingValues)
+        {
+            let drinks = document.getElementsByClassName('drink');
+            let ingAmounts = document.getElementsByClassName('ing-amount');
+            let ageds = document.getElementsByClassName('aged');
+            let iceds = document.getElementsByClassName('iced');
+            let statuses = document.getElementsByClassName('status');
+            for (let dr = 0; dr < 12; dr++)
+            {
+                drinks[dr].innerText = drinktionary[dr].Drink.Name.replace(/ /g, '\u00a0');
+                for (let ing = 0; ing < 5; ing++)
+                    ingAmounts[5*dr + ingValues[ing]].innerText = drinktionary[dr].Ingredients[ing];
+                ageds[dr].innerText = drinktionary[dr].Aged ? 'Yes' : 'No';
+                iceds[dr].innerText = drinktionary[dr].Iced ? 'Yes' : 'No';
+                statuses[dr].innerText = drinktionary[dr].State;
+            }
+        }
+
+        function setIngredientValues(ingValues)
+        {
+            let ings = document.getElementsByClassName('ing');
+            for (let ing = 0; ing < 5; ing++)
+                ings[ingValues[ing]].innerHTML = _ingNames[ing];
+        }
+
+        function setLetterRule(idRule, idO, id0, idO0, str)
+        {
+            document.getElementById(idRule).innerText = str;
+            document.getElementById(id0).style.display = str.includes('0') && !str.includes('O') ? 'inline' : 'none';
+            document.getElementById(idO).style.display = str.includes('O') && !str.includes('0') ? 'inline' : 'none';
+            document.getElementById(idO0).style.display = str.includes('O') && str.includes('0') ? 'inline' : 'none';
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Bartending</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Bartending.svg" class="diagram">
+                <h2>On the Subject of Bartending</h2>
+                <p class="flavour-text">Time to mix drinks and save lives.</p>
+
+                <p>It’s been a fairly slow night at the KDANE Bar and the last customer requires a parting order. To be able close the bar for the night, you must serve the final customer their drink of preference correctly and in the right order by inputting the proper ingredients in the correct slot(s) for each requested drink.</p>
+                <p>Failure to make the drink correctly or handing out the wrong drink first will make the customer throw the drink at you, leave the bar, and incur a strike for losing a customer. After this, your boss will present you with new orders until you get the drink(s) correct.</p>
+                <p>The module will display a variety of screens, five of which have colorful borders. These are the ingredient screens and are identified as position one through five from left to right.</p>
+                <p>Using the calculations on the following pages, identify the patron and the requested drinks and input them into the correct slot(s) on the module and serve the drink(s). Making an invalid recipe will display a glitched drink on the screen and you will need to remake the drink for that slot. Attempting to serve an unmixed drink or a invalid recipe will result in a strike and the module will re-shuffle the ingredients.</p>
+                <p>The ingredients are as follows:</p>
+                <ul>
+                    <li><span class="red">Red = Adelhyde</span></li>
+                    <li><span class="green">Green = Flanergide</span></li>
+                    <li><span class="yellow">Yellow = Bronson Ext.</span></li>
+                    <li><span class="white">White = Karmotrine</span></li>
+                    <li><span class="blue">Blue = Powdered Delta</span></li>
+                </ul>
+                <p>The ingredient numbers that are used for the calculations are listed above each ingredient on the Drinktionary.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Bartending</span>
+            </div>
+            <div class="page-content">
+                <h3>“What’ll ya have?”</h3>
+                <p>Listed in “The Patron” table are some of the regulars that frequent KDANE. Find who the drink(s) are for to serve the correct drink(s). The level of preference is ranked as 1 being the most preferred and 6 being the least preferred.</p>
+                <p>To determine who you are serving, identify first and second ingredients on the module. Do <code class="red">(1st ing.'s #)*2+(2nd ing.'s #)</code>. The last digit of the result of this calculation identifies your customer with the first customer being “0”.</p>
+                <table class="drinks">
+                    <tr>
+                        <th colspan="2">Patron</th>
+                        <th colspan="6">Drink Preference</th>
+                    </tr>
+                    <tr>
+                        <th colspan="2">/\/\/\/\</th>
+                        <th class="blue">1</th>
+                        <th class="blue">2</th>
+                        <th class="blue">3</th>
+                        <th class="blue">4</th>
+                        <th class="blue">5</th>
+                        <th class="blue">6</th>
+                    </tr>
+                    <tr>
+                        <td class="red">0</td>
+                        <th>Barbara</th>
+                        <td class='pref'>Blue Fairy</td>
+                        <td class='pref'>Piano Man</td>
+                        <td class='pref'>Frothy Water</td>
+                        <td class='pref'>Piano Woman</td>
+                        <td class='pref'>Fringe Weaver</td>
+                        <td class='pref'>Absinthe</td>
+                    </tr>
+                    <tr>
+                        <td class="red">1</td>
+                        <th>Patricia</th>
+                        <td class='pref'>Frothy Water</td>
+                        <td class='pref'>Piano Woman</td>
+                        <td class='pref'>Fringe Weaver</td>
+                        <td class='pref'>Grizzly Temple</td>
+                        <td class='pref'>A Fedora</td>
+                        <td class='pref'>Rum</td>
+                    </tr>
+                    <tr>
+                        <td class="red">2</td>
+                        <th>Karl</th>
+                        <td class='pref'>Piano Man</td>
+                        <td class='pref'>Rum</td>
+                        <td class='pref'>Grizzly Temple</td>
+                        <td class='pref'>Mulan Tea</td>
+                        <td class='pref'>Absinthe</td>
+                        <td class='pref'>Frothy Water</td>
+                    </tr>
+                    <tr>
+                        <td class="red">3</td>
+                        <th>Konrad</th>
+                        <td class='pref'>Mulan Tea</td>
+                        <td class='pref'>Frothy Water</td>
+                        <td class='pref'>Fluffy Dream</td>
+                        <td class='pref'>Bleeding Jane</td>
+                        <td class='pref'>Rum</td>
+                        <td class='pref'>A Fedora</td>
+                    </tr>
+                    <tr>
+                        <td class="red">4</td>
+                        <th>Vivi</th>
+                        <td class='pref'>Fluffy Dream</td>
+                        <td class='pref'>Moonblast</td>
+                        <td class='pref'>Absinthe</td>
+                        <td class='pref'>Piano Man</td>
+                        <td class='pref'>Beer</td>
+                        <td class='pref'>Fringe Weaver</td>
+                    </tr>
+                    <tr>
+                        <td class="red">5</td>
+                        <th>Angelika</th>
+                        <td class='pref'>Piano Woman</td>
+                        <td class='pref'>Blue Fairy</td>
+                        <td class='pref'>A Fedora</td>
+                        <td class='pref'>Absinthe</td>
+                        <td class='pref'>Bleeding Jane</td>
+                        <td class='pref'>Grizzly Temple</td>
+                    </tr>
+                    <tr>
+                        <td class="red">6</td>
+                        <th>Donna</th>
+                        <td class='pref'>Beer</td>
+                        <td class='pref'>Sugar Rush</td>
+                        <td class='pref'>Piano Woman</td>
+                        <td class='pref'>Bloom Light</td>
+                        <td class='pref'>Moonblast</td>
+                        <td class='pref'>Mulan Tea</td>
+                    </tr>
+                    <tr>
+                        <td class="red">7</td>
+                        <th>Gabe</th>
+                        <td class='pref'>Moonblast</td>
+                        <td class='pref'>Mulan Tea</td>
+                        <td class='pref'>Sugar Rush</td>
+                        <td class='pref'>A Fedora</td>
+                        <td class='pref'>Frothy Water</td>
+                        <td class='pref'>Bloom Light</td>
+                    </tr>
+                    <tr>
+                        <td class="red">8</td>
+                        <th>Clayton</th>
+                        <td class='pref'>Grizzly Temple</td>
+                        <td class='pref'>Bloom Light</td>
+                        <td class='pref'>Bleeding Jane</td>
+                        <td class='pref'>Fringe Weaver</td>
+                        <td class='pref'>Piano Man</td>
+                        <td class='pref'>Beer</td>
+                    </tr>
+                    <tr>
+                        <td class="red">9</td>
+                        <th>Chip</th>
+                        <td class='pref'>Bleeding Jane</td>
+                        <td class='pref'>Grizzly Temple</td>
+                        <td class='pref'>Moonblast</td>
+                        <td class='pref'>Sugar Rush</td>
+                        <td class='pref'>Blue Fairy</td>
+                        <td class='pref'>Fluffy Dream</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Bartending</span>
+            </div>
+            <div class="page-content">
+                <h3>The Drinktionary</h3>
+                <p>To determine the drink, apply the same operations as you did for identifying the patron, Do <code class="blue">max(((4th ing.'s #)*2+(5th ing.'s #)) mod 7),1)</code>. That is the preference column that is to be used.</p>
+                <ul>
+                    <li>If the serial number has at least 3 distinct characters in common with “<span id='chaser-rule'>CH4S3R</span>”<span id='chaser-o'> (that’s a letter O, not a digit zero)</span><span id='chaser-0'> (that’s a digit 0, not a letter O)</span><span id='chaser-o0'> (note that’s both a digit 0 and a letter O)</span>, the customer wants two drinks. If a second drink is requested, using number of the third ingredient, count that many drinks from the first. Wrap around in the same row, if needed. That is the second drink.</li>
+                    <li class="bold">NOTE: Ensure that the highest priority drink is in “Slot 1” when you are making the drinks.</li>
+                    <li>For mixed and blended drinks, if the serial number contains any of the characters “<span id='big-rule'>B1G</span>”<span id='big-o'> (that’s a letter O, not a digit zero)</span><span id='big-0'> (that’s a digit 0, not a letter O)</span><span id='big-o0'> (note that’s both a digit 0 and a letter O)</span>, the drink’s ingredients are doubled.</li>
+                    <li>For bottled drinks, simply slot the appropriate drink from the “Bottled Drinks” Drinktionary in the correct slot before serving.</li>
+                </ul>
+                <p>To finalize a drink, press the button labeled ‘M’ to begin mixing the drink. If a recipe calls for a drink to be <span class="yellow">“Mixed”</span>, the drink must be mixed for <span class="yellow">4–6 seconds</span> or if a recipe calls for a drink to be <span class="red">“Blended”</span>, it must be mixed for <span class="red">7–9 seconds</span>. You can tell it’s being blended when the shaker starts moving faster. Mixing a drink for less than 4 seconds or more than 10 seconds will result in an invalid drink. These timings are counted in real time.</p>
+
+                <p>The table below lists the intricate recipes needed to make each drink how the customer desires.</p>
+
+                <table class="drinks not-bottled">
+                    <tr>
+                        <th>Ingredient&nbsp;#</th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                        <th>5</th>
+                        <th colspan="3"></th>
+                    </tr>
+                    <tr>
+                        <th>Drink</th>
+                        <th class='ing blue'>Powdered<br>Delta</th>
+                        <th class='ing green'>Flaner-<br>gide</th>
+                        <th class='ing red'>Adel-<br>hyde</th>
+                        <th class='ing yellow'>Bronson<br>Ext.</th>
+                        <th class='ing white'>Karmo-<br>trine</th>
+                        <th>Aged</th>
+                        <th>Ice</th>
+                        <th>Mixed/<br>Blended</th>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Beer</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='ing-amount'>4</td>
+                        <td class='aged'>No</td>
+                        <td class='iced green'>No</td>
+                        <td class='status yellow'>Mixed</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Fluffy Dream</th>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='aged green'>Yes</td>
+                        <td class='iced green'>No</td>
+                        <td class='status yellow'>Mixed</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Bleeding Jane</th>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>4</td>
+                        <td class='aged'>No</td>
+                        <td class='iced green'>No</td>
+                        <td class='status red'>Blended</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Sugar Rush</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>4</td>
+                        <td class='aged'>No</td>
+                        <td class='iced green'>No</td>
+                        <td class='status yellow'>Mixed</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Piano Man</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>6</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='aged'>No</td>
+                        <td class='iced'>Yes</td>
+                        <td class='status red'>Blended</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Moonblast</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>6</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='aged'>No</td>
+                        <td class='iced'>Yes</td>
+                        <td class='status red'>Blended</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Fringe Weaver</th>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>9</td>
+                        <td class='aged green'>Yes</td>
+                        <td class='iced green'>No</td>
+                        <td class='status yellow'>Mixed</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Blue Fairy</th>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>4</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>5</td>
+                        <td class='aged green'>Yes</td>
+                        <td class='iced green'>No</td>
+                        <td class='status yellow'>Mixed</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Grizzly Temple</th>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='aged'>No</td>
+                        <td class='iced green'>No</td>
+                        <td class='status red'>Blended</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Bloom Light</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>2</td>
+                        <td class='ing-amount'>4</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='aged green'>Yes</td>
+                        <td class='iced'>Yes</td>
+                        <td class='status yellow'>Mixed</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Frothy&nbsp;Water</th>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>1</td>
+                        <td class='ing-amount'>0</td>
+                        <td class='aged green'>Yes</td>
+                        <td class='iced green'>No</td>
+                        <td class='status yellow'>Mixed</td>
+                    </tr>
+                    <tr>
+                        <th class='drink'>Piano Woman</th>
+                        <td class='ing-amount'>2</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='ing-amount'>5</td>
+                        <td class='ing-amount'>5</td>
+                        <td class='ing-amount'>3</td>
+                        <td class='aged green'>Yes</td>
+                        <td class='iced green'>No</td>
+                        <td class='status yellow'>Mixed</td>
+                    </tr>
+                </table>
+                <p>Bottled drinks are listed as follows:</p>
+                <table class="drinks">
+                    <tr><th>A Fedora</th><th>Mulan Tea</th><th>Absinthe</th><th>Rum</th></tr>
+                    <tr><td><img src="img/Bartending/A_Fedora.png"></td><td><img src="img/Bartending/MulanTea.png"></td><td><img src="img/Bartending/AbsintheSprite.png"></td><td><img src="img/Bartending/RumSprite.png"></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
