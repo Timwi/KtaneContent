@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>乱数クリスタル — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+
+        .page-footer::before { content: "ページ "; }
+        .page-footer::after { content: "/2"; }
+
+    </style>
+    <script>
+        const JSON_URL = "https://ktane.timwi.de/json/raw";
+
+        let allMods = []
+        function fetchManuals() {
+            return fetch(JSON_URL)
+            .then(v => v.json())
+            .then(json => {
+                allMods = json.KtaneModules.filter(mod => mod.Name);
+                fetchModule();
+            });
+        }
+
+        function fetchModule() {
+            document.querySelector(".flavour-text").classList.add("hidden");
+            const mod = allMods[Math.floor(Math.random() * allMods.length)];
+            const name = mod.Name;
+
+            const sheets = mod.Sheets;
+            if(sheets == undefined)
+                fetchModule();
+            else {
+                const aSheet = sheets[Math.floor(Math.random() * sheets.length)].split("|");
+
+                let link = encodeURIComponent(name + aSheet[0] + "." + aSheet[1]);
+                if(mod.FileName != undefined)
+                    link = encodeURIComponent(mod.FileName + aSheet[0] + "." + aSheet[1]);
+                document.querySelector(".flavour-text > a").setAttribute("href", "https://ktane.timwi.de/" + aSheet[1].toUpperCase() + "/" + link);
+                document.querySelector(".flavour-text").classList.remove("hidden");
+            }
+        }
+
+        fetchManuals();
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">乱数クリスタル</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/RNG Crystal.svg" class="diagram">
+                <h2>モジュール詳細：乱数クリスタル</h2>
+                <p class="flavour-text hidden"><a target="_blank" onclick="fetchModule()">I’m feeling lucky</a></p>
+                <p>モジュール上にはボタンが一つあり、読み込みバーとして機能する。また、いくつかのテキストが書かれている。</p>
+                <ul>
+                    <li>上部には、「圧倒的運っ•••」が書かれている。</li>
+                    <li>その一段下には「1」が書かれている。</li>
+                    <li>モジュールの右側には「運否天賦」と書かれている。</li>
+                </ul>
+                <p>開始するには、読み込みバーが完全に満たされるまでボタンを長押しし、離す。これにより、ある試行が開始する。試行は11回のコイントスで構成されており、すべてのコイントスで表を出さなければいけない。</p>
+                <p>もしくは、ステータスライトを長押しし、先のコイントス結果を予測する状態にする。この状態では、</p>
+                <ul>
+                    <li>読み込みバーを長押しすると、表と回答する。</li>
+                    <li>ステータスライトを長押しすると、裏と回答する。</li>
+                    <li><strong>ミスは絶対に許されない。</strong></li>
+                </ul>
+                <p><strong><i>11回のトスの結果がすべて「表」の場合(もしくは11回のトスすべての結果を予測できた場合)、モジュールには「神運」と表示され、モジュールの右下、通常はステータスライトが点灯する場所にクリスタルが表示される。この状態で、最後にもう一度同じ手順でボタンを押し続けてクリスタルを回収し、モジュールを解除する。</i></strong></p>
+                <p>そうでない場合、モジュールは他の幸運を意味するテキストのいずれかを表示する。もう一度試してみよう。</p>
+                <p>ただし、もしも分析担当者の一人を犠牲にしたいというのであれば、次のページに「同様に確からしいコイン」に関する情報がある。</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">乱数クリスタル</span>
+            </div>
+            <div class="page-content">
+                <h2>モジュール詳細：同様に確からしいコイン</h2>
+                <p class="comment">ランダム性™*を受け入れましょう。</p>
+                <p>コインはフィボナッチ線形帰還シフトレジスタに基づいてその結果を決定する。構成要素は以下の通りである。</p>
+                <ul>
+                    <li>バイナリレジスタ - ビットが計算されたタイミング(レジスタと呼ぶ)に従って並べられた、最大24桁の二進数ビットシーケンス。以下に詳述する処理後に存在する余分なビットは、破棄される。</li>
+                    <li>次のビットに影響を与える位置(タップと呼ぶ)のセット。このセットに含まれる各タップは、レジスタ内の対応する位置にあるビットを指す。</li>
+                </ul>
+                <p>それぞれの試行に対し、タップが表す位置にあるシーケンス内のビットを取得する。これら全てのビットに対して最下位桁からXOR演算を行い、この試行の結果を出力する。このビットを、その順序を維持したままレジスタの右端に加える。</p>
+                <p>1は表を表す。</p>
+                <img src="./img/RNG Crystal/LFSR.svg" class="invertible" width="675">
+                <p>上の例では、長さ10のレジスタを挙げている。タップは、実線のセルのうち灰色のセルの位置に対応しており、その位置のビットに対しXOR演算が最下位桁から順に行われ、点線のセルに出力される。そして、レジスタが対角線で示すように右にシフトされると、末尾のビットはレジスタの枠から漏れたため破棄され、同じ位置のビットがもう一度評価され、新しい結果が生成される。実際のモジュールは、左端ではなく右端に追加することで、左にシフトしていくことに注意する。</p>
+                <p class="comment">*完全なランダム性は保証されません。潜在的な決定的動作に関するメーカー詳細については保証書をご覧ください。</p>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+    </div>
+</body>
+</html>
