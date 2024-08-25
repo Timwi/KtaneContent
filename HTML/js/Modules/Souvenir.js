@@ -35,7 +35,7 @@ let SouvenirModuleData = [
 	{ name: "Bartending",	id: "BartendingModule",	questions: ["Which ingredient was in which position?"] },
 	{ name: "Bean Sprouts",	id: "beanSprouts",	questions: ["What colors were the eaten sprouts?","Where were the eaten beans?"] },
 	{ name: "Beans",	id: "beans",	questions: ["What color were the eaten beans?"] },
-	{ name: "Big Bean",	id: "bigBean",	questions: ["What color was the bean?"] },
+	{ name: "Big Bean",	id: "bigBean",	questions: ["What color and wobbliness was the bean?"] },
 	{ name: "Big Circle",	id: "BigCircle",	questions: ["Which colors were in the solution?"] },
 	{ name: "Binary",	id: "Binary",	questions: ["What word was displayed?"] },
 	{ name: "Binary LEDs",	id: "BinaryLeds",	questions: ["At which numeric value did you cut the correct wire?"] },
