@@ -19211,6 +19211,89 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Uncanny Maze",
+		moduleID: "uncannymaze",
+		loggingTag: "Uncanny Maze",
+		matches: [
+			{
+				regex: /Your maze layout is:/,
+				handler: function (matches, module) {
+					let len = 6;
+					let arr = [];
+					for (let i = 0; i < len; i++) {
+						let line = readTaggedLine();
+						len = line.length;
+						arr.push(line);
+					}
+					let svg = `<svg viewbox='-50 -50 ${len * 100 + 25} ${len * 100 + 25}' style='width: 4in; display: block'>`;
+					svg += `<rect x='-70' y='-70' width='${len * 100 + 50}' height='${len * 100 + 50}' fill='#000000' rx='20' ry='20'/>`;
+					for (let y = 0; y < arr.length; y++) {
+						for (let x = 0; x < arr[y].length; x++) { 
+							let xCoord = x * 100;
+							let yCoord = y * 100;
+							let c = arr[y][x];
+							switch (c) {
+								case "<":
+									c = "←";
+									xCoord -= 15;
+									break;
+								case ">":
+									c = "→";
+									xCoord -= 15;
+									break;
+								case "^":
+									c = "↑";
+									yCoord -= 10;
+									break;
+								case "V":
+									c = "↓";
+									yCoord -= 10;
+									break;
+								case "x":
+									c = "↔";
+									xCoord -= 15;
+									break;
+								case "X":
+									c = "↕";
+									yCoord -= 10;
+									break;
+								default:
+									break;
+							}
+							let t = `<text x='${xCoord - 5}' y='${yCoord + 35}' fill='white' style='font-size: 72px'>${c}</text>`;
+							svg += t;
+						}
+					}
+					module.push({ label: "Your maze layout is:", obj:svg + "</svg>" });
+					return true;
+				}
+			},
+			{
+				regex: /Your playfair cipher (key|submitting grid) is:/,
+				handler: function (matches, module) {
+					let lines = readTaggedLine();
+					for (let i = 0; i < 4; i++) {
+						lines += `\n${readTaggedLine()}`;
+					}
+					module.push({ label: "Your playfair cipher " + matches[1] + " is:", obj: pre(lines) });
+					return true;
+				}
+			},
+			{
+				regex: /Your base 36 key is:/,
+				handler: function (matches, module) {
+					let lines = readTaggedLine();
+					for (let i = 0; i < 5; i++) {
+						lines += `\n${readTaggedLine()}`;
+					}
+					module.push({ label: "Your base 36 key is:", obj: pre(lines) });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: 'GSUncolouredButtons',
 		loggingTag: 'Uncoloured Buttons',
 		matches: [
