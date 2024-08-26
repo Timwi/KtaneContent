@@ -13038,6 +13038,122 @@ let parseData = [
 		loggingTag: "PasswordComponent"
 	},
 	{
+		moduleID: "hexaterminals",
+		loggingTag: "Password Hexaterminals",
+		matches: [
+			{
+				regex: /Write the words: ([A-Z]*)\((->|<-)\), ([A-Z]*)\((->|<-)\), ([A-Z]*)\((->|<-)\), ([A-Z]*)\((->|<-)\) & ([A-Z]*)\((->|<-)\) along the (.)-axis\./,
+				handler: function (matches, module) {
+					if (!('Directions' in module))
+						module.Directions = {};
+					module.Directions["RQS".indexOf(matches[11])] = [2, 4, 6, 8, 10].map(n => matches[n] === '->');
+				}
+			},
+			{
+				regex: /Spin the terminals these many times in reading order to achieve the words mentioned: (.*)\./,
+				handler: function (matches, module) {
+					module.Spins = matches[1].split(',').map(t => parseInt(t.trim()));
+				}
+			},
+			{
+				regex: /Initial letters across the terminals in the (.)-axis: (.+)/,
+				handler: function (matches, module) {
+					if (!('Letters' in module))
+						module.Letters = {};
+					module.Letters[matches[1]] = matches[2].replace(/[-\[\];]/g, '');
+
+					if (matches[1] === 'Q') {
+						// Last line of output: generate SVG
+						let dic = {};
+						dic["0,-2"] = { x: 0, y: -1.73205080756888, ltrs: [], solLtrs: [], spins: module.Spins[0] };
+						dic["1,-2"] = { x: 0.75, y: -1.29903810567666, ltrs: [], solLtrs: [], spins: module.Spins[1] };
+						dic["2,-2"] = { x: 1.5, y: -0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[2] };
+						dic["-1,-1"] = { x: -0.75, y: -1.29903810567666, ltrs: [], solLtrs: [], spins: module.Spins[3] };
+						dic["0,-1"] = { x: 0, y: -0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[4] };
+						dic["1,-1"] = { x: 0.75, y: -0.433012701892219, ltrs: [], solLtrs: [], spins: module.Spins[5] };
+						dic["2,-1"] = { x: 1.5, y: 0, ltrs: [], solLtrs: [], spins: module.Spins[6] };
+						dic["-2,0"] = { x: -1.5, y: -0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[7] };
+						dic["-1,0"] = { x: -0.75, y: -0.433012701892219, ltrs: [], solLtrs: [], spins: module.Spins[8] };
+						dic["0,0"] = { x: 0, y: 0, ltrs: [], solLtrs: [], spins: module.Spins[9] };
+						dic["1,0"] = { x: 0.75, y: 0.433012701892219, ltrs: [], solLtrs: [], spins: module.Spins[10] };
+						dic["2,0"] = { x: 1.5, y: 0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[11] };
+						dic["-2,1"] = { x: -1.5, y: 0, ltrs: [], solLtrs: [], spins: module.Spins[12] };
+						dic["-1,1"] = { x: -0.75, y: 0.433012701892219, ltrs: [], solLtrs: [], spins: module.Spins[13] };
+						dic["0,1"] = { x: 0, y: 0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[14] };
+						dic["1,1"] = { x: 0.75, y: 1.29903810567666, ltrs: [], solLtrs: [], spins: module.Spins[15] };
+						dic["-2,2"] = { x: -1.5, y: 0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[16] };
+						dic["-1,2"] = { x: -0.75, y: 1.29903810567666, ltrs: [], solLtrs: [], spins: module.Spins[17] };
+						dic["0,2"] = { x: 0, y: 1.73205080756888, ltrs: [], solLtrs: [], spins: module.Spins[18] };
+
+						function dist(q, r) { return Math.max(Math.abs(q), Math.max(Math.abs(r), Math.abs(-q - r))); }
+						// Bottom-right letters for each dial
+						let ix = -2;
+						for (let q = 2; q >= -2; q--)
+							for (let r = -2; r <= 2; r++)
+								if (dist(q, r) <= 2)
+									dic[`${q},${r}`].ltrs.push(module.Letters.Q[ix += 2]);
+						// Bottom-left
+						ix = -1;
+						for (let qq = -2; qq <= 2; qq++)
+							for (let r = -2; r <= 2; r++)
+								if (dist(qq - r, r) <= 2)
+									dic[`${qq - r},${r}`].ltrs.push(module.Letters.S[ix += 2]);
+						// Left
+						ix = -1;
+						for (let r = -2; r <= 2; r++)
+							for (let q = -2; q <= 2; q++)
+								if (dist(q, r) <= 2)
+									dic[`${q},${r}`].ltrs.push(module.Letters.R[ix += 2]);
+						// Top-left letters for each dial
+						ix = -1;
+						for (let q = 2; q >= -2; q--)
+							for (let r = -2; r <= 2; r++)
+								if (dist(q, r) <= 2)
+									dic[`${q},${r}`].ltrs.push(module.Letters.Q[ix += 2]);
+						// Top-right
+						ix = -2;
+						for (let qq = -2; qq <= 2; qq++)
+							for (let r = -2; r <= 2; r++)
+								if (dist(qq - r, r) <= 2)
+									dic[`${qq - r},${r}`].ltrs.push(module.Letters.S[ix += 2]);
+						// Right
+						ix = -2;
+						for (let r = -2; r <= 2; r++)
+							for (let q = -2; q <= 2; q++)
+								if (dist(q, r) <= 2)
+									dic[`${q},${r}`].ltrs.push(module.Letters.R[ix += 2]);
+
+						// Generate “original layout” SVG
+						let svg = '';
+						for (let key of Object.keys(dic)) {
+							let hex = dic[key];
+							svg += `<path class='hex' d='M${Array(6).fill(0).map((_, i) => `${hex.x + Math.cos(i * Math.PI / 3) / 2} ${hex.y + Math.sin(i * Math.PI / 3) / 2}`).join(' ')}z' />`;
+							for (let i = 0; i < 6; i++)
+								svg += `<text class='ltr' x='0' y='.35' transform='translate(${hex.x} ${hex.y}) rotate(${60 * i})'>${hex.ltrs[i]}</text>`;
+						}
+						module.push({ label: "Original layout:", obj: $(`<svg class='password-hexaterminals' viewBox='-2.5 -2.3 5 4.6'><g transform='rotate(-30)'>${svg}</g></svg>`) });
+
+						// Generate “solution layout” SVG
+						function caesar(ch, amt) { return String.fromCharCode((ch.charCodeAt(0) - 65 + amt) % 26 + 65); }
+						svg = '';
+						for (let [, hex] of Object.entries(dic)) {
+							svg += `<path class='hex' d='M${Array(6).fill(0).map((_, i) => `${hex.x + Math.cos(i * Math.PI / 3) / 2} ${hex.y + Math.sin(i * Math.PI / 3) / 2}`).join(' ')}z' stroke='black' stroke-width='.05' fill='none' />`;
+							for (let i = 0; i < 6; i++)
+								svg += `<text class='ltr' x='0' y='.35' transform='translate(${hex.x} ${hex.y}) rotate(${60 * (i - hex.spins)})'>${caesar(hex.ltrs[i], hex.spins)}</text>`;
+						}
+						let arrows = '', svg2 = '', lns = [1.3856406460551025, 1.8186533479473221, 2.2516660498395416, 1.8186533479473221, 1.3856406460551025];
+						for (let axis = 0; axis < 3; axis++)
+							for (let arr = 0; arr < 5; arr++)
+								arrows += `<g class='arrow' transform='rotate(${60 * axis}) translate(0 ${(arr - 2) * .75}) rotate(${module.Directions[axis][arr] ? 0 : 180})'><path class='arline' d='M${-lns[arr]} 0 H ${lns[arr]}' /><path class='arhead' d='M${lns[arr]} -.18 l .25 .18 -.25 .18z' /></g>`;
+						for (let [, hex] of Object.entries(dic))
+							svg2 += `<circle cx='${hex.x}' cy='${hex.y}' r='.15' class='crc' /><text y='.07' transform='translate(${hex.x} ${hex.y}) rotate(30)'>${hex.spins}</text>`;
+						module.push({ label: "Solution layout:", obj: $(`<svg class='password-hexaterminals' viewBox='-2.5 -2.3 5 4.6'><g transform='rotate(-30)'>${svg}</g>${arrows}<g transform='rotate(-30)'>${svg2}</g></svg>`) });
+					}
+				}
+			}
+		]
+	},
+	{
 		moduleID: "GSPathfinder",
 		loggingTag: "Pathfinder",
 		matches: [
