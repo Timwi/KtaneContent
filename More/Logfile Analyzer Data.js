@@ -16515,6 +16515,46 @@ let parseData = [
 		loggingTag: "Simon's Ultimate Showdown"
 	},
 	{
+		displayName: ["Simon Forgets"],
+		moduleID: ["simonForgets"],
+		loggingTag: ["Simon Forgets"],
+		matches: [
+			{
+				regex: /Entering Stage (\d+) of (\d+)\./,
+				handler: function (matches, module) {
+					module.Stage = ["Entering Stage " + matches[1] + " of " + matches[2] + ".", []];
+					module.push(module.Stage);
+					return true;
+				}
+			},
+			{
+				regex: /Stage (\d+) color order: (.{10})/,
+				handler: function (matches, module) {
+					module.Stage[1].push("Color order: " + matches[2]);
+					return true;
+				}
+			},
+			{
+				regex: /Stage (\d+) > (.+)/,
+				handler: function (matches, module) {
+					module.Stage[1].push(matches[2]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					let line = matches.input;
+					if ('Stage' in module)
+						module.Stage[1].push(line);
+					else
+						// Any messages logged before the start
+						module.push(line);
+				}
+			}
+		]
+	},
+	{
 		moduleID: "SimonScreamsModule",
 		loggingTag: "Simon Screams",
 		matches: [
