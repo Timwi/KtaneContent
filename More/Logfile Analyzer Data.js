@@ -20599,6 +20599,23 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Worse Code",
+		moduleID: "worseCode",
+		loggingTag: "Worse Code",
+		matches: [
+			{
+				regex: /The path the observer took is as follows:/,
+				handler: function (matches, module) {
+					let lines = readLines(21);
+
+					module.push({ label: "The path the observer took is as follows:", obj: pre(lines.join("\n")) });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Wumbo",
 		moduleID: "wumbo",
 		loggingTag: "Wumbo",
