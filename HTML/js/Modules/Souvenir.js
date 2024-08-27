@@ -347,7 +347,7 @@ let SouvenirModuleData = [
 	{ name: "Numbers",	id: "Numbers",	questions: ["What two-digit number was given?"] },
 	{ name: "Numpath",	id: "numpath",	questions: ["What was the number and its color?"] },
 	{ name: "Object Shows",	id: "objectShows",	questions: ["What contestants were shown?"] },
-	{ name: "The Octadecayotton",	id: "TheOctadecayotton",	questions: ["What was the starting sphere?","What were the subrotations in each rotation?"] },
+	{ name: "The Octadecayotton",	id: "TheOctadecayotton",	questions: ["What was the starting sphere?","What were the subtransformations in each transformation?"] },
 	{ name: "Odd One Out",	id: "OddOneOutModule",	questions: ["What were the correct button presses?"] },
 	{ name: "Old AI",	id: "SCP079",	questions: ["Which condition did the displayed numbers follow?"] },
 	{ name: "Old Fogey",	id: "oldFogey",	questions: ["What was the initial color of the status light?"] },
