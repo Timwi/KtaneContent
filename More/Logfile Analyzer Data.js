@@ -13903,27 +13903,34 @@ let parseData = [
 		loggingTag: "Pointer Pointer",
 		matches: [
 			{
+				regex: /Selected board size: (\d)x(\d)/,
+				handler: function (matches, module) {
+					module.Size = parseInt(matches[1]);
+				}
+			},
+			{
 				regex: /Stage \d+/,
 				handler: function (matches, module) {
+					let size = module.Size;
 					const colorDict = { 'R': '#F00', 'G': '#0F0', 'B': '#00F', 'C': '#0FF', 'M': '#F0F', 'Y': '#FF0', 'W': '#FFF', 'K': '#444' };
 					const dirs = ['U', 'UR', 'R', 'DR', 'D', 'DL', 'L', 'DL'];
 
 					readLine();
-					const colors = readTaggedLines(6).map(l => l.split(' '));
+					const colors = readTaggedLines(size).map(l => l.split(' '));
 					readLine();
-					const dispArrows = readTaggedLines(6).map(l => l.split(' '));
+					const dispArrows = readTaggedLines(size).map(l => l.split(' '));
 					readLine();
-					const truthDir = readTaggedLines(6).map(l => l.split(' '));
+					const truthDir = readTaggedLines(size).map(l => l.split(' '));
 					readLines(2);
 					const path = readTaggedLine().substring(12).split(' -> ').map(c => ({ x: 'ABCDEF'.indexOf(c[0]), y: c[1] - '1' }));
 
 
 
-					let svg = "<svg viewbox='-5 -5 610 610' style='display: block; width: 3in'>";
+					let svg = `<svg viewbox='-5 -5 ${size * 100 + 10} ${size * 100 + 10}' style='display: block; width: 3in'>`;
 					const arrPath = 'M-15 40V10H-30L0-40 30 10H15V40Z';
 					const triPath = 'M-15 30H15L0 4Z';
-					for (let row = 0; row < 6; row++) {
-						for (let col = 0; col < 6; col++) {
+					for (let row = 0; row < size; row++) {
+						for (let col = 0; col < size; col++) {
 
 							const start = col == path[0].x && row == path[0].y;
 							const end = col == path[path.length - 1].x && row == path[path.length - 1].y;
@@ -13951,12 +13958,12 @@ let parseData = [
 						let cy = 100 * node.y + 50;
 						let xDiff = node.x - prev.x;
 						let yDiff = node.y - prev.y;
-						const xWrap = Math.abs(xDiff) == 5;
-						const yWrap = Math.abs(yDiff) == 5;
+						const xWrap = Math.abs(xDiff) == size - 1;
+						const yWrap = Math.abs(yDiff) == size - 1;
 						if (xWrap)
-							xDiff /= -5;
+							xDiff /= (size * -1 + 1);
 						if (yWrap)
-							yDiff /= -5;
+							yDiff /= (size * -1 + 1);
 						let midpointX = 100 * prev.x + 50 + 50 * xDiff;
 						let midpointY = 100 * prev.y + 50 + 50 * yDiff;
 
@@ -13967,9 +13974,9 @@ let parseData = [
 						svg += `<path transform='translate(${midpointX}, ${midpointY}) rotate(${angle})'
 									fill='#000' d='${triPath}'/>`;
 						if (xWrap)
-							midpointX = 600 - midpointX;
+							midpointX = (size * 100) - midpointX;
 						if (yWrap)
-							midpointY = 600 - midpointY;
+							midpointY = (size * 100) - midpointY;
 						line += `M ${midpointX} ${midpointY} L ${cx} ${cy} `;
 						prev = node;
 						svg += `<circle r='15' cx='${cx}' cy='${cy}' fill='#000'/>`;
