@@ -3217,10 +3217,10 @@ let parseData = [
 
 								$SVG(`<path d='M${55 + col * 100} ${55 + row * 100} l-15 -15 h30 v30 h-30 v-30z'>`)
 									.addClass(validRoad ? "city-planning-cell-road" :
-										      validShop ? "city-planning-cell-shop" : 
-										      validHouse ? "city-planning-cell-house" : 
-										      validParkCenter ? "city-planning-cell-park-center" : 
-										      validLibrary ? "city-planning-cell-library" : 
+										      validShop ? "city-planning-cell-shop" :
+										      validHouse ? "city-planning-cell-house" :
+										      validParkCenter ? "city-planning-cell-park-center" :
+										      validLibrary ? "city-planning-cell-library" :
 										      validSchool ? "city-planning-cell-school" : "city-planning-cell")
 									.appendTo(svg);
 							}
@@ -13064,25 +13064,25 @@ let parseData = [
 					if (matches[1] === 'Q') {
 						// Last line of output: generate SVG
 						let dic = {};
-						dic["0,-2"] = { x: 0, y: -1.73205080756888, ltrs: [], solLtrs: [], spins: module.Spins[0] };
-						dic["1,-2"] = { x: 0.75, y: -1.29903810567666, ltrs: [], solLtrs: [], spins: module.Spins[1] };
-						dic["2,-2"] = { x: 1.5, y: -0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[2] };
-						dic["-1,-1"] = { x: -0.75, y: -1.29903810567666, ltrs: [], solLtrs: [], spins: module.Spins[3] };
-						dic["0,-1"] = { x: 0, y: -0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[4] };
-						dic["1,-1"] = { x: 0.75, y: -0.433012701892219, ltrs: [], solLtrs: [], spins: module.Spins[5] };
-						dic["2,-1"] = { x: 1.5, y: 0, ltrs: [], solLtrs: [], spins: module.Spins[6] };
-						dic["-2,0"] = { x: -1.5, y: -0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[7] };
-						dic["-1,0"] = { x: -0.75, y: -0.433012701892219, ltrs: [], solLtrs: [], spins: module.Spins[8] };
-						dic["0,0"] = { x: 0, y: 0, ltrs: [], solLtrs: [], spins: module.Spins[9] };
-						dic["1,0"] = { x: 0.75, y: 0.433012701892219, ltrs: [], solLtrs: [], spins: module.Spins[10] };
-						dic["2,0"] = { x: 1.5, y: 0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[11] };
-						dic["-2,1"] = { x: -1.5, y: 0, ltrs: [], solLtrs: [], spins: module.Spins[12] };
-						dic["-1,1"] = { x: -0.75, y: 0.433012701892219, ltrs: [], solLtrs: [], spins: module.Spins[13] };
-						dic["0,1"] = { x: 0, y: 0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[14] };
-						dic["1,1"] = { x: 0.75, y: 1.29903810567666, ltrs: [], solLtrs: [], spins: module.Spins[15] };
-						dic["-2,2"] = { x: -1.5, y: 0.866025403784439, ltrs: [], solLtrs: [], spins: module.Spins[16] };
-						dic["-1,2"] = { x: -0.75, y: 1.29903810567666, ltrs: [], solLtrs: [], spins: module.Spins[17] };
-						dic["0,2"] = { x: 0, y: 1.73205080756888, ltrs: [], solLtrs: [], spins: module.Spins[18] };
+						dic["0,-2"] = { x: 0, y: -1.73205080756888, ltrs: [], spins: module.Spins[0] };
+						dic["1,-2"] = { x: 0.75, y: -1.29903810567666, ltrs: [], spins: module.Spins[1] };
+						dic["2,-2"] = { x: 1.5, y: -0.866025403784439, ltrs: [], spins: module.Spins[2] };
+						dic["-1,-1"] = { x: -0.75, y: -1.29903810567666, ltrs: [], spins: module.Spins[3] };
+						dic["0,-1"] = { x: 0, y: -0.866025403784439, ltrs: [], spins: module.Spins[4] };
+						dic["1,-1"] = { x: 0.75, y: -0.433012701892219, ltrs: [], spins: module.Spins[5] };
+						dic["2,-1"] = { x: 1.5, y: 0, ltrs: [], spins: module.Spins[6] };
+						dic["-2,0"] = { x: -1.5, y: -0.866025403784439, ltrs: [], spins: module.Spins[7] };
+						dic["-1,0"] = { x: -0.75, y: -0.433012701892219, ltrs: [], spins: module.Spins[8] };
+						dic["0,0"] = { x: 0, y: 0, ltrs: [], spins: module.Spins[9] };
+						dic["1,0"] = { x: 0.75, y: 0.433012701892219, ltrs: [], spins: module.Spins[10] };
+						dic["2,0"] = { x: 1.5, y: 0.866025403784439, ltrs: [], spins: module.Spins[11] };
+						dic["-2,1"] = { x: -1.5, y: 0, ltrs: [], spins: module.Spins[12] };
+						dic["-1,1"] = { x: -0.75, y: 0.433012701892219, ltrs: [], spins: module.Spins[13] };
+						dic["0,1"] = { x: 0, y: 0.866025403784439, ltrs: [], spins: module.Spins[14] };
+						dic["1,1"] = { x: 0.75, y: 1.29903810567666, ltrs: [], spins: module.Spins[15] };
+						dic["-2,2"] = { x: -1.5, y: 0.866025403784439, ltrs: [], spins: module.Spins[16] };
+						dic["-1,2"] = { x: -0.75, y: 1.29903810567666, ltrs: [], spins: module.Spins[17] };
+						dic["0,2"] = { x: 0, y: 1.73205080756888, ltrs: [], spins: module.Spins[18] };
 
 						function dist(q, r) { return Math.max(Math.abs(q), Math.max(Math.abs(r), Math.abs(-q - r))); }
 						// Bottom-right letters for each dial
