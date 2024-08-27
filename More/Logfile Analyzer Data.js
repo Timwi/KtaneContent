@@ -3188,7 +3188,7 @@ let parseData = [
 					module.makeImage = (row, col, image, rotate = false) => {
 						const rowPosition = 33 * row + 8;
 						const colPosition = 33 * col + 44;
-						return $('<img>').attr('style', `top: ${rowPosition}px; left: ${colPosition}px; ${rotate ? "transform: rotate(90deg);" : ""}`).attr('src', `../HTML/img/City Planning/${image}.png`).addClass("city-planning");
+						return $('<img>').attr('style', `top: ${rowPosition}px; left: ${colPosition}px; transform: scale(1.5) ${rotate ? "rotate(90deg)" : ""};`).attr('src', `../HTML/img/City Planning/${image}.png`).addClass("city-planning");
 					}
 					module.makeSvg = (module) => {
 						const matchCoordinate = (row, col, str) => {
@@ -3296,8 +3296,12 @@ let parseData = [
 					module.makeSvg(module).appendTo(div);
 					for (let row = 0; row < 6; row++) {
 						for (let col = 0; col < 6; col++) {
-							if (module.sameRow(row, module.road) || module.sameCol(col, module.road))
+							if (module.sameRow(row, module.road) && module.sameCol(col, module.road))
 								module.makeImage(row, col, "RoadIntersection").appendTo(div);
+							else if (module.sameCol(col, module.road))
+								module.makeImage(row, col, "RoadVertical").appendTo(div);
+							else if (module.sameRow(row, module.road))
+								module.makeImage(row, col, "RoadHorizontal").appendTo(div);
 							else if (module.shops.some(s => module.sameRow(row, s) && module.sameCol(col, s)))
 								module.makeImage(row, col, "ShoppingMarket").appendTo(div);
 							else if (module.houses.some(s => module.sameRow(row, s) && module.sameCol(col, s)))
