@@ -18244,6 +18244,80 @@ let parseData = [
 		]
 	},
 	{
+
+		moduleID: "TechnicalKeypad",
+		loggingTag: "Technical Keypad",
+		matches: [
+			{
+				regex: /The colours are, in reading order, (.+)\./,
+				handler: function (matches, module) {
+					module.colors = matches[1].split(", ");
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /The colour order is (.+)\./,
+				handler: function (matches, module) {
+					const colors = matches[1].split("").map(c => c.toLowerCase());
+					const backgroundColors = ["white", "red", "orange", "yellow", "green", "blue", "purple", "white", "teal"]
+					const svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 420 55'>");
+					for(let i = 0; i < 9; i++) {
+						$SVG(`<circle r='22.5' cx='${13 + 45 * i}' cy='15'/>`).addClass(`technical-keypad-${colors[i] == "k" ? "black" : backgroundColors.find(c => c.startsWith(colors[i]))} technical-keypad`).appendTo(svg);
+					}
+					module.push({ label: "Colour Order", obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /The buttons which apply are, in order, (.+)\./,
+				handler: function(matches, module) {
+					const appliedButtons = matches[1].split(", ").map(str => parseInt(str));
+					const svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 420 175'>");
+					const dimension = 50;
+					for (let row = 0; row < 3; row++) {
+						for (let col = 0; col < 3; col++) {
+							const x = col * dimension;
+							const y = row * dimension;
+							const ix = Math.floor(row * 3) + col;
+							let text = appliedButtons.indexOf(ix) + 1;
+							text = text == 0 ? "" : text;
+							$SVG("<rect>").addClass(`technical-keypad technical-keypad-${module.colors[ix]}`)
+								.attr("width", dimension).attr("height", dimension)
+								.attr("x", x).attr("y", y)
+								.appendTo(svg);
+							const textSvg = $SVG("<text>").addClass(`technical-keypad`)
+								.attr("x", x + dimension / 2)
+								.attr("y", y + dimension / 1.75)
+								.text(text).appendTo(svg);
+							if(module.colors[ix] === "white") {
+								textSvg.addClass(`technical-keypad-white`)
+							}
+						}
+					}
+					module.push({label: "The buttons which apply are", obj: svg})
+					return true;
+				}
+			},
+			{
+				regex: /Current Rule: tap button\(s\) (?:.+)|Current Rule: hold button \d+ for \d+ beep\(s\)\./,
+				handler: function(matches, module) {
+					module.currentRule = [matches[0], []];
+					module.push(module.currentRule);
+					return true;
+				}
+			},
+			{
+				regex: /Correctly tapped button \d\.|✕ You incorrectly tapped button \d!|Resetting\.|Rule passed\.|Correctly held button \d+ for \d+ beep\(s\)\.|✕ You tapped a button when you were expected to hold one!|✕ You held button \d for \d+ beep\(s\) when I expected \d+/,
+				handler: function(matches, module) {
+					module.currentRule[1].push(matches[0])
+					return true;
+				}
+			},
+			{regex: /.+/}
+		]
+	},
+	{
 		displayName: "Ten-Button Color Code",
 		moduleID: "TenButtonColorCode",
 		loggingTag: "Ten-Button Color Code",
