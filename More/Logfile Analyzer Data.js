@@ -19376,44 +19376,38 @@ let parseData = [
 						len = line.length;
 						arr.push(line);
 					}
-					let svg = `<svg viewbox='-50 -50 ${len * 100 + 25} ${len * 100 + 25}' style='width: 4in; display: block'>`;
-					svg += `<rect x='-70' y='-70' width='${len * 100 + 50}' height='${len * 100 + 50}' fill='#000000' rx='20' ry='20'/>`;
+					let svg = `<svg viewbox='-50 -50 ${len * 100} ${len * 100}' style='width: 4in; display: block'>`;
+					svg += `<rect x='-50' y='-50' width='${len * 100}' height='${len * 100}' fill='#000000' rx='20' ry='20'/>`;
 					for (let y = 0; y < arr.length; y++) {
 						for (let x = 0; x < arr[y].length; x++) {
 							let xCoord = x * 100;
-							let yCoord = y * 100;
+							let yCoord = y * 100 + 25;
 							let c = arr[y][x];
 							switch (c) {
 								case "<":
 									c = "←";
-									xCoord -= 15;
 									break;
 								case ">":
 									c = "→";
-									xCoord -= 15;
 									break;
 								case "^":
 									c = "↑";
-									yCoord -= 10;
 									break;
 								case "V":
 									c = "↓";
-									yCoord -= 10;
 									break;
 								case "x":
 									c = "↔";
-									xCoord -= 15;
 									break;
 								case "X":
 									c = "↕";
-									yCoord -= 10;
 									break;
 								default:
 									break;
 							}
-							let t = `<text x='${xCoord - 5}' y='${yCoord + 35}' fill='white' style='font-size: 72px'>${c}</text>`;
+							let t = `<text text-anchor="middle" x='${xCoord}' y='${yCoord}' fill='white' style='font-size: 84px'>${c}</text>`;
 							svg += t;
-						}
+ 						}
 					}
 					module.push({ label: "Your maze layout is:", obj: svg + "</svg>" });
 					return true;
