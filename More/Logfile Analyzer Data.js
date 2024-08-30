@@ -7233,6 +7233,26 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Gerrymandering",
+		moduleID: "gerrymandering",
+		loggingTag: "Gerrymandering",
+		matches: [
+			{
+				regex: /(Given map|Submitted districts|Upon leaving, this is what the districts looked like|Upon explosion, this is what the districts looked like):/,
+				handler: function (matches, module) {
+					let lines = readLines(1);
+					let width = ((lines[0].length - 1) / 4) | 0;
+					let height = width - 4;
+					lines.push(...readLines(height * 2));
+
+					module.push({ label: matches[0], obj: pre(lines.join("\n")) });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "giantsDrink",
 		loggingTag: "The Giant's Drink",
 		displayName: "The Giant’s Drink"
