@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>FizzBoss Optimized — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        $(function() {
+            function primeFactorsTo(max) {
+                let store  = [], i, j, primes = [];
+                for (i = 2; i <= max; ++i) {
+                    if (!store [i]) {
+                        primes.push(i);
+                        for (j = i << 1; j <= max; j += i) {
+                            store[j] = true;
+                        }
+                    }
+                } 
+                return primes;
+            }
+            let letters = ["f", "b", "z", "i", "u"];
+            let phrases = Array(125);
+            let count = 0;
+            for (let b of letters) {
+                for (let m of letters) {
+                    for (let e of letters) {
+                        phrases[count] = `${b}${m}${e}`;
+                        count++;
+                    }
+                }
+            }
+            let primes = primeFactorsTo(750);
+            let phrasesTable = $('#phrases-table');
+            for (let n = 0; n < 25; n++) {
+                let tr = $("<tr>").appendTo(phrasesTable);
+                for (let i = 0; i < 5; i++) {
+                    $("<th>").addClass("chk").text(phrases[n + i*25]).appendTo(tr);
+                    $("<td>").addClass("chk").text(primes[n + i*25 + 1]).appendTo(tr);
+                    if (i < 4) $("<td>").addClass("corner nohighlight").appendTo(tr);
+                }
+            }
+            let pagePhrases = $("#pagePhrases");
+            let numInput = $("<input>").attr("type","number");
+            let storedValue = 1;
+            numInput.attr("min","1");
+            numInput.attr("value","1");
+            numInput.appendTo(pagePhrases);
+            numInput.on("change", function() {
+                let curVal = numInput.val();
+                if (curVal < 1)
+                {
+                    numInput.val(storedValue);
+                    curVal = storedValue;
+                }
+                storedValue = curVal;
+                let chkBgs = $(".chk");
+                let oddPrimes = primes.slice(1);
+                // console.log(oddPrimes);
+                for (let p = 0; p < chkBgs.length; p++)
+                {
+                    let curIdx = Math.floor(p / 2);
+                    let primeRow = curIdx % 5;
+                    let primeCol = Math.floor(curIdx / 5);
+
+                    if (curVal % oddPrimes[primeCol + 25 * primeRow] == 0)
+                        chkBgs[p].className = "chk green";
+                    else
+                        chkBgs[p].className = "chk";
+                }
+            });
+        });
+    </script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 2'; }
+
+        .green { background-color: #0f08;}
+
+        /* Credit: Hexicube’s Forget Me Not manual */
+        .red-line-wrap {
+            width: 0;
+            height: 0;
+        }
+        .red-line {
+            width: 2em;
+            height: 66em;
+            opacity: 0.3;
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class='red-line-wrap'><div class='red-line'></div></div>
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">FizzBoss</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/FizzBoss.svg" class="diagram">
+                <h2>On the Optimization of FizzBoss</h2>
+                <p class="flavour-text">If you really know how to math, this is a test of knowing your divisible rules.</p>
+                <p><a href="FizzBozz.html">Original Manual</a></p>
+                <h3>Initially...</h3>
+                <ol>
+                    <li>Start with the sum of 0.</li>
+                    <li>Add the number displayed on the module to this sum.</li>
+                </ol>
+                <h3>For every number displayed after this...</h3>
+                <ol>
+                    <li>For each 3-letter phrase in the table provided that has its corresponding value divisible by the sum, add 1 to the current displayed number.</li>
+                    <li>Add the resulting number to this sum.</li>
+                </ol>
+                <h3>When all <a href="../More/Ignore Table.html#mod=fizzBoss">non-ignored modules</a> are solved...</h3>
+                <p>If none of the 3-letter phrases in the table provided have their corresponding values divisible by the sum, just press the green S button without inputting anything else.</p>
+                <p>Otherwise enter those phrases in <strong>ascending order of their values</strong>, then press the green S button to submit.</p>
+                <p>Every three inputs will duplicate the third letter displayed before the next phrase to input, which can be ignored. Once the defuser starts inputting a different phrase, the previously-inputted phrases wouldn’t be shown. Pressing the red R button will clear <strong>the current input</strong>, or <strong>all inputs if the screen is blank.</strong></p>
+                <p>If the answer submitted was incorrect, the module will strike and enter recovery mode. To see all of the numbers again, press any button. Once all of the numbers are shown again, you can start inputting.</p>
+                <h3>On the next page provided...</h3>
+                <p>An input box is provided for inputting numbers. Cells in the table provided that are green are divisible by the number inputted.</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class='red-line-wrap'><div class='red-line'></div></div>
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">FizzBoss</span>
+            </div>
+            <div class="page-content">
+                <p id="pagePhrases" class="centered">Number: </p>
+                <h3>Phrases Table:</h3>
+                <table id="phrases-table"></table>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+    </div>
+</body>
+</html>
