@@ -35,7 +35,7 @@ let SouvenirModuleData = [
 	{ name: "Barcode Cipher",	id: "BarcodeCipherModule",	questions: ["What was the screen number?","What was the edgework represented by each barcode?","What was the answer for each barcode?"] },
 	{ name: "Bartending",	id: "BartendingModule",	questions: ["Which ingredient was in which position?"] },
 	{ name: "Bean Sprouts",	id: "beanSprouts",	questions: ["What colors were the eaten sprouts?","Where were the eaten beans?"] },
-	{ name: "Beans",	id: "beans",	questions: ["What color were the eaten beans?"] },
+	{ name: "Beans",	id: "beans",	questions: ["What color were the eaten beans?","Which beans were wobbling?"] },
 	{ name: "Big Bean",	id: "bigBean",	questions: ["What color and wobbliness was the bean?"] },
 	{ name: "Big Circle",	id: "BigCircle",	questions: ["Which colors were in the solution?"] },
 	{ name: "Binary",	id: "Binary",	questions: ["What word was displayed?"] },
