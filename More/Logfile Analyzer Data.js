@@ -654,6 +654,17 @@ let parseData = [
 		]
 	},
 	{
+		loggingTag: "BombPreview",
+		matches: [
+			{
+				regex: /Preview: (.+)/,
+				handler: matches => {
+					lastBombGroup.PreviewImage = matches[1];
+				},
+			}
+		]
+	},
+	{
 		loggingTag: "CompetitiveLogger",
 		matches: [
 			{
