@@ -16577,6 +16577,64 @@ let parseData = [
 		loggingTag: "String Order"
 	},
 	{
+		moduleID: "ShyGuySays",
+		loggingTag: "Shy Guy Says",
+		matches: [
+			{
+				regex: /Press the Shy Guy to try again\.|Press Shy Guy's mask to begin!|Responded with the correct flags!/,
+				handler: function(matches, module) {
+					if(matches[0] == "Press Shy Guy's mask to begin!") {
+						module.stageNum = 0;
+						module.push(matches[0]);
+					}
+					else {
+						module.attemptDropdown[1].push(matches[0]);
+					}
+					return true;
+				}
+			},
+			{
+				regex: /==================== Stage (\d) ====================/,
+				handler: function(matches, module) {
+					const stageNum = matches[1];
+					if(stageNum == module.stageNum) {
+						module.attemptNum++;
+						module.attemptDropdown = [`Attempt ${module.attemptNum}`, []];
+						module.stageDropdown[1].push(module.attemptDropdown);
+					}
+					else {
+						module.stageNum = stageNum;
+						module.attemptNum = 1;
+						module.attemptDropdown = [`Attempt ${module.attemptNum}`, []];
+						module.stageDropdown = [`Stage ${module.stageNum}`, [module.attemptDropdown]];
+						module.push(module.stageDropdown);
+					}
+					return true;
+				}
+			},
+			{
+				regex: /===================== Solved =====================|You win!|Press Shy Guy's mask to begin!/,
+				handler: function(matches, module) {
+					if(matches[0].includes("Solved")) {
+						module.push("Solved")
+					}
+					else {
+						module.push(matches[0]);
+					}
+					return true;
+				},
+			},
+			{ 
+				regex: /.+/, 
+				handler: function(matches, module) {
+					module.attemptDropdown[1].push(matches[0]);
+					return true;
+				}
+			}
+
+		]
+	},
+	{
 		moduleID: "Signals",
 		loggingTag: "Signals",
 		matches: [
