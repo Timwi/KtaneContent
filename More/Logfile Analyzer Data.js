@@ -16609,6 +16609,8 @@ let parseData = [
 						module.stageDropdown = [`Stage ${module.stageNum}`, [module.attemptDropdown]];
 						module.push(module.stageDropdown);
 					}
+
+					module.attemptAnswer = [];
 					return true;
 				}
 			},
@@ -16627,6 +16629,12 @@ let parseData = [
 			{ 
 				regex: /.+/, 
 				handler: function(matches, module) {
+					
+					const correctFlagMatch = matches[0].match(/Respond with the (left|right) flag/);
+					if(correctFlagMatch !== null) {
+						module.attemptAnswer.push(correctFlagMatch[1].toUpperCase()[0]);
+					}
+					module.attemptDropdown[0] = `Attempt ${module.attemptNum}: ${module.attemptAnswer.join(" ")}`
 					module.attemptDropdown[1].push(matches[0]);
 					return true;
 				}
