@@ -8282,6 +8282,42 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "Kuro",
+		loggingTag: "Kuro",
+		matches: [
+			{
+				regex: /Current Time:.+/,
+				handler: function (matches, module) {
+					module.timeArr = [[], [matches[0]]];
+					module.push(module.timeArr);
+					return true;
+				}
+			},
+			{
+				regex: /It's (?:.+) (?:You should be).+/,
+				handler: function (matches, module) {
+					module.timeArr[0].push(matches[0]);
+					module.timeArr = undefined;
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					console.log(module.timeArr, matches[0]);
+					if(module.timeArr) {
+						module.push(module.timeArr[1].push(matches[0]));
+					}
+
+					else {
+						module.push(matches[0]);
+					}
+					return true;
+				}
+			}
+		]
+	},
+	{
 		moduleID: "kyudoku",
 		displayName: "Kyudoku",
 		loggingTag: "Kyudoku",
