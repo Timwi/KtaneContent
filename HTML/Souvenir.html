@@ -808,19 +808,31 @@
                 return at.localeCompare(bt, 'en', { sensitivity: 'base' });
             });
 
-            pages.forEach(p => { p.innerHTML = ''; });
-            let tops = Array.from(document.querySelectorAll('div.page .page-footer')).map(page => page.offsetTop);
-            let curPage = 0;
-            for (let i = 0; i < allModules.length;)
+            let mustRedo = true;
+            while (mustRedo)
             {
-                if (curPage >= pages.length)
+                mustRedo = false;
+                pages.forEach(p => { p.innerHTML = ''; });
+                let tops = Array.from(document.querySelectorAll('div.page .page-footer')).map(page => page.offsetTop);
+                let curPage = 0;
+                for (let i = 0; i < allModules.length;)
                 {
-                    let newPage = document.createElement('div');
-                    newPage.className = `page page-bg-0${curPage % 7 + 1}`;
-                    document.querySelector('div.section').appendChild(document.createTextNode('    '));
-                    document.querySelector('div.section').appendChild(newPage);
-                    document.querySelector('div.section').appendChild(document.createTextNode('\n    '));
-                    newPage.innerHTML = `
+                    if (curPage >= pages.length)
+                    {
+                        let prevPage = document.querySelector('div.section').lastElementChild.querySelector('.page-content');
+                        prevPage.appendChild(document.createTextNode('    '));
+                        let prevPageCont = document.createElement('p');
+                        prevPageCont.className = 'continued';
+                        prevPageCont.innerText = 'continued on next page...';
+                        prevPage.appendChild(prevPageCont)
+                        prevPage.appendChild(document.createTextNode('\n            '));
+
+                        let newPage = document.createElement('div');
+                        newPage.className = `page page-bg-0${curPage % 7 + 1}`;
+                        document.querySelector('div.section').appendChild(document.createTextNode('    '));
+                        document.querySelector('div.section').appendChild(newPage);
+                        document.querySelector('div.section').appendChild(document.createTextNode('\n    '));
+                        newPage.innerHTML = `
             <div class='page-header'>
                 <span class='page-header-doc-title'>Keep Talking and Nobody Explodes Mod<${''}/span>
                 <span class='page-header-section-title'>Souvenir<${''}/span>
@@ -830,25 +842,27 @@
             <${''}/div>
             <div class='page-footer relative-footer'>${curPage + 1}<${''}/div>
         `;
-                    pages.push(newPage.querySelector('.souvenir'));
-                    let ss = document.getElementById('souvenir-style');
-                    let m = /\.page-footer::after \{ content: ' of (\d+)'; \}/.exec(document.styleSheets[3].rules[12].cssText);
-                    if (m && +m[1] !== curPage+1)
-                        alert('Warning: number of pages has changed. Fix Souvenir.css accordingly!');
-                    tops.push(newPage.querySelector('.page-footer').offsetTop);
+                        pages.push(newPage.querySelector('.souvenir'));
+                        mustRedo = true;
+                        break;
+                    }
+                    let tn = document.createTextNode(indentation);
+                    pages[curPage].appendChild(tn);
+                    pages[curPage].appendChild(allModules[i]);
+                    if (pages[curPage].parentNode.parentNode.querySelector('.page-footer').offsetTop > tops[curPage])
+                    {
+                        pages[curPage].removeChild(allModules[i]);
+                        pages[curPage].removeChild(tn);
+                        curPage++;
+                    }
+                    else
+                        i++;
                 }
-                let tn = document.createTextNode(indentation);
-                pages[curPage].appendChild(tn);
-                pages[curPage].appendChild(allModules[i]);
-                if (pages[curPage].parentNode.parentNode.querySelector('.page-footer').offsetTop > tops[curPage])
-                {
-                    pages[curPage].removeChild(allModules[i]);
-                    pages[curPage].removeChild(tn);
-                    curPage++;
-                }
-                else
-                    i++;
             }
+            let ss = document.getElementById('souvenir-style');
+            m = /\.page-footer::after \{ content: ' of (\d+)'; \}/.exec(document.styleSheets[3].rules[12].cssText);
+            if (m && +m[1] !== curPage+1)
+                alert('Warning: number of pages has changed. Fix Souvenir.css accordingly!');
             pages.forEach(p => { p.appendChild(document.createTextNode(indentation.substr(0, indentation.length - 4))); });
 
             // Finally, generate the new HTML
