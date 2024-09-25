@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Roger — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .j {
+            list-style-type: none;
+        }
+
+        .page-footer::before { content: "Page "; }
+        .page-footer::after { content: " of 3"; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Roger</span>
+            </div>
+            <div class="page-content">
+                <h2>On the Subject of Roger.pdf</h2>
+                <p class="flavour-text">Only use this manual as a last resort.</p>
+
+                <p>To solve this module, calculate a message code based on the 4─digit number shown on page 1 of the game manual using the process detailed below.</p>
+                <h3>Section 0: Definitions, Functions, Constants, and Operations on Bit Strings and Integers</h3>
+                <h4>Subsection 0.0: Definitions</h4>
+                <ol>
+                    <li>
+                        A <strong>word</strong> is a <strong>32-bit</strong> string, which may be represented as 8 hex digits. To convert between the two, each 4-bit string is replaced with its corresponding hex digit.
+                        <ul>
+                            <li>An integer x, satisfying the relationship 0 &LessSlantEqual; x &lt; 2^32, can be represented as a word.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        A block is a 512-bit string, which may be represented as a sequence of 16 words.
+                    </li>
+                </ol>
+                <h4>Subsection 0.1: Operations</h4>
+                <ol>
+                    <li>
+                        Bitwise logical operations follow their standard definitions.
+                        <ul>
+                            <li>X AND Y = bitwise logical “and” of X and Y</li>
+                            <li>X OR Y = bitwise logical “or” of X and Y</li>
+                            <li>X XOR Y = bitwise logical “exclusive-or” of X and Y</li>
+                            <li>NOT X = bitwise logical “not” of X</li>
+                        </ul>
+                    </li>
+                    <li>
+                        The operation X + Y on words X and Y, representing integers x and y is defined as follows: Let n % m be the remainder upon dividing n by m. Compute
+                        <ul>
+                            <li>z = (x + y) % 2^32</li>
+                        </ul>
+                        Convert z to a word, Z, and define Z = X + Y
+                    </li>
+                    <li>
+                        The circular left shift operation S(X,n), where X is a word and n is an integer with 0 &LessSlantEqual; n &lt; 32, is defined by
+                        <ul>
+                            <li>S(X,n) = (X &lt;&lt; n) OR (X &gt;&gt; 32-n)</li>
+                        </ul>
+                        All shifts are logical shifts─always shift in zeroes.
+                    </li>
+                    <li>
+                        Bit padding is used to make the total length of the padded message a multiple of 512. This process then processes sequential blocks of 512 bits when calculating the message code.
+                        Suppose a message has length l &lt; 2^64. Before the message is processed, it is padded on the right as follows:
+                    </li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Roger</span>
+            </div>
+            <div class="page-content">
+                <ol class="j">
+                    <li>
+                        <ol>
+                            <li>“1” is appended</li>
+                            <li>“0”s are appended until the length of the last block in the message is 448 bits.</li>
+                            <li>Obtain the 2-word representation of l, then append these two words to the padded message.</li>
+                        </ol>
+                    </li>
+                </ol>
+                <h4>Subsection 0.2: Functions and Constants</h4>
+                <p>A sequence of logical functions f(0) to f(79) is used in this message code. Each f(t), with 0 &LessSlantEqual; t &LessSlantEqual; 79 operates on words B, C, and D and produces a word as output. f(t,B,C,D) is defined as follows:</p>
+                <ol>
+                    <li>f(t,B,C,D) = (B AND C) OR ((NOT B) AND D); for 0 &LessSlantEqual; t &LessSlantEqual; 19</li>
+                    <li>f(t,B,C,D) = B XOR C XOR D; for 20 &LessSlantEqual; t &LessSlantEqual; 39</li>
+                    <li>f(t,B,C,D) = (B AND C) OR (B AND D) OR (C AND D); for 40 &LessSlantEqual; t &LessSlantEqual; 59</li>
+                    <li>f(t,B,C,D) = B XOR C XOR D; for 60 &LessSlantEqual; t &LessSlantEqual; 79</li>
+                </ol>
+                <p>A sequence of constant words K(0) to K(79) is also used. In hex, these words are:</p>
+                <ol>
+                    <li>K(t) = 00196883; for 0 &LessSlantEqual; t &LessSlantEqual; 19</li>
+                    <li>K(t) = 01200145; for 20 &LessSlantEqual; t &LessSlantEqual; 39</li>
+                    <li>K(t) = 009080a2; for 40 &LessSlantEqual; t &LessSlantEqual; 59</li>
+                    <li>K(t) = 383f8128; for 60 &LessSlantEqual; t &LessSlantEqual; 79</li>
+                </ol>
+                <h3>Section 0.5: Preparing the Message</h3>
+                <p>The message, in <a href="https://ktane.timwi.de/HTML/Bitwise%20Oblivion.html">ASCII (page 3)</a>, consists of the string “<code>Roger </code>” concatenated with the 4-digit code shown on the game manual. Convert each character into its corresponding byte, and concatenate all bytes together before processing.</p>
+                <h3>Section 1: Calculating the Message Code</h3>
+                <p>The message code is calculated using the message constructed in Section 0.5, padded as described in Subsection 0.1 ─ Bit padding. Before any blocks are processed, 10 variables are initialised as follows (in hex):</p>
+                <ul>
+                    <li>H0 = 9559b62d</li>
+                    <li>H1 = 71884793</li>
+                    <li>H2 = 1bb72471</li>
+                    <li>H3 = deadbeef</li>
+                    <li>H4 = f1ea5eed</li>
+                    <li>A, B, C, D, E = 00000000.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Roger</span>
+            </div>
+            <div class="page-content">
+                <p>Divide the padded message into blocks, and process each block in order, labeled M(1) to M(n), as M(i):</p>
+                <p>Perform the following:</p>
+                <ol>
+                    <li>
+                        Divide M(i) into 16 words W(0) to W(15), where W(0) is the left-most word
+                        <ul>
+                            <li>For 16 &LessSlantEqual; t &LessSlantEqual; 79, W(t) = S(W(t-3) XOR W(t-8) XOR W(t-14) XOR W(t-16),1)</li>
+                        </ul>
+                    </li>
+                    <li>Set A = H0, B = H1, C = H2, D = H3, E = H4</li>
+                    <li>
+                        For t = 0 to 79, do:
+                        <ul>
+                            <li>TEMP = S(A,5) + f(t;B,C,D) + E + W(t) + K(t);</li>
+                            <li>E = D; D = C; C = S(B,30); B = A, A = TEMP;</li>
+                        </ul>
+                    </li>
+                    <li>Let H0 = H0 + A, H1 = H1 + B, H2 = H2 + C, H3 = H3 + D, H4 = H4 + E</li>
+                </ol>
+                <p>After processing M(n), the message code is the 160-bit string represented by the 5 words: <code>H0 H1 H2 H3 H4</code></p>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+    </div>
+</body>
+</html>
