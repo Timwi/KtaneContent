@@ -86,6 +86,7 @@
             let shownNumber;
             let logArray = [];
             let revealedLog = false;
+            let textarea = null;
             
             generateButton();
             let fontA = new FontFaceObserver('Roboto Mono');
@@ -203,7 +204,7 @@
                 }
                 
                 rogerString = "Roger " + z.toString().padStart(4, "0");
-                sha1(rogerString).then(hash => {
+                messageCode(rogerString).then(hash => {
                     outputNumber = hash;
                     outputNumber = outputNumber.replaceAll(/[a-f]/g, "") + "4275";
                     outputNumber = outputNumber.substring(0, 4);
@@ -257,6 +258,9 @@
                 if (greenLights == 4) {
                     shownNumber = arraysMatch(solution, givenInputs) ? outputNumber : RNG(10000).toString().padStart(4, "0");
                     logArray.push("Provided inputs are " + (arraysMatch(solution, givenInputs) ? "correct, showing correct answer " + outputNumber + "." : "incorrect, showing random number."));
+                }
+                if (revealedLog) {
+                    textarea.innerHTML = logArray.join("\n");
                 }
             }
             
@@ -419,7 +423,7 @@
                     if (!revealedLog) {
                         let logCheck = window.prompt("Provide the code given via the defuser's logfile.");
                         let shaInput = "Roger Logging " + seed;
-                        sha1(shaInput).then(hash => {
+                        messageCode(shaInput).then(hash => {
                             if (logCheck == hash) {
                                 showLogging();
                                 revealedLog = true;
@@ -441,7 +445,7 @@
             }
 
             function showLogging() {
-                let textarea = document.createElement("textarea");
+                textarea = document.createElement("textarea");
                 textarea.innerHTML = logArray.join("\n");
                 textarea.readOnly = "true";
                 logDiv.appendChild(textarea);
@@ -540,14 +544,140 @@
                 let y = Math.abs(p[1] - circ[1]);
                 return (x*x + y*y) < circ[2]*circ[2];
             }
-            
-            async function sha1(input) {
-                const encoder = new TextEncoder();
-                const data = encoder.encode(input);
-                const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-                const hashArray = Array.from(new Uint8Array(hashBuffer));
-                const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-                return hashHex;
+
+            let H = new Uint32Array(5)
+            let letterConsts = new Uint32Array(5)
+            let Kvalues = new Uint32Array(4)
+
+            async function messageCode(message)
+            {
+                // [0x9559b62d, 0x71884793, 0x1bb72471, 0xdeadbeef, 0xf1ea5eed]
+                H[0] = 0x9559b62d;
+                H[1] = 0x71884793;
+                H[2] = 0x1bb72471;
+                H[3] = 0xdeadbeef;
+                H[4] = 0xf1ea5eed;
+
+                letterConsts = new Uint32Array(5)
+
+                Kvalues[0] = 0x00196883;
+                Kvalues[1] = 0x01200145;
+                Kvalues[2] = 0x009080a2;
+                Kvalues[3] = 0x383f8128;
+
+                let bitstring = ""
+                for(let i = 0; i < message.length; i++) {
+                    bitstring += leftZeroPad(message.charCodeAt(i).toString(2), 8);
+                }
+                bitstring = hashPad(bitstring);
+                for(let i = 0; i < Math.floor(bitstring.length / 512); i++) {
+                    messageCodeBlock(bitstring.substring(512*i, 512*(i+1)));
+                }
+                result = ""
+                for(let i = 0; i < H.length; i++) {
+                    result += leftZeroPad(H[i].toString(16), 8);
+                }
+                return result;
+            }
+
+            function leftZeroPad(string, wantedLength)
+            {
+                let r = string
+                if(string.length >= wantedLength) {
+                    return string;
+                }
+                while(r.length < wantedLength) {
+                    r = "0" + r;
+                }
+                return r;
+            }
+
+            function messageCodeBlock(block)
+            {
+                let words = new Uint32Array(80);
+                for(let i = 0; i < 16; i++) {
+                    words[i] = parseInt(block.substring(32*i, 32*(i+1)), 2);
+                }
+                
+                for(let j = 0; j < H.length; j++) {
+                    letterConsts[j] = H[j];
+                }
+                for(let t = 0; t < 80; t++) {
+                    if(16 <= t) {
+                        words[t] = shiftCircleLeft(words[t - 3] ^ words[t - 8] ^ words[t - 14] ^ words[t - 16], 1);
+                    }
+                    
+                    let temp = add(add(add(add(shiftCircleLeft(letterConsts[0], 5), f(t, letterConsts[1], letterConsts[2], letterConsts[3])), letterConsts[4]), words[t]), K(t));
+                    letterConsts[4] = letterConsts[3];
+                    letterConsts[3] = letterConsts[2];
+                    letterConsts[2] = shiftCircleLeft(letterConsts[1], 30);
+                    letterConsts[1] = letterConsts[0];
+                    letterConsts[0] = temp;
+                }
+                for(let j = 0; j < H.length; j++) {
+                    H[j] = add(H[j], letterConsts[j]);
+                }
+            }
+
+            function shiftCircleLeft(x, n)
+            {
+                return (((x << n) >>> 0) | (x >>> (32 - n) >>> 0));
+            }
+
+            function add(x, y)
+            {
+                return (x + y) % 4294967296;
+            }
+
+            function hashPad(bitstring)
+            {
+                let r = bitstring + "1";
+                while(r.length % 512 != 448) {
+                    r += "0";
+                }
+                r += modifiedBinaryConvert(bitstring.length);
+                return r;
+            }
+
+            function modifiedBinaryConvert(x)
+            {
+                let t = x.toString(2);
+                while(t.length < 64) {
+                    t = "0" + t;
+                }
+                return t;
+            }
+
+            function f(t, B, C, D)
+            {
+                if(t < 20) {
+                    return (B & C) | ((~B) & D);
+                }
+                else if(t < 40) {
+                    return B ^ C ^ D;
+                }
+                else if(t < 60) {
+                    return (B & C) | (B & D) | (C & D);
+                }
+                else {
+                    return B ^ C ^ D;
+                }
+            }
+
+            function K(t)
+            {
+                if(t < 20) {
+                    return Kvalues[0];
+                }
+                else if(t < 40) {
+                    return Kvalues[1];
+                }
+                else if(t < 60) {
+                    return Kvalues[2];
+                }
+                else {
+                    return Kvalues[3];
+                }
             }
         })() //...for this hack
     </script>
