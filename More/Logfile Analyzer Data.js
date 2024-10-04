@@ -12708,7 +12708,7 @@ let parseData = [
 				regex: /The left face is (.+)/,
 				handler: function (matches, module) {
 					let getColorClass = (str) => {
-						let colorArr = ["black", "blue", "green", "cyan", "magenta", "yellow", "white"];
+						let colorArr = ["black", "red", "blue", "green", "cyan", "magenta", "yellow", "white"];
 						let color = "white";
 						for (let j = 0; j < 7; j++) {
 							if (str.includes(colorArr[j])) {
