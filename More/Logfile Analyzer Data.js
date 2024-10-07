@@ -19391,6 +19391,11 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Typing Tutor",
+		moduleID: "needyTypingTutor",
+		loggingTag: "Needy Typing Tutor"
+	},
+	{
 		displayName: "UIN(+L)",
 		moduleID: "UINpL",
 		loggingTag: "UIN(+L)",
