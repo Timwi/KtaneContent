@@ -13641,8 +13641,6 @@ let parseData = [
 				regex: /Generated Grid:/,
 				handler: function (_, module) {
 					const icons = ['apple', 'pen', 'pineapple'];
-					const imgstyle = 'width: 1cm; margin: 0';
-					const tdstyle = 'border: 1mm solid; text-align: center;	';
 
 					let grid = readTaggedLines(6).map(l => l.split('').map(ch => ch - '1'));
 					readLine();
@@ -13651,14 +13649,14 @@ let parseData = [
 					let startCol = 'ABCDEF'.indexOf(start[0]);
 					let startRow = start[1] - '1';
 					console.log(start);
-					let table = "<table style='width: 3in;'>";
+					let table = "<table class='ppap-table'>";
 					for (let row = 0; row < 6; row++) {
 						table += '<tr>';
 						for (let col = 0; col < 6; col++) {
 							const fill = row == startRow && col == startCol ? '#8F8' : 'none';
-							table += `<td style='${tdstyle} background-color: ${fill}'>`;
+							table += `<td style='background-color:${fill};'>`;
 							if (grid[row][col] != -1)
-								table += `<img style='${imgstyle}' src='img/PPAP/${icons[grid[row][col]]}.png'>`;
+								table += `<img src='img/PPAP/${icons[grid[row][col]]}.png'>`;
 							table += '</td>';
 						}
 						table += '</tr>';
