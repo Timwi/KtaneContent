@@ -5252,6 +5252,51 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "doubleScreenModule",
+		loggingTag: "Double Screen",
+		matches: [
+			{
+				regex: /This module will require \d presses to solve/,
+				handler: function (_, module) {
+					module.attemptNum = 1;
+					module.currentStage = 1;
+					module.attemptDropdown = ["Attempt 1", [["Stage 1", []]]];
+					module.push(module.attemptDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /The (?:.+) screen is (?:.+) and it's showing (?:.+)|The correct screen to press is the (?:.+) screen/,
+				handler: function (matches, module) {
+					module.attemptDropdown[1][module.currentStage - 1][1].push(matches.input);
+					return true;
+				}
+			},
+			{
+				regex: /Pressing the (?:.+) screen was incorrect, Strike! Resetting the module.../,
+				handler: function (matches, module) {
+					module.attemptDropdown[1][module.currentStage - 1][1].push(matches.input);
+					module.currentStage = 1;
+					module.attemptNum++;
+					module.attemptDropdown = [`Attempt ${module.attemptNum}`, [["Stage 1", []]]];
+					module.push(module.attemptDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Pressing the (.+) screen was correct(.+)?/,
+				handler: function (matches, module) {
+					module.attemptDropdown[1][0][1].push(matches.input);
+					module.currentStage++;
+					module.attemptDropdown[1].push([`Stage ${module.currentStage}`, []])
+					console.log(module.attemptDropdown)
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Dr. Doctor",
 		moduleID: "DrDoctorModule",
 		loggingTag: "Dr. Doctor",
