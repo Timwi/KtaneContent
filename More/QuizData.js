@@ -743,6 +743,33 @@ const everything = {
 				]
 			]
 		},
+		'Hieroglyphics': {
+			'CSS': 'textonly hieroglyphics',
+			'RandomizeLeft': true,
+			'Groups': ['names', 'symbols'],
+			'Items': [
+				[
+					['E', 'Ankh'],
+					['T', 'Bone'],
+					['B', 'Bull'],
+					['D', 'Eye of Horus'],
+					['K', 'Goose'],
+					['U', 'Head of Cow'],
+					['O', 'Horn'],
+					['W', 'Lasso'],
+					['L', 'Lion'],
+					['A', 'Male'],
+					['V', 'Mosaic'],
+					['M', 'Owl'],
+					['R', 'Scales'],
+					['G', 'Tent'],
+					['Q', 'Triangle'],
+					['Y', 'Two Reeds'],
+					['C', 'Urn'],
+					['N', 'Water']
+				]
+			]
+		},
 		'Hiragana': {
 			'CSS': 'textonly kana',
 			'RandomizeRight': true,
@@ -1096,7 +1123,7 @@ const everything = {
 			]
 		},	
 		'Monsplodes': {
-			'CSS': 'flags',
+			'CSS': 'flags monsplode',
 			'RandomizeRight': true,
 			'Groups': ['names', 'Monsplodes'],
 			'Items': [
