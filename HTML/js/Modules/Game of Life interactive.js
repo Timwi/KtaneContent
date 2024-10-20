@@ -1,5 +1,9 @@
 $(function() {
     const interactive = $("table.interactive");
+    let gridRows = 8;
+    let gridCols = 6;
+    if (typeof ROWS !== 'undefined') gridRows = ROWS;
+    if (typeof COLS !== 'undefined') gridCols = COLS;
     let saveStates = [];
     let currentState = 0;
 
@@ -13,9 +17,9 @@ $(function() {
         }
     }
 
-    for (let y = 0; y < 9; y++) {
+    for (let y = 0; y <= gridRows; y++) {
         const row = $("<tr>").appendTo(interactive);
-        for (let x = 0; x < 7; x++) {
+        for (let x = 0; x <= gridCols; x++) {
             if (x == 0 && y == 0) {
                 $("<th>").appendTo(row);
             } else if (y == 0 && x > 0) {
@@ -44,6 +48,11 @@ $(function() {
 
     $("button.reset-grid").click(function() {
         $("table.interactive td").removeClass("white dot");
+    });
+
+    $("button.toggle-marked").click(function() {
+        $("table.interactive td.dot").toggleClass("white");
+        if ($("table.interactive td.dot").length > 0) removeFutureSaves();
     });
 
     $("button.save").click(function() {
