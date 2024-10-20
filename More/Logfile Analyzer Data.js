@@ -6277,18 +6277,109 @@ let parseData = [
 		]
 	},
 	{
-		displayName: "Following Orders",
 		moduleID: "FollowingOrders",
 		loggingTag: "Following Orders",
 		matches: [
 			{
 				regex: /The maze generated as such, where '\.' represents a safe tile and '\*' represents a trapped tile:\s*/,
 				handler: function (matches, module) {
-					var board = readMultiple(5);
-					module.push({ label: matches.input.replace(/'/g, ''), obj: pre(board) });
+					if(!module.convertCoordinate) {
+						module.convertCoordinate = (row, col) => {return `${".ABCDE"[col]}${row}` };
+						module.attempts = 1;
+					}
+
+					module.dropDown = ["Attempt " + module.attempts, []];
+					const startPosRegex = /Your starting position is column (\d), row (\d)./;
+					const goalPosRegex = /Your goal is column (\d), row (\d)./;
+					const columnHieroglyphsRegex = /Column Hieroglyphs: (.+)/
+					const rowHieroglyphsRegex = /Row Hieroglyphs: (.+)/
+
+					
+
+					var lines = readMultiple(5);
+					const linesBroken = lines.split('\n');
+					const startPosMatch = readLine().match(startPosRegex);
+					const startPosRow = startPosMatch[2] - 1;
+					const startPosCol = startPosMatch[1];
+
+					const goalPosMatch = readLine().match(goalPosRegex);
+					const goalPosRow = goalPosMatch[2] - 1;
+					const goalPosCol = goalPosMatch[1];
+
+					const columnHieroglyphsMatch = readLine().match(columnHieroglyphsRegex);
+					const columnHieroglyphs = columnHieroglyphsMatch[1].split(', ')
+					
+					const rowHieroglyphsMatch = readLine().match(rowHieroglyphsRegex);
+					const rowHieroglyphs = rowHieroglyphsMatch[1].split(', ')
+
+					const table = $("<table>").addClass("following-orders");
+
+					for(let row = 0; row < 6; row++) {
+						const tr = $('<tr>').appendTo(table);
+						for(let col = 0; col < 6; col++) {
+							const td = $('<td>').appendTo(tr);
+
+							//row hieroglyphs
+							if(col == 0 && row < 5) {
+								if(row == startPosRow) {
+									td.addClass('following-orders-start');
+								}
+								$('<img>').attr('src', `../HTML/img/Following Orders/${rowHieroglyphs[row]}.png`).appendTo(td);
+							}
+
+							//col hieroglyphs
+							else if(row == 5 && col > 0) {
+								if(col == startPosCol) {
+									td.addClass('following-orders-start');
+								}
+								$('<img>').attr('src', `../HTML/img/Following Orders/${columnHieroglyphs[col - 1]}.png`).appendTo(td);
+							}
+
+
+							//safe / unsafe cell
+							else if(row != 5 && col != 0) {
+								let lineRow = linesBroken[row];
+								if(lineRow.replaceAll(" ", "")[col - 1] == '*') {
+									td.addClass('following-orders-unsafe');
+								}
+								else {
+									td.addClass('following-orders-safe');
+								}
+							}
+						}
+					}
+
+					module.dropDown[1].push({ label: `Yellow is starting position (${module.convertCoordinate(startPosRow + 1, startPosCol, )}). The maze generated as such, where white represents a safe tile and black represents a trapped tile`, obj: table })
+					module.dropDown[1].push(`Your goal is ${module.convertCoordinate(goalPosRow + 1, goalPosCol, )}`);
+					module.push(module.dropDown);
 					return true;
 				}
 			},
+			{
+				regex: /Desired destination from column (\d), row (\d): (.+) to (.+)./,
+				handler: function (matches, module) {
+					module.desiredDestinationIndex = module.dropDown[1].length;
+					module.dropDown[1].push([`Current Position: ${module.convertCoordinate(matches[2], matches[1])}. ${matches[3]} to ${matches[4]}`])
+					return true;
+				}
+			},
+			{
+				regex: /Shouts: (.+)/,
+				handler: function (matches, module) {
+					module.dropDown[1][module.desiredDestinationIndex].push(matches[1].split(', '))
+					return true;
+				}
+			},
+			{
+				regex: /Strike! Generating new maze.../,
+				handler: function (matches, module) {
+					module.attempts++;
+					module.push(matches[0])
+					return true;
+				}
+			},
+
+			
 			{ regex: /.+/ }
 		]
 	},
