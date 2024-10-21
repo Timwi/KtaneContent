@@ -770,7 +770,6 @@ let parseData = [
 						module.SetCss();
 						module.JSONs.push(module.Stage);
 						module.Stage = [];
-						//console.log(JSON.stringify(module.JSONs));
 						module[1] = { label: `<a href='../HTML/14%20interactive%20(MásQuéÉlite).html#${JSON.stringify(module.JSONs)}'>View stages interactively</a>` };
 					}
 					return true;
@@ -3138,7 +3137,6 @@ let parseData = [
 						<path fill="${module.plateColour}" d="M28.3756 23.26078H.2444L14.31-1.10156Z"/>
 					`;
 					const triangles = [];
-					console.log(module.transforms.entries());
 					for (const [colourIx, transform] of module.transforms.entries()) {
 						const isFalseChip = colourIx == falseChip;
 						const triangle = `<use fill="${colours[colourIx]}" href="#a" transform="${transform}"${isFalseChip ? ` stroke="#0D0"` : ``}/>`;
@@ -4202,8 +4200,6 @@ let parseData = [
 						colours.push(colour);
 					}
 
-					console.log(colours)
-
 					let svg = `<br><svg class='cruel-synesthesia' transform="translate(75 0)" width="400" height="200" viewbox="100 250 1125 275">`;
 					for (let i = 0; i < finalInfo.length; i++) {
 						svg += `<rect class="color-cell" x="${cellSize * (i % 4) + cellSize}" y="${cellSize * Math.floor(i / 4) + cellSize}" width="${cellSize}" height="${cellSize}" style="fill:#${colours[i]}"/>`;
@@ -4688,10 +4684,6 @@ let parseData = [
 					let callback2 = () => {
 						let mz = new DACHMaze();
 						mz = mz.SetRules(new MonoRandom(parseInt(matches[1])));
-
-						// let p = module.pop();
-						// console.log(p);
-						// module.push(p);
 						module.push(module.pop().obj.prepend(mz.svg[0].querySelector(".DACHMap")));
 					};
 
@@ -5289,7 +5281,6 @@ let parseData = [
 					module.attemptDropdown[1][0][1].push(matches.input);
 					module.currentStage++;
 					module.attemptDropdown[1].push([`Stage ${module.currentStage}`, []])
-					console.log(module.attemptDropdown)
 					return true;
 				}
 			},
@@ -8417,7 +8408,6 @@ let parseData = [
 			{
 				regex: /.+/,
 				handler: function (matches, module) {
-					console.log(module.timeArr, matches[0]);
 					if(module.timeArr) {
 						module.push(module.timeArr[1].push(matches[0]));
 					}
@@ -9270,7 +9260,6 @@ let parseData = [
 					let rows = [];
 					for (let ix = 3; ix < rowCount; ix += 2) {
 						let row = grid[ix].split('|').map(x => parseInt(x)).filter(x => !isNaN(x));
-						console.log(row);
 						rows.push(row);
 					}
 					let table = "<table class='levenshtein'> <tr> <td class='empty'></td> <td class='empty'></td>";
@@ -10398,7 +10387,6 @@ let parseData = [
 				regex: /^(\d{40}|\d{42})$/,
 				handler: function (matches, module) {
 					var svg = module.MasyuSvg[1].obj;
-					console.log(module.MasyuSvg);
 					switch (matches[1].length) {
 						case 40: //Drawing horizontal lines
 							for (let i = 0; i < matches[1].length; i++) {
@@ -10653,9 +10641,6 @@ let parseData = [
 						module.ShapeNumbers = null;
 						module.push("-------------------------------------");
 					}
-					/*
-					const regex = /[A-Z][a-z]+/;
-					console.log(module[1].includes(matches[1]));*/
 					if (typeof module.Counter !== "number") {
 						module.push(null);
 						module.Counter = 0;
@@ -12113,7 +12098,6 @@ let parseData = [
 				handler: function (_, module) {
 					readLine();
 					const grid = readLines(6).map(l => l.replace(/\[Nomai #\d+\] \d /, ''));
-					console.log(grid);
 					const values = grid.map(r => r.substring(1, 12).split(' '));
 					const fills = { 'x': '#222', '0': '#A00', '1': '#888' };
 					const imgStyle = 'margin: 0; width: 1.5cm; vertical-align: top;';
@@ -13761,7 +13745,6 @@ let parseData = [
 					let start = readLine().match(/[A-F][1-6]/)[0];
 					let startCol = 'ABCDEF'.indexOf(start[0]);
 					let startRow = start[1] - '1';
-					console.log(start);
 					let table = "<table class='ppap-table'>";
 					for (let row = 0; row < 6; row++) {
 						table += '<tr>';
@@ -15193,7 +15176,6 @@ let parseData = [
 						edges.push(newRow);
 					}
 					svg = module.createIcons(module.iconsArr, icons, svg, module.dimension);
-					console.log(edges);
 					svg = module.createEdges(edges, svg, module.dimension);
 					let submission = [`Submission ${module.submissionNum}`, [{ nobullet: true, obj: svg }]];
 					module.push(submission);
@@ -17083,7 +17065,6 @@ let parseData = [
 					let angleOffsets = [180, 315, 0, 270];
 
 					let j = JSON.parse(matches[0]);
-					console.log(j);
 					function svg(i, n, cs) {
 						return `<td>
 							<svg viewBox="-5 -5 10 10" style='width: 2cm'>
@@ -18770,7 +18751,6 @@ let parseData = [
 						makePath(i, "180", grid[i]).forEach(obj => obj.appendTo(svg));
 						makePath(i, "270", grid[i]).forEach(obj => obj.appendTo(svg));
 					}
-					console.log(svg)
 					module.push({ label: matches[0], obj: svg });
 					return true;
 				}
@@ -19135,8 +19115,6 @@ let parseData = [
 							}
 						}
 					}
-					console.log(svg);
-					console.log($(svg.prop('outerHTML')));
 					module.push({ label: 'Starting board:', obj: svg.prop('outerHTML') });
 					return true;
 				}
@@ -19590,7 +19568,6 @@ let parseData = [
 							finalScore: finalScores[ix]
 						};
 					});
-					console.log(expertObjs);
 					const expertDropdowns = expertObjs.map((ex) =>
 						[
 							ex.name + ": Final score = " + ex.finalScore,
