@@ -18068,6 +18068,22 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "GSSuitsAndColours",
+		loggingTag: "Suits and Colours",
+		matches: [
+			{ 
+				regex: /Board .:/,
+				handler: function (matches, module) {
+					console.log('suits and colors caught')
+					const lines = readLines(3);
+					module.push({ label: matches.input, obj: pre(lines.join('\n')) });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "superpositionRB",
 		loggingTag: "Superposition",
 		matches: [
