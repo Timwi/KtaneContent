@@ -9402,6 +9402,34 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "RGBLogicMalfunction",
+		loggingTag: "Malfunctioning RGB Logic",
+		matches: [
+			{
+				regex: /Activation #(?:\d+):/,
+				handler: function (matches, module) {
+					module.dropdown = [matches.input, []];
+					module.push(module.dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /The (?:.+) grid's true colours are|The following positions are deductable:|The following tiles should be pressed:/,
+				handler: function (matches, module) {
+					const lines = readTaggedLines(4);
+					module.dropdown[1].push({ label: matches.input, obj: pre(lines.join("\n")) });
+					return true;
+				}
+			},
+			{ 
+				regex: /.+/,
+				handler: function (matches, module) {
+					module.dropdown[1].push(matches.input);			
+				}
+			}
+		]
+	},
+	{
 		moduleID: "markscript",
 		loggingTag: "Markscript",
 		matches: [
@@ -18074,9 +18102,7 @@ let parseData = [
 			{ 
 				regex: /Board .:/,
 				handler: function (matches, module) {
-					console.log('suits and colors caught')
-					const lines = readLines(3);
-					module.push({ label: matches.input, obj: pre(lines.join('\n')) });
+					module.push({ label: matches.input, obj: pre(readLines(3).join('\n')) });
 					return true;
 				}
 			},
