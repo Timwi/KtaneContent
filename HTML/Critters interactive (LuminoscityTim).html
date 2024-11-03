@@ -1,0 +1,284 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Critters — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+    $(function() {
+        const interactive = $("table.interactive");
+        let gridRows = 8;
+        let gridCols = 8;
+        let saveStates = [];
+        let currentState = 0;
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        for (let y = 0; y <= gridRows; y++) {
+            const row = $("<tr>").appendTo(interactive);
+            for (let x = 0; x <= gridCols; x++) {
+                if (x == 0 && y == 0) {
+                    $("<th>").appendTo(row);
+                } else if (y == 0 && x > 0) {
+                    $("<th>").text(String.fromCharCode(64 + x)).appendTo(row);
+                } else if (y > 0 && x == 0) {
+                    $("<th>").text(y).appendTo(row);
+                } else {
+                    $("<td>").click(function() {
+                        $(this).toggleClass("colored");
+                        removeFutureSaves();
+                    }).contextmenu(function() {
+                        $(this).toggleClass("dot");
+                        removeFutureSaves();
+                        return false;
+                    }).append('<div class="box"></div>').appendTo(row);
+                }
+            }
+        }
+
+        $("input[name='color']").change(function() {
+            currentColor = $(this).val();
+            interactive.removeClass("yellow pink blue").addClass(currentColor);
+        });
+
+        $("input[name='borderPattern']").change(function() {
+            const selectedPattern = $(this).val();
+            interactive.removeClass("main alternate").addClass(selectedPattern);
+        });
+
+        $("button.reset").click(function() {
+            $("table.interactive td").removeClass("colored dot");
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $("button.reset-grid").click(function() {
+            $("table.interactive td").removeClass("colored dot");
+        });
+
+        $("button.toggle-marked").click(function() {
+            $("table.interactive td.dot").toggleClass("colored");
+            if ($("table.interactive td.dot").length > 0) removeFutureSaves();
+        });
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveClass = Array.from($("table.interactive, table.interactive td")).map(x => $(x)).map(x => x.attr("class") || "");
+            let colorValue = $("input[name='color']:checked").val();
+            let borderPatternValue = $("input[name='borderPattern']:checked").val();
+
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $("table.interactive, table.interactive td").each((i, x) => $(x).attr("class", saveClass[i]));
+                $(`input[name='color'][value='${colorValue}']`).prop("checked", true);
+                $(`input[name='borderPattern'][value='${borderPatternValue}']`).prop("checked", true);
+                currentState = stateNumber;
+            }).appendTo(".saves");
+
+            saveStates.push(button);
+        });
+    });
+    </script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+        tr { width: 33%; }
+        td ul { padding: 0 0 0 1em; }
+        tr:nth-child(n+1) { font-size: 14px; }
+
+        .interactive-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        table.interactive, table.interactive tr, table.interactive th, table.interactive td:nth-child(1) {
+            border: none;
+            background: none;
+        }
+
+        table.interactive td {
+            border: rgb(51, 77, 108) 2px solid;
+            padding: 0;
+            width: 35px;
+            height: 35px;
+        }
+        table.interactive tr:nth-child(2) td { border-top-width: 8px; }
+        table.interactive tr td:nth-child(2) { border-left-width: 8px; }
+        table.interactive tr td:nth-child(9) { border-right-width: 8px; }
+        table.interactive tr:nth-child(9) td { border-bottom-width: 8px; }
+
+        table.interactive.alternate tr:nth-child(2n) td {
+            border-bottom-width: 8px;
+        }
+
+        table.interactive.alternate td:nth-child(2n) {
+            border-right-width: 8px;
+        }
+
+        table.interactive.main tr:nth-child(2n+1) td {
+            border-bottom-width: 8px;
+        }
+
+        table.interactive.main td:nth-child(2n+1) {
+            border-right-width: 8px;
+        }
+
+        table.interactive td>.box {
+            background: black;
+            transition: background 0.2s;
+            position: relative;
+            width: 35px;
+            height: 35px;
+        }
+
+        table.interactive.yellow td.colored > .box {
+            background: #ffff00;
+        }
+
+        table.interactive.pink td.colored > .box {
+            background: #ff00ff;
+        }
+
+        table.interactive.blue td.colored > .box {
+            background: #0080ff;
+        }
+
+        table.interactive td>.box::after {
+            position: absolute;
+            top: 17.5px;
+            left: 17.5px;
+            content: '';
+            width: 0px;
+            height: 0px;
+            background: white;
+            transition: background 0.2s, top 0.2s, left 0.2s, width 0.2s, height 0.2s;
+        }
+
+        table.interactive td.dot>.box::after {
+            top: 12.5px;
+            left: 12.5px;
+            width: 10px;
+            height: 10px;
+        }
+
+        table.interactive td.colored.dot>.box::after {
+            background: black;
+        }
+
+        button {
+            margin: 5px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+            display: block;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .page {
+            background-position: top;
+            background-repeat: repeat-y;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Critters</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Critters.svg" class="diagram">
+                <h2>On the Subject of Critters</h2>
+                <p class="flavour-text">At least these bugs are not game-breaking.</p>
+                <p>The module displays an 8×8 grid of tiles, a taller tile to the right, and two wider tiles above. To solve the module, iterate the grid according to the procedure described below and toggle tiles accordingly. Pressing the tile on the right will submit your answer. Striking or pressing the tile labelled with the first letter of the colour used to determine the rules applied will reset the grid. Pressing the wide tile labelled ‘C’ will clear all tiles, setting their states to be inactive.</p>
+                <p>The grid has two sets with 16 2×2s each. The main set is obtained by dividing the grid into a 4×4 array of 2×2 groups. The alternate set uses the corners of these 2×2s as its centers and the centers of the 2×2s as its corners. Some of these 2×2s will wrap around.</p>
+                <p>In the following table, look up the colour of your tiles and execute the corresponding ruleset. The instructions will apply to each 2×2 in the set used, individually. Use the condition corresponding to the number of coloured (active) cells in the 2×2.</p>
+                <table>
+                    <tr>
+                        <th style="background-color:#ffff0080">yellow (standard)</th>
+                        <th style="background-color:#ff00ff80">pink (alternate)</th>
+                        <th style="background-color:#0080ff80">blue (reverse)</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <ul>
+                                <li>0, 1 or 4: Toggle the state of each cell in the group.</li>
+                                <li>2: Keep the group as is.</li>
+                                <li>3: Rotate the group 180 degrees and toggle the state of each cell.</li>
+                            </ul>
+                            Iterate once with the <strong>main</strong> set, then once with the <strong>alternate</strong> set.
+                        </td>
+                        <td>
+                            <ul>
+                                <li>0, 1 or 4: Keep the group as is.</li>
+                                <li>2: Toggle the state of each cell in the group.</li>
+                                <li>3: Rotate the group 180 degrees.</li>
+                            </ul>
+                            Iterate once with the <strong>main</strong> set, then once with the <strong>alternate</strong> set.
+                        </td>
+                        <td>
+                            <ul>
+                                <li>0, 3 or 4: Toggle the state of each cell in the group.</li>
+                                <li>1: Rotate the group 180 degrees and toggle the state of each cell.</li>
+                                <li>2: Keep the group as is.</li>
+                            </ul>
+                            Iterate once with the <strong>alternate</strong> set, then once with the <strong>main</strong> set.
+                        </td>
+                    </tr>
+                </table>
+                <div class="color-selector hstack gap2">
+                    <label><input type="radio" name="color" value="yellow" checked> Yellow</label>
+                    <label><input type="radio" name="color" value="pink"> Pink</label>
+                    <label><input type="radio" name="color" value="blue"> Blue</label>
+                </div>
+                <div class="border-selector hstack gap2">
+                    <label><input type="radio" name="borderPattern" value="main" checked> Main</label>
+                    <label><input type="radio" name="borderPattern" value="alternate"> Alternate</label>
+                </div>
+                <div class="interactive-container">
+                    <table class="interactive yellow main"></table>
+                    <div class="buttons">
+                        <button class="reset">Reset</button>
+                        <button class="reset-grid">Reset Grid</button>
+                        <button class="toggle-marked">Toggle Marked</button>
+                    </div>
+                    <div class="saves buttons">
+                        <button class="save">Save</button>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
