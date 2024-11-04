@@ -1,14 +1,240 @@
-<!DOCTYPE html>
-<html lang="ja">
+﻿<!DOCTYPE html>
+<html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>乳白色暗号 — Keep Talking and Nobody Explodes Module</title>
+    <title>Off-White Cipher — Keep Talking and Nobody Explodes Module</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
-    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+    $(function() {
+        const squareColors = ["red", "green", "blue", "cyan", "magenta", "yellow", "white", "black"];
+        const colorLetters = ["R", "G", "B", "C", "M", "Y", "W", "K"];
+        const colorKeyI = { r: 0, g: 1, b: 2, c: 3, m: 4, y: 5, w: 6, k: 7 };
+        let pieces = ["cpk", "cpq", "cpn", "cpb", "cpr"];
+
+        let selectedColor = "white";
+        let selectedSquare = null;
+        let currX = 0;
+        let currY = 0;
+        let start;
+        let saveStates = [];
+        let currentState = 0;
+        let grid = $(".grid");
+        let squares = 6;
+        let changed = [];
+
+        function selectNone() {
+            start = null;
+            if (changed.length < 1) {
+                selectedSquare = null;
+            }
+            changed = [];
+            updateSelection();
+        }
+        $(document).click(function() {
+            selectNone();
+        }).keydown(function(event) {
+            if (!(event.altKey || event.ctrlKey || event.shiftKey)) {
+                let k = event.key.toLowerCase();
+                let space = event.key == " ";
+                if (
+                    space || k == "c" || k == "m" || k == "y" || k == "b" ||
+                    k == "g" || k == "r" || k == "k" || k == "w"
+                ) {
+                    pressColorKey(space ? -1 : colorKeyI[k]);
+                }
+                return false;
+            }
+        });
+
+        function pressColorKey(k) {
+            if (selectedSquare) {
+                if (k >= 0) {
+                    removeColorClass(selectedSquare);
+                    selectedSquare.addClass(squareColors[k]);
+                }
+                if (currX == squares - 1)
+                    currY = (currY + 1) % squares;
+                currX = (currX + 1) % squares;
+                selectedSquare = $(`.netsq.x${currX}.y${currY}`);
+                updateSelection();
+            }
+            if (k >= 0) {
+                removeColorClass(colorInd);
+                colorInd.addClass(squareColors[k]).text(squareColors[k]);
+                selectedColor = squareColors[k];
+            }
+        }
+
+        function removeColorClass(elem) {
+            elem.removeClass("white black cyan magenta yellow red blue green");
+        }
+
+        function hasWhichColor(elem) {
+            for (let i = 0; i < squareColors.length; i++) {
+                if (elem.hasClass(squareColors[i])) { return i; }
+            }
+            return -1;
+        }
+
+        function updateSelection() {
+            $(".netsq").removeClass("selected");
+            if(selectedSquare) selectedSquare.addClass("selected");
+        }
+
+        let row;
+        // Initially based on code from Samfundev’s Chess interactive
+        row = $("<div>").addClass("cell-row letters").appendTo(grid);
+        $("<div>").addClass("square").appendTo(row);
+        for (let i = 0; i < squares; i++) {
+            $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row).each(function(_, e) {
+                $(this).addClass(`label${i+1}`);
+            });
+        }
+        for (let y = 0; y < squares; y++) {
+            row = $("<div>").addClass("cell-row").appendTo(grid);
+            $("<div>").addClass("square").text(y+1).appendTo(row);
+            for (let x = 0; x < squares; x++) {
+                $("<div>").addClass("netsq square black").appendTo(row).each(function(_, e) {
+                    let element = $(e);
+                    element.mousedown(function(event) {
+                        start = [x, y];
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return false;
+                    });
+                    $(this).addClass(`x${x} y${y}`);
+
+                    element.mouseup(function(event) {
+                        let letgo = [x, y];
+                        if (start) { // Just in case.
+                            changed = [];
+                            let a, b, i;
+                            if (start[0] == x) {
+                                a = (start[1] > y ? y : start[1]);
+                                b = (start[1] > y ? start[1] : y);
+                                for (i = a; i <= b; i++) {
+                                    changed.push([x, i]);
+                                }
+                            } else if (start[1] == y) {
+                                a = (start[0] > x ? x : start[0]);
+                                b = (start[0] > x ? start[0] : x);
+                                for (i = a; i <= b; i++) {
+                                    changed.push([i, y]);
+                                }
+                            } else if (Math.abs(start[0] - x) == Math.abs(start[1] - y)) {
+                                let dist = Math.abs(start[0] - x);
+                                let dirx = (start[0] < x) ? 1 : -1;
+                                let diry = (start[1] < y) ? 1 : -1;
+
+                                for (i = 0; i <= dist; i++) {
+                                    changed.push([start[0] + i * dirx, start[1] + i * diry]);
+                                }
+                            }
+
+                            if (changed.length > 0) {
+                                let from = $(`.netsq.x${start[0]}.y${start[1]}`);
+                                changed.forEach((pos, idx) => {
+                                    let elm = $(`.netsq.x${pos[0]}.y${pos[1]}`);
+                                    if (pos[0] == letgo[0] || pos[1] == letgo[1]) {
+                                        selectedSquare = elm;
+                                        updateSelection();
+
+                                        currX = x;
+                                        currY = y;
+                                    }
+                                    removeColorClass(elm);
+                                    elm.addClass(selectedColor);
+                                });
+                            }
+
+                            start = null;
+                        }
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return false;
+                    });
+                });
+            }
+        }
+
+        let cButtons = $(".tools");
+        let colorInd = $("<div>").addClass("color-indicator white").text("white").appendTo(cButtons)
+            for (let c = 0; c < squareColors.length; c++) {
+            $("<button>").text(colorLetters[c]).click(function(event) {
+                pressColorKey(c);
+                event.preventDefault();
+                event.stopPropagation();
+            }).addClass(squareColors[c]).appendTo(cButtons);
+        }
+
+        $(".reset-board").click(function() {
+            removeColorClass($(".netsq"));
+            $(".netsq").addClass("black");
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-all").click(function() {
+            pressColorKey(6);
+            removeColorClass($(".netsq"));
+            $(".netsq").addClass("black");
+            selectNone();
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveState = Array.from($(".grid .netsq, svg, .piece")).map(x => $(x)).map(x => x.attr("class") || "");
+            console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_selectedColor = selectedColor;
+            let s_selectedSquare = selectedSquare;
+            let s_currX = currX;
+            let s_currY = currY;
+            let s_start = start;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".grid .netsq, svg, .piece").each((i, x) => $(x).attr("class", saveState[i]));
+                currentState = stateNumber;
+
+                selectedColor = s_selectedColor;
+                selectedSquare = s_selectedSquare;
+                currX = s_currX;
+                currY = s_currY;
+                start = s_start;
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    });
+    </script>
     <style>
         table {
             margin: auto;
@@ -61,8 +287,126 @@
             width: 0.6cm;
             height: 0.6cm;
         }
-        .page-footer::before { content: 'ページ '; }
-        .page-footer::after { content: '/7'; }
+
+        .cell-row {
+            height: 60px;
+        }
+
+        .tools {
+            height: 40px;
+            margin-top: 10px;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            float: left;
+            font-size: 40px;
+            user-select: none;
+            text-align: center;
+            border: 0px solid;
+            cursor: default;
+        }
+        .netsq {
+            box-sizing: border-box;
+            border: 1px solid #DDD;
+            cursor: pointer;
+        }
+        .square:not(.netsq) {
+            padding: 9px 0 0;
+        }
+
+        .netsq.x0 { border-left: 1px solid black; }
+        .netsq.x5 { border-right: 1px solid black; }
+        .netsq.y0 { border-top: 1px solid black; }
+        .netsq.y5 { border-bottom: 1px solid black; }
+        .dark .netsq { border-color: #CCC; }
+        .netsq.selected { border: 4px dashed orange; }
+
+        .last-square {
+            border-right-width: 2px;
+        }
+        .invisible {
+            visibility: hidden;
+        }
+
+        :is(div, button).black { background: #555; color: #FFF; }
+        :is(div, button).white { background: #FFFFFFEE; color:#000 }
+        :is(div, button).cyan { background: #00FFFFCC; color:#000 }
+        :is(div, button).magenta { background: #FF00FFCC; color:#000 }
+        :is(div, button).yellow { background: #FFFF00CC; color:#000 }
+        :is(div, button).blue { background: #0000FFCC; color: #FFF; }
+        :is(div, button).green { background: #00FF00CC; color:#000 }
+        :is(div, button).red { background: #FF0000CC; color: #FFF; }
+
+        .dark .colors button { border-color: #888; }
+        .tools button {
+            margin: 0;
+            font-size: 20px;
+            width: 38px;
+        }
+        .color-indicator {
+            padding: 9px 10px;
+            border: 1px solid #888;
+            margin-right: 10px;
+            width: 70px;
+            text-align: center;
+        }
+
+        .select.selected { border-color: orange; }
+
+        .gridholder {
+            height: 430px;
+            width: 430px;
+            margin-left: auto;
+            margin-right: auto;
+
+        }
+        .stampholder {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        button {
+            font-family: 'Special Elite';
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 5px;
+        }
+        button.reset-saves, button.reset-board, button.reset-all {
+            padding: 10px 20px;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .save {
+            padding: 5px 8px;
+        }
+
+        .page1 li {
+            margin-bottom: 16px;
+        }
+
+        .rgb-diagram { width: 50%; }
+        .page {
+            background-repeat: repeat-y;
+            background-position: bottom;
+        }
+        text.big { font-size: 11px; }
+        text.small { font-size: 6px; }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 8'; }
     </style>
 </head>
 <body>
@@ -70,16 +414,16 @@
         <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">乳白色暗号</span>
+                <span class="page-header-section-title">Off-White Cipher</span>
             </div>
             <div class="page-content">
                 <img src="img/Component/Ultimate Cipher.svg" class="diagram">
-                <h2>モジュール詳細：乳白色暗号</h2>
-                <p class="flavour-text">“FaZe Banks Supreme Off-White Hoodie NFTは50.23イーサリアムで販売中”</p>
-                <p>3つのディスプレーには、それぞれメッセージが表示されている。</p>
-                <p>上のディスプレーにある暗号化された単語を取得し以下のルールに従う。</p>
-                <h3>ステップ1：回転/跳躍複合 馬跳孤児院暗号</h3>
-                <p>このステップでは、とある孤児院を開設する必要がある。孤児院は5×5のグリッドで構成される。孤児院は最初、以下のような何の変哲もないグリッドから始まる。</p>
+                <h2>On the Subject of The Off-White Cipher</h2>
+                <p class="flavour-text">“FaZe Banks Supreme Off-White Hoodie NFT Selling for 50.23 Ethereum”</p>
+                <p>Each of the three displays displays a message.</p>
+                <p>Take the encrypted word on the top screen and follow the mechanics down below:</p>
+                <h3>Step 1: Composite Spinning/Jumping Leapfrog Orphanage Cipher</h3>
+                <p>For this step an orphanage must be opened. The orphanage consists of a 5×5 grid. The orphanage starts off as the uninteresting grid featured below.</p>
                 <table>
                     <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
                     <tr><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th></tr>
@@ -87,15 +431,15 @@
                     <tr><th>P</th><th>Q</th><th>R</th><th>S</th><th>T</th></tr>
                     <tr><th>U</th><th>V</th><th>W</th><th>Y</th><th>Z</th></tr>
                 </table>
-                <p>真ん中のディスプレーにある4つの英字を取得する。これらは、あなたが抱える孤児である。彼らの性格に基づき、孤児院を拡張させたり、変更させたりする。それぞれの英字は、孤児の頭文字である。</p>
-                <p>順番に、下の表からそれぞれの孤児の形を見つける。この図形を、中心に対して180度回転させ，影付きのセルにある英字を新しい位置に移動させる。</p>
+                <p>Take the 4 letters on the middle screen. These are your orphans. They will enhance and modify the orphanage according to their personalities. Each letter is the first name of an orphan.</p>
+                <p>For each orphan in order, find its shape in the below tables. Rotate this shape 180 degrees about its center to translate the shaded cells to new positions.</p>
                 </div>
             <div class="page-footer relative-footer">1</div>
         </div>
         <div class="page page-bg-02">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">乳白色暗号</span>
+                <span class="page-header-section-title">Off-White Cipher</span>
             </div>
             <div class="page-content">
                 <table style="font-size: 73%; table-layout: fixed">
@@ -896,16 +1240,16 @@
         <div class="page page-bg-03">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">乳白色暗号</span>
+                <span class="page-header-section-title">Off-White Cipher</span>
             </div>
             <div class="page-content">
-                <p>4つの回転を適用させた後の最終的なグリッドが、今回使用する孤児院である。</p>
-                <p>暗号化された単語を2文字のペアに分ける。</p>
-                <p>各ペアごとに、両方の英字を孤児院から探す。孤児院上の英字1から英字2を飛び越え、英字1からの経路の中点に英字2があるような位置に降り立つ。その後、英字2からその英字を同様に飛び越える。孤児院は必要に応じてループする(孤児院は<em>すべて</em>の面で円環状に繋がっている)。</p>
-                <p>到達した位置にあるそれぞれの英字が復号された位置である。</p>
-                  <p>ペアの英字の一方がXの場合、Xである方の英字はそのままにし、もう片方の英字は孤児院の中央を飛び越えるようにする。</p>
-                <h4 class="centered">例</h4>
-                <p class="centered">孤児院：LVQX</p>
+                <p>After performing 4 rotations, the resulting grid is the used orphanage.</p>
+                <p>Split the encrypted word into pairs.</p>
+                <p>For each pair, find both letters in the orphanage. Make Letter 1 jump directly over Letter 2 on the Orphanage such that the path taken by Letter 1 has its midpoint located at Letter 2. Then make Letter 2 jump over this acquired letter in the same way. Wrap around the orphanage if needed (<em>all</em> orphanages are toroidal).</p>
+                <p>The two positions that each letter lands on are the decrypted positions.</p>
+                  <p>If one of the letters of the pair is an X, the letter which is an X remains an X and the other letter jumps over the center cell of the orphanage.</p>
+                <h4 class="centered">Example</h4>
+                <p class="centered">Orphans: LVQX</p>
                 <table>
                     <tr>
                         <td style="border-style: hidden">
@@ -1125,204 +1469,237 @@
         <div class="page page-bg-04">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">乳白色暗号</span>
+                <span class="page-header-section-title">Off-White Cipher</span>
             </div>
             <div class="page-content">
-                <p style="text-align:center; position: relative; right: 2cm">暗号化された単語：KEVAFK</p>
-                    <table style="float: right" class="childShape">
-                    <tr>
-                        <td>Z</td>
-                        <td>B</td>
-                        <td>C</td>
-                        <td>Q</td>
-                        <td class="green">E</td>
-                    </tr>
-                    <tr>
-                        <td>Y</td>
-                        <td class="green">K</td>
-                        <td>H</td>
-                        <td>D</td>
-                        <td>J</td>
-                    </tr>
-                    <tr>
-                                <td>S</td>
-                        <td>L</td>
-                        <td>M</td>
-                        <td>P</td>
-                        <td>O</td>
-                    </tr>
-                    <tr>
-                        <td>G</td>
-                        <td>I</td>
-                        <td>R</td>
-                        <td>N</td>
-                        <td>T</td>
-                    </tr>
-                    <tr>
-                        <td>U</td>
-                        <td>V</td>
-                        <td class="yellow">W</td>
-                        <td>F</td>
-                        <td>A</td>
-                    </tr>
-                </table>
-                <p class="centered">ペア1：<br>KからEを飛び越える = W<br>EからWを飛び越える = G</p>
-                <p class="centered">ペア2:<br>VからAを飛び越える = W<br>AからWを飛び越える = U</p>
+                            <p style="text-align:center; position: relative; right: 2cm">Encrypted word: KEVAFK</p>
+                                <table style="float: right" class="childShape">
+                                <tr>
+                                    <td>Z</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>Q</td>
+                                    <td class="green">E</td>
+                                </tr>
+                                <tr>
+                                    <td>Y</td>
+                                    <td class="green">K</td>
+                                    <td>H</td>
+                                    <td>D</td>
+                                    <td>J</td>
+                                </tr>
+                                <tr>
+                                         <td>S</td>
+                                    <td>L</td>
+                                    <td>M</td>
+                                    <td>P</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>G</td>
+                                    <td>I</td>
+                                    <td>R</td>
+                                    <td>N</td>
+                                    <td>T</td>
+                                </tr>
+                                <tr>
+                                    <td>U</td>
+                                    <td>V</td>
+                                    <td class="yellow">W</td>
+                                    <td>F</td>
+                                    <td>A</td>
+                                </tr>
+                            </table>
+                <p class="centered">Pair 1:<br>K jumped over E = W<br>E jumped over W = G</p>
+                <p class="centered">Pair 2:<br>V jumped over A = W<br>A jumped over W = U</p>
 
-                <table style="float: right" class="childShape">
-                    <tr>
-                        <td>Z</td>
-                        <td>B</td>
-                        <td>C</td>
-                        <td>Q</td>
-                        <td class="green">E</td>
-                    </tr>
-                    <tr>
-                        <td>Y</td>
-                        <td>K</td>
-                        <td>H</td>
-                        <td>D</td>
-                        <td>J</td>
-                    </tr>
-                    <tr>
-                                <td>S</td>
-                        <td>L</td>
-                        <td>M</td>
-                        <td>P</td>
-                        <td>O</td>
-                    </tr>
-                    <tr>
-                        <td class="yellow">G</td>
-                        <td>I</td>
-                        <td>R</td>
-                        <td>N</td>
-                        <td>T</td>
-                    </tr>
-                    <tr>
-                        <td>U</td>
-                        <td>V</td>
-                        <td class="green">W</td>
-                        <td>F</td>
-                        <td>A</td>
-                    </tr>
-                </table>
-                <p class="centered">ペア3：<br>FからKを飛び越える = T<br>KからTを飛び越える = C</p>
-                <p class="centered">新たな暗号化された単語：WGWUTC</p>
-                <h3>ステップ2：マクドナルド™ チキンナゲット・ビッグマック暗号</h3>
+                            <table style="float: right" class="childShape">
+                                <tr>
+                                    <td>Z</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>Q</td>
+                                    <td class="green">E</td>
+                                </tr>
+                                <tr>
+                                    <td>Y</td>
+                                    <td>K</td>
+                                    <td>H</td>
+                                    <td>D</td>
+                                    <td>J</td>
+                                </tr>
+                                <tr>
+                                         <td>S</td>
+                                    <td>L</td>
+                                    <td>M</td>
+                                    <td>P</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td class="yellow">G</td>
+                                    <td>I</td>
+                                    <td>R</td>
+                                    <td>N</td>
+                                    <td>T</td>
+                                </tr>
+                                <tr>
+                                    <td>U</td>
+                                    <td>V</td>
+                                    <td class="green">W</td>
+                                    <td>F</td>
+                                    <td>A</td>
+                                </tr>
+                            </table>
+                <p class="centered">Pair 3:<br>F jumped over K = T<br>K jumped over T = C</p>
+                <p class="centered">New Encrypted Word: WGWUTC</p>
+                <h3>Step 2: McDondald’s™ Chicken Nugget Big Mac Cipher</h3>
                 <ul>
-                    <li>あなたは現在マクドナルド™で働いており、チキンナゲットとビッグマックしか売ることができない。チキンナゲット1箱の値段は31Ξである。ビッグマックの値段は41Ξである。</li>
-                    <li>暗号化された単語と下のディスプレーにある3桁の数字を取得する。この3つの数字は、3つの注文番号である。</li>
-                    <li>暗号化された単語を3組のペアに分ける。3つの各ペアはマクドナルド™での注文に対応し、支払金額を示している。</li>
-                    <li>1つ目のペアの英字をアルファベット上の位置の数字に変換する。<b>どちらかの英字がZの場合、その値は0とする</b>。 <em>注文番号の1桁目の676倍</em>、<em>ペアの1つ目の英字の26倍</em>、<em>ペアの2つ目の英字</em>(1倍)を合計する。</li>
-                    <li>2つ目のペアと2桁目、3つ目のペアと3桁目に対してもこれを繰り返す。</li>
-                    <li>これらは、各注文に対して支払われた3つの金額である。この情報により、各注文で注文された商品を推測することができる。</li>
-                    <li>それぞれの支払額に対して、対応する2つの英字がある。ひとつは<em>チキンナゲット</em>の注文個数であり、A1Z26に変換される。もうひとつは<em>ビッグマック</em>の注文個数であり、A1Z26に変換される。これらの数字は、このペアの復号された英字に対応している。</li>
+                    <li>You’re currently working at McDondald’s™ and you can only sell Chicken Nuggets and Big Macs. A box of Chicken Nuggets costs 31Ξ. A Big Mac costs 41Ξ.</li>
+                    <li>Take your encrypted word and the 3 digits on the bottom screen. These 3 digits are the three order numbers.</li>
+                    <li>Split your encrypted word into 3 pairs. Each of these three pairs corresponds to an order at McDondald’s™, dictating the money paid.</li>
+                    <li>Convert the letters of the first pair to their alphabetic positions. <b>If either letter is Z, its value is 0 here</b>. Add together the <em>first digit of the order number times 676</em>, the <em>first letter of the pair times 26</em>, and the <em>second letter of the pair</em> (times 1).</li>
+                    <li>Repeat with the second pair and second digit, and the third pair with the third digit.</li>
+                    <li>These are the 3 amounts paid for each order. With this information, it is possible to deduce the items ordered for each order.</li>
+                    <li>For each amount paid, there are two corresponding letters. The first is the number of <em>Chicken Nuggets</em> ordered, converted to A1Z26. The second is the number of <em>Big Macs</em> ordered, converted to A1Z26. These numbers correspond to the decrypted letters for this pair.</li>
                 </ul>
-                <p><b>ヒント：支払額に4を掛け、41で割った余りを求めることで、注文したチキンナゲットの数を特定できる。ビッグマックの個数はこの値から推測できる。</b></p>
+                <p><b>Tip: you can determine the number of Chicken Nuggets ordered by multiplying the amount paid by 4, then moduloing by 41. The number of Big Macs can be deduced with this value.</b></p>
             </div>
             <div class="page-footer relative-footer">4</div>
         </div>
-        <div class="page page-bg-05">
+
+        <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">乳白色暗号</span>
+                <span class="page-header-section-title">Off-White Cipher</span>
             </div>
             <div class="page-content">
-                <h4 class="centered">例</h4>
-                <p class="centered">暗号化された単語：WGWUTC<br>注文番号：010</p>
-                <p class="centered">W × 26 + G + 0 × 676 = 605Ξ<br>W × 26 + U + 1 × 676 = 1295Ξ<br>T × 26 + C + 0 × 676 = 523Ξ</p>
-                <p class="centered">(605 × 4) % 41 = A<br>(605 - A × 31) / 41 = N<br>(1295 × 4) % 41 = N<br>(1295 - N × 31) / 41 = U<br>(523 × 4) % 41 = A<br>(523 - A × 31) / 41 = L</p>
-                <p class="centered">復号された単語：ANNUAL</p>
-                <h3>ステップ3：標準形式NFT生成マネーロンダリング暗号</h3>
-                <p>マクドナルド™暗号で復号後、単語が取得できるだろう。素晴らしい！しかし、単語を闇市で販売し、イーサリアムを稼ぐことはできない。</p>
-                <p> 6×6のビットマップで構成されるNFTを、この単語から生成しなければならない。</p>
-                <p>以下のルールに従って、単語から数字の文字列を生成する。</p>
+                <div class="gridholder"><div class="grid vstack left"></div></div>
+                <div class="stampholder">
+                    <div class="tools hstack"></div>
+                </div>
+                <br>
+                <div class="saves buttons">
+                    <button class="save">Save</button>
+                </div>
+                <div style="margin-top: 5mm">
+                    <button class="reset-board">Reset Grid</button>
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <h3>Interactive Controls</h3>
                 <ul>
-                    <li>2つのシーケンスを作成する。
-                    <ul>
-                        <li>ひとつは、復号された単語内の各英字をアルファベット上の位置の数字に変換し10で割った余りからなる、6桁の数字である。</li>
-                        <li>もうひとつは、復号された単語内の各英字をアルファベット上の位置の数字に変換し、掛け合わせることで求める。<b>このシーケンスのみ先頭にあるゼロを削除する。</b></li>
-                    </ul></li>
-                    <li>1つ目のシーケンスのコピーから開始し、シーケンスが少なくとも12桁の長さになるまで、2番目のシーケンスのコピーを末尾に追加する。</li>
-                    <li>これが生成シーケンスである。用済みである他の2つのシーケンスは、直ちに破壊すること。</li>
+                    <li>Use one of the color buttons or press <strong>R/G/B/C/M/Y/W/K/Space</strong> on your keyboard to choose a color.</li>
+                    <li>Click on a cell to paint that color.</li>
+                    <li>Drag across cells to color several cells.</li>
+                    <li>
+                        You can save the current state of the board, reset the board,
+                        reset the saves, or reset everything using the other buttons.
+                    </li>
                 </ul>
             </div>
             <div class="page-footer relative-footer">5</div>
         </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Off-White Cipher</span>
+            </div>
+            <div class="page-content">
+                <h4 class="centered">Example</h4>
+                <p class="centered">Encrypted Word: WGWUTC<br>Order Number: 010</p>
+                <p class="centered">W × 26 + G + 0 × 676 = 605Ξ<br>W × 26 + U + 1 × 676 = 1295Ξ<br>T × 26 + C + 0 × 676 = 523Ξ</p>
+                <p class="centered">(605 × 4) % 41 = A<br>(605 - A × 31) / 41 = N<br>(1295 × 4) % 41 = N<br>(1295 - N × 31) / 41 = U<br>(523 × 4) % 41 = A<br>(523 - A × 31) / 41 = L</p>
+                <p class="centered">Decrypted Word: ANNUAL</p>
+                <h3>Step 3: Standard Procedure NFT-generating Money Laundering Cipher</h3>
+                <p>The word will be already decrypted after the McDondald’s™ Cipher. Great! However, we can’t sell words on the black market to gain Ethereum.</p>
+                <p>An NFT consisting of a 6×6 Bitmap must be generated from this word.</p>
+                <p>Follow the rules below to generate a string of digits from the word.</p>
+                <ul>
+                    <li>Two sequences will be made.
+                    <ul>
+                        <li>The first is 6 digits long and consists of each letter in the decrypted word replaced by its alphabetic position modulo 10.</li>
+                        <li>The second is made by the product of all the alphabetic positions of the decrypted word. <b>Remove leading zeros from this sequence only.</b></li>
+                    </ul></li>
+                    <li>Start with a copy of the first sequence and append a copy of the second sequence until the sequence is at least 12 digits long.</li>
+                    <li>This is the Generating sequence. Destroy the other two sequences now; they are classified.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">6</div>
+        </div>
         <div class="page page-bg-06">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">乳白色暗号</span>
+                <span class="page-header-section-title">Off-White Cipher</span>
             </div>
             <div class="page-content">
                 <ul>
-                    <li>生成シーケンスの先頭3桁を以下の表から参照し、3つの色を得る。</li>
-                    <li>表内の英字は色の名前「黒(<em>K</em>), 赤(<em>R</em>), 緑(<em>G</em>), 青(<em>B</em>), 白(<em>W</em>), シアン(<em>C</em>), マゼンタ(<em>M</em>), 黄(<em>Y</em>)」に対応している。</li>
+                    <li>Reference the first three digits of the Generating sequence in the below table to get three colors. </li>
+                    <li>The letter in the table corresponds to one of blac<em>K</em>, <em>R</em>ed, <em>G</em>reen, <em>B</em>lue, <em>W</em>hite, <em>C</em>yan, <em>M</em>agenta, or <em>Y</em>ellow.</li>
                 </ul>
                 <table>
 
-                    <tr>
-                        <th>数字</th>
-                        <th>0</th>
-                        <th>1</th>
-                        <th>2</th>
-                        <th>3</th>
-                        <th>4</th>
-                        <th>5</th>
-                        <th>6</th>
-                        <th>7</th>
-                        <th>8</th>
-                        <th>9</th>
-                    </tr>
-                    <tr>
-                        <td>色1</td>
-                        <td>K</td>
-                        <td>R</td>
-                        <td>G</td>
-                        <td>B</td>
-                        <td>W</td>
-                        <td>C</td>
-                        <td>M</td>
-                        <td>Y</td>
-                        <td>R</td>
-                        <td>C</td>
-                    </tr>
-                    <tr>
-                        <td>色2</td>
-                        <td>M</td>
-                        <td>K</td>
-                        <td>R</td>
-                        <td>G</td>
-                        <td>B</td>
-                        <td>W</td>
-                        <td>C</td>
-                        <td>M</td>
-                        <td>Y</td>
-                        <td>G</td>
-                    </tr>
-                    <tr>
-                        <td>色3</td>
-                        <td>B</td>
-                        <td>Y</td>
-                        <td>K</td>
-                        <td>R</td>
-                        <td>G</td>
-                        <td>B</td>
-                        <td>W</td>
-                        <td>C</td>
-                        <td>M</td>
-                        <td>Y</td>
-                    </tr>
+                        <tr>
+                            <th>Digit</th>
+                            <th>0</th>
+                            <th>1</th>
+                            <th>2</th>
+                            <th>3</th>
+                            <th>4</th>
+                            <th>5</th>
+                            <th>6</th>
+                            <th>7</th>
+                            <th>8</th>
+                            <th>9</th>
+                        </tr>
+                        <tr>
+                            <td>COLOR 1</td>
+                            <td>K</td>
+                            <td>R</td>
+                            <td>G</td>
+                            <td>B</td>
+                            <td>W</td>
+                            <td>C</td>
+                            <td>M</td>
+                            <td>Y</td>
+                            <td>R</td>
+                            <td>C</td>
+                        </tr>
+                        <tr>
+                            <td>COLOR 2</td>
+                            <td>M</td>
+                            <td>K</td>
+                            <td>R</td>
+                            <td>G</td>
+                            <td>B</td>
+                            <td>W</td>
+                            <td>C</td>
+                            <td>M</td>
+                            <td>Y</td>
+                            <td>G</td>
+                        </tr>
+                        <tr>
+                            <td>COLOR 3</td>
+                            <td>B</td>
+                            <td>Y</td>
+                            <td>K</td>
+                            <td>R</td>
+                            <td>G</td>
+                            <td>B</td>
+                            <td>W</td>
+                            <td>C</td>
+                            <td>M</td>
+                            <td>Y</td>
+                        </tr>
                 </table>
-                <p>次に、生成シーケンスの4~11桁目を取得し、各桁を1~6の範囲になるまで繰り返し6を足し引きする。</p>
-                <p>この8桁を4組のペアに分割する。各ペアは6×6グリッドの座標を示し、ペアの一つ目の数字は左から右に数えた列、二つ目の数字は上から下に数えた段を示している。</p>
-                <p>これで、妻と別れる原因となるNFTを作る準備ができた。</p>
-            <p>以下のルールに、順番通りに従う。</p>
+                <p>Next, take digits 4–11 of the Generating sequence and add or subtract 6 from them until they are in the range 1–6.</p>
+                <p>Split these eight digits into four pairs. Each of these pairs represents a coordinate in a 6×6 grid, with the first in the pair being the column from left to right, and the second being the row from top to bottom.
+                <p>You are now ready to begin creating the NFT that will cause your wife to leave you.</p>
+            <p>Follow these rules in this order:</p>
                     <ol>
-                        <li>6×6グリッド全体を色1で埋める。</li>
-                        <li>座標1と座標2が対角線上の頂点となるような長方形を、色2で埋める。</li>
-                        <li>座標3と座標4が対角線上の頂点となるような長方形を、色3で埋める。一つ目の長方形の上から重ねて埋めてよい。</li>
-                        <li>生成シーケンスの12桁目を使用し、対応するグリッドでハイライトされたすべてのマスのRGB値を反転する。</li>
+                        <li>Fill the entire 6×6 grid with COLOR 1.</li>
+                        <li>Draw the rectangle whose opposite corners are COORDINATE 1 and COORDINATE 2 and color it with COLOR 2.</li>
+                        <li>Draw the rectangle whose opposite corners are COORDINATE 3 and COORDINATE 4 and color it with COLOR 3. This may paint over the first rectangle.</li>
+                        <li>Using the twelfth digit of the Generating sequence, invert the RGB values of all squares that are highlighted in digit 12’s corresponding grid:</li>
                     </ol>
                     <table style="font-size: 73%">
 
@@ -1866,18 +2243,19 @@
                     </tr>
                 </table>
             </div>
-            <div class="page-footer relative-footer">6</div>
+            <div class="page-footer relative-footer">7</div>
         </div>
+
         <div class="page page-bg-07">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">乳白色暗号</span>
+                <span class="page-header-section-title">Off-White Cipher</span>
             </div>
             <div class="page-content">
-                <p>色のRGB値を変換する際には、以下の表を用いる。</p>
+                <p>Use the table below to invert a Color’s RGB Values.</p>
                 <table>
                     <tr>
-                        <th>通常</th>
+                        <th>Normal</th>
                         <td>K</td>
                         <td>R</td>
                         <td>G</td>
@@ -1888,7 +2266,7 @@
                         <td>Y</td>
                     </tr>
                     <tr>
-                        <th>反転</th>
+                        <th>Inverted</th>
                         <td>W</td>
                         <td>C</td>
                         <td>M</td>
@@ -1899,14 +2277,14 @@
                         <td>B</td>
                     </tr>
                 </table>
-                <p>送信ボタン(初期状態では「1」と書かれている)を押すと、送信モードに移行する。NFTを入力し、再度送信ボタンを押す。正しい回答が送信されると、モジュールは解除される。</p>
-                <p>どうか、間違いのないように行ってほしい。私のイーサリアムが懸かっているのだ。</p>
+                <p>Press the submit button (initially labelled with a ‘1’) to enter submission mode. Input the NFT and press submit once more. Upon a correct submission, the module will solve.</p>
+                <p>Please do this correctly; my ethereum is at stake.</p>
                 <br>
-                <h4 class="centered">例</h4>
-                <p class="centered">復号された単語：ANNUAL</p>
-                <p class="centered">一つ目のシーケンス：144112<br>二つ目のシーケンス：49392</p>
-                <p class="centered">14411249392 は長さが足りない。<br>1441124939249392 は長さが足りている！</p>
-                <p class="centered">144 → RBG<br>11249392 → 11243332 → (1,1) (2,4) (3,3) (3,2)<br>4 → 反転で使用する値</p>
+                <h4 class="centered">Example</h4>
+                <p class="centered">Decrypted Word: ANNUAL</p>
+                <p class="centered">First Sequence: 144112<br>Second Sequence: 49392</p>
+                <p class="centered">14411249392 is not long enough.<br>1441124939249392 is long enough!</p>
+                <p class="centered">144 → RBG<br>11249392 → 11243332 → (1,1) (2,4) (3,3) (3,2)<br>4 → invert value</p>
                 <table>
                     <tr>
                         <td style="border-style: hidden">
@@ -1920,7 +2298,7 @@
                         </table>
                         </td>
                         <td style="border-style: hidden;text-align:center">
-                        全埋め→
+                        Fill Grid→
                         </td>
                         <td style="border-style: hidden">
                             <table class="nft red">
@@ -1933,7 +2311,7 @@
                         </table>
                         </td>
                         <td style="border-style: hidden;text-align:center">
-                        長方形1→
+                        Rectangle 1→
                         </td>
                         <td style="border-style: hidden">
                             <table class="nft">
@@ -1991,7 +2369,7 @@
                 <table>
                     <tr>
                         <td style="border-style: hidden;text-align:center">
-                        長方形2→
+                        Rectangle 2→
                         </td>
                         <td style="border-style: hidden">
                             <table class="nft">
@@ -2046,7 +2424,7 @@
                         </table>
                         </td>
                         <td style="border-style: hidden;text-align:center">
-                        12桁目の<br>反転グリッドを適用→
+                        Modify according<br>to digit 12→
                         </td>
                         <td style="border-style: hidden">
                             <table class="nft">
@@ -2102,7 +2480,7 @@
                     </tr>
                 </table>
             </div>
-        <div class="page-footer relative-footer">7</div>
+        <div class="page-footer relative-footer">8</div>
         </div>
     </div>
 </body>
