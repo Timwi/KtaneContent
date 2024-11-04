@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Maze Identification — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/Utilities/math-utils.js"></script>
+    <script>
+        class Space {
+            constructor(wallU,wallR,wallD,wallL)
+            {
+                this.wallU = wallU;
+                this.wallR = wallR;
+                this.wallD = wallD;
+                this.wallL = wallL;
+            }
+        }
+
+        const wallOrbits = [["wall11","wall82","wall7F","wall1E"],["wall21","wall84","wall6F","wall1C"],["wall31","wall86","wall5F","wall1A"],["wall41","wall88","wall4F","wall18"],["wall51","wall8A","wall3F","wall16"],["wall61","wall8C","wall2F","wall14"],["wall71","wall8E","wall1F","wall12"],
+            ["wall22","wall73","wall7E","wall1D"],["wall32","wall75","wall6E","wall1B"],["wall42","wall77","wall5E","wall19"],["wall52","wall79","wall4E","wall17"],["wall62","wall7B","wall3E","wall15"],["wall72","wall7D","wall2E","wall13"],
+            ["wall23","wall74","wall6D","wall2C"],["wall33","wall76","wall5D","wall2A"],["wall43","wall78","wall4D","wall28"],["wall53","wall7A","wall3D","wall26"],["wall63","wall7C","wall2D","wall24"],
+            ["wall34","wall65","wall6C","wall2B"],["wall44","wall67","wall5C","wall29"],["wall54","wall69","wall4C","wall27"],["wall64","wall6B","wall3C","wall25"],
+            ["wall35","wall66","wall5B","wall3A"],["wall45","wall68","wall4B","wall38"],["wall55","wall6A","wall3B","wall36"],
+            ["wall46","wall57","wall5A","wall39"],["wall56","wall59","wall4A","wall37"],
+            ["wall47","wall58","wall49","wall48"]
+        ];
+        const hexRef = ["1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"];
+        const horizRef = ["1","3","5","7","9","B","D","F"];
+        const vertRef = { "2":1, "4":3, "6":5, "8":7, "A":9, "C":11, "E":13 };
+        const upSymb = "&#x1F82D;";
+        const rightSymb ="&#x1F82E;";
+        const downSymb = "&#x1F82F;";
+        const leftSymb = "&#x1F82C;";
+        let direction = 0;
+        let curX = 3;
+        let curY = 3;
+        const ROWS = 7;
+        const COLS = 7;
+        const directions = {
+            0:[0,-1],
+            1:[0,1],
+            2:[-1,0],
+            3:[1,0]
+        };
+        const rowMax = ROWS * 2 + 1;
+        const colMax = COLS * 2 + 1;
+        let state = {
+            s:Array(ROWS+3).fill().map(() => Array(COLS+3).fill("")),
+            h:Array(ROWS+3).fill().map(() => Array(COLS+2).fill("")),
+            v:Array(ROWS+2).fill().map(() => Array(COLS+3).fill(""))
+        };
+
+        function hasWall(x,y,dir)
+        {
+            let xy = findWallName(x,y,dir);
+            return document.getElementById(`wall${xy[0]}${xy[1]}`).classList.contains("solid");
+        }
+
+        function rotLeft()
+        {
+            direction = (direction+3)%4;
+            drawArrow();
+        }
+
+        function rotRight()
+        {
+            direction = (direction+1)%4
+            drawArrow();
+        }
+
+        function moveForward()
+        {
+            let newX = curX;
+            let newY = curY;
+            let wallForward = hasWall(curX,curY,direction);
+            switch(direction)
+            {
+                case 0:
+                    newY--;
+                    break;
+                case 1: 
+                    newX++;
+                    break;
+                case 2: 
+                    newY++
+                    break;
+                case 3: 
+                    newX--;
+                    break;
+            }
+            if(wallForward || newX < 0 || newY < 0 || newX > COLS-1 || newY > ROWS-1)
+            {
+                return;
+            }
+            document.getElementById("table"+cellName(curX, curY)).innerHTML = " ";
+            curX=newX;
+            curY=newY;
+            drawArrow();
+        }
+
+        function moveBackward()
+        {
+            direction = (direction+2)%4;
+            moveForward();
+            direction = (direction+2)%4;
+            drawArrow();
+        }
+
+        function drawArrow()
+        {
+            let arrowSymbol = "";
+            switch(direction)
+            {
+                case 0:
+                    arrowSymbol = upSymb;
+                    break;
+                case 1:
+                    arrowSymbol = rightSymb;
+                    break;
+                case 2:
+                    arrowSymbol = downSymb;
+                    break;
+                case 3:
+                    arrowSymbol = leftSymb;
+                    break;
+            }
+            document.getElementById("table"+cellName(curX, curY)).innerHTML = arrowSymbol;
+        }
+
+        function cellName(x, y) {
+            return String.fromCharCode(65+x) + `${y+1}`;
+        }
+
+        function toggleWall(wallDir)
+        {
+            let wallmodded = wallDir;
+            if(document.getElementById("relativeWalls").checked)
+            {
+                wallmodded = (wallDir + direction) % 4;
+            }
+            let xy = findWallName(curX,curY,wallmodded);
+            toggleFinal(xy[0], xy[1]);
+        }
+
+        function findWallName(x,y,dir)
+        {
+            let modX = curX;
+            let modY = curY;
+            switch(dir)
+            {
+                case 0:
+                    modX = curX+1;
+                    modY = 2*curY+1;
+                    modY = hexRef[modY-1];
+                    break;
+                case 1:
+                    modX = curX+2;
+                    modY = 2*curY+2;
+                    modY = hexRef[modY-1];
+                    break;
+                case 2:
+                    modX = curX+1;
+                    modY = 2*curY+3;
+                    modY = hexRef[modY-1];
+                    break;
+                case 3:
+                    modX = curX+1;
+                    modY = 2*curY+2;
+                    modY = hexRef[modY-1];
+                    break;              
+            }
+            return [modX, modY];
+        }
+
+        function doToggleWall(col, row, add = false, rem = false) {
+            let wall = document.getElementById(`wall${col}${row}`);
+            if (add) wall?.classList.add("solid");
+            else if (rem) wall?.classList.remove("solid");
+            else wall?.classList.toggle("solid");
+            // also solidify the corners between walls
+            if (horizRef.includes(row)) {   //if adding a horizontal wall
+                doToggleSidewall(col, row, "sol1", add, rem);
+                doToggleSidewall(col+1, row, "sol2", add, rem);
+            }
+            else {                          //if adding a vertical wall
+                let vr = vertRef[row];
+                let [v1, v2] = [ hexRef[vr-1], hexRef[vr+1] ];
+                doToggleSidewall(col, v1, "sol3", add, rem);
+                doToggleSidewall(col, v2, "sol4", add, rem);
+            }
+        }
+
+        function doToggleSidewall(col, row, type, add = false, rem = false) {
+            let sidewall = side(col, row);
+            if (add) sidewall?.classList.add(type);
+            else if (rem) sidewall?.classList.remove(type);
+            else sidewall?.classList.toggle(type);
+        }
+
+        function toggleFinal(col, row, add = false, rem = false, copy = true)
+        {
+            doToggleWall(col, row, add, rem);
+            // make opposite edges always match
+            let last = hexRef[hexRef.length - 1];
+            if (horizRef.includes(row)) {   //if adding a horizontal wall
+                if (copy && row == "1") doToggleWall(col, last, add, rem);
+                if (copy && row == last) doToggleWall(col, "1", add, rem);
+                if (col == 1) {
+                    doToggleSidewall(COLS+1, row, "sol1", add, rem);
+                    if (row == "1") doToggleSidewall(COLS+1, last, "sol1", add, rem);
+                    if (row == last) doToggleSidewall(COLS+1, "1", "sol1", add, rem);
+                }
+                if (col == COLS) {
+                    doToggleSidewall(1, row, "sol2", add, rem);
+                    if (row == "1") doToggleSidewall(1, last, "sol2", add, rem);
+                    if (row == last) doToggleSidewall(1, "1", "sol2", add, rem);
+                }
+            }
+            else {                          //if adding a vertical wall
+                let seclast = hexRef[hexRef.length-2];
+                if (copy && col == 1) doToggleWall(COLS+1, row, add, rem);
+                if (copy && col == COLS+1) doToggleWall(1, row, add, rem);
+                if (row == hexRef[1]) {
+                    doToggleSidewall(col, last, "sol3", add, rem);
+                    if (col == 1) doToggleSidewall(COLS+1, last, "sol3", add, rem);
+                    if (col == COLS+1) doToggleSidewall(1, last, "sol3", add, rem);
+                }
+                if (row == seclast) {
+                    doToggleSidewall(col, "1", "sol4", add, rem);
+                    if (col == 1) doToggleSidewall(COLS+1, "1", "sol4", add, rem);
+                    if (col == COLS+1) doToggleSidewall(1, "1", "sol4", add, rem);
+                }
+            }
+        }
+
+        function setupEventListeners() 
+        {
+            if (document.addEventListener) {
+                document.addEventListener('keydown', onKeyDown, false);
+            }
+            else if (document.attachEvent) {
+                document.attachEvent('onkeydown', onKeyDown);
+            }
+            for (let r = 1; r <= rowMax; r += 2) {
+                for (let c = 1; c <= COLS + 1; c++) {
+                    let sidewall = document.querySelector(`.maptable tr:nth-child(${r}) td:nth-child(${2 * c - 1})`);
+                    let row = hexRef[r-1];
+                    if (sidewall) sidewall.id = `sidewall${c}${row}`;
+                }
+            }
+            for (let r = 1; r <= rowMax; r++) {
+                for (let c = 1; c <= COLS + 1; c++) {
+                    let row = hexRef[r-1];
+                    let wall = document.getElementById(`wall${c}${row}`);
+                    if (wall) wall.onclick = function() { toggleFinal(c, row); };
+                }
+            }
+        }
+
+        function mazeRot()
+        {
+            for(let orbitno = 0; orbitno <28; orbitno++)
+            {
+                let temp=[false,false,false,false]
+                for(let orbloop =0; orbloop <4; orbloop++)
+                {
+                    temp[orbloop] = document.getElementById(wallOrbits[orbitno][orbloop]).classList.contains("solid");
+                }
+                for(let orbloop =0; orbloop <4; orbloop++)
+                {
+                    let orb = wallOrbits[orbitno][orbloop];
+                    if (temp[(orbloop+3)%4] && !temp[orbloop]) {
+                        toggleFinal(parseInt(orb[4]), orb[5], true, false, false);
+                    } else if(!temp[(orbloop+3)%4] && temp[orbloop]) {
+                        toggleFinal(parseInt(orb[4]), orb[5], false, true, false);
+                    }
+                }
+            }
+            direction = (direction+1)%4;
+            document.getElementById("table"+cellName(curX, curY)).innerHTML = " ";
+            let temp = curX;
+            curX = 6 - curY;
+            curY = temp;
+            drawArrow();
+        
+        }
+
+        function side(x, y) {
+            return document.getElementById(`sidewall${x}${typeof y === "number" ? hexRef[y-1] : y}`);
+        }
+        function wall(x, y) {
+            return document.getElementById(`wall${x}${typeof y === "number" ? hexRef[y-1] : y}`);
+        }
+
+        function getState() {
+            // state.s = Array(ROWS+3).fill().map(() => Array(COLS+3).fill(""));
+            // state.h = Array(ROWS+3).fill().map(() => Array(COLS+2).fill(""));
+            // state.v = Array(ROWS+2).fill().map(() => Array(COLS+3).fill(""));
+            for (let r = 0; r < ROWS+3; r++)
+                for (let c = 0; c < COLS+3; c++)
+                    state.s[r][c] = side(UMod(c-1, COLS+1) + 1, 2*UMod(r-1, ROWS+1) + 1).className;
+            for (let r = 0; r < ROWS+3; r++)
+                for (let c = 0; c < COLS+2; c++)
+                    state.h[r][c] = wall(UMod(c-1, COLS) + 1, 2*UMod(r-1, ROWS+1) + 1).className;
+            for (let r = 0; r < ROWS+2; r++)
+                for (let c = 0; c < COLS+3; c++)
+                    state.v[r][c] = wall(UMod(c-1, COLS+1) + 1, 2*UMod(r-1, ROWS) + 2).className;
+            console.log(state);
+        }
+
+        function shiftMaze(dir) {
+            getState();
+            switch (dir) {
+                case 0:   // up
+                    for (let r = 1; r <= ROWS + 1; r++) {
+                        for (let c = 1; c <= COLS + 1; c++) {
+                            side(c, r * 2 - 1).className = state.s[r <= ROWS ? r + 1 : 2][c];
+                            if (c <= COLS) wall(c, r * 2 - 1).className = state.h[r <= ROWS ? r + 1 : 2][c];
+                            if (r <= ROWS) wall(c, r * 2).className = state.v[r + 1][c];
+                        }
+                    }
+                    break;
+                case 1:   // down
+                    for (let r = ROWS + 1; r >= 1; r--) {
+                        for (let c = 1; c <= COLS + 1; c++) {
+                            side(c, r * 2 - 1).className = state.s[r > 1 ? r - 1 : ROWS][c];
+                            if (c <= COLS) wall(c, r * 2 - 1).className = state.h[r > 1 ? r - 1 : ROWS][c];
+                            if (r <= ROWS) wall(c, r * 2).className = state.v[r > 1 ? r - 1 : ROWS][c];
+                        }
+                    }
+                    break;
+                case 2:   // left
+                    for (let r = 1; r <= ROWS + 1; r++) {
+                        for (let c = 1; c <= COLS + 1; c++) {
+                            side(c, r * 2 - 1).className = state.s[r][c <= COLS ? c + 1 : 2];
+                            if (c <= COLS) wall(c, r * 2 - 1).className = state.h[r][c + 1];
+                            if (r <= ROWS) wall(c, r * 2).className = state.v[r][c <= COLS ? c + 1 : 2];
+                        }
+                    }
+                    break;
+                case 3:   // right
+                    for (let r = 1; r <= ROWS + 1; r++) {
+                        for (let c = COLS + 1; c >= 1; c--) {
+                            side(c, r * 2 - 1).className = state.s[r][c > 1 ? c - 1 : COLS];
+                            if (c <= COLS) wall(c, r * 2 - 1).className = state.h[r][c > 1 ? c - 1 : COLS];
+                            if (r <= ROWS) wall(c, r * 2).className = state.v[r][c > 1 ? c - 1 : COLS];
+                        }
+                    }
+                    break;
+            }
+
+            document.getElementById("table"+cellName(curX, curY)).innerHTML = " ";
+            let dr = directions[dir];
+            curX = UMod(curX + dr[0], COLS);
+            curY = UMod(curY + dr[1], ROWS);
+            drawArrow();
+        }
+
+        function onKeyDown(e)
+        {
+            if(e.ctrlKey)
+            {
+                switch(e.key)
+                {
+                    case "ArrowUp":
+                        e.preventDefault();
+                        toggleWall(0);
+                        break;
+                    case "ArrowRight":
+                        e.preventDefault();
+                        toggleWall(1);
+                        break;
+                    case "ArrowDown":
+                        e.preventDefault();
+                        toggleWall(2);
+                        break;
+                    case "ArrowLeft":
+                        e.preventDefault();
+                        toggleWall(3);
+                        break;
+                }
+            } else if (!e.altKey) {
+            switch(e.key.toLowerCase())
+                {
+                    case "w":
+                    case "arrowup":
+                        e.preventDefault();
+                        moveForward();
+                        break;
+                    case "d":
+                    case "arrowright":
+                        e.preventDefault();
+                        rotRight();
+                        break;
+                    case "s":
+                    case "arrowdown":
+                        e.preventDefault();
+                        moveBackward();
+                        break;
+                    case "a":
+                    case "arrowleft":
+                        e.preventDefault();
+                        rotLeft();
+                        break;
+                    case "r": 
+                        e.preventDefault();
+                        mazeRot();
+                        break;
+                }
+            }
+        }
+    </script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+        }
+
+        .dark th, .dark td {
+           border: 1px dotted;
+        }
+
+        th {
+            padding:0 0 0;
+            border: 1px dotted;
+        }
+
+        .maptable td:nth-child(2n-1) {
+            width: .1in;
+        }
+
+        .maptable td:nth-child(2n) {
+            width: .7in;
+        }
+
+        th.quad {
+            padding: .3em .6em .2em;
+        }
+
+        td {
+            border:1px dotted;
+            text-align:center;
+            padding:0 0 0;
+        }
+
+        tr.tall {
+            border:none;
+            height:.7in;
+        }
+
+        tr.short {
+            border:1px dotted;
+            height:.1in;
+        }
+
+        table.maptable {
+            width:5.7in;
+            height:5.7in;
+            border:1px solid;
+            border-collapse:collapse;
+            font-size:40px;
+            table-layout:fixed;
+        }
+
+        td:is(.sol1,.sol2,.sol3,.sol4), .solid {
+            background-color: Black;
+        }
+
+        .dark td:is(.sol1,.sol2,.sol3,.sol4), .dark .solid {
+            background-color: white;
+        }
+        label, input[type='checkbox'] {
+            cursor: pointer;
+            margin: 3px;
+        }
+
+        /* Remove this if you only have a single page */
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 2'; }
+        .page {
+            background-position: top;
+            background-repeat: repeat-y;
+        }
+    </style>
+</head>
+<body onload="setupEventListeners()">
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Maze Identification</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Maze Identification.svg" class="diagram">
+                <h2>On the Subject of Maze Identification</h2>
+                <p class="flavour-text">Yep, that's definitely a maze.</p>
+
+                <p>Use WASD or Arrow keys to navigate the maze, with up/down or W/S moving you forward and backward, and left/right or AD rotating you in place.</p>
+                <ul>
+                    <li>CTRL+Arrows will place walls around the square you are in, or simply click narrow cells to mark them as walls.</li>
+                    <li>By default, CTRL+Up will mark the wall above the arrow regardless of the arrow's direction - the checkbox below will swap the behavior of CTRL+Arrows to placing walls relative to the direction you are facing.</li>
+                    <li>The button below the maze or R will rotate  the entire maze 90 degrees clockwise.</li>
+                </ul>
+            <div>
+                <div><label for="relativeWalls">Place walls in relative position</label><input type="checkbox" id="relativeWalls"></div>
+                <p class="centered">Shift
+                    <button onclick="shiftMaze(0)"> Up </button>
+                    <button onclick="shiftMaze(1)"> Down </button>
+                    <button onclick="shiftMaze(2)"> Left </button>
+                    <button onclick="shiftMaze(3)"> Right </button>
+                </p>
+                <p class="centered">Move 
+                    <button onclick="moveForward()"> Forward </button>
+                    <button onclick="moveBackward()"> Backward </button>
+                    <button onclick="rotLeft()"> Left </button>
+                    <button onclick="rotRight()"> Right </button>
+                </p>
+                <table class="maptable">
+                    <tr class="short">
+                        <td></td><td id="wall11"></td><td></td><td id="wall21"></td><td></td><td id="wall31"></td><td></td><td id="wall41"></td><td></td><td id="wall51"></td><td></td><td id="wall61"></td><td></td><td id="wall71"></td><td></td>
+                    </tr>
+                    <tr class="tall">
+                        <td id="wall12"></td><td id="tableA1"></td><td id="wall22"></td><td id="tableB1"></td><td id="wall32"></td><td id="tableC1"></td><td id="wall42"></td><td id="tableD1"></td><td id="wall52"></td><td id="tableE1"></td><td id="wall62"></td><td id="tableF1"></td><td id="wall72"></td><td id="tableG1"></td><td id="wall82"></td>
+                    </tr>
+                    <tr class="short">
+                        <td></td><td id="wall13"></td><td></td><td id="wall23"></td><td></td><td id="wall33"></td><td></td><td id="wall43"></td><td></td><td id="wall53"></td><td></td><td id="wall63"></td><td></td><td id="wall73"></td><td></td>
+                    </tr>
+                    <tr class="tall">
+                        <td id="wall14"></td><td id="tableA2"></td><td id="wall24"></td><td id="tableB2"></td><td id="wall34"></td><td id="tableC2"></td><td id="wall44"></td><td id="tableD2"></td><td id="wall54"></td><td id="tableE2"></td><td id="wall64"></td><td id="tableF2"></td><td id="wall74"></td><td id="tableG2"></td><td id="wall84"></td>
+                    </tr>
+                    <tr class="short">
+                        <td></td><td id="wall15"></td><td></td><td id="wall25"></td><td></td><td id="wall35"></td><td></td><td id="wall45"></td><td></td><td id="wall55"></td><td></td><td id="wall65"></td><td></td><td id="wall75"></td><td></td>
+                    </tr>
+                    <tr class="tall">
+                        <td id="wall16"></td><td id="tableA3"></td><td id="wall26"></td><td id="tableB3"></td><td id="wall36"></td><td id="tableC3"></td><td id="wall46"></td><td id="tableD3"></td><td id="wall56"></td><td id="tableE3"></td><td id="wall66"></td><td id="tableF3"></td><td id="wall76"></td><td id="tableG3"></td><td id="wall86"></td>
+                    </tr>
+                    <tr class="short">
+                        <td></td><td id="wall17"></td><td></td><td id="wall27"></td><td></td><td id="wall37"></td><td></td><td id="wall47"></td><td></td><td id="wall57"></td><td></td><td id="wall67"></td><td></td><td id="wall77"></td><td></td>
+                    </tr>
+                    <tr class="tall">
+                        <td id="wall18"></td><td id="tableA4"></td><td id="wall28"></td><td id="tableB4"></td><td id="wall38"></td><td id="tableC4"></td><td id="wall48"></td><td id="tableD4">&#x1F82D;</td><td id="wall58"></td><td id="tableE4"></td><td id="wall68"></td><td id="tableF4"></td><td id="wall78"></td><td id="tableG4"></td><td id="wall88"></td>
+                    </tr>
+                    <tr class="short">
+                        <td></td><td id="wall19"></td><td></td><td id="wall29"></td><td></td><td id="wall39"></td><td></td><td id="wall49"></td><td></td><td id="wall59"></td><td></td><td id="wall69"></td><td></td><td id="wall79"></td><td></td>
+                    </tr>
+                    <tr class="tall">
+                        <td id="wall1A"></td><td id="tableA5"></td><td id="wall2A"></td><td id="tableB5"></td><td id="wall3A"></td><td id="tableC5"></td><td id="wall4A"></td><td id="tableD5"></td><td id="wall5A"></td><td id="tableE5"></td><td id="wall6A"></td><td id="tableF5"></td><td id="wall7A"></td><td id="tableG5"></td><td id="wall8A"></td>
+                    </tr>
+                    <tr class="short">
+                        <td></td><td id="wall1B"></td><td></td><td id="wall2B"></td><td></td><td id="wall3B"></td><td></td><td id="wall4B"></td><td></td><td id="wall5B"></td><td></td><td id="wall6B"></td><td></td><td id="wall7B"></td><td></td>
+                    </tr>
+                    <tr class="tall">
+                        <td id="wall1C"></td><td id="tableA6"></td><td id="wall2C"></td><td id="tableB6"></td><td id="wall3C"></td><td id="tableC6"></td><td id="wall4C"></td><td id="tableD6"></td><td id="wall5C"></td><td id="tableE6"></td><td id="wall6C"></td><td id="tableF6"></td><td id="wall7C"></td><td id="tableG6"></td><td id="wall8C"></td>
+                    </tr>
+                    <tr class="short">
+                        <td></td><td id="wall1D"></td><td></td><td id="wall2D"></td><td></td><td id="wall3D"></td><td></td><td id="wall4D"></td><td></td><td id="wall5D"></td><td></td><td id="wall6D"></td><td></td><td id="wall7D"></td><td></td>
+                    </tr>
+                    <tr class="tall">
+                        <td id="wall1E"></td><td id="tableA7"></td><td id="wall2E"></td><td id="tableB7"></td><td id="wall3E"></td><td id="tableC7"></td><td id="wall4E"></td><td id="tableD7"></td><td id="wall5E"></td><td id="tableE7"></td><td id="wall6E"></td><td id="tableF7"></td><td id="wall7E"></td><td id="tableG7"></td><td id="wall8E"></td>
+                    </tr>
+                    <tr class="short">
+                        <td></td><td id="wall1F"></td><td></td><td id="wall2F"></td><td></td><td id="wall3F"></td><td></td><td id="wall4F"></td><td></td><td id="wall5F"></td><td></td><td id="wall6F"></td><td></td><td id="wall7F"></td><td></td>
+                    </tr>
+                </table>
+                <p class="centered"><button onclick="mazeRot()"> Rotate Maze</button> </p>
+            </div>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Maze Identification</span>
+            </div>
+            <div class="page-content">
+                <h2> Appendix: Reminders from the original manual</h2>
+                <h3>Meaning of Shapes</h3>
+                    
+                <p>The lit shapes tell you what walls are surrounding you, according to the list below:</p>
+                
+                <ul>
+                    <li>Triangle - In front of you</li>
+                    <li>Square - On your right</li>
+                    <li>Hexagon - Behind you</li>
+                    <li>Octagon - On your left</li>
+                </ul>
+                <h3>Sample Quadrants</h3>
+                    
+                <table>
+                    <tr>
+                        <th>Value</th>
+                        <th>1</th>
+                        <th>2</th>
+                        <th>3</th>
+                        <th>4</th>
+                    </tr>
+                    <tr>
+                        <th class="quad">Quadrant</th>
+                        <th style="font-family:'Lucida Console', monospace; line-height: 100%;">╔═╦═╗<br>║x║x║<br>║⠀║⠀║<br>║x⠀x║<br>╚═══╝</th>
+                        <th style="font-family:'Lucida Console', monospace; line-height: 100%;">╔═══╗<br>║x⠀x║<br>║⠀══╣<br>║x⠀x║<br>╚═══╝</th>
+                        <th style="font-family:'Lucida Console', monospace; line-height: 100%;">╔═══╗<br>║x⠀x║<br>║⠀║⠀║<br>║x║x║<br>╚═╩═╝</th>
+                        <th style="font-family:'Lucida Console', monospace; line-height: 100%;">╔═══╗<br>║x⠀x║<br>╠══⠀║<br>║x⠀x║<br>╚═══╝</th>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+    </div>
+</body>
+</html>
