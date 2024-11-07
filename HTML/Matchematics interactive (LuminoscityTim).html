@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Matchematics — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="data/Matchematics/data.js"></script>
+    <script>
+    $(function() {
+        let saveStates = [];
+        let currentState = 0;
+        let display = $(".hstack.holder");
+        let svg1 = $("svg.interactive");
+        let movesNumber = $(".movesNumber");
+        const operators = ["plus","minus","mult","divi","mod"];
+        const operationSymbols = "+-*/%";
+        let operation = 0;
+        const puzzleTypes = ["Remove", "Add", "Move"];
+        let puzzleType = 0;
+        let moves = 2;
+        let numbers = Array(3).fill(0);
+        let generating = false;
+        let savedDigits = [];
+        let solList = [];
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+
+        function Generate() {
+            puzzleType = Math.floor(Math.random() * 3);
+
+            const selectedPuzzles = MatchematicsPuzzles[puzzleType];
+            const nPuzzles = selectedPuzzles.length;
+            const puzzle = selectedPuzzles[Math.floor(Math.random() * nPuzzles)];
+
+            operation = operationSymbols.indexOf(puzzle[3]);
+            moves = parseInt(puzzle[4], 10);
+            movesNumber.text(moves);
+            $(".instruction .puzzle-type").removeClass(puzzleTypes.join(" ")).addClass(puzzleTypes[puzzleType]);
+            $(".operator:not(.eq)").removeClass(operators.join(" ")).addClass(operators[operation]);
+
+            for (let i = 0; i < 3; i++) {
+                numbers[i] = parseInt(puzzle[i], 10);
+            }
+            ResetDigits();
+
+            console.log(`Equation: ${numbers[0]} ${operationSymbols[operation]} ${numbers[1]} = ${numbers[2]}`);
+            console.log(`Required action: ${puzzleTypes[puzzleType]} ${moves}`);
+            let sol = GetAnswer();
+            solList = sol.map(s => `${s.A} ${operationSymbols[operation]} ${s.B} = ${s.C}`);
+            console.log(solList.join("\n"));
+            $(".solution .str").html(solList.join("<br>"));
+        }
+
+        function TestInput(a, b, c) {
+            const A = (a << 14) | (b << 7) | c;
+            const B = (sevenSegmentDigits[numbers[0]] << 14) | (sevenSegmentDigits[numbers[1]] << 7) | sevenSegmentDigits[numbers[2]];
+
+            // Count the number of matches added and removed
+            const add = (A & ~B).toString(2).replace(/0/g, "").length;
+            const rem = (~A & B).toString(2).replace(/0/g, "").length;
+
+            // Check if the correct amount of matches have changed based on puzzleType
+            switch (puzzleType) {
+                case PuzzleType.REMOVE:
+                    if (add > 0 || rem !== moves) return false;
+                    break;
+                case PuzzleType.ADD:
+                    if (rem > 0 || add !== moves) return false;
+                    break;
+                case PuzzleType.MOVE:
+                    if (add !== rem || add !== moves) return false;
+                    break;
+                default: return true;
+            }
+
+            // Verify if matches form real numbers and get their values
+            const inputNum = [];
+            const arr = [a, b, c];
+            for (let i = 0; i < 3; i++) {
+                inputNum[i] = sevenSegmentDigits.indexOf(arr[i]);
+                if (inputNum[i] === -1) {
+                    return false;
+                }
+            }
+
+            // Check if the numbers fit the equation
+            return SatisfyEquation(inputNum[0], inputNum[1], inputNum[2], operation);
+        }
+
+        function SatisfyEquation(a, b, c, op) {
+            switch (op)
+            {
+                case Operation.ADD: return a + b == c;
+                case Operation.SUB: return a - b == c;
+                case Operation.MUL: return a * b == c;
+                case Operation.DIV: return b != 0 && a == b * c;
+                case Operation.MOD: return b != 0 && a % b == c;
+                default: return true;
+            }
+        }
+
+        function GetAnswer() {
+            let sol = [];
+            for (let a = 0; a < 10; a++)
+                for (let b = 0; b < 10; b++)
+                    for (let c = 0; c < 10; c++)
+                        if (SatisfyEquation(a, b, c, operation) && TestInput(sevenSegmentDigits[a], sevenSegmentDigits[b], sevenSegmentDigits[c]))
+                            sol.push({A:a, B:b, C:c});
+            return sol;
+        }
+
+        function ResetDigits(event, fromNumbers = false) {
+            if (fromNumbers || mode() == MODE_PLAY) {
+                for (let disp = 0; disp < 3; disp++) {
+                    for (let seg = 0; seg < 7; seg++) {
+                        let bit = (sevenSegmentDigits[numbers[disp]] >> (6 - seg)) & 1;
+                        $(`svg.interactive.display${disp} polygon.seg${seg}`).toggleClass("black", bit == 1);
+                    }
+                }
+            }
+            else {
+                $("svg.interactive polygon").each((i, x) => $(x).attr("class", savedDigits[i]));
+            }
+            $(".solved-text").addClass("invis");
+        }
+
+        function getInput(i) {
+            let digits = [];
+            for (let seg = 0; seg < 7; seg++) {
+                digits.push($(`svg.interactive.display${i} polygon.seg${seg}`).hasClass("black") ? "1" : "0");
+            }
+            return parseInt(digits.join(""), 2);
+        }
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        for (let i = 1; i <= 2; i++) {
+            let op = $("<div>").addClass("operator " + (i > 1 ? "eq" : "plus")).appendTo(display);
+            if (i == 1) {
+                op.click(function() {
+                    op.removeClass(operators[operation]);
+                    operation = (operation + 1) % operators.length;
+                    op.addClass(operators[operation]);
+                });
+            }
+            let vstack = $("<div>").addClass(`vstack display${i}`).appendTo(display);
+            let svg = MakeSvgTag(340, 636, 0, -40, {class:`interactive display${i}`, "text-anchor":"middle", "stroke-width":"4"})
+                .appendTo(vstack);
+            svg.html(svg1.html());
+        }
+
+        $("svg.interactive").each(function(i) {
+            let btn = $("<button>").click(function() {
+                $(`svg.display${i} polygon`).removeClass("black");
+            }).text(`Clear ${String.fromCharCode(65 + i)}`);
+            $(`.vstack.display${i}`).append(btn);
+        });
+
+        for (let disp = 0; disp < 3; disp++) {
+            for (let seg = 0; seg < 7; seg++) {
+                $(`svg.interactive.display${disp} polygon.seg${seg}`).click(function() {
+                    $(this).toggleClass("black");
+                    if (mode() == MODE_PLAY && TestInput(getInput(0), getInput(1), getInput(2))) {
+                        if ($("button.sound").hasClass("play"))
+                            audioSolve[0].play();
+                        $(".solved-text").removeClass("invis");
+                    }
+                    else {
+                        playNumberSound($(this).hasClass("black") ? 1 : 0);
+                        $(".solved-text").addClass("invis");
+                    }
+                });
+            }
+        }
+        $(".instruction span.puzzle-type").click(function() {
+            $(".puzzle-type").removeClass(puzzleTypes[puzzleType]);
+            puzzleType = (puzzleType + 1) % puzzleTypes.length;
+            $(".puzzle-type").addClass(puzzleTypes[puzzleType]);
+        });
+
+        let down = false;
+        $(document).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toLowerCase();
+            if (k == "-")
+                movesDec();
+            else if (k == "=" || k == "+")
+                movesInc();
+            down = false;
+        });
+
+        function movesDec() {
+            if (mode() == MODE_PLAY) return;
+            moves = Math.max(1, moves - 1);
+            movesNumber.text(moves);
+        }
+        function movesInc() {
+            if (mode() == MODE_PLAY) return;
+            moves = Math.min(9, moves + 1);
+            movesNumber.text(moves);
+        }
+        $(".movestext.minus").click(function() {
+            movesDec();
+        });
+        $(".movestext.plus").click(function() {
+            movesInc();
+        });
+
+        let tools = $(".tools");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
+        $("<button>").addClass("reset-grid").text("Reset").appendTo(tools).click(ResetDigits);
+
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            if ($(this).hasClass("solve")) {
+                $("body").addClass("solve");
+                savedDigits = Array.from($("svg.interactive polygon")).map(x => $(x)).map(x => x.attr("class") || "");
+            }
+            else {
+                $("body").removeClass("solve");
+            }
+        });
+
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if (mode() == MODE_PLAY) {
+                Generate();
+            }
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+
+        function playNumberSound(n) {
+            if ($("button.sound").hasClass("play") && !isNaN(n) && n >= 0 && n <= 1) {
+                let aud = audioNumbers[n][0].cloneNode();
+                aud.volume = 0.5;
+                aud.play();
+            }
+        }
+
+        let audioNumbers = [
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 1.wav")
+                .appendTo(display),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Shapes and Bombs - Press 3.wav")
+                .appendTo(display)
+        ];
+        let audioSolve = $("<audio>")
+            .attr("src","audio/Module Listening/Colored Keys - Solve.wav")
+            .prop("volume", 0.4)
+            .appendTo(display);
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.reset-all").click(function() {
+            $("button.read-solve").removeClass("solve");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $(".solved-text").addClass("invis");
+            $("body").removeClass("play solve solution-shown");
+            numbers.fill(0);
+            ResetDigits(null, true);
+            moves = 2;
+            movesNumber.text(moves);
+            puzzleType = 0;
+            $(".puzzle-type").removeClass(puzzleTypes.join(" ")).addClass(puzzleTypes[puzzleType]);
+            operation = 0;
+            $("div.operator:not(.eq)").removeClass(operators.join(" ")).addClass(operators[operation]);
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $("button.reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($("svg.interactive polygon, .operator, button, .puzzle-type, .solved-text")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveBodyClass = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            // console.log(saveStates);
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+            let s_operation = operation;
+            let s_puzzleType = puzzleType;
+            let s_moves = moves;
+            let s_savedDigits = savedDigits;
+            let s_solList = solList;
+            let s_numbers = JSON.stringify(numbers);
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $("svg.interactive polygon, .operator, button, .puzzle-type, .solved-text").each((i, x) => $(x).attr("class", saveStateClass[i]));
+                $("body").each((i, x) => $(x).attr("class", saveBodyClass[i]));
+                currentState = stateNumber;
+                operation = s_operation;
+                puzzleType = s_puzzleType;
+                moves = s_moves;
+                savedDigits = s_savedDigits;
+                solList = s_solList;
+                numbers = JSON.parse(s_numbers);
+                movesNumber.text(moves);
+                $(".instruction .puzzle-type").removeClass(puzzleTypes.join(" ")).addClass(puzzleTypes[puzzleType]);
+                $(".operator:not(.eq)").removeClass(operators.join(" ")).addClass(operators[operation]);
+                $(".solution .str").html(solList.join("<br>"));
+            }).addClass("flash").appendTo(`.saves`);
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+        ResetDigits(null, true);
+    });
+    </script>
+    <style>
+        .hstack {
+            align-items: center;
+        }
+        .vstack {
+            align-items: center;
+        }
+        .hstack.spread {
+            justify-content: space-around;
+            width: 70%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hstack.spread .vstack { width: 30%; }
+        .hstack .option { min-width: 130px; }
+        .instruction {
+            margin-top: 5mm;
+        }
+        .instruction :is(p,span) {
+            margin: .2em 0;
+            padding: .3em 0 .2em;
+        }
+        .instruction span:is(.puzzle-type, .movesNumber) {
+            font-size: 25px;
+        }
+        body:not(.play) .puzzle-type { cursor: pointer; }
+        body.play .operator,
+        body.play span.puzzle-type {
+            pointer-events: none;
+        }
+        .instruction-group {
+            border: 1px solid;
+            text-align: center;
+            width: 130px;
+        }
+        .puzzle-type.Remove::after {content: 'Remove'; }
+        .puzzle-type.Add::after {content: 'Add'; }
+        .puzzle-type.Move::after {content: 'Move'; }
+        .instruction span.movesNumber {
+            user-select: none;
+            margin-left: 2mm;
+        }
+
+        svg.interactive { width: 100%; }
+
+        svg polygon {
+            cursor: pointer;
+            stroke: #888;
+            fill: transparent;
+        }
+        svg text {
+            user-select: none;
+            fill: #000;
+            font-size: 60px;
+        }
+        .dark svg text { fill: #DDD; }
+        svg polygon.black {
+            fill: #000;
+            stroke: #000;
+        }
+        .dark svg polygon.black {
+            fill: #DDD;
+            stroke: #DDD;
+        }
+        svg polygon:not(.black) {
+            opacity: 50%;
+        }
+
+        .operator {
+            width: 70px;
+            text-align: center;
+            font-size: 50px;
+            height: 80px;
+        }
+        .operator:not(.eq) { cursor: pointer; }
+        .operator.plus::after { content: '+'; }
+        .operator.minus::after { content: '-'; }
+        .operator.mult::after { content: '×'; }
+        .operator.divi::after { content: '/'; }
+        .operator.mod::after { content: '%'; }
+        .operator.eq::after { content: '='; }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .option label, input.action {
+            cursor: pointer;
+        }
+        img.displays {
+            width: 100%;
+            filter: hue-rotate(300deg) saturate(8);
+        }
+        .vspace { margin-top: 3mm; }
+        .buttons {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        .buttons.resets {
+            flex-wrap: nowrap;
+            min-width: 60mm;
+            justify-content: center;
+        }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+            margin: 2px 20px 0 0;
+        }
+        .invis { opacity: 0; }
+        .tools { margin-top: 10px; }
+
+        .movestext {
+            font-size: 20px;
+            padding-top: 8px;
+            height: 35px;
+        }
+
+        .solution {
+            font-family: 'Roboto Mono';
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        .solution span:not(.str) {
+            display: inline-block;
+            min-width: 120px;
+        }
+        body:not(.solution-shown) .solution,
+        body:not(.play) .solution {
+            color: transparent;
+            font-size: 0;
+        }
+
+        body:not(.play, .solve) .reset-grid,
+        body:not(.play) button.show-sol,
+        body.play .movestext,
+        body.play button.read-solve {
+            user-select: none;
+            pointer-events: none;
+            background-color: #666;
+        }
+
+        body:is(.play, .solve) input.transparent-input.qty {
+            user-select: none;
+            pointer-events: none;
+            color: #FF0000CC;
+        }
+        body:is(.play, .solve) .netsq.tree {
+            pointer-events: none;
+        }
+
+        body.play button.read-solve::before,
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        body:is(.square7, .square8) button.read-solve {
+            width: 77px;
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        body:is(.square7, .square8) button.expert-play {
+            width: 118px;
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        body:not(.play) button.show-sol::before,
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';
+        }
+        button.show-sol {
+            padding: 3px 3px 1px;
+            width: 100px;
+        }
+        .page {
+            background-position: top;
+            background-repeat: repeat-y;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Matchematics</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Matchematics.svg" class="diagram">
+                <h2>On the Subject of Matchematics</h2>
+                <p class="flavour-text">Can you make the match?</p>
+                <p>This module shows an incorrect mathematical expression created using matches. Using the instruction at the top, make the equation true. Click on a segment of a digit to add or remove a match. If the equation is incorrect or you didn’t follow the instruction, a strike will be recorded.</p>
+                <p>The “%” sign represents the modulo operation, which is the remainder after a division.</p>
+                <p>The valid match arrangements are based on seven-segment displays, examples of this can be found below.</p>
+                <img alt="Image of 7 Segment Displays" src="img/Faulty Seven Segment Displays/SegmentsStitched.png" class="displays">
+                <div class="hstack tools left"></div>
+                <div class="hstack gap1 alignc left instruction">
+                    <span>Instruction:</span>
+                    <p class="instruction-group">
+                        <span class="puzzle-type Remove"></span>
+                        <span class="movesNumber">2</span>
+                    </p>
+                    <div style="width:3mm"></div>
+                    <button class="movestext minus">-</button>
+                    <button class="movestext plus">+</button>
+                </div>
+                <div class="hstack alignc holder">
+                    <div class="vstack display0">
+                        <svg class="interactive display0" viewBox="0 -40 340 636" xmlns="http://www.w3.org/2000/svg" text-anchor="middle" stroke-width="4">
+                            <polygon class="seg0" points="278.759,520.74 242.759,556.74 98.759,556.74 62.759,520.74 98.759,484.74 242.759,484.74"/>
+                            <polygon class="seg1" points="287.759,295.928 323.759,331.928 323.759,475.928 287.759,511.928 251.759,475.928 251.759,331.928"/>
+                            <polygon class="seg2" points="278.759,287.927 242.759,323.928 98.759,323.928 62.759,287.927 98.759,251.927 242.759,251.927"/>
+                            <polygon class="seg3" points="53.758,295.928 89.758,331.928 89.758,475.928 53.758,511.928 17.758,475.928 17.758,331.928"/>
+                            <polygon class="seg4" points="287.759,64.427 323.759,100.427 323.759,244.427 287.759,280.427 251.759,244.427 251.759,100.427"/>
+                            <polygon class="seg5" points="53.758,64.427 89.759,100.427 89.759,244.427 53.758,280.427 17.758,244.427 17.758,100.427"/>
+                            <polygon class="seg6" points="278.759,55.26 242.759,91.26 98.759,91.26 62.759,55.26 98.759,19.26 242.759,19.26"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="saves buttons vspace">
+                    <button class="save">Save</button>
+                </div>
+                <div class="buttons vspace">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <div style="height:1mm"></div>
+                <div class="hstack left solution"><span>Solution:</span><span class="str"></span></div>
+                <h4>Controls</h4>
+                <ul>
+                    <li>Click a <strong>segment</strong> to toggle its state.</li>
+                    <li>Click the <strong>left operator</strong> or instruction <strong>action</strong> to set their state.</li>
+                    <li>Use the <strong>+</strong>/<strong>-</strong> buttons or <strong>+</strong>/<strong>-</strong> on your keyboard to change the number of moves.</li>
+                    <li>Switch to <strong>Read</strong> mode to lock in the initial state. Use the <strong>Reset</strong> button to go back to the intial state.</li>
+                    <li>Press the <strong>Manual</strong> button to have fun solving generated puzzles.</li>
+                    <li>The solution to the generated puzzles can be shown or hidden.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>Use the other buttons to clear individual displays, save the state, reset the saves, or reset everything.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
