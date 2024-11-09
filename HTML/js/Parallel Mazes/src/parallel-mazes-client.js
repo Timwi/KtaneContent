@@ -15,7 +15,7 @@ define(["require", "exports", "./type", "./ws-client"], function (require, expor
     exports.ON_MODULE_MOVED_EVENT = "module_moved";
     class ParallelMazesClient {
         constructor() {
-            this.ws = new ws_client_1.WSClient("wss://warm-wildwood-46578.herokuapp.com/");
+            this.ws = new ws_client_1.WSClient("ws://parallelmazes.eltrick.uk:3000");
         }
         connect() {
             return __awaiter(this, void 0, void 0, function* () { yield this.ws.connect(); this.pingJob(); });
