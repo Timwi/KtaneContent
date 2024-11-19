@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>じゃんけんグリッド — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        $(function() {
+            let interactive = $("table.interactive");
+            let saveStates = [];
+            let currentState = 0;
+            let squares = [];
+            let rows = 8;
+            let cols = 6;
+            let nSquares = rows * cols;
+            let selectedSquare = 0;
+            let selected = null;
+            let objClicked = false;
+            let squareColors = ["red", "green", "blue", "black"];
+            let rps = ["Rock", "Paper", "Scissors", "None"];
+            const colorKeyI = { r: 0, g: 1, b: 2, k: 3 };
+            let colorLetters = ["R", "G", "B", "K"];
+
+            function selectNone() {
+                selected = null;
+                updateSelection();
+            }
+            $(document).click(function() {
+                if (!objClicked) {
+                    selectNone();
+                }
+                objClicked = false;
+            }).keydown(function(event) {
+                let k = event.key.toLowerCase();
+                let space = event.key == " ";
+                if (space || k == "r" || k == "g" || k == "b" || k == "k") {
+                    pressColorKey(space ? colorKeyI["k"] : colorKeyI[k]);
+                    $(document).click();
+                    if (space) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return false;
+                    }
+                }
+            });
+
+            function pressColorKey(k) {
+                if (selected) {
+                    removeColorClass(selected);
+                    selected.addClass(squareColors[k]);
+                    if (selectedSquare < nSquares) {selectedSquare = (selectedSquare + 1) % nSquares;}
+                    else {selectedSquare = (selectedSquare + 1) % nSquares + nSquares;}
+                    selected = squares[selectedSquare];
+                    updateSelection();
+                }
+            }
+
+            function removeFutureSaves() {
+                if (currentState < saveStates.length - 1) {
+                    for (let i = currentState + 1; i < saveStates.length; i++) {
+                        saveStates[i].remove();
+                    }
+
+                    saveStates.splice(currentState + 1, saveStates.length - currentState);
+                }
+            }
+
+            function updateSelection() {
+                $(".selected").removeClass("selected");
+                if (selected && selected.length > 0) {
+                    selected.addClass("selected");
+                }
+                objClicked = true;
+            }
+
+            // Based on code from Samfundev’s Game of Life interactive
+            for (let y = 0; y <= rows; y++) {
+                const row = $("<tr>").appendTo(interactive);
+                for (let x = 0; x <= cols; x++) {
+                    if (x == 0 && y == 0) {
+                        $("<th>").appendTo(row);
+                    } else if (y == 0 && x > 0) {
+                        $("<th>").text(String.fromCharCode(64 + x)).appendTo(row);
+                    } else if (y > 0 && x == 0) {
+                        $("<th>").text(y).appendTo(row);
+                    } else {
+                        $("<td>").click(function() {
+                            if ($(this).hasClass("selected")) {
+                                selectNone();
+                            }
+                            else {
+                                selected = $(this);
+                                selectedSquare = (y-1)*cols + x - 1;
+                                updateSelection();
+                            }
+                        }).contextmenu(function() {
+                            $(this).toggleClass("dot");
+                            return false;
+                        }).addClass("multicolor black").append('<div class="box"></div>').appendTo(row);
+                    }
+                }
+            }
+            $("td.multicolor").each(function() {
+                squares.push($(this));
+            });
+
+            let cButtons = $(".vstack.colors");
+            for (let v = 0; v < 4; v++) {
+                let stack = $("<div>").addClass("hstack").appendTo(cButtons);
+                $("<button>").text(colorLetters[v]).click(function() {
+                    pressColorKey(v);
+                }).addClass(squareColors[v]).appendTo(stack);
+                $("<span>").addClass("rps").text(rps[v]).appendTo(stack);
+            }
+
+            function hasWhichColor(elem) {
+                for (var i = 0; i < squareColors.length; i++) {
+                    if (elem.hasClass(squareColors[i])) { return i; }
+                }
+                return -1;
+            }
+
+            function nextColor(elem) {
+                let c = hasWhichColor(elem);
+                removeColorClass(elem);
+                elem.addClass(squareColors[(c + 1) % squareColors.length]);
+            }
+
+            function removeColorClass(elem) {
+                elem.removeClass("black red blue green");
+            }
+
+            $("button.reset-all").click(function() {
+                $(`.grid table.interactive td`).removeClass("red blue green dot");
+                $(`.grid table.interactive td`).addClass("black");
+                selectNone();
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+
+            $("button.reset-saves").click(function() {
+                saveStates.forEach(x => x.remove());
+                saveStates = [];
+                currentState = 0;
+            });
+
+            $("button.reset-grid").click(function() {
+                $(`.grid table.interactive td`).removeClass("red blue green dot");
+                $(`.grid table.interactive td`).addClass("black");
+            });
+
+            $(".colorblind").click(function() {
+                $(this).toggleClass("en");
+                $("body").toggleClass("cblind");
+            });
+
+            $("button.save").click(function() {
+                removeFutureSaves();
+
+                let saveState = Array.from($(`.grid table.interactive td`)).map(x => $(x)).map(x => x.attr("class") || "");
+                console.log(saveStates);
+                let stateNumber = saveStates.length;
+                currentState = stateNumber;
+
+                let button = $("<button>").text(stateNumber + 1).click(function() {
+                    $(`.grid table.interactive td`).each((i, x) => $(x).attr("class", saveState[i]));
+                    currentState = stateNumber;
+                }).addClass("flash").appendTo(`.saves.buttons`);
+                setTimeout(() => {
+                    button.removeClass("flash");
+                }, 100);
+
+                saveStates.push(button);
+            });
+        });
+    </script>
+    <style>
+        .hstack {
+            align-items: center;
+        }
+        .vstack {
+            align-items: center;
+        }
+        .hstack.just-left {
+            justify-content: left;
+        }
+        .vstack.just-left {
+            align-items: start;
+        }
+
+        .interactive-container {
+            width: 70mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        table.interactive, table.interactive tr, table.interactive th, table.interactive td:nth-child(1) {
+            border: none;
+            background: none;
+        }
+
+        table.interactive td {
+            border: rgb(51, 77, 108) 5px solid;
+            /* box-sizing: border-box; */
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        table.interactive td>.box {
+            transition: background 0.2s;
+            position: relative;
+            width: 30px;
+            height: 30px;
+        }
+
+        table.interactive td.black>.box, button.black { background: black; }
+        table.interactive td.blue>.box, button.blue { background: blue; }
+        table.interactive td.green>.box, button.green { background: green; }
+        table.interactive td.red>.box, button.red { background: red; }
+        body.cblind td.black .box::after, button.black { color: white; content: "K"; }
+        body.cblind td.blue .box::after, button.blue { color: white; content: "B"; }
+        body.cblind td.green .box::after, button.green { color: white; content: "G"; }
+        body.cblind td.red .box::after, button.red { color: white; content: "R"; }
+
+        table.interactive td.selected>.box {
+            background: rgba(200, 200, 200, 0.4);
+        }
+        body:not(.cblind) table.interactive td.multicolor>.box::after {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            content: '';
+            width: 0px;
+            height: 0px;
+            transition: background 0.2s, top 0.2s, left 0.2s, width 0.2s, height 0.2s;
+        }
+        body.cblind table.interactive td.multicolor>.box::after {
+            position: absolute;
+            top: 8px;
+            left: 10px;
+        }
+
+        body:not(.cblind) table.interactive td.multicolor.dot>.box::after {
+            top: 10px;
+            left: 10px;
+            width: 10px;
+            height: 10px;
+            background: white;
+        }
+
+        button {
+            margin: 4px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+            display: block;
+            font-family: "Special Elite";
+            padding-top: 3px;
+        }
+        button.reset-board, button.reset-all, button.reset-saves, button.save {
+            padding-left: 2px;
+            padding-bottom: 0px;
+            padding-right: 2px;
+        }
+        .colors button {
+            margin: 0;
+            font-size: 20px;
+            width: 30px;
+            padding-top: 7px;
+        }
+        span.rps {
+            padding-top: 7px;
+            margin-left: 10px;
+        }
+        button.colorblind {
+            font-size: 13px;
+            padding: 2px;
+        }
+        button.colorblind.en::before {
+            content: 'Colorblind Enabled';
+        }
+        button.colorblind:not(.en)::before {
+            content: '色覚サポート';
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+
+        h4 {
+            margin-top: 3mm;
+            padding-left: 6mm;
+        }
+        table.nopadding ul {
+            margin: 7px;
+            padding: 0;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        .buttons.resets {
+            flex-wrap: nowrap;
+            min-width: 60mm;
+            justify-content: center;
+        }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">じゃんけんグリッド</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/CA-RPS.svg" class="diagram">
+                <h2>モジュール詳細：じゃんけんグリッド</h2>
+                <p class="flavour-text">「変なモジュールだな」<i>あなたは自分が誰であるか知っている。</i></p>
+                <p>モジュールには8×6グリッドがある。このグリッドの各セルは、グー(赤)、パー(青)、チョキ(緑)または空のいずれかになる。</p>
+                <p>初期グリッド内の各セルの状態は、隣接する8つのセル間のグー、チョキ、パーの数によって変化する。</p>
+                <ul><li>セルが空の場合:<ul>
+                <li>隣接するセルがすべて空か3種類が同数の場合、セルは空のままである。</li>
+                <li>そうでなければ、2種類が同数の場合、2つを比べて勝利した方の色に切り替える。</li>
+                <li>そうでなければ、セルの状態は最も数の多いものに切り替える。</li></ul>
+                <li>セルが空ではない場合:
+                <ul><li>そのセルに勝つセルの数が、そのセルが負けるセルの数以上ある場合、セルはそのままである。</li>
+                <li>それ以外の場合、セルの状態は現在の状態に勝つ状態である。</li></ul></li></ul>
+                <p>*グリッドの端は反対側にループするため、グリッド内のすべてのセルには8つの隣接するセルが存在する。</p>
+                <p>グリッド内のセルの状態を切り替えるには:</p>
+                <ol><li>グー、チョキ、パーのボタンを押す。<br>既に選択されている状態を選択すると選択された状態が空に切り替わる。デフォルトでは空の状態が選択されている。</li>
+                <li>グリッド内のセルを選択し、そのセルを選択した状態に切り替える。</li></ol>
+                <ul><li>「Clear」ボタンは、すべてのセルの状態を空に変更する。</li>
+                <li>「Reset」ボタンは、すべてのセルの状態を元の状態に変更する。</li>
+                <li>「Submit」ボタンは、グリッド内のセルの現在の構成が予想される最終構成と照合される。<br>構成が一致するとモジュールは解除される。一致しない場合、ミスが記録される。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">じゃんけんグリッド</span>
+            </div>
+            <div class="page-content">
+                <table class="nopadding">
+                    <tr>
+                        <th>セルは空である</th>
+                        <th>セルは空ではない</th>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%">
+                            <ul>
+                                <li>すべての隣接が空、または3種類が同点:<b>空のまま</b></li>
+                                <li>2種類が同点:2種類を比べて<b>勝利</b>するもの</li>
+                                <li>それ以外: <b>最も数の多いもの</b></li>
+                            </ul>
+                        </td>
+                        <td style="width: 50%">
+                            <ul>
+                                <li>隣接するセルについて負けの数以上勝つセルがある:変化なし</li>
+                                <li>それ以外:現在の状態に勝つもの</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+                <button class="colorblind"></button>
+                <div class="hstack">
+                    <div class="interactive-container grid">
+                        <table class="interactive"></table>
+                    </div>
+                    <div class="vstack just-left colors"></div>
+                </div>
+
+                <div class="saves buttons">
+                    <button class="save">保存</button>
+                </div>
+                <div class="buttons">
+                    <button class="reset-saves">保存削除</button>
+                    <button class="reset-grid">グリッドリセット</button>
+                    <button class="reset-all">全てリセット</button>
+                </div>
+
+                <h3>操作</h3>
+                <ul>
+                    <li>セルを<b>押して</b>、R/G/B/K(スペース)キーを押すか色ボタンを押して選択したセルに色を付ける。</li>
+                    <li>選択したセルを<b>押す</b>か、グリッドの外側を押して選択を解除する。</li>
+                    <li>セルを<b>右クリック</b>してマークする。</li>
+                    <li>色覚サポートを有効にすると、各セルに色の英名の頭文字が表示される。</li>
+                    <li>各グリッドの下のボタンを使用し、グリッドを保存、保存削除、グリッドのリセット、及び全てリセットできる。</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>
