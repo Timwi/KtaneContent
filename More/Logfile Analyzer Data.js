@@ -16952,6 +16952,51 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "SimonShapesModule",
+		loggingTag: "Simon Shapes",
+		matches: [
+			{
+				regex: /Stage \d+: (The reference digit is: \d+\. The flashes are .+, which means that (.+) and (.+) needs to be pressed for this stage\.)/,
+				handler: function (matches, module) {
+					if(!module.logic) {
+						module.logic = [];
+						module.answer = [];
+					}
+					module.answer.push(matches[2], matches[3])
+					module.logic.push(matches[1]);
+					return true;
+				}
+			},
+			{
+				regex: /---------- Stage (\d) ----------/,
+				handler: function (matches, module) {
+					const stageNum = matches[1];
+					const answer = module.answer.filter((_, ix) => ix <= stageNum * 2 - 1).join(", ");
+					module.currentArr = [`Stage ${stageNum}: Press ${answer}`, [module.logic[stageNum - 1], [`Inputs`, []]]];
+					module.push(module.currentArr);
+					return true;
+				}
+			},
+			{
+				regex: /Pressed (Red|Green|Blue|Cyan|Magenta|Yellow)/,
+				handler: function (matches, module) {
+					const loggedLine = readTaggedLine();
+					
+					if(loggedLine === "Time for the shape!") {
+						module.currentArr[1][1][1].push(matches[0]);
+						linen--;
+					}
+					else {
+						module.currentArr[1][1][1].push(`${matches[0]}. ${loggedLine}`);
+					}
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+
+		]
+	},
+	{
 		moduleID: "SimonShrieksModule",
 		loggingTag: "Simon Shrieks",
 		matches: [
