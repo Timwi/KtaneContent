@@ -496,6 +496,7 @@ let SouvenirModuleData = [
 	{ name: "Subscribe to Pewdiepie",	id: "subscribeToPewdiepie",	questions: ["How many subscribers do Pewdiepie and T-Series have?"] },
 	{ name: "Subway",	id: "subway",	questions: ["Which bread did the customer ask for?","Which item was not asked for?"] },
 	{ name: "Sugar Skulls",	id: "sugarSkulls",	questions: ["What skulls were shown?"] },
+	{ name: "Suits and Colours",	id: "GSSuitsAndColours",	questions: ["What were the colours and suits of each cell?"] },
 	{ name: "Superparsing",	id: "superparsing",	questions: ["What was the displayed word?"] },
 	{ name: "The Switch",	id: "BigSwitch",	questions: ["What color were the LEDs?"] },
 	{ name: "Switches",	id: "switchModule",	questions: ["What was the initial position of the switches?"] },
