@@ -15238,8 +15238,7 @@ let parseData = [
 					module.push(submission);
 					return true;
 				}
-			},
-			{ regex: /.+/ }
+			}
 		],
 	},
 	{
