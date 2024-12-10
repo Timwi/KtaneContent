@@ -43,3 +43,18 @@ function NoSpecialKeys(event) {
 function IsLetter(str) {
     return str.length === 1 && str.match(/[a-z]/i);;
 }
+
+function getHighlighterMode(event) {
+    let ctrl = event.ctrlKey;
+    let shift = event.shiftKey;
+
+    if (event.altKey && !ctrl && !shift) {
+        ctrl = true;
+        shift = true;
+    }
+
+    if (event.metaKey)
+        ctrl = true;
+
+    return ((ctrl && !shift) ? 'column' : (shift && !ctrl) ? 'row' : (shift && ctrl) ? 'element' : null);
+}
