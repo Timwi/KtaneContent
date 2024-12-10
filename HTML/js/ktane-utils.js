@@ -167,7 +167,7 @@ e.onload = function()
                     $(this).css("fill", $(this).data('origFill'));
                 }
             }).removeClass("svgIsHighlighted");
-        })
+        });
 
         // Takes a keypress event; returns a number 0-9 if a number key was pressed (ignoring modifiers), else null.
         function extractNumberKey(event) {
