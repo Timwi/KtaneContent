@@ -32,6 +32,7 @@ let SouvenirModuleData = [
 	{ name: "Bakery",	id: "bakery",	questions: ["Which menu items were present?"] },
 	{ name: "Bamboozled Again",	id: "bamboozledAgain",	questions: ["What were the text and color of each correct button?","What were the decrypted text and color of each displayed message?"] },
 	{ name: "Bamboozling Button",	id: "bamboozlingButton",	questions: ["What color was the button in each stage?","What were the labels on the button in each stage?","What were the displays and their colors in each stage?"] },
+	{ name: "Bar Charts",	id: "GSBarCharts",	questions: ["What were the bars’ heights, colors, and labels?","What was the category?","What was the unit?"] },
 	{ name: "Barcode Cipher",	id: "BarcodeCipherModule",	questions: ["What was the screen number?","What was the edgework represented by each barcode?","What was the answer for each barcode?"] },
 	{ name: "Bartending",	id: "BartendingModule",	questions: ["Which ingredient was in which position?"] },
 	{ name: "Bean Sprouts",	id: "beanSprouts",	questions: ["What colors were the eaten sprouts?","Where were the eaten beans?"] },
