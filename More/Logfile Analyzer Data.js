@@ -1813,10 +1813,7 @@ let parseData = [
 				handler:function (matches, module) {
 					const svg = module.getSVG(module.positiveColor);
 					module.dropDown[1].push({ label: 'User Submission:',obj:  $('<div>').append(svg) });
-					debugger
-					console.log(module.attempts)
 					module.attempts++;
-
 					module.dropDown = [`Attempt ${module.attempts}`, []];
 					module.positiveClues = [];
 					if(module.advanced) {
@@ -15561,6 +15558,151 @@ let parseData = [
 					}
 					finalLine += "\n           Red                        Green                        Blue";
 					module.push({ label: "The grid:", obj: pre(finalLine) });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
+		moduleID: "RGBQuiz",
+		loggingTag: "RGB Quiz",
+		matches: [
+			{
+				regex: /Stage (\d+), color index: (red|green|blue)/,
+				// regex: /Stage 1, color index: (red|green|blue)/,
+				handler: function (matches, module) {
+					const colorTextSize = 12;
+					const colorTextYOffset = -5;
+					
+					currentStage = matches[1];
+
+					if (!module.dimension) {
+						module.currentStage = 1;
+						module.dimension = 50;
+						module.halfDimension = module.dimension / 2;
+						module.stageDropdowns = [];
+						module.attemptNum = 1;
+						module.push(`Attempt ${module.attemptNum}`)
+						module.makeRect = (x, y, color) => {
+							return $SVG("<rect>")
+								.attr("width", module.dimension)
+								.attr("height", module.dimension)
+								.attr("x", x)
+								.attr("y", y)
+								.attr("fill", color)
+								.addClass("rgb-quiz")
+						}
+						module.makeText = (x, y, text, fontSize, needsWhiteText) => {
+							return $SVG("<text>")
+								.attr("x", x)
+								.attr("y", y)
+								.attr("font-size", fontSize)
+								.attr("fill", needsWhiteText ? "white" : "black")
+								.text(text)
+						}
+						module.makeSubmissionGrid = (input) => {
+							const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 175'>`);
+							for (let row = 0; row < 3; row++) {
+								for (let col = 0; col < 5; col++) {
+									let index = row * 5 + col;
+									const shouldPress = input[index] == '#';
+									const backgroundColor = shouldPress ? "green" : "red";
+									const x = col * module.dimension;
+									const y = row * module.dimension;
+									module.makeRect(x, y, backgroundColor).appendTo(svg);
+									module.makeText(x + module.halfDimension - 5, y + module.halfDimension + 5, shouldPress ? '✔' : 'X', undefined, false).appendTo(svg);
+								}
+							}
+							return svg;
+						}
+
+						module.colors = [
+							{name: "BLUE", mixture: "--+", backgroundColor: "#44F", needsWhiteText: true},
+							{name: "AZURE", mixture: "-0+", backgroundColor: "#08F", needsWhiteText: false},
+							{name: "CYAN", mixture: "-++", backgroundColor: "#0FF", needsWhiteText: false},
+							{name: "VIOLET", mixture: "0-+", backgroundColor: "#80F", needsWhiteText: true},
+							{name: "MAYA", mixture: "00+", backgroundColor: "#88F", needsWhiteText: false},
+							{name: "AQUA", mixture: "0++", backgroundColor: "#8FF", needsWhiteText: false},
+							{name: "MAGENTA", mixture: "+-+", backgroundColor: "#F8F", needsWhiteText: false},
+							{name: "PINK", mixture: "+0+", backgroundColor: "#F8F", needsWhiteText: false},
+							{name: "WHITE", mixture: "+++", backgroundColor: "#fff", needsWhiteText: false},
+							{name: "INDIGO", mixture: "--0", backgroundColor: "#448", needsWhiteText: true},
+							{name: "TEAL", mixture: "-00", backgroundColor: "#088", needsWhiteText: true},
+							{name: "JADE", mixture: "-+0", backgroundColor: "#0F8", needsWhiteText: false},
+							{name: "PLUM", mixture: "0-0", backgroundColor: "#808", needsWhiteText: true},
+							{name: "GRAY", mixture: "000", backgroundColor: "#888", needsWhiteText: false},
+							{name: "MINT", mixture: "0+0", backgroundColor: "#8F8", needsWhiteText: false},
+							{name: "ROSE", mixture: "+-0", backgroundColor: "#F08", needsWhiteText: true},
+							{name: "SALMON", mixture: "+00", backgroundColor: "#F88", needsWhiteText: false},
+							{name: "CREAM", mixture: "++0", backgroundColor: "#FF8", needsWhiteText: false},
+							{name: "BLACK", mixture: "---", backgroundColor: "#000", needsWhiteText: true},
+							{name: "FOREST", mixture: "-0-", backgroundColor: "#080", needsWhiteText: true},
+							{name: "GREEN", mixture: "-+-", backgroundColor: "#0F0", needsWhiteText: false},
+							{name: "MAROON", mixture: "0--", backgroundColor: "#844", needsWhiteText: true},
+							{name: "OLIVE", mixture: "00-", backgroundColor: "#880", needsWhiteText: true},
+							{name: "LIME", mixture: "0+-", backgroundColor: "#8F0", needsWhiteText: false},
+							{name: "RED", mixture: "+--", backgroundColor: "#F00", needsWhiteText: true},
+							{name: "ORANGE", mixture: "+0-", backgroundColor: "#F80", needsWhiteText: false},
+							{name: "YELLOW", mixture: "++-", backgroundColor: "#FF0", needsWhiteText: false},
+						]
+					}
+
+					module.stageDropdowns.push([`Stage ${matches[1]}`, ["Color index: " + matches[2]]]);
+					const gridLines = readTaggedLines(4).slice(1).map(arr => arr.split(' ')).flatMap(arr => arr)
+					const gridSvg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 175'>`);
+					for (let row = 0; row < 3; row++) {
+						for (let col = 0; col < 5; col++) {
+							let index = row * 5 + col;
+							const mixture = gridLines[index];
+							const colorObj = module.colors.find(obj => obj.mixture == mixture);
+							const name = colorObj.name;
+							const backgroundColor = colorObj.backgroundColor;
+							const needsWhiteText = colorObj.needsWhiteText;
+							const x = col * module.dimension;
+							const y = row * module.dimension;
+							module.makeRect(x, y, backgroundColor, module.dimension).appendTo(gridSvg);
+							module.makeText(x + 2, y + module.dimension + colorTextYOffset, name.toUpperCase()[0] + name.substring(1).toLowerCase(), colorTextSize, needsWhiteText).appendTo(gridSvg);
+							module.makeText(x + module.halfDimension - 10, y + module.halfDimension, mixture, undefined, needsWhiteText).appendTo(gridSvg);
+
+						}
+					}
+
+					const screenColorMixture = readTaggedLine().match(/Stage \d, Screen color: ((-|\+|0){3})/)[1]
+					const screenColorObj = module.colors.find(obj => obj.mixture == screenColorMixture);
+
+					const stageColorX = 0;
+					const stageColorY = 0
+					const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 70'>`);
+					module.makeRect(stageColorX, stageColorY, screenColorObj.backgroundColor).appendTo(svg);
+					module.makeText(stageColorX + 2, stageColorY + module.dimension + colorTextYOffset, screenColorObj.name.toUpperCase()[0] + screenColorObj.name.substring(1).toLowerCase(), colorTextSize, screenColorObj.needsWhiteText).appendTo(svg);
+					module.makeText(stageColorX + module.halfDimension - 10, stageColorY + module.halfDimension, screenColorMixture, undefined, screenColorObj.needsWhiteText).appendTo(svg);
+
+					const solutionLines = readTaggedLines(4).slice(1).map(arr => arr.split(' ')).flatMap(arr => arr)
+					module.stageDropdowns[currentStage - 1][1].push({ obj: gridSvg, label: "Grid:", nobullet: true }, { obj: svg, label: "Stage Color:", nobullet: true }, { obj: module.makeSubmissionGrid(solutionLines), label: "Solution:", nobullet: true });
+					module.push(module.stageDropdowns[currentStage - 1]);
+					return true;
+				}
+			},
+			{
+				regex: /Incorrectly submitted ([x#]{15})\. Strike\./,
+				handler: function (matches, module) {
+					
+					const gridLines = matches[1].split('');
+					module.stageDropdowns[module.currentStage - 1][1].push({ obj: module.makeSubmissionGrid(gridLines), label: "Incorrectly submitted:", nobullet: true })
+					module.stageDropdowns = [];
+					module.attemptNum += 1;
+					module.currentStage = 1;
+					module.push(`Attempt ${module.attemptNum}`)
+					return true;
+				}
+			},
+			{
+				regex: /Correctly submitted ([x#]{15})\./,
+				handler: function (matches, module) {
+					const gridLines = matches[1].split('');
+					module.stageDropdowns[module.currentStage - 1][1].push({ obj: module.makeSubmissionGrid(gridLines), label: "Correctly submitted:", nobullet: true })
+					module.currentStage += 1;
 					return true;
 				}
 			},
