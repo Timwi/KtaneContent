@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Keypad — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        * {
+            font-family: 'Special Elite', 'Courier New', monospace;
+            box-sizing: border-box;
+        }
+        .keypad-table {
+            margin: auto;
+            margin-top: 0.5em;
+        }
+        .keypad-unique-symbol {
+            filter: contrast(0%) sepia(100%) saturate(100);
+        }
+        .keypad-table-column {
+            width: 90px;
+            height: 90px;
+            max-width: 90px;
+            text-align: center;
+            padding-top: 0px;
+        }
+        .keypad-symbol-image {
+            height: 1.6em;
+        }
+        .keypad-table-column p {
+            margin: 0;
+            height: 2em;
+            font-size: 0.4em;
+            line-height: 1.05em;
+            transform: translateY(-2px);
+        }
+        .keypad-table-column p span {
+            display: inline-block;
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        span input {
+            width: 100%;
+        }
+
+        .keypad-no-names p {
+            display: none;
+        }
+        .keypad-no-names .keypad-table-column {
+            font-size: 1em;
+        }
+        .keypad-no-names .keypad-symbol-image {
+            height: 1.9em;
+        }
+
+        .keypad-table-spacer {
+            margin: 0;
+            padding: 0.1em !important;
+            width: 0;
+        }
+
+        .dark table {
+            color: #222;
+        }
+    </style>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var CUSTOM_SYMBOL_NAMES_KEY = "vanilla-keypad-custom-symbol-names";
+        var SYMBOL_NAMES_TYPE_KEY = "vanilla-keypad-symbol-names-type";
+
+        var filenames = [
+            "1-copyright.png", "2-filledstar.png", "3-hollowstar.png", "4-smileyface.png", "5-doublek.png", "6-omega.png", "7-squidknife.png", "8-pumpkin.png",
+            "9-hookn.png", "10-teepee.png", "11-six.png", "12-squigglyn.png", "13-at.png", "14-ae.png", "15-meltedthree.png", "16-euro.png", "17-circle.png",
+            "18-nwithhat.png", "19-dragon.png", "20-questionmark.png", "21-paragraph.png", "22-rightc.png", "23-leftc.png", "24-pitchfork.png", "25-tripod.png",
+            "26-cursive.png", "27-tracks.png", "28-balloon.png", "29-weirdnose.png", "30-upsidedowny.png", "31-bt.png"
+        ];
+        var symbolnames = {
+            "None": null,
+            "Official Names": [
+                "Copyright Sign", "Black Star", "White Star", "Arabic Teh with Ring", "Descender Zhe", "Greek Omega", "Iotified Big Yus", "Titlo Omega",
+                "Coptic Kai", "Coptic Gangia", "Cyrillic Be", "Archaic Greek Koppa", "Cyrillic Little Yus", "Lowercase Æsh", "Cyrillic Komi Dzje", "Diaeresis Cyrillic E", "Cyrillic Hundred Thousands",
+                "Short I with Tail", "Cyrillic Ksi", "Inverted Question Mark", "Pilcrow Sign", "Dot Lunate Sigma", "Reverse Dot Lunate Sigma", "Greek Psi", "Cyrillic Big Yus",
+                "Abkhazian Ha", "Cyrillic Thousands", "Greek Koppa", "Greek Zeta", "Greek Lambda", "Cyrillic Yat"
+            ],
+            "Community Names": [
+                "Copyright", "Filled Star", "Hollow Star", "Smiley", "Double K", "Omega", "Squid Knife", "Pumpkin",
+                "Hook N", "Teepee", "Six", "Squiggly N", "A-T", "A-E", "Melted 3", "Euro", "Circle",
+                "N with Hat", "Dragon", "Question Mark", "Paragraph", "Right C", "Left C", "Pitchfork", "Tripod",
+                "Cursive", "Tracks", "Balloon", "Weird Nose", "Upside Down Y", "B-T"
+            ],
+            "Quick Names": [
+                "Copyright", "Filled Star", "Empty Star", "Smile", "I-X", "Omega", "Squid Knife", "Pumpkin",
+                "H", "Teepee", "Six", "Lightning", "A-T", "A-E", "Melted 3", "E", "Circle",
+                "N", "Dragon 3", "Question", "Pilcrow", "Right C", "Left C", "I-U", "Tripod",
+                "Cursive", "Tracks", "Balloon", "Zeta", "Lambda", "B-T"
+            ],
+        }
+        if (!(CUSTOM_SYMBOL_NAMES_KEY in localStorage)) {
+            localStorage[CUSTOM_SYMBOL_NAMES_KEY] = JSON.stringify(symbolnames["Quick Names"]);
+        }
+        symbolnames["Custom Names"] = JSON.parse(localStorage[CUSTOM_SYMBOL_NAMES_KEY]);
+        if (!(SYMBOL_NAMES_TYPE_KEY in localStorage)) {
+            localStorage[SYMBOL_NAMES_TYPE_KEY] = "Quick Names";
+        }
+
+        function setRules(rnd) {
+            var precedenceLists = PopulatePLists(rnd);
+            var uniqueLists = PopulateULists(precedenceLists);
+
+            var trs = document.querySelectorAll('.keypad-table tr');
+            for (var row = 0; row < trs.length; row++) {
+                var tds = trs[row].querySelectorAll('.keypad-table-column');
+                for (var col = 0; col < tds.length; col++) {
+                    var symbol = precedenceLists[col][row];
+
+                    var img = tds[col].firstElementChild;
+                    img.setAttribute('src', `img/Keypad/${symbol}`);
+                    if (uniqueLists[col][row]) {
+                        img.classList.add('keypad-unique-symbol');
+                    } else {
+                        img.classList.remove('keypad-unique-symbol');
+                    }
+
+                    tds[col].lastElementChild.addEventListener("dblclick", function(ev) {
+                        if (localStorage[SYMBOL_NAMES_TYPE_KEY] != "Custom Names") return;
+
+                        var span = ev.target;
+                        if (span.tagName == "P") span = span.firstElementChild;
+                        if (span.tagName == "INPUT") return;
+                        var text = span.textContent;
+                        span.textContent = "";
+
+                        var input = document.createElement("INPUT");
+                        input.value = text;
+                        input.addEventListener("focusout", function() {
+                            inputSymbolName(input, precedenceLists);
+                        });
+                        input.addEventListener("keydown", function(ev) {
+                            if (ev.key == "Enter") inputSymbolName(input, precedenceLists);
+                        });
+                        input.addEventListener("change", function() {
+                            inputSymbolName(input, precedenceLists);
+                        });
+
+                        span.appendChild(input);
+                        input.select();
+                    });
+                }
+            }
+
+            loadSymbolNames(precedenceLists);
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        function setSymbolNames(precedenceLists, type) {
+            if (type == "Custom Names") {
+                document.querySelector("p i").textContent = "(double click to edit name)";
+            } else {
+                document.querySelector("p i").textContent = ""
+            }
+
+            var names = symbolnames[type];
+            if (names == null) {
+                document.querySelector('.keypad-table').classList.add('keypad-no-names');
+            } else {
+                document.querySelector('.keypad-table').classList.remove('keypad-no-names');
+                var trs = document.querySelectorAll('.keypad-table tr');
+                for (var row = 0; row < precedenceLists[0].length; row++) {
+                    var tds = trs[row].querySelectorAll('.keypad-table-column');
+                    for (var col = 0; col < precedenceLists.length; col++) {
+                        var span = tds[col].lastElementChild.firstElementChild;
+                        span.textContent = names[filenames.indexOf(precedenceLists[col][row])];
+                    }
+                }
+            }
+            localStorage[SYMBOL_NAMES_TYPE_KEY] = type;
+        }
+
+        function loadSymbolNames(precedenceLists) {
+            var namesSelector = document.getElementById('symbol-names-type');
+            namesSelector.innerHTML = Object.keys(symbolnames).map(
+                function(type) {
+                    return `<option value="${type}">${type}</option>`;
+                }
+            ).join("");
+            namesSelector.addEventListener('change', function(ev) {
+                setSymbolNames(precedenceLists, ev.target.value);
+            });
+            namesSelector.value = localStorage[SYMBOL_NAMES_TYPE_KEY];
+            setSymbolNames(precedenceLists, localStorage[SYMBOL_NAMES_TYPE_KEY]);
+        }
+
+        function inputSymbolName(input, precedenceLists) {
+            var text = input.value.trim();
+            console.log(input, text);
+            if (text) {
+                var img = input.parentElement.parentElement.parentElement.firstElementChild;
+                var filename = img.src.substring(img.src.lastIndexOf("/")+1);
+                symbolnames["Custom Names"][filenames.indexOf(filename)] = text;
+                localStorage[CUSTOM_SYMBOL_NAMES_KEY] = JSON.stringify(symbolnames["Custom Names"]);
+            }
+            input.remove();
+            setSymbolNames(precedenceLists, localStorage[SYMBOL_NAMES_TYPE_KEY]);
+        }
+
+        function PopulateULists(precedenceLists) {
+            var notUnique = new Set();
+            var uniqueLists = [];
+            for (var col = 0; col < precedenceLists.length; col++) {
+                var uniqueList = [];
+                for (var row = 0; row < precedenceLists[col].length; row++) {
+                    var symbol = precedenceLists[col][row];
+                    if (notUnique.has(symbol)) {
+                        uniqueList.push(false);
+                        continue;
+                    }
+                    var unique = true;
+                    for (var icol = 0; icol < precedenceLists.length; icol++) {
+                        if (icol != col && precedenceLists[icol].includes(symbol)) {
+                            unique = false;
+                            break;
+                        }
+                    }
+                    if (!unique) notUnique.add(symbol);
+                    uniqueList.push(unique);
+                }
+                uniqueLists.push(uniqueList);
+            }
+            return uniqueLists;
+        }
+
+        function PopulatePLists(rnd) {
+            var pLists = [];
+            var list = filenames.slice(0);
+            var list2 = [];
+            for (var i = 0; i < 6; i++) {
+                var list3 = [];
+                pLists.push(list3);
+                var j = 0;
+                if (i > 0) {
+                    while (j < 3) {
+                        if (list2.length == 0) break;
+                        var index = rnd.next(0, list2.length);
+                        list3.push(list2[index]);
+                        list2.splice(index, 1);
+                        j++;
+                    }
+                }
+                while (j < 7) {
+                    var index2 = rnd.next(0, list.length);
+                    list3.push(list[index2]);
+                    list2.push(list[index2]);
+                    list.splice(index2, 1);
+                    j++;
+                }
+                RandomizePList(list3, rnd);
+            }
+            return pLists;
+        }
+
+        // Note: this shuffling function needs to match the one in the game
+        function RandomizePList(pList, rnd) {
+            for (var i = 0; i < pList.length; i++) {
+                var value = pList[i];
+                var index = rnd.next(0, pList.length);
+                pList[i] = pList[index];
+                pList[index] = value;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Keypad</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Keypad.svg" class="diagram">
+                <h2>On the Subject of Keypads</h2>
+                <p class="flavour-text">Oh hey! I've seen these symbols in some old math and history books. I wonder why they're on a bomb?</p>
+                <ul>
+                    <li>Only one column below has all four of the symbols from the keypad.</li>
+                    <li>Press the four buttons in the order their symbols appear from top to bottom within that column.</li>
+                    <li>Colored symbols are unique to that column.</li>
+                </ul>
+                <p>Symbol Names: <select id="symbol-names-type"></select> <i></i></p>
+                <table class="keypad-table invertible">
+                    <tr>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/28-balloon.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/16-euro.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/1-copyright.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/11-six.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/24-pitchfork.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/11-six.png"><br><p><span></span></p></td>
+                    </tr>
+                    <tr>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/13-at.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/28-balloon.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/8-pumpkin.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/21-paragraph.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/4-smileyface.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/16-euro.png"><br><p><span></span></p></td>
+                    </tr>
+                    <tr>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/30-upsidedowny.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/23-leftc.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/26-cursive.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/31-bt.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/31-bt.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/27-tracks.png"><br><p><span></span></p></td>
+                    </tr>
+                    <tr>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/12-squigglyn.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/26-cursive.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/5-doublek.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/7-squidknife.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/22-rightc.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/14-ae.png"><br><p><span></span></p></td>
+                    </tr>
+                    <tr>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/7-squidknife.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/3-hollowstar.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/15-meltedthree.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/5-doublek.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/21-paragraph.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/24-pitchfork.png"><br><p><span></span></p></td>
+                    </tr>
+                    <tr>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/9-hookn.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/9-hookn.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/30-upsidedowny.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/20-questionmark.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/19-dragon.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/18-nwithhat.png"><br><p><span></span></p></td>
+                    </tr>
+                    <tr>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/23-leftc.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/20-questionmark.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/3-hollowstar.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/4-smileyface.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/2-filledstar.png"><br><p><span></span></p></td>
+                        <td class="keypad-table-spacer nohighlight"></td>
+                        <td class="keypad-table-column"><img class="keypad-symbol-image" src="img/Keypad/6-omega.png"><br><p><span></span></p></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
