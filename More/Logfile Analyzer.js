@@ -3,6 +3,10 @@ if (localStorage.getItem("theme") == "dark") {
     document.documentElement.classList.add("dark-mode");
 }
 
+$.event.special.destroyed = {
+    remove: o => o.handler?.(),
+};
+
 class Groups {
     constructor() {
         this.groups = [];
@@ -235,7 +239,7 @@ class BombGroup {
             .mousedown(function() { return false; });
         var bombGroupHTML = $("<div class='bomb-group'>").hide().appendTo("#wrap");
 
-        if (this.PreviewImage) bombHTML.addClass("preview").css("backgroundImage", `url("${this.PreviewImage}"), url(img/BombPreview.png)`);
+        if (this.PreviewImage) bombHTML.addClass("preview").css("background", `url("${this.PreviewImage}") top / 100%, url(img/BombPreview.png) center / cover`);
 
         var totalModules = 0;
         var totalNeedies = 0;
@@ -942,6 +946,50 @@ function Bomb(seed) {
 
         var caseHTML = $("<span>").text(" Unknown");
 
+        let previewImage = null;
+
+        console.log(this);
+
+        if (this.PreviewImage)
+        {
+            previewImage = $("<div>")
+                .addClass("bomb-preview")
+                .css("background-image", `url("${this.PreviewImage}")`);
+
+            const getDelta = e => {
+                const box = previewImage[0].getBoundingClientRect();
+                return (e.pageX - box.x) / box.width;
+            };
+
+            let isDragging = false,
+                delta = 0,
+                currentPos = 0;
+
+            const onDown = e => {
+                isDragging = true;
+                delta = getDelta(e);
+                e.preventDefault();
+            },
+            onMove = e => {
+                if (isDragging) {
+                    e.preventDefault();
+
+                    const d = getDelta(e);
+                    currentPos += d - delta;
+                    delta = d;
+
+                    previewImage.css("background-position-y", `${Math.floor(-currentPos * 6) / (this.PreviewFrames - 1) * 100}%`);
+                }
+            },
+            onUp = e => {
+                isDragging = false;
+            };
+
+            previewImage.on("mousedown touchstart", onDown);
+            $(window).on("mousemove touchmove", onMove).on("mouseup touchend", onUp);
+            previewImage.on("destroyed", () => $(window).off("mousemove touchmove", onMove).off("mouseup touchend", onUp));
+        }
+
         var edgeworkInfo = $("<div class='module-info'>").appendTo(info);
         $("<h3>").text("Edgework").appendTo(edgeworkInfo);
         makeTree([
@@ -954,6 +1002,7 @@ function Bomb(seed) {
             "Widgets: " + (this.Batteries.length + indicators.length + this.PortPlates.length + this.ModdedWidgets),
             this.ModdedWidgetInfo.length > 0 ? ["Modded Widgets:", this.ModdedWidgetInfo] : null,
             { label: "Case:", obj: caseHTML },
+            { label: "Preview:", obj: previewImage ?? $("<span>").text(" Unknown") },
         ], $("<ul>").appendTo(edgeworkInfo));
 
         $("<button class='module'>")
