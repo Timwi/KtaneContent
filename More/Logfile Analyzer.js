@@ -948,8 +948,6 @@ function Bomb(seed) {
 
         let previewImage = null;
 
-        console.log(this);
-
         if (this.PreviewImage)
         {
             previewImage = $("<div>")
