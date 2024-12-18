@@ -663,7 +663,19 @@ let parseData = [
 				handler: matches => {
 					lastBombGroup.PreviewImage = matches[1];
 				},
-			}
+			},
+			{
+				regex: /Preview \((\d+)\): (.+)/,
+				handler: matches => {
+					lastBombGroup.PreviewImage = matches[2];
+					lastBombGroup.PreviewFrames = parseInt(matches[1], 10);
+					if (lastBombGroup.Bombs.length) {
+						const bomb = lastBombGroup.Bombs[0];
+						bomb.PreviewImage = lastBombGroup.PreviewImage;
+						bomb.PreviewFrames = lastBombGroup.PreviewFrames;
+					}
+				},
+			},
 		]
 	},
 	{
