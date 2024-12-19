@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Memory — Keep Talking and Nobody Explodes</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var NUM_STAGES = 5;
+        var DISPLAY_MODE_KEY = "vanilla-memory-display-mode";
+        var COLOR_MODE_KEY = "vanilla-memory-color-mode";
+        var REVERSE_MODE_KEY = "vanilla-memory-reverse-mode";
+        var TEXT_BOX_SIZE_KEY = "vanilla-memory-text-box-size";
+
+        var displayModes = {
+            "Default": [
+                [3, 3],
+                function(id, targetDigit, targetStage) {
+                    return [
+                        ["Pos", "1st"], ["Pos", "2nd"], ["Pos", "3rd"], ["Pos", "4th"],
+                        ["Lbl", `${targetDigit}`],
+                        ["Pos", `S${targetStage}`], ["Lbl", `S${targetStage}`]
+                    ][id];
+                }
+            ],
+            "Short": [
+                [1, 2],
+                function(id, targetDigit, targetStage) {
+                    return [
+                        ["P", "1"], ["P", "2"], ["P", "3"], ["P", "4"],
+                        ["L", `${targetDigit}`],
+                        ["P", `S${targetStage}`], ["L", `S${targetStage}`]
+                    ][id];
+                }
+            ],
+            "Short Ordinals": [
+                [1, 3],
+                function(id, targetDigit, targetStage) {
+                    return [
+                        ["P", "1st"], ["P", "2nd"], ["P", "3rd"], ["P", "4th"],
+                        ["L", `${targetDigit}`],
+                        ["P", `S${targetStage}`], ["L", `S${targetStage}`]
+                    ][id];
+                }
+            ],
+            "Position-Label": [
+                [2, 2],
+                function(id, targetDigit, targetStage) {
+                    return [
+                        ["1", ""], ["2", ""], ["3", ""], ["4", ""],
+                        ["", `${targetDigit}`],
+                        [`S${targetStage}`, ""], ["", `S${targetStage}`]
+                    ][id];
+                }
+            ],
+            "Position-Label Ordinals": [
+                [3, 3],
+                function(id, targetDigit, targetStage) {
+                    return [
+                        ["1st", ""], ["2nd", ""], ["3rd", ""], ["4th", ""],
+                        ["", `${targetDigit}`],
+                        [`S${targetStage}`, ""], ["", `S${targetStage}`]
+                    ][id];
+                }
+            ]
+        };
+
+        if (
+            !(DISPLAY_MODE_KEY in localStorage) ||
+            !(localStorage[DISPLAY_MODE_KEY] in displayModes)
+        ) {
+            localStorage[DISPLAY_MODE_KEY] = "Default";
+        }
+        if (!(COLOR_MODE_KEY in localStorage)) {
+            localStorage[COLOR_MODE_KEY] = "1";
+        }
+        if (!(REVERSE_MODE_KEY in localStorage)) {
+            localStorage[REVERSE_MODE_KEY] = "0";
+        }
+        if (!(TEXT_BOX_SIZE_KEY in localStorage)) {
+            localStorage[TEXT_BOX_SIZE_KEY] = "50px";
+        }
+
+        function makeRules(rnd) {
+            var rules = []
+            var weights = {};
+            var flag = true;
+            for (var i = 0; i < NUM_STAGES; i++) {
+                var StageRules = [];
+
+                flag = !flag;
+                for (var j = 1; j <= 4; j++) {
+                    var digit = rnd.next(1, 5);
+                    var Stage = i > 0 ? rnd.next(1, i + 1) : null;
+                    StageRules.push([
+                        SelectSolution(rnd, weights, CreateSolutionsList(weights, i, flag)),
+                        digit, Stage
+                    ]);
+                }
+
+                rules.push(StageRules);
+            }
+            return rules;
+        }
+        function showRules(rules) {
+            var mode = displayModes[localStorage[DISPLAY_MODE_KEY]];
+            var translator = mode[1];
+            var widths = mode[0];
+
+            var l = localStorage[REVERSE_MODE_KEY] == "0" ? 0 : 1;
+            var r = localStorage[REVERSE_MODE_KEY] == "0" ? 1 : 0;
+            for (var i = 0; i < NUM_STAGES; i++) {
+                var tds = document.querySelectorAll(`#memory-stage-${i+1} td`);
+                for (var j = 0; j < 4; j++) {
+                    var rule = rules[i][j];
+                    var texts = translator(rule[0], rule[1], rule[2]);
+                    var tdl = tds[j*2+l];
+                    var tdr = tds[j*2+r];
+                    tdl.style.width = `${widths[0]*12+6}px`;
+                    tdr.style.width = `${widths[1]*12+6}px`;
+                    tdl.textContent = texts[0];
+                    tdr.textContent = texts[1];
+
+                    if (localStorage[COLOR_MODE_KEY] == "0") {
+                        tdl.className = "";
+                        tdr.className = "";
+                    } else if (texts[0].includes("P")) {
+                        tdl.className = "pos";
+                        tdr.className = "pos";
+                    } else if (texts[0].includes("L")) {
+                        tdl.className = "lbl";
+                        tdr.className = "lbl";
+                    } else {
+                        tdl.className = "pos";
+                        tdr.className = "lbl";
+                    }
+
+                    if (texts[0].includes("S")) {
+                        tdl.classList.add("stage");
+                    }
+                    if (texts[1].includes("S")) {
+                        tdr.classList.add("stage");
+                    }
+                }
+            }
+
+            var headers = document.querySelectorAll("#memory-highlight-table tr:first-child th");
+            headers[l].textContent = "Position";
+            headers[r].textContent = "Label";
+
+            var trs = document.querySelectorAll("#memory-highlight-table tr");
+            for (var i = 1; i <= NUM_STAGES; i++) {
+                var tds = trs[i].querySelectorAll("td");
+                for (var x = 0; x < 4; x++) {
+                    if (localStorage[COLOR_MODE_KEY] == "0") {
+                        tds[x+l*4].className = "";
+                        tds[x+r*4].className = "";
+                    } else {
+                        tds[x+l*4].className = "pos";
+                        tds[x+r*4].className = "lbl";
+                    }
+                }
+            }
+        }
+
+        function setRules(rnd) {
+            var rules = makeRules(rnd);
+
+            var displayMode = document.getElementById("display-mode");
+            displayMode.innerHTML = Object.keys(displayModes).map(
+                function(v) {
+                    return `<option value="${v}">${v}</option>`
+                }
+            ).join("");
+            displayMode.addEventListener("change", function(ev) {
+                localStorage[DISPLAY_MODE_KEY] = ev.target.value;
+                showRules(rules);
+            });
+            displayMode.value = localStorage[DISPLAY_MODE_KEY];
+
+            var colorMode = document.getElementById("color-mode");
+            colorMode.addEventListener("change", function(ev) {
+                localStorage[COLOR_MODE_KEY] = ev.target.checked ? "1" : "0";
+                showRules(rules);
+            });
+            colorMode.checked = localStorage[COLOR_MODE_KEY] = "1";
+
+            var reverseMode = document.getElementById("reverse-mode");
+            reverseMode.addEventListener("change", function(ev) {
+                localStorage[REVERSE_MODE_KEY] = ev.target.checked ? "1" : "0";
+                showRules(rules);
+            });
+            reverseMode.checked = localStorage[REVERSE_MODE_KEY] == "1";
+
+            var textarea = document.querySelector("textarea");
+            textarea.addEventListener("mouseup", function(ev) {
+                localStorage[TEXT_BOX_SIZE_KEY] = ev.target.style.width;
+            });
+            textarea.style.width = localStorage[TEXT_BOX_SIZE_KEY];
+
+            showRules(rules);
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        function CreateSolutionsList(weights, Stage, usePreviousIndex) {
+            var list = [];
+            list.push(0);
+            list.push(1);
+            list.push(2);
+            list.push(3);
+            list.push(4);
+            if (Stage > 0) list.push(usePreviousIndex ? 5 : 6);
+            for (var i = 0; i < list.length; i++) {
+                var current = list[i];
+                if (!(current in weights)) weights[current] = 1;
+            }
+            if (Stage > 2) {
+                weights[5] = 1;
+                weights[6] = 1;
+            }
+            return list;
+        }
+
+        function SelectSolution(rnd, weights, list) {
+            var num = 0;
+            for (var i = 0; i < list.length; i++) {
+                num += weights[list[i]];
+            }
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < list.length; i++) {
+                if (num2 < weights[list[i]]) {
+                    weights[list[i]] = weights[list[i]] * .05;
+                    return list[i];
+                }
+                num2 -= weights[list[i]];
+            }
+            return list[rnd.next(0, list.length)];
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        textarea {
+            width: 50px;
+            resize: horizontal;
+        }
+        table {
+            border: none;
+        }
+        th, td {
+            line-height: 1em;
+            text-align: center;
+            padding: .35em .1em 0;
+            vertical-align: middle;
+        }
+        td {
+            width: 42px;
+            min-height: 25px;
+            height: 25px;
+        }
+        th {
+            background: #eef;
+            color: #000;
+            min-width: 25px;
+            min-height: 25px;
+            height: 25px;
+        }
+        th.im {
+            background: #ddf;
+        }
+        .dark th {
+            background: #667;
+            color: #eee;
+        }
+        .dark th.im {
+            background: #557;
+        }
+        .m1-bottom {
+            margin-bottom: 10px;
+        }
+
+        #memory-highlight-table th {
+            min-width: 75px;
+        }
+        #memory-highlight-table td {
+            width: 25px;
+        }
+        #memory-highlight-table td:nth-of-type(4) {
+            border-right-width: 3px;
+        }
+
+        .pos {
+            color: #f00;
+        }
+        .lbl {
+            color: #00f;
+        }
+        .dark .lbl {
+            color: #0dd;
+        }
+        .stage {
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Memory</span>
+            </div>
+            <div class="page-content">
+                <div class="content-header">
+                    <img src="img/Component/Memory.svg" class="diagram">
+                    <h2>On the Subject of Memory</h2>
+                    <p class="flavour-text">Memory is a fragile thing, but books are only slightly less fragile, because both will be blown up by a bomb.</p>
+                    <ul>
+                        <li>Press the correct button to progress the module to the next stage. Complete all stages to disarm the module.</li>
+                        <li>Pressing an incorrect button will reset back to stage 1.</li>
+                        <li>Button positions are ordered from left to right.</li>
+                    </ul>
+                    <p>
+                        <label for="display-mode">Display Mode: </label><select id="display-mode"></select>
+                        &nbsp;
+                        <input id="color-mode" type="checkbox"><label for="color-mode"> Colors</label>
+                        &nbsp;
+                        <input id="reverse-mode" type="checkbox"><label for="reverse-mode"> Reverse Columns</label>
+                    </p>
+                </div>
+                <div class="memory-rules hstack gap1 m1-bottom">
+                    <table id="memory-stage-1">
+                        <tr><th colspan="3" class="im">Stage 1</th></tr>
+                        <tr><th>1</th><td class="pos">Pos</td><td class="pos">2nd</td></tr>
+                        <tr><th>2</th><td class="pos">Pos</td><td class="pos">2nd</td></tr>
+                        <tr><th>3</th><td class="pos">Pos</td><td class="pos">3rd</td></tr>
+                        <tr><th>4</th><td class="pos">Pos</td><td class="pos">4th</td></tr>
+                    </table>
+                    <table id="memory-stage-2">
+                        <tr><th colspan="3" class="im">Stage 2</th></tr>
+                        <tr><th>1</th><td class="lbl">Lbl</td><td class="lbl">4</td></tr>
+                        <tr><th>2</th><td class="pos">Pos</td><td class="pos stage">S1</td></tr>
+                        <tr><th>3</th><td class="pos">Pos</td><td class="pos">1st</td></tr>
+                        <tr><th>4</th><td class="pos">Pos</td><td class="pos stage">S1</td></tr>
+                    </table>
+                    <table id="memory-stage-3">
+                        <tr><th colspan="3" class="im">Stage 3</th></tr>
+                        <tr><th>1</th><td class="lbl">Lbl</td><td class="lbl stage">S2</td></tr>
+                        <tr><th>2</th><td class="lbl">Lbl</td><td class="lbl stage">S1</td></tr>
+                        <tr><th>3</th><td class="pos">Pos</td><td class="pos">3rd</td></tr>
+                        <tr><th>4</th><td class="lbl">Lbl</td><td class="lbl">4</td></tr>
+                    </table>
+                    <table id="memory-stage-4">
+                        <tr><th colspan="3" class="im">Stage 4</th></tr>
+                        <tr><th>1</th><td class="pos">Pos</td><td class="pos stage">S1</td></tr>
+                        <tr><th>2</th><td class="pos">Pos</td><td class="pos">1st</td></tr>
+                        <tr><th>3</th><td class="pos">Pos</td><td class="pos stage">S2</td></tr>
+                        <tr><th>4</th><td class="pos">Pos</td><td class="pos stage">S2</td></tr>
+                    </table>
+                    <table id="memory-stage-5">
+                        <tr><th colspan="3" class="im">Stage 5</th></tr>
+                        <tr><th>1</th><td class="lbl">Lbl</td><td class="lbl stage">S1</td></tr>
+                        <tr><th>2</th><td class="lbl">Lbl</td><td class="lbl stage">S2</td></tr>
+                        <tr><th>3</th><td class="lbl">Lbl</td><td class="lbl stage">S4</td></tr>
+                        <tr><th>4</th><td class="lbl">Lbl</td><td class="lbl stage">S3</td></tr>
+                    </table>
+                </div>
+                <div id="memory-highlight-table" class="hstack gap1">
+                    <table>
+                        <tr>
+                            <td class="corner"></td>
+                            <th colspan="4" class="nohighlight">Position</th>
+                            <th colspan="4" class="nohighlight">Label</th>
+                        </tr>
+                        <tr>
+                            <th class="nohighlight">Stage 1</th>
+                            <td class="pos">1</td><td class="pos">2</td><td class="pos">3</td><td class="pos">4</td>
+                            <td class="lbl">1</td><td class="lbl">2</td><td class="lbl">3</td><td class="lbl">4</td>
+                        </tr>
+                        <tr>
+                            <th class="nohighlight">Stage 2</th>
+                            <td class="pos">1</td><td class="pos">2</td><td class="pos">3</td><td class="pos">4</td>
+                            <td class="lbl">1</td><td class="lbl">2</td><td class="lbl">3</td><td class="lbl">4</td>
+                        </tr>
+                        <tr>
+                            <th class="nohighlight">Stage 3</th>
+                            <td class="pos">1</td><td class="pos">2</td><td class="pos">3</td><td class="pos">4</td>
+                            <td class="lbl">1</td><td class="lbl">2</td><td class="lbl">3</td><td class="lbl">4</td>
+                        </tr>
+                        <tr>
+                            <th class="nohighlight">Stage 4</th>
+                            <td class="pos">1</td><td class="pos">2</td><td class="pos">3</td><td class="pos">4</td>
+                            <td class="lbl">1</td><td class="lbl">2</td><td class="lbl">3</td><td class="lbl">4</td>
+                        </tr>
+                        <tr>
+                            <th class="nohighlight">Stage 5</th>
+                            <td class="pos">1</td><td class="pos">2</td><td class="pos">3</td><td class="pos">4</td>
+                            <td class="lbl">1</td><td class="lbl">2</td><td class="lbl">3</td><td class="lbl">4</td>
+                        </tr>
+                    </table>
+                    <textarea class="hidden"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
