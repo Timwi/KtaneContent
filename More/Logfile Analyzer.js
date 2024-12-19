@@ -955,8 +955,10 @@ function Bomb(seed) {
                 .css("background-image", `url("${this.PreviewImage}")`);
 
             const getDelta = e => {
-                const box = previewImage[0].getBoundingClientRect();
-                return (e.pageX - box.x) / box.width;
+                const box = previewImage[0].getBoundingClientRect(),
+                    x = e.touches ? e.touches.length ? e.touches[0].pageX : 0 : e.pageX;
+
+                return (x - box.x) / box.width;
             };
 
             let isDragging = false,
