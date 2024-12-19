@@ -239,7 +239,7 @@ class BombGroup {
             .mousedown(function() { return false; });
         var bombGroupHTML = $("<div class='bomb-group'>").hide().appendTo("#wrap");
 
-        if (this.PreviewImage) bombHTML.addClass("preview").css("background", `url("${this.PreviewImage}") top / 100%, url(img/BombPreview.png) center / cover`);
+        if (this.PreviewImage) bombHTML.addClass("preview").css("background", `url("${this.PreviewImage}") top / 100%, url(img/BombPreview.png) center / 150%`);
 
         var totalModules = 0;
         var totalNeedies = 0;
@@ -946,16 +946,16 @@ function Bomb(seed) {
 
         var caseHTML = $("<span>").text(" Unknown");
 
-        let previewImage = null;
+        let previewContainer = null;
 
         if (this.PreviewImage)
         {
-            previewImage = $("<div>")
+            previewContainer = $("<div>")
                 .addClass("bomb-preview")
                 .css("background-image", `url("${this.PreviewImage}")`);
 
             const getDelta = e => {
-                const box = previewImage[0].getBoundingClientRect(),
+                const box = previewContainer[0].getBoundingClientRect(),
                     x = e.touches ? e.touches.length ? e.touches[0].pageX : 0 : e.pageX;
 
                 return (x - box.x) / box.width;
@@ -978,16 +978,16 @@ function Bomb(seed) {
                     currentPos += d - delta;
                     delta = d;
 
-                    previewImage.css("background-position-y", `${Math.floor(-currentPos * 6) / (this.PreviewFrames - 1) * 100}%`);
+                    previewContainer.css("background-position-y", `${Math.floor(-currentPos * 6) / (this.PreviewFrames - 1) * 100}%`);
                 }
             },
             onUp = e => {
                 isDragging = false;
             };
 
-            previewImage.on("mousedown touchstart", onDown);
+            previewContainer.on("mousedown touchstart", onDown);
             $(window).on("mousemove touchmove", onMove).on("mouseup touchend", onUp);
-            previewImage.on("destroyed", () => $(window).off("mousemove touchmove", onMove).off("mouseup touchend", onUp));
+            previewContainer.on("destroyed", () => $(window).off("mousemove touchmove", onMove).off("mouseup touchend", onUp));
         }
 
         var edgeworkInfo = $("<div class='module-info'>").appendTo(info);
@@ -1002,7 +1002,7 @@ function Bomb(seed) {
             "Widgets: " + (this.Batteries.length + indicators.length + this.PortPlates.length + this.ModdedWidgets),
             this.ModdedWidgetInfo.length > 0 ? ["Modded Widgets:", this.ModdedWidgetInfo] : null,
             { label: "Case:", obj: caseHTML },
-            { label: "Preview:", obj: previewImage ?? $("<span>").text(" Unknown") },
+            { label: "Preview:", obj: previewContainer ?? $("<span>").text(" Unknown") },
         ], $("<ul>").appendTo(edgeworkInfo));
 
         $("<button class='module'>")
