@@ -418,7 +418,7 @@ let SouvenirModuleData = [
 	{ name: "Rhythms",	id: "MusicRhythms",	questions: ["What was the color?"] },
 	{ name: "RNG Crystal",	id: "rngCrystal",	questions: ["Where were the taps?"] },
 	{ name: "Robo-Scanner",	id: "roboScannerModule",	questions: ["Where was the empty cell?"] },
-	{ name: "Robot Programming",	id: "robotProgramming",	questions: ["What was the name of each robot?"] },
+	{ name: "Robot Programming",	id: "robotProgramming",	questions: ["What was the shape and color of each robot?"] },
 	{ name: "Roger",	id: "roger",	questions: ["What four-digit number was given?"] },
 	{ name: "Role Reversal",	id: "roleReversal",	questions: ["What was the condition digit that solved the module?","What colors were the internal wires?"] },
 	{ name: "The Rule",	id: "theRule",	questions: ["What was the rule number?"] },
