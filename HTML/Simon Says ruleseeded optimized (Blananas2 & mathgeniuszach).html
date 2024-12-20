@@ -1,0 +1,180 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Simon Says — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var DISPLAY_LETTERS_KEY = "vanilla-simon-says-display-letters";
+        var DARK_ARROWS_KEY = "vanilla-simon-says-dark-arrows";
+
+        // var simonColors = ["Red", "Blue", "Green", "Yellow"];
+        const RED = 0;
+        const BLUE = 1;
+        const GREEN = 2;
+        const YELLOW = 3;
+
+        // 4 colored squares and letters
+        var COLOR_PATHS = [
+            '<path fill="#bf0000" d="M 47,53 94,100 47,147 0,100 Z"/>',
+            '<path fill="#001cbf" d="M 100,0 147,47 100,94 53,47 Z"/>',
+            '<path fill="#39bf00" d="m 100,106 47,47 -47,47 -47,-47 z"/>',
+            '<path fill="#bfbf00" d="m 153,53 47,47 -47,47 -47,-47 z"/>',
+        ].join("");
+        var LETTER_PATHS = [
+            '<path aria-label="R" fill="#640000" d="m 31,73 h 14 c 6,0 10,1 13,4 3,3 5,7 5,12 0,6 -3,10 -7,13 l 9,23 H 53 L 43,101 v 0 24 H 31 Z m 12,10 v 12 c 6,0 8,-2 8,-6 0,-4 -2,-6 -8,-6 z"/>',
+            '<path aria-label="B" fill="#000064" d="m 85,20 h 12 c 7,0 12,1 15,4 3,3 4,7 4,11 0,4 -1,8 -6,11 5,2 7,6 7,11 0,4 -1,8 -4,11 -3,3 -8,4 -13,4 H 85 Z m 12,10 v 11 c 5,0 8,-1 8,-6 0,-5 -5,-5 -8,-5 z m 0,21 v 11 c 5,0 9,-1 9,-5 0,-4 -3,-6 -8,-6 z"/>',
+            '<path aria-label="G" fill="#006400" d="m 119,149 v 9 c 0,7 -2,12 -5,16 -3,4 -8,6 -14,6 -6,0 -11,-3 -14,-8 -3,-5 -5,-11 -5,-20 0,-9 1,-15 5,-20 4,-5 7,-7 14,-7 7,0 13,3 17,11 l -10,4 c -2,-4 -4,-4 -7,-4 -3,0 -4,2 -5,4 -1,2 -2,6 -2,12 0,5 1,10 2,12 1,2 2,4 5,4 3,0 7,-3 7,-9 h -6 v -10 z"/>',
+            '<path aria-label="Y" fill="#646400" d="m 136,77 h 11 l 6,17 v 0 l 6,-17 h 11 l -12,28 v 24 h -10 v -24 z"/>',
+        ].join("");
+        // Arrow segments (Line, Triangle A, Triangle B)
+        var LINES = [
+            [[RED, BLUE], ["m93 54-39 39", "m53 94 3-10 7 7z", "m94 53-10 3 7 7z"]],
+            [[RED, GREEN], ["m93 146-39-39", "m53 106 3 10 7-7z", "m94 147-10-3 7-7z"]],
+            [[RED, YELLOW], ["m57 100h86", "m56 100 9 5v-10z", "m144 100-9 5v-10z"]],
+            [[BLUE, GREEN], ["m100 57v86","m100 56-5 9h10z", "m100 144-5-9h10z"]],
+            [[BLUE, YELLOW], ["m107 54 39 39", "m106 53 10 3-7 7z", "m147 94-3-10-7 7z"]],
+            [[GREEN, YELLOW], ["m146 107-39 39", "m106 147 10-3-7-7z", "m147 106-3 10-7-7z"]],
+        ];
+
+        function makeSvg(paths) {
+            return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 200 200">${paths.join("")}</svg>`
+        }
+
+        function displayRules(rules) {
+            const arrowColor = localStorage[DARK_ARROWS_KEY] == "1" ? "#ccc" : "#fff";
+
+            for (var i = 0; i < 6; i++) {
+                var colors = rules[i];
+
+                var paths = [COLOR_PATHS];
+                if (localStorage[DISPLAY_LETTERS_KEY] == "1") {
+                    paths.push(LETTER_PATHS);
+                }
+
+                for (const line of LINES) {
+                    const from = line[0][0];
+                    const to = line[0][1];
+                    const ldata = line[1];
+
+                    if (colors[from] == to || colors[to] == from) {
+                        // One color moves to another, draw line
+                        paths.push(`<path d="${ldata[0]}" stroke="${arrowColor}" stroke-width="3"/>`);
+                        if (colors[to] == from) {
+                            // to -> from, draw first triangle
+                            paths.push(`<path d="${ldata[1]}" stroke="${arrowColor}" fill="${arrowColor}" stroke-linecap="square" stroke-width="2"/>`);
+                        }
+                        if (colors[from] == to) {
+                            // from -> to, draw second triangle
+                            paths.push(`<path d="${ldata[2]}" stroke="${arrowColor}" fill="${arrowColor}" stroke-linecap="square" stroke-width="2"/>`);
+                        }
+                    }
+                }
+                
+                var cell = document.querySelector(`.diagrams > tbody > tr:nth-child(${i%3+2}) > td:nth-child(${Math.floor(i/3)+2}) > img`);
+                cell.src = "data:image/svg+xml;base64," + btoa(makeSvg(paths));
+            }
+        }
+
+        function setRules(rnd) {
+            var rules = [];
+            for (var i = 0; i < 6; i++) {
+                var colors = [];
+                for (var j = 0; j < 4; j++) colors.push(rnd.next(0, 4));
+                while (colors.filter(color => color !== colors[0]).length === 0) {
+                    colors[rnd.next(0, 4)] = rnd.next(0, 4);
+                }
+                rules.push(colors);
+            }
+
+            setup(rules);
+        }
+
+        function setDefaultRules(rnd) {
+            setup([
+                [BLUE, RED, YELLOW, GREEN],
+                [YELLOW, GREEN, BLUE, RED],
+                [GREEN, RED, YELLOW, BLUE],
+                [BLUE, YELLOW, GREEN, RED],
+                [RED, BLUE, YELLOW, GREEN],
+                [YELLOW, GREEN, BLUE, RED]
+            ]);
+        }
+
+        function setup(rules) {
+            if (!(DISPLAY_LETTERS_KEY in localStorage)) {
+                localStorage[DISPLAY_LETTERS_KEY] = "1";
+            }
+            var letters = document.getElementById("letters");
+            letters.addEventListener("change", function(ev) {
+                localStorage[DISPLAY_LETTERS_KEY] = ev.target.checked ? "1" : "0";
+                displayRules(rules);
+            });
+            letters.checked = localStorage[DISPLAY_LETTERS_KEY] == "1";
+            
+            if (!(DARK_ARROWS_KEY in localStorage)) {
+                localStorage[DARK_ARROWS_KEY] = "0";
+            }
+            var arrows = document.getElementById("arrows");
+            arrows.addEventListener("change", function(ev) {
+                localStorage[DARK_ARROWS_KEY] = ev.target.checked ? "1" : "0";
+                displayRules(rules);
+            });
+            arrows.checked = localStorage[DARK_ARROWS_KEY] == "1";
+
+            displayRules(rules);
+        }
+    </script>
+    <style>
+        svg { width: 200px; height: 200px; }
+        table { margin: 0 auto; }
+        .diagrams th.col { width: 225px; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Simon Says</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Simon Says.svg" class="diagram">
+                <h2>On the Subject of Simon Says SVGs</h2>
+                <p class="flavour-text">I was going to explain what ‘Scalable Vector Graphics’ are but any nerd actually looking at the text you are reading right now almost certainly already knows.</p>
+                <ul>
+                    <li>Play a game of Simon Says, but press different buttons depending on the pattern in the table below.</li>
+                </ul>
+                <p>
+                    <input type="checkbox" id="letters"><label for="letters"> Show Letters</label> 
+                    <input type="checkbox" id="arrows"><label for="arrows"> Darker Arrows</label>
+                </p>
+                <table class='diagrams'>
+                    <tr><th>Strikes</th><th class='col'>Vowel</th><th class='col'><em>NO</em> Vowel</th></tr>
+                    <tr>
+                        <th>0</th>
+                        <td><img src="img/Simon Says/Simon Says A.svg"></td>
+                        <td><img src="img/Simon Says/Simon Says B.svg"></td>
+                    </tr>
+                    <tr>
+                        <th>1</th>
+                        <td><img src="img/Simon Says/Simon Says C.svg"></td>
+                        <td><img src="img/Simon Says/Simon Says D.svg"></td>
+                    </tr>
+                    <tr>
+                        <th>2+</th>
+                        <td><img src="img/Simon Says/Simon Says E.svg"></td>
+                        <td><img src="img/Simon Says/Simon Says C.svg"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>

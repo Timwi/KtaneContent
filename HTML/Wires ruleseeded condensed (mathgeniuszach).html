@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Wires — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var WireColor = [
+            "<span class='black'>Black</span>",
+            "<span class='blue'>Blue</span>",
+            "<span class='red'>Red</span>",
+            "<span class='white'>White</span>",
+            "<span class='yellow'>Yellow</span>",
+        ];
+        var MIN_WIRES = 3;
+        var MAX_WIRES = 6;
+        var LOGGING = false;
+
+        // SOLUTIONS (player actions)
+        // These correspond to the Solution instances. Their text may be parametrized with a color.
+        var WireIndex0 = { id: 'wire0', Text: color => "1st" };
+        var WireIndex1 = { id: 'wire1', Text: color => "2nd" };
+        var WireIndex2 = { id: 'wire2', Text: color => "3rd" };
+        var WireIndex3 = { id: 'wire3', Text: color => "4th" };
+        var WireIndex4 = { id: 'wire4', Text: color => "5th" };
+        var WireLast = { id: 'wire_last', Text: color => "Last" };
+        var WireColorExactlyOne = { id: "wirecolor", Text: color => `${color}` };
+        var WireColorCutFirst = { id: "wirecolorfirst", Text: color => `First ${color}` };
+        var WireColorCutLast = { id: "wirecolorlast", Text: color => `Last ${color}` };
+
+        // QUERIES (conditions)
+        // These correspond to the QueryableProperty instances. Their text may be parametrized with a color.
+        var IsExactlyOneColorWire = {
+            id: "isExactlyOneColorWire",
+            Text: color => `1<br>${color}`,
+            UsesColor: true,
+            ColorAvailableForSolution: true,
+            WiresInvolvedInQuery: 1,
+            AdditionalSolutions: [WireColorExactlyOne],
+            CompoundQueryOnly: false
+        };
+
+        var MoreThanOneColorWire = {
+            id: "isMoreThanOneColorWire",
+            Text: color => `2+<br>${color}`,
+            UsesColor: true,
+            ColorAvailableForSolution: true,
+            WiresInvolvedInQuery: 2,
+            AdditionalSolutions: [WireColorCutFirst, WireColorCutLast],
+            CompoundQueryOnly: false
+        };
+
+        var IsExactlyZeroColorWire = {
+            id: "isExactlyZeroColorWire",
+            Text: color => `No<br>${color}`,
+            UsesColor: true,
+            ColorAvailableForSolution: false,
+            WiresInvolvedInQuery: 0,
+            AdditionalSolutions: [],
+            CompoundQueryOnly: false
+        };
+
+        var LastWireIsColor = {
+            id: "isLastWireColor",
+            Text: color => `Last<br>${color}`,
+            UsesColor: true,
+            ColorAvailableForSolution: true,
+            WiresInvolvedInQuery: 1,
+            AdditionalSolutions: [],
+            CompoundQueryOnly: false
+        };
+
+        var DoesSerialNumberStartWithLetter = { id: "doesSerialNumberStartWithLetter", Text: color => "letter", CompoundQueryOnly: true };
+        var IsSerialNumberOdd = { id: "isSerialNumberOdd", Text: color => "odd", CompoundQueryOnly: true };
+        function IsPortPresent(port) { return { id: `portPresent_${port}`, Text: color => `${port}`, CompoundQueryOnly: true }; }
+        var EmptyPortPlate = { id: "emptyPlatePresent", Text: color => "EP", CompoundQueryOnly: true };
+
+        class Rule {
+            // Both ‘queries’ and ‘solution’ are expected to be an object of the following structure:
+            // {
+            //    Obj: <the QueryableProperty or Solution instance>,
+            //    Color: <the color to parametrize the query or solution by (optional)>
+            // }
+            constructor(queries, solution) {
+                this.Queries = queries;
+                this.Solution = solution;
+            }
+
+            GetQueryText(i) {
+                return this.Queries[i].Obj.Text(this.Queries[i].Color);
+            }
+
+            GetString(isOtherwise) {
+                const solution = this.Solution.Obj.Text(this.Solution.Color);
+                switch (this.Queries.length) {
+                    case 0: return `<tr><th colspan="3">${solution}</th></tr>`
+                    case 1: return `<tr><td colspan="2">${this.GetQueryText(0)}</td><th>${solution}</th></tr>`;
+                    case 2: return `<tr><td>${this.GetQueryText(0)}</td><td>${this.GetQueryText(1)}</td><th>${solution}</th></tr>`
+                }
+            }
+        }
+
+        function IsWireQueryValid(rule) {
+            if (rule.Queries.Count === 1)
+                return true;
+            function has(obj, color) { return rule.Queries.filter(q => q.Obj.id === obj.id && q.Color === color).length; }
+            for (var i = 0; i < 4; i++) {
+                var c = WireColor[i];
+                if ([has(IsExactlyOneColorWire, c), has(IsExactlyZeroColorWire, c), has(MoreThanOneColorWire, c)].filter(q => q).length >= 2)
+                    return false;
+                if (!has(LastWireIsColor, c))
+                    continue;
+                if (has(IsExactlyZeroColorWire, c))
+                    return false;
+                for (var j = i + 1; j < 5; j++)
+                    if (has(LastWireIsColor, WireColor[j]))
+                        return false;
+            }
+            return true;
+        }
+
+        function GetNumRules(rnd) {
+            return (rnd.nextDouble(LOGGING) < 0.6) ? 3 : 4;
+        }
+
+        function GetNumQueriesForRule(rnd) {
+            return (rnd.nextDouble(LOGGING) < 0.6) ? 1 : 2;
+        }
+
+        function CalculatePossibleQueryableProperties(queryWeights, querySets, wiresAvailableInQuery, compoundQueriesAllowed) {
+            var list = [];
+            for (var i = 0; i < querySets.length; i++) {
+                if (LOGGING)
+                    console.log(`Query Set #${i} (${querySets[i].length} / ${wiresAvailableInQuery})`);
+                for (var j = 0; j < querySets[i].length; j++) {
+                    if (LOGGING)
+                        console.log(`  -- Query #${j} = ${querySets[i][j].id}`);
+                    if (!querySets[i][j].CompoundQueryOnly || compoundQueriesAllowed)
+                        if ((querySets[i][j].WiresInvolvedInQuery || 0) <= wiresAvailableInQuery) {
+                            if (LOGGING)
+                                console.log(`  -- -- ✓`);
+                            list.push(querySets[i][j]);
+                        }
+                }
+            }
+
+            for (var i = 0; i < list.length; i++)
+                if (!(list[i].id in queryWeights))
+                    queryWeights[list[i].id] = 1;
+
+            return list;
+        }
+
+        function SelectQueryableProperty(rnd, queryWeights, possibleQueryableProperties) {
+            if (LOGGING)
+                console.log(`SelectQueryableProperty(list = ${possibleQueryableProperties.length})`);
+            var num = 0;
+            for (var i = 0; i < possibleQueryableProperties.length; i++) {
+                if (!(possibleQueryableProperties[i].id in queryWeights))
+                    queryWeights[possibleQueryableProperties[i].id] = 1;
+                num += queryWeights[possibleQueryableProperties[i].id];
+            }
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < possibleQueryableProperties.length; i++) {
+                if (num2 < queryWeights[possibleQueryableProperties[i].id]) {
+                    queryWeights[possibleQueryableProperties[i].id] = queryWeights[possibleQueryableProperties[i].id] * .1;
+                    return possibleQueryableProperties[i];
+                }
+                num2 -= queryWeights[possibleQueryableProperties[i].id];
+            }
+            return possibleQueryableProperties[rnd.next(0, possibleQueryableProperties.length)];
+        }
+
+        function CalculatePossibleSolutions(solutionWeights, wireCount, rule) {
+            var list = [];
+            list.push(WireIndex0);
+            list.push(WireIndex1);
+            list.push(WireLast);
+            if (wireCount >= 4)
+                list.push(WireIndex2);
+            if (wireCount >= 5)
+                list.push(WireIndex3);
+            if (wireCount >= 6)
+                list.push(WireIndex4);
+
+            for (var i = 0; i < rule.Queries.length; i++)
+                if (('AdditionalSolutions' in rule.Queries[i].Obj) && rule.Queries[i].Obj.AdditionalSolutions.length)
+                    for (var j = 0; j < rule.Queries[i].Obj.AdditionalSolutions.length; j++)
+                        list.push(rule.Queries[i].Obj.AdditionalSolutions[j]);
+
+            for (var k = 0; k < list.length; k++)
+                if (!(list[k].id in solutionWeights))
+                    solutionWeights[list[k].id] = 1;
+            return list;
+        }
+
+        function SelectSolution(rnd, weights, list) {
+            if (LOGGING)
+                console.log(`SelectSolution(list = ${list.length})`);
+            var num = 0;
+            for (var i = 0; i < list.length; i++)
+                num += weights[list[i].id];
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < list.length; i++) {
+                if (num2 < weights[list[i].id]) {
+                    weights[list[i].id] = weights[list[i].id] * .05;
+                    return list[i];
+                }
+                num2 -= weights[list[i].id];
+            }
+            return list[rnd.next(0, list.length)];
+        }
+
+        function setRules(rnd) {
+            var serialNumberQueries = [DoesSerialNumberStartWithLetter, IsSerialNumberOdd];
+            var wireQueries = [IsExactlyOneColorWire, IsExactlyZeroColorWire, LastWireIsColor, MoreThanOneColorWire];
+            var portQueries = ["DVI", "PS2", "RJ", "RCA", "PAR", "SER"].map(p => IsPortPresent(p));
+            portQueries.push(EmptyPortPlate);
+            for (var i = MIN_WIRES; i <= MAX_WIRES; i++) {
+                var list2 = [];
+                var list = [];
+                list.push(serialNumberQueries);
+                list.push(wireQueries);
+                if (rnd.seed !== 1)
+                    list.push(portQueries);
+                var queryWeights = {};
+                var solutionWeights = {};
+                var numRules = GetNumRules(rnd);
+                for (var j = 0; j < numRules; j++) {
+                    var listOfWireColors = WireColor.slice(0);
+                    var rule = new Rule([], null);
+                    var numQueriesForRule = GetNumQueriesForRule(rnd);
+                    var list3 = [];
+                    var num = i - 1;
+                    for (var k = 0; k < numQueriesForRule; k++) {
+                        var compoundQueriesAllowed = k > 0;
+                        var possibleQueryableProperties = CalculatePossibleQueryableProperties(queryWeights, list, num, compoundQueriesAllowed);
+                        if (LOGGING) {
+                            console.log("queryWeights:");
+                            for (var key in queryWeights)
+                                console.log(`  -- ${key} = ${queryWeights[key]}`);
+                        }
+                        var query = { Obj: SelectQueryableProperty(rnd, queryWeights, possibleQueryableProperties) };
+                        if (LOGGING)
+                            console.log(`query = ${query.Obj.id}`);
+                        if ('WiresInvolvedInQuery' in query.Obj)
+                            num -= query.Obj.WiresInvolvedInQuery;
+                        if (('UsesColor' in query.Obj) && query.Obj.UsesColor) {
+                            var wireColorIx = rnd.next(0, listOfWireColors.length, LOGGING);
+                            var wireColor = listOfWireColors[wireColorIx];
+                            listOfWireColors.splice(wireColorIx, 1);
+                            query.Color = wireColor;
+                            if (query.Obj.ColorAvailableForSolution)
+                                list3.push(wireColor);
+                        }
+                        rule.Queries.push(query);
+                    }
+
+                    var possibleSolutions = CalculatePossibleSolutions(solutionWeights, i, rule);
+                    rule.Solution = { Obj: SelectSolution(rnd, solutionWeights, possibleSolutions) };
+                    if (list3.length > 0)
+                        rule.Solution.Color = list3[rnd.next(0, list3.length, LOGGING)];
+
+                    if (rnd.seed === 1 || IsWireQueryValid(rule))
+                        list2.push(rule);
+                    else
+                        j--;    // Previous rule was invalid.
+                }
+
+                list2 = list2.map((inf, ix) => { return { obj: inf, ix: ix }; });
+                list2.sort((a, b) => {
+                    var p = b.obj.Queries.length - a.obj.Queries.length;
+                    return p === 0 ? a.ix - b.ix : p;
+                });
+                list2 = list2.map(inf => inf.obj);
+
+                var rule2 = new Rule([], null);
+                var list4 = CalculatePossibleSolutions(solutionWeights, i, rule2);
+                if (rnd.seed !== 1) {   // Enforce no redundant rules.
+                    var forbiddenId = list2[list2.length - 1].Solution.Obj.id;
+                    list4 = list4.filter(l => l.id !== forbiddenId);
+                }
+                rule2.Solution = { Obj: list4[rnd.next(0, list4.length, LOGGING)] };
+                list2.push(rule2);
+
+                document.getElementById(`wires-${i}`).innerHTML =
+                    `<tr><th class="im" colspan="3">${i} Wires</th></tr>${list2.map(
+                        (rl, rlIx) => rl.GetString()
+                    ).join("\n")}`
+            }
+        }
+
+        function setDefaultRules(rnd) {}
+    </script>
+    <style>
+        .page-content * {
+            box-sizing: border-box;
+        }
+        .black {
+            color: #808;
+            font-weight: bold;
+        }
+        .blue {
+            color: #00f;
+            font-weight: bold;
+        }
+        .red {
+            color: #f00;
+            font-weight: bold;
+        }
+        .white {
+            color: #888;
+            font-weight: bold;
+        }
+        .yellow {
+            color: #aa0;
+            font-weight: bold;
+        }
+
+        th, td {
+            line-height: 1em;
+            text-align: center;
+            padding: .35em .2em 0;
+            vertical-align: middle;
+        }
+        .wires-rules td, .wires-rules th {
+            width: 55px;
+            min-height: 39px;
+            height: 39px;
+            font-size: 0.9em;
+            padding: .35em 0 0;
+        }
+        
+        .wires-rules td[colspan="2"] {
+            width: 110px;
+        }
+        .wires-rules {
+            margin-bottom: 10px;
+        }
+        .key { 
+            margin: 0.5em auto;
+        }
+        th {
+            background: #eef;
+            color: #000;
+            min-width: 25px;
+            min-height: 25px;
+            height: 25px;
+        }
+        th.im {
+            background: #ddf;
+        }
+        .dark th {
+            background: #667;
+            color: #eee;
+        }
+        .dark th.im {
+            background: #557;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Wires</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Wires.svg" class="diagram">
+                <h2>On the Subject of Wires</h2>
+                <p class="flavour-text">If wires are the veins and arteries of electronics, then this is an electronics anatomy textbook.</p>
+                <ul>
+                    <li>A wire module can have 3-6 wires on it.</li>
+                    <li>Only <em>one</em> wire needs to be cut to disarm the module.</li>
+                    <li>Wire ordering begins with the first on the top.</li>
+                </ul>
+                <div class="wires-rules hstack top">
+                    <table id="wires-3">
+                        <tr><th class="im" colspan="3">3 Wires</th></tr>
+                        <tr><td colspan="2">No<br><span class="red">Red</span></td><th>2nd</th></tr>
+                        <tr><td colspan="2">1st & 2nd<br><span class="blue">Blue</span></td><th>2nd</th></tr>
+                        <tr><td colspan="3"></td></tr>
+                        <tr><td colspan="3"></td></tr>
+                        <tr><th colspan="3">Last</th></tr>
+                    </table>
+                    <table id="wires-4">
+                        <tr><th class="im" colspan="3">4 Wires</th></tr>
+                        <tr><td>2+<br><span class="red">Red</span></td><td>odd</td><th>Last<br><span class="red">Red</span></th></tr>
+                        <tr><td colspan="2">1<br><span class="blue">Blue</span></td><th>1st</th></tr>
+                        <tr><td>No<br><span class="red">Red</span></td><td>Last<br><span class="yellow">Yellow</span></td><th>1st</th></tr>
+                        <tr><td colspan="2">2+<br><span class="yellow">Yellow</span></td><th>4th</th></tr>
+                        <tr><th colspan="3">2nd</th></tr>
+                    </table>
+                    <table id="wires-5">
+                        <tr><th class="im" colspan="3">5 Wires</th></tr>
+                        <tr><td>Last<br><span class="black">Black</span></td><td>odd</td><th>4th</th></tr>
+                        <tr><td colspan="2">1+<br><span class="black">Black</span></td><th>1st</th></tr>
+                        <tr><td>1<br><span class="red">Red</span></td><td>2+<br><span class="yellow">Yellow</span></td><th>1st</th></tr>
+                        <tr><td colspan="3"></td></tr>
+                        <tr><th colspan="3">2nd</th></tr>
+                    </table>
+                    <table id="wires-6">
+                        <tr><th class="im" colspan="3">6 Wires</th></tr>
+                        <tr><td>0<br><span class="yellow">Yellow</span></td><td>odd</td><th>3rd</th></tr>
+                        <tr><td colspan="2">1+<br><span class="red">Red</span></td><th>4th</th></tr>
+                        <tr><td>1<br><span class="yellow">Yellow</span></td><td>2+<br><span class="white">White</span></td><th>4th</th></tr>
+                        <tr><td colspan="3"></td></tr>
+                        <tr><th colspan="3">Last</th></tr>
+                    </table>
+                </div>
+                <table class="key">
+                    <tr><th class="im" colspan="2">Key</th></tr>
+                    <tr><th>odd</th><td>last digit of serial is odd</td></tr>
+                    <tr><th>letter</th><td>first character of serial is a letter</td></tr>
+                    <tr><th>PAR</th><td>parallel port exists</td></tr>
+                    <tr><th>SER</th><td>serial port exists</td></tr>
+                    <tr><th>PS2</th><td>PS/2 port exists</td></tr>
+                    <tr><th>RCA</th><td>RCA stereo port exists</td></tr>
+                    <tr><th>RJ</th><td>RJ-45 port exists</td></tr>
+                    <tr><th>EP</th><td>an empty port plate exists</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
