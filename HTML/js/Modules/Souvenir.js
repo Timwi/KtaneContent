@@ -274,6 +274,7 @@ let SouvenirModuleData = [
 	{ name: "Mahjong",	id: "MahjongModule",	questions: ["What were the first two matched pairs?","What was the bottom-left tile?"] },
 	{ name: "Main Page",	id: "mainpage",	questions: ["Which color and message did the bubble (not) display?","Which main page did Homestar, the background, or any of the buttons’ effects come from?"] },
 	{ name: "Maritime Flags",	id: "MaritimeFlagsModule",	questions: ["What bearing was signaled?","What callsign was signaled?"] },
+	{ name: "Maritime Semaphore",	id: "MaritimeSemaphoreModule",	questions: ["Where was the dummy?","Which letters were signaled?"] },
 	{ name: "The Maroon Button",	id: "MaroonButtonModule",	questions: ["What was A?"] },
 	{ name: "Maroon Cipher",	id: "maroonCipher",	questions: ["What was on each screen?"] },
 	{ name: "Mashematics",	id: "mashematics",	questions: ["What were the numbers in the equation?","What was the answer?"] },
@@ -584,5 +585,6 @@ let SouvenirModuleData = [
 	{ name: "Ángel Hernández",	id: "AngelHernandezModule",	questions: ["What letter was shown by the raised buttons in each stage?"] },
 	{ name: "Épelle-moi Ça",	id: "epelleMoiCa",	questions: ["What word was asked to be spelled?"] },
 	{ name: "ƎNA Cipher",	id: "enaCipher",	questions: ["What were the keyword, the transposition key and the encrypted word?"] },
+	{ name: "↻↺",	id: "clockCounter",	questions: ["Which arrows were shown?"] },
 	{ name: "❖",	id: "nonverbalSimon",	questions: ["What were the flashes?"] },
 ];
