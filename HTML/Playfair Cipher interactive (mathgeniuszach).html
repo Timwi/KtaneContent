@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Playfair Cipher — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment-timezone-all/builds/moment-timezone-with-data.min.js"></script>
+    <script>
+        var COLORS = {"magenta": 1, "blue": 2, "orange": 3, "yellow": 4};
+        var TIMEZONE_KEY = "playfair-cipher-timezone";
+
+        if (!(TIMEZONE_KEY in localStorage)) {
+            localStorage[TIMEZONE_KEY] = "none";
+        }
+
+        function setCipherText(text) {
+            var tc = text.replace(/[^a-zA-Z]+/g, "").toUpperCase().replace(/J/g, "I");
+            document.getElementById("pair1").textContent = tc.substring(0, 2);
+            document.getElementById("pair2").textContent = tc.substring(2, 4);
+            document.getElementById("pair3").textContent = tc.substring(4, 6);
+        }
+        function setPlayfair(text) {
+            var tds = document.querySelectorAll("#playfair-table td");
+            var tc = text.replace(/[^a-zA-Z]+/g, "").toUpperCase().replace(/J/g, "I");
+
+            var counts = {};
+            for (var c of tc) {
+                if (c in counts) ++counts[c];
+                else counts[c] = 1;
+            }
+
+            for (var i = 0; i < 25; ++i) {
+                tds[i].textContent = i >= tc.length ? "" : tc[i];
+                if (i >= tc.length || counts[tc[i]] <= 1) {
+                    tds[i].classList.remove("dup");
+                } else {
+                    tds[i].classList.add("dup");
+                }
+            }
+        }
+
+        function setBob(checked) {
+            if (checked) {
+                for (var nobob of document.querySelectorAll(".nobob")) {
+                    nobob.classList.add("hidden");
+                }
+                for (var yesbob of document.querySelectorAll(".yesbob")) {
+                    yesbob.classList.remove("hidden");
+                }
+            } else {
+                for (var nobob of document.querySelectorAll(".nobob")) {
+                    nobob.classList.remove("hidden");
+                }
+                for (var yesbob of document.querySelectorAll(".yesbob")) {
+                    yesbob.classList.add("hidden");
+                }
+
+            }
+        }
+
+        function setHighlights() {
+            for (var alt of document.querySelectorAll(".alt")) {
+                alt.classList.remove("alt");
+            }
+
+            var color = document.getElementById("color").value;
+            if (color != "none") {
+                color = COLORS[color];
+                for (var elem of document.querySelectorAll(`
+                    #part2 tr:nth-child(2) th:nth-of-type(${color}),
+                    #part2 tr:not(:first-child) td:nth-of-type(${color}),
+                    #result tr:nth-child(2) th:nth-of-type(${color}),
+                    #result tr:not(:first-child) td:nth-of-type(${color})
+                `)) {
+                    elem.classList.add("alt");
+                }
+            }
+
+            var timezone = document.getElementById("timezone").value;
+            if (timezone != "none") {
+                var weekday = null;
+                if (timezone == "local") {
+                    weekday = new Date().getDay();
+                } else if (moment) {
+                    weekday = moment.tz(timezone)._d.getDay();
+                }
+                if (weekday != null) {
+                    for (var elem of document.querySelectorAll(`
+                        #day tr:nth-child(${weekday+2}) > th,
+                        #day tr:nth-child(${weekday+2}) > td
+                    `)) {
+                        elem.classList.add("alt");
+                    }
+                }
+            }
+        }
+
+        var lastTime = undefined;
+        function checkTime(alerting) {
+            var timezone = document.getElementById("timezone").value;
+            if (timezone != "none") {
+                var weekday = null;
+                if (timezone == "local") {
+                    weekday = new Date().getDay();
+                } else if (moment) {
+                    weekday = moment.tz(timezone)._d.getDay();
+                }
+                if (weekday != null) {
+                    if (lastTime)
+                    for (var elem of document.querySelectorAll(`
+                        #day tr:nth-child(${weekday+2}) > th,
+                        #day tr:nth-child(${weekday+2}) > td
+                    `)) {
+                        elem.classList.add("alt");
+                    }
+                }
+                if (alerting && lastTime != weekday) {
+                    alert("Date Changed!");
+                }
+                lastTime = weekday;
+            }
+        }
+
+        window.addEventListener("DOMContentLoaded", function () {
+            var ciphertext = document.getElementById("ciphertext");
+            ciphertext.addEventListener("input", function (ev) { setCipherText(ev.target.value); });
+            setCipherText(ciphertext.value);
+
+            var playfair = document.getElementById("playfair");
+            playfair.addEventListener("input", function (ev) { setPlayfair(ev.target.value); });
+            setPlayfair(playfair.value);
+
+            var bob = document.getElementById("bob");
+            bob.addEventListener("change", function (ev) { setBob(ev.target.checked); });
+            setBob(bob.checked);
+
+            var color = document.getElementById("color");
+
+            var timezone = document.getElementById("timezone");
+            if (moment) {
+                var tzs = Object.values(moment.tz.names()).map(function (zname) {
+                    var tz = moment.tz(zname);
+                    return [
+                        tz._z.population, zname, zname.replace(/_/g, " "),
+                        tz.format("Z").replace("-", "−"), tz.format("z")
+                    ];
+                });
+                timezone.innerHTML =
+                    '<option value="none"></option>' +
+                    '<option value="local">Local Time</option>' +
+                    tzs.filter(function (zone) {
+                        return zone[0] > 0
+                    }).sort(function (a, b) {
+                        if (a[3][0] == "−" && b[3][0] == "+") return -1;
+                        if (a[3][0] == "+" && b[3][0] == "−") return 1;
+                        return (a[3][0] == "+" ? 1 : -1) * a[3].localeCompare(b[3]);
+                    }).map(function (zone) {
+                        return `<option value="${zone[1]}">(${zone[3]}) ${zone[2]} (${zone[4]})</option>`
+                    }).join("");
+            }
+            timezone.value = localStorage[TIMEZONE_KEY];
+
+            color.addEventListener("change", setHighlights);
+            timezone.addEventListener("change", function (ev) {
+                localStorage[TIMEZONE_KEY] = ev.target.value;
+                checkTime(false);
+                setHighlights();
+            });
+            setHighlights();
+
+            var plaintext = document.getElementById("plaintext");
+
+            if (lastTime === undefined) {
+                checkTime(false);
+                setInterval(function() {checkTime(true)}, 1000);
+            }
+
+            document.getElementById("clear").addEventListener("click", function () {
+                ciphertext.value = "";
+                playfair.value = "";
+                plaintext.value = "";
+                timezone.value = "none";
+                color.value = "none";
+                bob.checked = false;
+                setHighlights();
+                setCipherText("");
+                setPlayfair("");
+                setBob(false);
+            });
+
+            document.getElementById("semiclear").addEventListener("click", function () {
+                ciphertext.value = "";
+                playfair.value = "";
+                plaintext.value = "";
+                color.value = "none";
+                setHighlights();
+                setCipherText("");
+                setPlayfair("");
+            })
+        });
+    </script>
+    <style>
+        .page-content * {
+            box-sizing: border-box;
+            font-family: 'Special Elite', 'Courier New', monospace;
+        }
+
+        table, .dark table {
+            border: none;
+        }
+
+        p {
+            margin-bottom: .5em;
+        }
+
+        th, td, select, input, label, button {
+            text-align: center;
+            padding: .35em .2em .05em;
+        }
+        th, td {
+            line-height: 1em;
+        }
+        th {
+            background: #eef;
+            color: #000;
+            min-height: 25px;
+            height: 25px;
+        }
+
+        .magenta {
+            color: #f0f;
+        }
+        .blue {
+            color: #08f;
+        }
+        .orange {
+            color: #f80;
+        }
+        .yellow {
+            color: #aa0;
+        }
+
+        #part2 th, #result tr:nth-child(2) th {
+            min-width: 77px;
+        }
+
+        #playfair-table td {
+            width: 50px;
+            height: 50px;
+            font-size: 2em;
+        }
+
+        #pair1, #pair2, #pair3 {
+            text-align: left;
+        }
+
+        th.title-cell {
+            background: #ddf;
+        }
+        th.alt, .dup {
+            background: #fbb;
+        }
+        td.alt {
+            background: #fdd;
+        }
+        .dark th {
+            background: #667;
+            color: #eee;
+        }
+        .dark th.title-cell {
+            background: #557;
+        }
+        .dark th.alt, .dark .dup {
+            background: #855;
+        }
+        .dark td.alt {
+            background: #200;
+        }
+
+        .dim {
+            color: #888;
+        }
+
+        .hstack {
+            margin-bottom: .5em;
+        }
+
+        .hstack > p {
+            margin: 0;
+        }
+        small {
+            margin-top: .4em;
+            text-align: center;
+            line-height: 1.1em;
+        }
+        #ciphertext {
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Playfair Cipher</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Playfair Cipher.svg" class="diagram">
+                <h2>On the Subject of Playfair Cipher</h2>
+                <p class="flavour-text">Encrypting secrets since 1854, exploding bombs since 2018.</p>
+                <div class="hstack alignc gap">
+                    <label for="timezone">Timezone: </label>
+                    <select id="timezone">
+                        <option value="none"></option>
+                        <option value="local">Local Time</option>
+                    </select>
+                </div>
+                <div class="hstack alignc gap2">
+                    <input type="text" id="ciphertext" placeholder="Ciphertext...">
+                    <span>
+                        <label for="color">Screen Color: </label>
+                        <select id="color">
+                            <option value="none"></option>
+                            <option value="magenta" class="magenta">Magenta</option>
+                            <option value="blue" class="blue">Blue</option>
+                            <option value="orange" class="orange">Orange</option>
+                            <option value="yellow" class="yellow">Yellow</option>
+                        </select>
+                    </span>
+                    <span><input type="checkbox" id="bob"><label for="bob"> lit BOB</label></span>
+                </div>
+                <div class="hstack gap3">
+                    <p><b>AA</b> = 2(B - H)</p>
+                    <p><b>D</b> = 2H - B</p>
+                    <p><b>D &gt; AA</b> = B &lt; H + ⅓H</p>
+                </div>
+                <div class="hstack top gap">
+                    <table id="day">
+                        <tr><th class="title-cell" colspan="2">Part 1</th></tr>
+                        <tr><th>Sun</th><td>BECOZY</td></tr>
+                        <tr><th>Mon*</th><td><span class="nobob">PLAY</span><span class="yesbob hidden">HIDDEN</span></td></tr>
+                        <tr><th>Tue</th><td>HIDDEN</td></tr>
+                        <tr><th>Wed*</th><td><span class="nobob">SECRET</span><span class="yesbob hidden">CIPHER</span></td></tr>
+                        <tr><th>Thu</th><td>CIPHER</td></tr>
+                        <tr><th>Fri*</th><td><span class="nobob">FAIL</span><span class="yesbob hidden">PARTYHARD</span></td></tr>
+                        <tr><th>Sat</th><td>PARTYHARD</td></tr>
+                    </table>
+                    <div class="vstack">
+                        <table id="part2">
+                            <tr><td class="corner" rowspan="2"></td><th class="title-cell" colspan="4">Part 2</th></tr>
+                            <tr>
+                                <th><span class="magenta">Magenta</span></th>
+                                <th><span class="blue">Blue</span></th>
+                                <th><span class="orange">Orange</span></th>
+                                <th><span class="yellow">Yellow</span></th>
+                            </tr>
+                            <tr><th>SER and PAR</th><td>SAFE</td><td>EFAS</td><td>MESSAGE</td><td>GROOVE</td></tr>
+                            <tr><th>S# sum &gt; 10</th><td>CODE</td><td>EDOC</td><td>QUIET</td><td>ETIUQ</td></tr>
+                            <tr><th>D > AA</th><td>GROOVE</td><td>EVOORG</td><td>TEIUQ</td><td>QUITE</td></tr>
+                            <tr><th>else</th><td>MESSAGE</td><td>EGASSEM</td><td>SAFE</td><td>EDOC</td></tr>
+                        </table>
+                        <small>
+                            “SER” is a serial port. “PAR” is a parallel port.<br>
+                            “S# sum” is the sum of all digits in the serial number.<br>
+                            “D” is the # of D batteries. “AA” is the # of AA batteries.
+                        </small>
+                    </div>
+                    <table>
+                        <tr><th class="title-cell" colspan="2">Part 3</th></tr>
+                        <tr><th>0 Xs</th><td></td></tr>
+                        <tr><th>1 Xs</th><td>ONE</td></tr>
+                        <tr><th>2 Xs</th><td>TWO</td></tr>
+                        <tr><th>3+ Xs</th><td>MANY</td></tr>
+                    </table>
+                </div>
+                <div class="hstack alignc gap2">
+                    <p class="centered">
+                        *If <em class="highlightable">lit BOB</em> exists, use the next day instead.<br>
+                        If no vowel in S#, swap parts 1 & 2.<br>
+                        Now add all parts together to make a full key.<br>
+                        Reverse the full key if S# sum is prime.
+                    </p>
+                    <table>
+                        <tr><th class="title-cell" colspan="8">Primes</th></tr>
+                        <tr><td>2</td><td>3</td><td>5</td><td>7</td><td>11</td><td>13</td><td>17</td><td>19</td></tr>
+                        <tr><td>23</td><td>29</td><td>31</td><td>37</td><td>41</td><td>43</td><td>47</td><td>53</td></tr>
+                    </table>
+                </div>
+                <div class="hstack bottom gap1">
+                    <div class="vstack gap">
+                        <input type="text" id="playfair" placeholder="Playfair Content...">
+                        <table id="playfair-table">
+                            <tr><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><td></td><td></td><td></td><td></td><td></td></tr>
+                        </table>
+                    </div>
+                    <div class="vstack gap">
+                        <input placeholder="Plaintext..." id="plaintext">
+                        <table id="result">
+                            <tr>
+                                <td class="corner" rowspan="2" id="pair1"></td>
+                                <td class="corner" rowspan="2" id="pair2"></td>
+                                <td class="corner" rowspan="2" id="pair3"></td>
+                                <th class="title-cell" colspan="4">Result Sequence</th>
+                            </tr>
+                            <tr>
+                                <th><span class="magenta">Magenta</span></th>
+                                <th><span class="blue">Blue</span></th>
+                                <th><span class="orange">Orange</span></th>
+                                <th><span class="yellow">Yellow</span></th>
+                            </tr>
+                            <tr><th rowspan="4">ST</th><th rowspan="2">RI</th><th>KE</th><td>ABCD</td><td>CDAB</td><td>BADC</td><td>DABC</td></tr>
+                            <tr><th>K<span class="dim">X</span></th><td>BCDA</td><td>DACB</td><td>ADCB</td><td>ABCD</td></tr>
+                            <tr><th rowspan="2">RY</th><th>KE</th><td>CDAB</td><td>ACBD</td><td>DCBA</td><td>BCDA</td></tr>
+                            <tr><th>K<span class="dim">X</span></th><td>DABC</td><td>CBDA</td><td>CBAD</td><td>CDAB</td></tr>
+                            <tr><th rowspan="4">ZT</th><th rowspan="2">RI</th><th>KE</th><td>ABDC</td><td>BDAC</td><td>BACD</td><td>DACB</td></tr>
+                            <tr><th>K<span class="dim">X</span></th><td>BDCA</td><td>DBCA</td><td>ACDB</td><td>ACBD</td></tr>
+                            <tr><th rowspan="2">RY</th><th>KE</th><td>CABD</td><td>BCAD</td><td>CDBA</td><td>CBDA</td></tr>
+                            <tr><th>K<span class="dim">X</span></th><td>DCAB</td><td>CADB</td><td>DBAC</td><td>BDAC</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <p class="centered">
+                    For each pair in grid:<br>
+                    <b>Same Row</b> -> Shift Left &nbsp;
+                    <b>Same Column</b> -> Shift Up <br>
+                    <b>Otherwise</b> -> Same Row, Column of Other<br>
+                </p>
+                <div class="hstack gap1">
+                    <button id="semiclear">Clear Inputs</button>
+                    <button id="clear">Clear Manual</button>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
