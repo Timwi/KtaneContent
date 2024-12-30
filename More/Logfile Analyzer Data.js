@@ -15754,7 +15754,7 @@ let parseData = [
 			{
 				regex: /The resulting maze:/,
 				handler: function (match, module) {
-					const colours = {
+					module.colours = {
 						"X": "#FFFA",
 						"r": "#F00A",
 						"y": "#FF0A",
@@ -15764,13 +15764,13 @@ let parseData = [
 					};
 					const mazeData = readLines(9)
 						.map(l => l.split(''));
-					const svg = $SVG(`<svg viewbox="-0.5 -0.5 10 10" class="robot-programming">`);
+					module.svg = $SVG(`<svg viewbox="-0.5 -0.5 10 10" class="robot-programming">`);
 					for (const [y, row] of mazeData.entries()) {
 						for (const [x, cell] of row.entries()) {
-							$SVG(`<rect x="${x}" y="${y}" width="1" height="1" fill="${colours[cell]}">`).appendTo(svg);
+							$SVG(`<rect x="${x}" y="${y}" width="1" height="1" fill="${module.colours[cell]}">`).appendTo(module.svg);
 						}
 					}
-					module.push({ label: match[0], obj: svg });
+					module.push({ label: match[0], obj: module.svg });
 					return true;
 				}
 			},
@@ -15778,12 +15778,31 @@ let parseData = [
 				regex: /The robots in the initial order are: (.+)\./,
 				handler: function (matches, module) {
 					module.botAppearances = matches[1].split(", ");
+					const paths = {
+						"Circle": {path: "m-0.45,0a0.45,0.45,0,1,0,0.9,0a0.45,0.45,0,1,0,-0.9,0", xOffset: 1.5, yOffset: 7.5},
+						"Hexagon": {path: "l0.4,0.2l0,0.4l-0.4,0.2l-0.4,-0.2l0,-0.4z", xOffset: 1.5, yOffset: 7.1},
+						"Square": {path: "l0.8,0l0,0.8l-0.8,0z", xOffset: 1.1, yOffset: 7.1},
+						"Triangle": {path: "l0.4,0.8l-0.8,0z", xOffset: 1.5, yOffset: 7.1},
+					};
+
+					for(let i = 0; i < module.botAppearances.length; i++)
+					{
+						const botAppearance = module.botAppearances[i].split(' ');
+						const colorPrefix = botAppearance[0].toLowerCase()[0];
+						const color = colorPrefix == 'b' ? "#4763d1" : module.colours[colorPrefix]
+						const shape = botAppearance[1];
+						const pathObj = paths[shape];
+						const startingPath = `M${pathObj.xOffset + (2 * i)},${pathObj.yOffset}`;
+						$SVG(`<path>`).attr("d", startingPath + pathObj.path).attr("fill", color).appendTo(module.svg);
+					}
 					return true;
 				}
 			},
 			{
 				regex: /The robot types are: (.+)\./,
 				handler: function (matches, module) {
+					
+
 					module.push(matches[0]);
 					module.attemptNum = 1;
 					module.botOrder = matches[1].split(", ");
