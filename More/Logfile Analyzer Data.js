@@ -20404,6 +20404,15 @@ let parseData = [
 					return true;
 				}
 			},
+			{
+				regex: /Valve 1 should( not)? be pressed, Valve 2 should( not)? be pressed, and Valve 3 should( not)? be pressed\./,
+				handler: function (matches, module) {
+					let answer = matches.map((match, index) => !match && index !== 0 ? index : null)
+							.filter(item => item !== null);
+					module.push(`Valves to press: ${answer.length > 0 ? answer.join(", ") : "None"}`);
+					return true;
+				}
+			},
 			{ regex: /.+/ }
 		]
 	},
