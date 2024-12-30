@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Complicated Wires — Keep Talking and Nobody Explodes</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var instructions = [
+            '<td class="yes">✓</td>',
+            '<td class="no">×</td>',
+            '<td class="serial">S</td>',
+            '<td class="parallel">P</td>',
+            '<td class="battery">B</td>'
+        ];
+
+        function GetWeightedRandomCutInstruction(rnd, weights) {
+            var totalWeight = 0;
+            for (var i = 0; i < instructions.length; i++) {
+                if (!(instructions[i] in weights))
+                    weights[instructions[i]] = 1;
+                totalWeight += weights[instructions[i]];
+            }
+
+            var prob = rnd.nextDouble() * totalWeight;
+            for (var i = 0; i < instructions.length; i++) {
+                var instr = instructions[i];
+                if (prob < weights[instr]) {
+                    weights[instr] = weights[instr] * .1;
+                    return instr;
+                }
+                prob -= weights[instr];
+            }
+            return instructions[rnd.next(0, instructions.length)];
+        }
+
+        function setRules(rnd) {
+            var numCuts = 1;
+            var weights = {};
+            for (var i = 0; i < instructions.length; i++) weights[instructions[i]] = 1;
+
+            var first = true;
+            function getInstr() {
+                if (first) {
+                    first = false;
+                    return instructions[0];
+                }
+                var instr = GetWeightedRandomCutInstruction(rnd, weights);
+                if (instr === instructions[0]) numCuts++;
+                return instr;
+            }
+
+            // red, blue, star, LED
+            var rows = [0, 2, 1, 3].map(
+                i => document.querySelector(`#venn-table > tbody > tr:nth-child(${i+2})`)
+            );
+            for (var row of rows) {
+                for (var i of [0, 2, 1, 3]) {
+                    var col = row.querySelector(`td:nth-child(${i+3})`);
+                    col.outerHTML = getInstr();
+                }
+            }
+
+            if (rnd.seed != 1 && numCuts >= 2) rows[0].querySelector("td:not(.corner)").outerHTML = getInstr();
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+    </script>
+    <style>
+        .page-content * {
+            box-sizing: border-box;
+        }
+        table, .dark table, .led, .star, .color {
+            border: none;
+        }
+        
+        th, td
+        {
+            min-width: 45px;
+            min-height: 45px;
+            height: 45px;
+            font-size: 1.5em;
+            padding: .35em .2em 0;
+            text-align: center;
+        }
+        caption {
+            font-size: 25px;
+        }
+        .yes, .no, .star {
+            font-size: 2.5em;
+            line-height: 0;
+        }
+        .star {
+            padding-top: .07em;
+        }
+        .led, .star {
+            border-left: 1px solid black;
+            border-right: 1px solid black;
+        }
+        .yes {
+            background-color: #bf9;
+            padding-top: .23em;
+        }
+        .no {
+            background-color: #e55;
+            padding-top: .3em;
+        }
+        .battery { background-color: #fd5; }
+        .parallel { background-color: #d6d; }
+        .serial { background-color: #cdd; }
+
+        .dark .yes { background-color: #6a3; }
+        .dark .no { background-color: #900; }
+        .dark .battery { background-color: #a80; }
+        .dark .parallel { background-color: #818; }
+        .dark .serial { background-color: #788; }
+
+        .color {
+            padding: 0;
+            line-height: 0;
+            min-width: 0;
+        }
+
+        .hstack {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page venn-wires page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Complicated Wires</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Complicated Wires.svg" class="diagram">
+                <h2>On the Subject of Complicated Wires</h2>
+                <p class="flavour-text">
+                    These wires aren’t like other wires. Fortunately, there’s a simple, easy to follow table
+                    to determine which need to be cut. It even has colors! Some lunatic could probably even turn
+                    this into an esoteric 4-way venn diagram.
+                </p>
+                <ul>
+                    <li>Look at each wire: there is an LED above the wire and a space for a “★” symbol below the wire.</li>
+                    <li>For <em>each</em> wire/LED/symbol combination, use the table below to decide whether or not to cut the wire.</li>
+                </ul>
+                <div class="hstack top gap2">
+                    <table id="venn-table">
+                        <tr>
+                            <td class="corner" colspan="2"></td>
+                            <th class="led" colspan="2">
+                                <svg width="24" height="24" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="11" fill="#fff"/>
+                                    <circle cx="12" cy="12" r="10"/>
+                                </svg>
+                            </th>
+                            <th class="led" colspan="2">
+                                <svg width="24" height="24" viewBox="0 0 24 24">
+                                    <defs>
+                                        <radialGradient id="grad" cx="10" cy="10" r="9" gradientTransform="matrix(1.222 0 0 1.222 -.2222 -.2222)" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#ec0" stop-opacity="0" offset=".3"/>
+                                            <stop stop-color="#ec0" stop-opacity=".75" offset=".8"/>
+                                            <stop stop-color="#ec0" stop-opacity=".1" offset="1"/>
+                                        </radialGradient>
+                                    </defs>
+                                    <circle cx="12" cy="12" r="11" fill="#fff"/>
+                                    <circle cx="12" cy="12" r="9" fill="none" stroke="#000"/>
+                                    <circle cx="12" cy="12" r="11" fill="url(#grad)"/>
+                                </svg>
+                            </th>
+                        </tr>
+                        <tr>
+                            <td class="color"></td>
+                            <th class="color">
+                                <svg height="100%" viewBox="4 0 18 24">
+                                    <rect x="6" y="1" width="12" height="22" fill="#fff" stroke="#000"/>
+                                </svg>
+                            </th>
+                            <td class="yes">✓</td><td class="yes">✓</td><td class="no">×</td><td class="battery">B</td>
+                        </tr>
+                        <tr>
+                            <th class="color">
+                                <svg height="100%" viewBox="4 0 16 24">
+                                    <rect x="6" y="1" width="12" height="22" fill="#fff"/>
+                                    <path d="m11 1-5 5v5l10-10z" fill="#d00"/>
+                                    <path d="m6 16 12-12v5l-12 12z" fill="#d00"/>
+                                    <path d="m18 14-9 9h5l4-4z" fill="#d00"/>
+                                    <rect x="6" y="1" width="12" height="22" fill="none" stroke="#000"/>
+                                </svg>
+                            </th>
+                            <th class="color">
+                                <svg height="100%" viewBox="4 0 18 24">
+                                    <rect x="6" y="1" width="12" height="22" fill="#d00" stroke="#000"/>
+                                </svg>
+                            </th>
+                            <td class="serial">S</td><td class="yes">✓</td><td class="battery">B</td><td class="battery">B</td>
+                        </tr>
+                        <tr>
+                            <th class="color">
+                                <svg height="100%" viewBox="4 0 16 24">
+                                    <rect x="6" y="1" width="12" height="22" fill="#fff"/>
+                                    <path d="m11 1-5 5v5l10-10z" fill="#238"/>
+                                    <path d="m6 16 12-12v5l-12 12z" fill="#238"/>
+                                    <path d="m18 14-9 9h5l4-4z" fill="#238"/>
+                                    <rect x="6" y="1" width="12" height="22" fill="none" stroke="#000"/>
+                                </svg>
+                            </th>
+                            <th class="color">
+                                <svg height="100%" viewBox="4 0 18 24">
+                                    <rect x="6" y="1" width="12" height="22" fill="#238" stroke="#000"/>
+                                </svg>
+                            </th>
+                            <td class="serial">S</td><td class="no">×</td><td class="parallel">P</td><td class="parallel">P</td>
+                        </tr>
+                        <tr>
+                            <td class="color"></td>
+                            <th class="color">
+                                <svg height="100%" viewBox="4 0 18 24">
+                                    <rect x="6" y="1" width="12" height="22" fill="#d00"/>
+                                    <path d="m11 1-5 5v5l10-10z" fill="#238"/>
+                                    <path d="m6 16 12-12v5l-12 12z" fill="#238"/>
+                                    <path d="m18 14-9 9h5l4-4z" fill="#238"/>
+                                    <rect x="6" y="1" width="12" height="22" fill="none" stroke="#000"/>
+                                </svg>
+                            </th>
+                            <td class="serial">S</td><td class="parallel">P</td><td class="serial">S</td><td class="no">×</td>
+                        </tr>
+                        <tr>
+                            <td class="corner" colspan="2"></td><th class="star"></th>
+                            <th class="star">★</th><th class="star"></th><th class="star">★</th>
+                        </tr>
+                    </table>
+                    <table id="venn-key">
+                        <caption>Key</caption>
+                        <tr><td class="yes">✓</th><td>Cut</td></tr>
+                        <tr><td class="no">×</th><td>Don’t Cut</td></tr>
+                        <tr><td class="serial">S</th><td>Cut if serial even</td></tr>
+                        <tr><td class="parallel">P</th><td>Cut if parallel port</td></tr>
+                        <tr><td class="battery">B</th><td>Cut if 2+ batteries</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
