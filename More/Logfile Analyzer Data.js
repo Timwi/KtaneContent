@@ -1082,6 +1082,22 @@ let parseData = [
 		moduleID: "3dTunnels",
 	},
 	{
+		loggingTag: "3N+1",
+		moduleID: "threeNPlusOne",
+		matches: [
+			{
+				regex: /(?:\d+) is (?:\d)\. Completed All Stages\. Module Solved\./,
+				handler: function (matches, module) {
+					if(!module.solved)
+						module.push(matches[0]);
+					module.solved = true;
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		loggingTag: "4 Buttons",
 		moduleID: "4buttons",
 		matches: [
