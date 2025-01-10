@@ -186,9 +186,9 @@ function readHash() {
 
     window.location.hash.substr(1).split(";").forEach(function(param) {
         var parts = param.replace(/^bomb-/g, "bomb=").split("=");
-        if (parts.length != 2) return;
+        if (parts.length < 2) return;
 
-        state[parts[0]] = parts[1];
+        state[parts[0]] = parts.slice(1).join("=");
     });
 
     return state;
