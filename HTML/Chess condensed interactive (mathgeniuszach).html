@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Chess — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/Modules/Chess.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        const REORDER_KEYS_KEY = "modded-chess-interactive-reorder-keys";
+        if (!(REORDER_KEYS_KEY in localStorage)) {
+            localStorage[REORDER_KEYS_KEY] = "1";
+        }
+
+        let defaultRules = null;
+
+        function makeChessboard(labels) {
+            const ths = document.querySelectorAll(".chessboard th");
+            for (let i = 0; i < 6; i++) {
+                ths[i].textContent = labels.ranks[5-i];
+                ths[i+6].textContent = labels.files[i];
+            }
+        }
+
+        function getDefaultRules(rnd) {
+            if (defaultRules !== null) return;
+
+            defaultRules = {};
+            for (let rule = 1; rule <= 6; rule++) {
+                defaultRules[rule] = document.getElementById(`rule${rule}`).innerHTML;
+            }
+
+            const reorder = document.getElementById("reorder");
+            reorder.addEventListener("change", ev => {
+                localStorage[REORDER_KEYS_KEY] = ev.target.checked ? "1" : "0";
+                if (rnd.seed == 1) setDefaultRules(rnd);
+                else setRules(rnd);
+            })
+            reorder.checked = localStorage[REORDER_KEYS_KEY] == "1";
+
+            for (const piece of document.querySelectorAll(".piece")) {
+                piece.addEventListener("click", ev => {
+                    document.querySelector(".selected").classList.remove("selected");
+                    ev.target.closest(".piece").classList.add("selected");
+                });
+            }
+
+            document.getElementById("clear").addEventListener("click", ev => {
+                for (const td of document.querySelectorAll(".chessboard td")) {
+                    td.classList.remove("marked");
+                    td.innerHTML = "";
+                }
+            });
+
+            let piece = undefined;
+            let mover;
+            function mousemove(ev) {
+                if (!ev.target.closest(".chessboard")) return;
+                const td = ev.target.closest("td");
+                if (!td) return;
+
+                if (piece == null) {
+                    td.innerHTML = "";
+                } else if (typeof piece == "string") {
+                    td.innerHTML = piece;
+                } else {
+                    if (piece) td.classList.add("marked");
+                    else td.classList.remove("marked");
+                }
+            }
+            document.addEventListener("mousedown", ev => {
+                if (ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+                if (!ev.target.closest(".chessboard")) return;
+                const td = ev.target.closest("td");
+                if (!td) return;
+
+                const svg = document.querySelector(".selected").firstElementChild;
+                if (svg.id == "marker") {
+                    piece = !td.classList.contains("marked");
+                    td.classList.toggle("marked");
+                } else if (svg.id == td.firstElementChild?.id) {
+                    piece = null;
+                    td.innerHTML = "";
+                } else {
+                    piece = svg.outerHTML;
+                    td.innerHTML = piece;
+                }
+                mover = document.addEventListener("mousemove", mousemove);
+            });
+            document.addEventListener("mouseup", ev => {
+                document.removeEventListener("mousemove", mousemove);
+            });
+        }
+
+        function setDefaultRules(rnd) {
+            getDefaultRules(rnd);
+            for (let i = 1; i <= 6; i++) {
+                const span = document.getElementById(`rule${i}`);
+                span.innerHTML = defaultRules[i].replace(/\{i\}/g, i).replace(/\{j\}/g, 5);
+            }
+            document.getElementById("order").textContent = "C#4 C#5 C#1 C#2 C#3 C#6";
+            makeChessboard({
+                ranks: ['1', '2', '3', '4', '5', '6'],
+                files: ['a', 'b', 'c', 'd', 'e', 'f']
+            });
+            reorderRules([4, 5, 1, 2, 3, 6]);
+        }
+
+        function setRules(rnd) {
+            getDefaultRules(rnd);
+
+            const order = [1, 2, 3, 4, 5, 6];
+            rnd.shuffleFisherYates(order);
+
+            const ind = order.indexOf(5);
+            const invertX = !(rnd.nextInt() & 1);
+            const invertY = !(rnd.nextInt() & 1);
+            const swap = !(rnd.nextInt() & 1);
+            const invertField = !!(rnd.nextInt() & 1);
+            const invertSerial = !(rnd.nextInt() & 1);
+
+            for (let i = 0; i < 6; i++) {
+                const span = document.getElementById(`rule${i + 1}`);
+                let inner = defaultRules[order[i]].replace(/\{i\}/g, i + 1);
+                switch (order[i]) {
+                    case 1: inner = inner.replace(/\{j\}/g, ind + 1); break;
+                    case 2: inner = inner.replace("odd", invertSerial ? "even" : "odd"); break;
+                    case 5: inner = inner.replace("white", invertField ? "black" : "white"); break;
+                }
+                span.innerHTML = inner;
+            }
+
+            document.getElementById("order").textContent = [4, 5, 1, 2, 3, 6].map(i => `C#${order.indexOf(i)+1}`).join(" ");
+
+            const letters = ['a', 'b', 'c', 'd', 'e', 'f'];
+            const numbers = ['1', '2', '3', '4', '5', '6'];
+            if (invertX) letters.reverse();
+            if (invertY) numbers.reverse();
+            const setLabels = { ranks: [], files: [] };
+            for (let i = 0; i < 6; i++) {
+                setLabels.ranks.push(swap ? letters[i] : numbers[i]);
+                setLabels.files.push(swap ? numbers[i] : letters[i]);
+            }
+            makeChessboard(setLabels);
+            reorderRules([4, 5, 1, 2, 3, 6].map(i => order.indexOf(i)+1));
+        }
+
+        function reorderRules(reordering) {
+            if (localStorage[REORDER_KEYS_KEY] != "1") return;
+
+            const rules = reordering.map(i => document.getElementById(`rule${i}`).innerHTML);
+            for (let i = 0; i < 6; i++) {
+                document.getElementById(`rule${i+1}`).innerHTML = rules[i];
+            }
+        }
+    </script>
+    <style>
+        .page-content * {
+            box-sizing: border-box !important;
+        }
+
+        table, .dark table {
+            border: none;
+            outline: none;
+        }
+
+        small {
+            text-align: center;
+        }
+        p {
+            margin: 0;
+        }
+        ul {
+            margin: 5px 0;
+        }
+
+        th, td {
+            line-height: 1em;
+            text-align: center;
+            padding: .35em .2em .05em;
+            vertical-align: middle;
+            width: auto;
+            height: 25px;
+            min-width: 25px;
+        }
+        th:last-child {
+            width: 25px;
+        }
+        th {
+            background: #eef;
+            color: #000;
+            min-height: 25px;
+            height: 25px;
+        }
+        th.title-cell {
+            background: #ddf;
+            min-width: 100px;
+        }
+        .dark th {
+            background: #667;
+            color: #eee;
+        }
+        .dark th.title-cell {
+            background: #557;
+        }
+
+        .chessboard th {
+            background: none;
+            border: none;
+            width: 50px;
+            height: 50px;
+            font-size: 2em;
+        }
+        .chessboard td {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+        .black {
+            background: #444;
+        }
+        .white {
+            background: #fff;
+        }
+        .black.marked {
+            background: darkred;
+        }
+        .white.marked {
+            background: red;
+        }
+        .piece {
+            width: 51px;
+            height: 50px;
+            text-align: center;
+            border: none;
+            background: none;
+            overflow: hidden;
+        }
+
+        #clear {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+        }
+
+        .piece:hover {
+            background: #ddf;
+        }
+        .dark .piece:hover {
+            background: #335;
+        }
+        .piece.selected {
+            background: #ccf;
+        }
+        .dark .piece.selected {
+            background: #557;
+        }
+
+        svg {
+            width: 43px !important;
+            height: 43px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Chess</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Chess.svg" class="diagram">
+                <h2>On the Subject of Chess</h2>
+                <p class="flavour-text">Without pressure, chess is simply a game of cause and effect.</p>
+
+                <ul>
+                    <li>
+                        Use the numbered buttons on the bottom row of the module to browse through six different coordinates on the 6×6 chessboard below.
+                        A green LED below the button indicates which coordinate is currently selected.
+                    </li>
+                    <li>Using the tables below, place a specific chess figure on each coordinate.</li>
+                    <li>Assuming standard FIDE chess movements (and that the pieces are all white), the chess figures together will attack all but one square.</li>
+                    <li>To solve the module, enter the coordinate of the only unattacked square (letter then number) into the module.</li>
+                </ul>
+
+                <div class="vstack alignc gap">
+                    <small>
+                        C#n refers to the nth coordinate.<br>
+                        L# is the last digit of the serial number.<br>
+                        K is king, Q is queen, R is rook, B is bishop, and N is knight.<br>
+                        If a rule asks for a number of pieces, do all other rules first.
+                    </small>
+                    <p>Recommended Order: <span id="order">C#4 C#5 C#1 C#2 C#3 C#6</span> &nbsp; <input type="checkbox" id="reorder"><label for="reorder"> Reorder</label></p>
+                    <div class="hstack top gap chess">
+                        <table id="rule1">
+                            <tr><th class="title-cell" colspan="2">C#{i}</th></tr>
+                            <tr><td>C#{j} is Q</td><th>K</th></tr>
+                            <tr><th colspan="2">B</th></tr>
+                        </table>
+                        <table id="rule2">
+                            <tr><th class="title-cell" colspan="2">C#{i}</th></tr>
+                            <tr><td>L# odd</td><th>R</th></tr>
+                            <tr><th colspan="2">N</th></tr>
+                        </table>
+                        <table id="rule3">
+                            <tr><th class="title-cell" colspan="2">C#{i}</th></tr>
+                            <tr><td>&lt;2 R</td><th>Q</th></tr>
+                            <tr><th colspan="2">K</th></tr>
+                        </table>
+                        <table id="rule4">
+                            <tr><th class="title-cell">C#{i}</th></tr>
+                            <tr><th>R</th></tr>
+                        </table>
+                        <table id="rule5">
+                            <tr><th class="title-cell" colspan="2">C#{i}</th></tr>
+                            <tr><td>white</td><th>Q</th></tr>
+                            <tr><th colspan="2">R</th></tr>
+                        </table>
+                        <table id="rule6">
+                            <tr><th class="title-cell" colspan="2">C#{i}</th></tr>
+                            <tr><td>0 Q</td><th>Q</th></tr>
+                            <tr><td>0 N</td><th>N</th></tr>
+                            <tr><th colspan="2">B</th></tr>
+                        </table>
+                    </div>
+                    <div class="hstack gap">
+                        <table class="chessboard">
+                            <tr><th class="corner">6</th><td class="white"></td><td class="black"></td><td class="white"></td><td class="black"></td><td class="white"></td><td class="black"></td></tr>
+                            <tr><th class="corner">5</th><td class="black"></td><td class="white"></td><td class="black"></td><td class="white"></td><td class="black"></td><td class="white"></td></tr>
+                            <tr><th class="corner">4</th><td class="white"></td><td class="black"></td><td class="white"></td><td class="black"></td><td class="white"></td><td class="black"></td></tr>
+                            <tr><th class="corner">3</th><td class="black"></td><td class="white"></td><td class="black"></td><td class="white"></td><td class="black"></td><td class="white"></td></tr>
+                            <tr><th class="corner">2</th><td class="white"></td><td class="black"></td><td class="white"></td><td class="black"></td><td class="white"></td><td class="black"></td></tr>
+                            <tr><th class="corner">1</th><td class="black"></td><td class="white"></td><td class="black"></td><td class="white"></td><td class="black"></td><td class="white"></td></tr>
+                            <tr><td class="corner"></td><th class="corner">a</th><th class="corner">b</th><th class="corner">c</th><th class="corner">d</th><th class="corner">e</th><th class="corner">f</th></tr>
+                        </table>
+                        <div class="vstack top">
+                            <button class="piece selected">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -3 20 20" id="marker">
+                                    <path d="m11.1 0.644a2 2 0 0 1 2.791 0.036l1.433 1.433a2 2 0 0 1 0.035 2.791l-0.413 0.435-8.07 8.995a0.5 0.5 0 0 1-0.372 0.166h-3a0.5 0.5 0 0 1-0.234-0.058l-0.412 0.412a0.5 0.5 0 0 1-0.354 0.146h-2a0.5 0.5 0 0 1-0.354-0.854l1.412-1.412a0.5 0.5 0 0 1-0.058-0.234v-3a0.5 0.5 0 0 1 0.166-0.372l8.995-8.07z" fill="#000"/>
+                                    <g fill="#fff">
+                                        <path d="m5.293 13.5-2.793-2.793v1.586l1.207 1.207z"/>
+                                        <path d="m14.57 4.284 0.064-0.068a1 1 0 0 0-0.017-1.396l-1.433-1.433a1 1 0 0 0-1.396-0.018l-0.068 0.065z"/>
+                                        <path d="m10.98 2.114-8.254 7.406 3.753 3.753 7.406-8.254z"/>
+                                    </g>
+                                </svg>
+                            </button>
+                            <button class="piece">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -2 45 45" id="king">
+                                    <g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+                                        <path stroke-linejoin="miter" d="M22.5 11.63V6M20 8h5"/>
+                                        <path fill="#fff" stroke-linecap="butt" stroke-linejoin="miter" d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"/>
+                                        <path fill="#fff" d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7"/>
+                                        <path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0"/>
+                                    </g>
+                                </svg>
+                            </button>
+                            <button class="piece">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -2 45 45" id="queen">
+                                    <g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round">
+                                        <path d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38.5,13.5 L 31,25 L 30.7,10.9 L 25.5,24.5 L 22.5,10 L 19.5,24.5 L 14.3,10.9 L 14,25 L 6.5,13.5 L 9,26 z"/>
+                                        <path d="M 9,26 C 9,28 10.5,28 11.5,30 C 12.5,31.5 12.5,31 12,33.5 C 10.5,34.5 11,36 11,36 C 9.5,37.5 11,38.5 11,38.5 C 17.5,39.5 27.5,39.5 34,38.5 C 34,38.5 35.5,37.5 34,36 C 34,36 34.5,34.5 33,33.5 C 32.5,31 32.5,31.5 33.5,30 C 34.5,28 36,28 36,26 C 27.5,24.5 17.5,24.5 9,26 z"/>
+                                        <path d="M 11.5,30 C 15,29 30,29 33.5,30" fill="none"/>
+                                        <path d="M 12,33.5 C 18,32.5 27,32.5 33,33.5" fill="none"/>
+                                        <circle cx="6" cy="12" r="2" />
+                                        <circle cx="14" cy="9" r="2" />
+                                        <circle cx="22.5" cy="8" r="2" />
+                                        <circle cx="31" cy="9" r="2" />
+                                        <circle cx="39" cy="12" r="2" />
+                                    </g>
+                                </svg>
+                            </button>
+                            <button class="piece">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -2 45 45" id="rook">
+                                    <g fill="#fff" stroke="#000" fill-rule="evenodd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-dasharray="none" transform="translate(0,0.3)">
+                                        <path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z" stroke-linecap="butt" />
+                                        <path d="M 12,36 L 12,32 L 33,32 L 33,36 L 12,36 z" stroke-linecap="butt" />
+                                        <path d="M 11,14 L 11,9 L 15,9 L 15,11 L 20,11 L 20,9 L 25,9 L 25,11 L 30,11 L 30,9 L 34,9 L 34,14" stroke-linecap="butt" />
+                                        <path d="M 34,14 L 31,17 L 14,17 L 11,14" />
+                                        <path d="M 31,17 L 31,29.5 L 14,29.5 L 14,17" stroke-linecap="butt" stroke-linejoin="miter" />
+                                        <path d="M 31,29.5 L 32.5,32 L 12.5,32 L 14,29.5" />
+                                        <path d="M 11,14 L 34,14" fill="none" stroke="#000" stroke-linejoin="miter" />
+                                    </g>
+                                </svg>
+                            </button>
+                            <button class="piece">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -2 45 45" id="bishop">
+                                    <g fill="none" fill-rule="evenodd" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-dasharray="none" transform="translate(0,0.6)">
+                                        <g fill="#fff" stroke-linecap="butt">
+                                          <path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.35,38.99 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.65,38.99 6.68,38.97 6,38 C 7.35,36.54 9,36 9,36 z"/>
+                                          <path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/>
+                                          <path d="M 25 8 A 2.5 2.5 0 1 1  20,8 A 2.5 2.5 0 1 1  25 8 z"/>
+                                        </g>
+                                        <path d="M 17.5,26 L 27.5,26 M 15,30 L 30,30 M 22.5,15.5 L 22.5,20.5 M 20,18 L 25,18" stroke-linejoin="miter"/>
+                                    </g>
+                                </svg>
+                            </button>
+                            <button class="piece">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -2 45 45" id="knight">
+                                    <g fill="#fff" stroke="#000" fill-rule="evenodd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-dasharray="none" transform="translate(0,0.3)">
+                                        <path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18" />
+                                        <path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,9.506 13.5,8.5 13.5,7.5 C 14.5,6.5 16.5,10 16.5,10 L 18.5,10 C 18.5,10 19.28,8.008 21,7 C 22,7 22,10 22,10" />
+                                        <path d="M 9.5 25.5 A 0.5 0.5 0 1 1 8.5,25.5 A 0.5 0.5 0 1 1 9.5 25.5 z" />
+                                        <path d="M 15 15.5 A 0.5 1.5 0 1 1  14,15.5 A 0.5 1.5 0 1 1  15 15.5 z" transform="matrix(0.866,0.5,-0.5,0.866,9.693,-5.173)" />
+                                    </g>
+                                </svg>
+                            </button>
+                            <button id="clear">
+                                Clear<br>Board
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
