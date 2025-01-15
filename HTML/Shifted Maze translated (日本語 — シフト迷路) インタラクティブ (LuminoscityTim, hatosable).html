@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>シフト迷路 — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/math-utils.js"></script>
+    <script>
+        $(function() {
+            var left = 0;
+            var up = 0;
+            var rows = 6;
+            var cols = 6;
+            var leftPx = [0,0,0,0,0,0];
+            var upPx = [0,0,0,0,0,0];
+            var selected;
+            var selectedT;
+            var selectedRing = 0;
+            var ldisp = $(".leftOff");
+            var udisp = $(".upOff");
+
+            const directions = {
+                Up: [0, 1],
+                Left: [1, 0],
+                Down: [0, -1],
+                Right: [-1, 0],
+                w: [0, 1],
+                a: [1, 0],
+                s: [0, -1],
+                d: [-1, 0]
+            };
+            const whichDisp = {
+                Up: udisp,
+                Left: ldisp,
+                Down: udisp,
+                Right: ldisp,
+                w: ldisp,
+                a: udisp,
+                s: ldisp,
+                d: udisp
+            };
+            const rcolors = {
+                b: "#00F",
+                m: "#F0F",
+                y: "#DD0",
+                g: "#0C0",
+                w: "#FFF"
+            };
+            const ringIdx = {
+                "rdisp1": 0,
+                "rdisp2": 1,
+                "rdisp3": 2,
+                "rdisp4": 3
+            };
+            const nextColor = {
+                "#00F": rcolors["w"],
+                "#FFF": rcolors["m"],
+                "#F0F": rcolors["y"],
+                "#DD0": rcolors["g"],
+                "#0C0": rcolors["b"]
+            };
+            const colorText = {
+                "#00F": "青",
+                "#FFF": "白",
+                "#F0F": "マゼンタ",
+                "#DD0": "黄",
+                "#0C0": "緑"
+            };
+            var ringColors = {};
+            var rings = [];
+            var ringDisp = [];
+
+            function selectNone() {
+                selected = null;
+                selectedT = "";
+                updateSelection();
+            }
+
+            $(document).click(function(event) {
+                selectNone();
+            }).keydown(function(event) {
+                let k = event.key.toLowerCase();
+                if (event.key.startsWith("Arrow")) {
+                    selected = whichDisp[event.key.substring(5)];
+                    selectedT = "disp";
+                    updateSelection();
+                    let direction = directions[event.key.substring(5)];
+                    if (direction[0] !== 0) {
+                        newOffset(selected, UMod(left + direction[0], cols));
+                    } else {
+                        newOffset(selected, UMod(up + direction[1], rows));
+                    }
+                    event.preventDefault();
+                } else if (event.shiftKey && (k == "w" || k == "a" || k == "s" || k == "d")) {
+                    selected = whichDisp[k];
+                    selectedT = "disp";
+                    updateSelection();
+                    let direction = directions[k];
+                    if (direction[0] !== 0) {
+                        newOffset(selected, UMod(left + direction[0], cols));
+                    } else {
+                        newOffset(selected, UMod(up + direction[1], rows));
+                    }
+                } else if (k == "m" || k == "g" || k == "y" || k == "b" || k == "w") {
+                    if (selectedT != "rings") {
+                        selected = rings[0];
+                        selectedT = "rings";
+                        selectedRing = 0;
+                        updateSelection();
+                    }
+
+                    selected.css("stroke", rcolors[k])
+                    var id = "rdisp" + (selectedRing + 1);
+                    ringColors[id] = rcolors[k];
+                    ringDisp[selectedRing].text(colorText[ rcolors[k] ]);
+                    selectedRing = (selectedRing + 1) % rings.length;
+                    selected = rings[selectedRing];
+                    updateSelection();
+                } else if (k == "l" || k == "u") {
+                    selectedT = "disp";
+                    if (k == "l") { selected = ldisp; }
+                    else { selected = udisp; }
+                    updateSelection();
+                } else if (event.key == "Escape") {
+                    selectNone();
+                } else if (event.shiftKey && event.keyCode >= 49 && event.keyCode <= 53) {
+                    var n = event.keyCode - 49;
+                    selectedRing = n;
+                    selected = rings[selectedRing];
+                    selectedT = "rings";
+                    updateSelection();
+                } else if (!event.shiftKey) {
+                    n = parseInt(event.key);
+                    if (n >= 0 && !event.altKey) {
+                        n = UMod(n, rows);
+                        if (selectedT != "disp") {
+                            selectedT = "disp";
+                            selected = udisp;
+                            updateSelection();
+                        }
+                        newOffset(selected, n);
+
+                        if (selected.is(ldisp)) {
+                            selected = udisp;
+                        } else if (selected.is(udisp)) {
+                            selected = ldisp;
+                        }
+                        updateSelection();
+                    }
+                }
+            });
+
+            function newOffset(disp, value) {
+                disp.text(value);
+                left = parseInt(ldisp.text());
+                up = parseInt(udisp.text());
+                translateWalls();
+            }
+
+            ldisp.click(function() {
+                newOffset(ldisp, UMod(left + 1, cols));
+            });
+
+            udisp.click(function() {
+                newOffset(udisp, UMod(up + 1, rows));
+            });
+
+            $(".ring").each(function() {
+                rings.push($(this));
+            });
+            $(".ring-display").each(function() {
+                ringColors[this.id] = "#00F";
+                ringDisp.push($(this));
+            });
+            $(".ring-display").click(function(event) {
+                var i = ringIdx[event.target.id];
+                var next = nextColor[ ringColors[event.target.id] ];
+                ringDisp[i].text(colorText[next]);
+                rings[i].css("stroke", next);
+                ringColors[event.target.id] = next;
+                event.preventDefault();
+            });
+
+            let mazesvg = $(".mazesvg");
+
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 6; c++) {
+                    let dot = MakeSvgElem("circle", {
+                        class: "dot", cx:(150 + c*100), cy:(150 + r*100), r:13.5,
+                        fill: "none", stroke: "#000", "stroke-width": 3
+                    });
+                    mazesvg[0].appendChild(dot);
+                }
+            }
+
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 6; c++) {
+                    let cell = MakeSvgElem("rect", {
+                        class: ("highlightable row" + r + " column" + c), x:(c*100 + 100),
+                        y:(r*100 + 100), width:100, height:100, fill:"transparent"
+                    });
+                    mazesvg[0].appendChild(cell);
+                }
+            }
+
+            $(".markedListUp").click(function() {
+                var off = $(".markedListOffset")[0];
+                var n = parseInt(off.innerText) + 1;
+                off.innerText = n;
+
+                var items = $(".markedList")[0].getElementsByTagName("li");
+                var s = items[0].innerText;
+                items[0].innerText = items[1].innerText;
+                items[1].innerText = items[2].innerText;
+                items[2].innerText = s;
+            });
+            $(".markedListDown").click(function() {
+                var off = $(".markedListOffset")[0];
+                var n = parseInt(off.innerText) - 1;
+                if (n >= 0) {
+                    off.innerText = n;
+
+                    var items = $(".markedList")[0].getElementsByTagName("li");
+                    var s = items[2].innerText;
+                    items[2].innerText = items[1].innerText;
+                    items[1].innerText = items[0].innerText;
+                    items[0].innerText = s;
+                }
+            });
+
+            $(".reset").click(function() {
+                let col = rcolors["b"];
+                $(".ring").css("stroke", col);
+                $(".ring-display").text(colorText[col]);
+                $(".off-display").text("0");
+                $(".ring-display").each(function() {
+                    ringColors[this.id] = col;
+                });
+                left = 0;
+                up = 0;
+                translateWalls();
+                selectNone();
+            });
+
+            function updateSelection() {
+                $(".selected").removeClass("selected");
+                $(".outlined").removeClass("outlined");
+                if (selected && selected.length > 0) {
+                    selected.addClass("selected");
+                    if (selectedT == "rings") {
+                        for (let i = 1; i <= rings.length; i++) {
+                            if ($("#ring" + i).hasClass("selected")) {
+                                $("#ringO" + i).addClass("outlined");
+                                $("#rdisp" + i).addClass("selected");
+                            }
+                        }
+                    }
+                }
+            }
+
+            function translateWalls() {
+                for (let i = 0; i < rows; i++) {
+                    if (i < left) {
+                        leftPx[i] = left - cols;
+                    } else {
+                        leftPx[i] = left;
+                    }
+                    leftPx[i] *= -100;
+
+                    if (i < up) {
+                        upPx[i] = up - rows;
+                    } else {
+                        upPx[i] = up;
+                    }
+                    upPx[i] *= -100;
+                }
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        $(".maze-wall.row" + r + ".column" + c).css("transform", "translate(" + leftPx[c] + "px," + upPx[r] + "px)");
+                        $("rect.row" + r + ".column" + c).css("transform", "translate(" + leftPx[c] + "px," + upPx[r] + "px)");
+                    }
+                }
+            }
+        });
+    </script>
+    <style>
+        table {
+            font-size: 14px;
+        }
+        .dark svg path, .dark circle.dot {
+            filter: invert(100%) contrast(90%);
+        }
+        .maze-wall, rect.highlightable {
+            transition: 0.5s;
+        }
+
+        .selected {
+            background-color: rgba(255, 255, 0, 0.5) !important;
+        }
+        .outlined {
+            stroke-width: 18;
+        }
+        .dark .outlined {
+            stroke: #FA0;
+        }
+
+        .markedListControls {
+            float: left;
+            text-align: center;
+            position: relative;
+            bottom: 2mm;
+        }
+        .markedListControls button {
+            font-size: 13px;
+            font-weight: bolder;
+            height: 5.5mm;
+            width: 6.5mm;
+        }
+        .markedList {
+            margin-left: 2mm;
+        }
+        .markedListOffset {
+            margin-top: 0.5mm;
+            font-weight: bold;
+        }
+        button {
+            pointer-events: all;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+        }
+        button.reset {
+            position: relative;
+            top: 8mm;
+            left: 100mm;
+            font-family: Special Elite;
+            font-size: 17px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+
+        input {
+            width: 25px;
+        }
+        .input-grid, .input-grid td, .input-grid th {
+            border: none;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .off-display, .ring-display {
+            cursor: pointer;
+            user-select: none;
+        }
+        th.off-display {
+            width: 5mm;
+        }
+        th.ring-display {
+            width: 20mm;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">シフト迷路</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Shifted Maze.svg" class="diagram">
+                <h2>モジュール詳細：シフト迷路</h2>
+                <p class="flavour-text">この迷路は繰り返すことが大好きだ。何度も何度も…</p>
+
+                <p>モジュールを解除するには、6×6の迷路の座標を表示するディスプレーと、迷路内の白色の光を移動するための矢印で構成されている。</p>
+
+                <p>
+                    モジュールを解除するには、白色の光を正しい順序で3つの円形のマークに移動させる必要がある。
+                    <br>
+                    壁、迷路の外、または間違った順序でマークされた場所に移動すると、ミスが記録される。モジュールはリセットされず、迷路も変更されない。
+                </p>
+
+                <h3>目的地の順序</h3>
+                <p>
+                    4つの座標には円形のマークがあり、開始位置は白のマークである。次の順序で他のマークに移動する。
+                </p>
+                <div class="markedListControls">
+                    <button class="markedListUp">+</button>
+                    <div class="markedListOffset">0</div>
+                    <button class="markedListDown">–</button>
+                </div>
+                <ol class="markedList" id="markedList">
+                    <li style="font-size:14px">開始地点の対角線上のマーク</li>
+                    <li style="font-size:14px">開始地点と同じ段のマーク</li>
+                    <li style="font-size:14px">開始地点と同じ列のマーク</li>
+                </ol>
+                <p>単1バッテリー1つにつき、このルールは2が1にシフトし、3は2、1は3になる。</p>
+
+                <h3>迷路のシフト</h3>
+                <p>
+                    迷路の種類は1つしかないが、垂直／水平方向の両方にシフトする可能性がある。
+                    <br>
+                    シフトを決定するには、(開始地点を基準とした)マークの色を参照し、以下の表の手順を行う。
+                </p>
+
+                <h4>垂直方向</h4>
+                <table>
+                    <tr>
+                        <th>同じ列の色</th>
+                        <td colspan="2">黄</td>
+                        <td colspan="2">マゼンタ</td>
+                        <td colspan="2">青</td>
+                    </tr>
+                    <tr>
+                        <th>対角線に<br>反対の色</th>
+                        <td>マゼンタ<br>／黄</td>
+                        <td>青<br>／緑</td>
+                        <td>マゼンタ<br>／黄</td>
+                        <td>青<br>／緑</td>
+                        <td>マゼンタ<br>／黄</td>
+                        <td>青／緑</td>
+                    </tr>
+                    <tr><th>シフト数</th><td>2</td><td>3</td><td>0</td><td>5</td><td>1</td><td>4</td></tr>
+                </table>
+
+                <h4>水平方向</h4>
+                <table>
+                    <tr>
+                        <th>同じ段の色</th>
+                        <td colspan="2">黄</td>
+                        <td colspan="2">マゼンタ</td>
+                        <td colspan="2">青</td>
+                    </tr>
+                    <tr>
+                        <th>対角線に<br>反対の色</th>
+                        <td>緑<br>／黄</td>
+                        <td>青／<br>マゼンタ</td>
+                        <td>緑<br>／黄</td>
+                        <td>青／<br>マゼンタ</td>
+                        <td>緑<br>／黄</td>
+                        <td>青／<br>マゼンタ</td>
+                    </tr>
+                    <tr><th>シフト数</th><td>0</td><td>4</td><td>1</td><td>3</td><td>2</td><td>5</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">シフト迷路</span>
+            </div>
+            <div class="page-content">
+                <p>
+                    迷路は対応するシフト数だけ<em>左(水平方向)</em>および<em>上(垂直シフト)</em>にシフトされる。
+                    <br>
+                    このページの迷路は、変更されていない迷路を示す。
+                    <br>
+                    実線は壁を表し、点線は通行可能である。
+                </p>
+
+                <button class="reset">リセット</button>
+                <table class="input-grid">
+                    <tr>
+                        <th>シフト数：</th>
+                        <td>上：</td>
+                        <th class="upOff off-display">0</th>
+                        <td>左：</td>
+                        <th class="leftOff off-display">0</th>
+                    </tr>
+                </table>
+                <table class="input-grid">
+                    <tr>
+                        <th>リング：</th>
+                        <td>1:</td>
+                        <th id="rdisp1" class="ring-display">青</th>
+                        <td>2:</td>
+                        <th id="rdisp2" class="ring-display">青</th>
+                        <td>3:</td>
+                        <th id="rdisp3" class="ring-display">青</th>
+                        <td>4:</td>
+                        <th id="rdisp4" class="ring-display">青</th>
+                    </tr>
+                </table>
+                <svg class="mazesvg" viewbox="0 0 800 705" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-miterlimit="5.5">
+                    <path fill="none" stroke="#000" stroke-width="3" stroke-dasharray="0,3,3,3" d="M100 100h600v600H100z"/>
+                    <path class="maze-wall row0 column0" d="M100 100h100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row0 column2" d="M300 100h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row0 column3" d="M400 100h100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row0 column4" d="M600 100v100h-100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row0 column5" d="M600 100v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row1 column4" d="M500 200h100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row1 column0" d="M100 200v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column0" d="M100 300v100h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column0" d="M100 400h100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row1 column1" d="M300 200H200v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row0 column1" d="M200 200h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row1 column0" d="M200 200v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row1 column2" d="M400 200v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row1 column3" d="M400 200v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column2" d="M400 300v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column3" d="M400 300v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row1 column5" d="M700 200v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column5" d="M700 300v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row2 column2" d="M300 300v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column2" d="M300 400v100h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column2" d="M400 500v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column1" d="M300 300v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column1" d="M300 400v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column2" d="M300 500h103" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column3" d="M400 500v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row2 column4" d="M600 400v-100h-100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row2 column5" d="M600 300v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row1 column4" d="M500 300h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column4" d="M600 400v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column5" d="M600 400v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row4 column0" d="M200 500v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column1" d="M200 500v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row3 column3" d="M500 400v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column3" d="M500 500v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row3 column4" d="M500 400v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row4 column4" d="M500 500v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row4 column5" d="M600 600h100v-100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row5 column5" d="M600 600h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row5 column5" d="M700 600v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row4 column0" d="M100 500v100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row5 column0" d="M100 600v100h100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <path class="maze-wall row5 column2" d="M300 600v100h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row5 column3" d="M400 700h100" fill="none" stroke="#000" stroke-width="6"/>
+                    <path class="maze-wall row5 column1" d="M300 600v100" fill="none" stroke="#000" stroke-width="6"/>
+
+                    <circle id="ringO1" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#000" stroke-width="11" transform="translate(356.3 40.5)"/>
+                    <circle id="ringO2" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#000" stroke-width="11" transform="translate(656.3 40.5)"/>
+                    <circle id="ringO3" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#000" stroke-width="11" transform="translate(356.3 340.5)"/>
+                    <circle id="ringO4" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#000" stroke-width="11" transform="translate(656.3 340.5)"/>
+                    <circle class="ring" id="ring1" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#00F" stroke-width="10" transform="translate(356.3 40.5)"/>
+                    <circle class="ring" id="ring2" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#00F" stroke-width="10" transform="translate(656.3 40.5)"/>
+                    <circle class="ring" id="ring3" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#00F" stroke-width="10" transform="translate(356.3 340.5)"/>
+                    <circle class="ring" id="ring4" cx="-106.3" cy="209.5" r="40" fill="none" stroke="#00F" stroke-width="10" transform="translate(656.3 340.5)"/>
+                </svg>
+                <div style="height: 5mm"></div>
+                <p>
+                    <b>リングの色名</b>をクリックするか<b>B/W/M/Y/G</b>キーを押すと、リングの色を変更できる。キーは色の英名の頭文字に対応している。<br>
+                     <b>Shift + 1–4</b>キーを押すと、選択中のリングを変更できる。リングは読み順で番号が振られている。<br>
+                    <b>0–9</b>キーを押すと、左と上のシフト数を一括で変更できる。<br>
+                    <b>L</b>キー/<b>U</b>キーを押すと、選択中のシフト数を変更できる。<br>
+                    <b>シフト数の値</b>をクリックするか<b>矢印キー</b>または<b>Shift + WASD</b>キーで迷路を1ずつシフトさせることができる。<br>
+                    <b>Esc</b>キーを押すか迷路の外をクリックすると、選択を解除できる。
+                </p>
+            </div>
+            <div class="page-footer relative-footer">ページ 2/2</div>
+        </div>
+    </div>
+</body>
+</html>
