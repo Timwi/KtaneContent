@@ -7424,7 +7424,15 @@ let parseData = [
 					let target = module.answer || module;
 					if (matches[1] == "Submitted") target = module;
 
-					target.push({ label: matches[1], obj: grid });
+					if(moduleInfo.moduleData.moduleID == "LifeIteration")
+					{
+						target.push([matches[0].substr(0, matches[0].length - 1), [{ nobullet: true, obj: grid }]]);
+					}
+					else
+					{
+						target.push({ label: matches[1], obj: grid });
+					}
+
 				}
 			},
 			{
