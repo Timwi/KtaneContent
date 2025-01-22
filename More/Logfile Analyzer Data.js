@@ -2155,6 +2155,20 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "BaseConversion",
+		loggingTag: "Base Conversion",
+		matches: [
+			{
+				regex: /BoeforBase : (\d+)/,
+				handler: function (matches, module) {
+					module.push(`BeforeBase : ${matches[1]}`)
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "BattleshipModule",
 		loggingTag: "Battleship",
 		matches: [
