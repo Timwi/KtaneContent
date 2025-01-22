@@ -14307,6 +14307,35 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "PointGrid",
+		loggingTag: "Point Grid",
+		matches: [
+			{
+				regex: /Top arrow solution: (.+)/,
+				handler: function (matches, module) {
+					module.topArrows = matches[1];
+					return true;
+				},
+			},
+			{
+				regex: /Right arrow solution: (.+)/,
+				handler: function (matches, module) {
+					module.rightArrows = matches[1].split(' ');
+					return true;
+				},
+			},
+			{
+				regex: /Generated Grid:/,
+				handler: function (_, module) {
+					let grid = [module.topArrows].concat(readTaggedLines(6).map((line, ix) => `${line} ${module.rightArrows[ix]}`));
+					module.push({label: "Solution:", obj: pre(grid.join('\n')), nobullet: true})
+					return true;
+				},
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "PointOfOrderModule",
 		loggingTag: "Point of Order",
 		matches: [
