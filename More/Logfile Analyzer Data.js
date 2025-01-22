@@ -4846,6 +4846,50 @@ let parseData = [
 		loggingTag: "Needy Determinants"
 	},
 	{
+		displayName: "DetoNATO",
+		moduleID: "Detonato",
+		loggingTag: "DetoNATO",
+		matches: [
+			{
+				regex: /Stage (\d)\. The word is ".+"\. The letters are: [A-Z], [A-Z], [A-Z] and [A-Z]\./,
+				handler: function (matches, module) {
+					const newStage = matches[1];
+					if(!module.currentStage || module.currentStage != newStage)
+					{
+						module.attemptNum = 1;
+						module.currentStage = newStage;
+						module.stageDropdown = [`Stage ${newStage}'s Expected Letter: N/A`, []]
+						module.push(module.stageDropdown)
+					}
+
+					else if(module.currentStage == newStage)
+					{
+						module.attemptNum++;
+					}
+					module.attemptDropdown = [`Attempt ${module.attemptNum}`, []];
+					module.stageDropdown[1].push(module.attemptDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /The key is ".+"\.|Letter [A-Z] was (in)?correct\.(?:(?: Resetting the stage| Advancing to stage \d)\.)?/,
+				handler: function (matches, module) {
+					module.attemptDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /Expected letter: ([A-Z])\./,
+				handler: function (matches, module) {
+					module.attemptDropdown[1].push(matches[0]);
+					module.stageDropdown[0] = `Stage ${module.currentStage}'s Expected Letter: ${matches[1]}`
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Diffusion",
 		moduleID: "diffusion",
 		loggingTag: "Diffusion",
