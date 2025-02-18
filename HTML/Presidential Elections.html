@@ -8,6 +8,8 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
     <style>
         table { margin: 1em auto; }
         img.tournament { width: 100%; }
@@ -33,7 +35,156 @@
             user-select: none;
             pointer-events: none;
         }
+
+        #red { background-color: #EE5555; color: black }
+        #green { background-color: #55EE55; color: black }
+        #blue { background-color: #5588EE; color: black }
+        #yellow { background-color: #EEEE55; color: black }
+        #magenta { background-color: #EE55EE; color: black }
+        #cyan { background-color: #55EEEE; color: black }
+        #orange { background-color: #EE9955; color: black }
+        #purple { background-color: #9955EE; color: white }
+        #brown { background-color: #995522; color: white }
+        #crimson { background-color: #771111; color: white }
+        #forest { background-color: #117711; color: white }
+        #navy { background-color: #111177; color: white }
+        #black { background-color: #111111; color: white }
+        #gray { background-color: #999999; color: black }
+        #white { background-color: #EEEEEE; color: black }
     </style>
+    <script>
+        const colorNames = ["Red", "Green", "Blue", "Yellow", "Magenta", "Cyan", "Orange", "Purple", "Brown", "Crimson", "Forest", "Navy", "Black", "Gray", "White"];
+        const partyNamesAndIcons = [
+            ["tortoise.svg", "Slowpoke"],
+            ["monkey.svg", "Mischief"],
+            ["paranoia.svg", "Conspiracy"],
+            ["guillotine.svg", "Trivia Murder","12"],
+            ["receive-money.svg", "Rent Is Too Damn Low","9.5"],
+            ["cryo-chamber.svg", "Experimental","12"],
+            ["duck.svg", "Quack Quack"],
+            ["pinata.svg", "Birthday"],
+            ["crab.svg", "Carcinization","12"],
+            ["shoebill.svg", "Vine Boom"],
+            ["robot.svg", "Android"],
+            ["gas-mask.svg", "Toxicity"],
+            ["koala.svg", "Little Guy"],
+            ["telepathy.svg", "Vote For This","12"],
+            ["jason-mask.svg", "Aaaaaaaah"],
+            ["feline.svg", "Catpeople"],
+            ["anthem.svg","Perfect Pitch","12"],
+            ["heart-organ.svg","Follow Your"],
+            ["axolotl.svg","Endangered"],
+            ["fire-bowl.svg","Arson"],
+            ["gecko.svg","Reptilian"],
+            ["ouroboros.svg","Party"],
+            ["oppression.svg","It's So Over"],
+            ["sitting-dog.svg","Dogpeople"],
+            ["warp-pipe.svg","Super Mario"]
+        ];
+        const colorNumbers = ["12","5","13","3","7","4","8","10","14","15","2","6","1","9","11"]
+        const partyNumbers = ["7","15","4","2","9","8","12","13","6","11","3","16","1","5","14","10"]
+        const votingMethods = ["First-Past-The-Post", "Last-Past-The-Post", "Instant Runoff", "Coomb’s Method", "Borda Count", "Approval Voting", "STV", "Condorcet Method"];
+        const sortingMethods = [
+            "in alphabetical order by their color names.",
+            "by the number of letters of their color names (descending).",
+            "in reading order based on the color name table.",
+            "clockwise, starting with the top-right.",
+            "by the Scrabble score of the last three letters of their names (descending).",
+            "clockwise, starting from the bottom-left.",
+            "by the number next to their party names (descending).",
+            "in reading order based on the party name table.",
+            "in alphabetical order by their names.",
+            "by the number next to their color names (descending).",
+            "by the number of letters in their party names (descending).",
+            "clockwise, starting from the bottom-right.",
+            "in alphabetical order by their party names.",
+            "by the Scrabble score of the first three letters of their names (descending).",
+            "by the Scrabble score of the first and last letters of their names (descending).",
+            "by the number of letters in their names (descending).",
+            "clockwise, starting from the top-left.",
+            "the same way the previous character voted.*",
+            "in reading order.",
+            // Extra sorting methods
+            "in reverse alphabetical order by their color names.",
+            "by the number of letters of their color names (ascending).",
+            "in reverse reading order based on the color name table.",
+            "counterclockwise, starting with the top-right.",
+            "by the Scrabble score of the last three letters of their names (ascending).",
+            "counterclockwise, starting from the bottom-left.",
+            "by the number next to their party names (ascending).",
+            "in reverse reading order based on the party name table.",
+            "in reverse alphabetical order by their names.",
+            "by the number next to their color names (ascending).",
+            "by the number of letters in their party names (ascending).",
+            "counterclockwise, starting from the bottom-right.",
+            "in alphabetical order by their party names.",
+            "by the Scrabble score of the first three letters of their names (ascending).",
+            "by the Scrabble score of the first and last letters of their names (ascending).",
+            "by the number of letters in their names (ascending).",
+            "counterclockwise, starting from the top-left.",
+            "in reverse reading order."
+        ];
+        const edgeworkMethods = [
+            "Number of AA batteries",
+            "Number of D batteries × 2",
+            "Number of lit indicators × 2",
+            "Number of unlit indicators × 2",
+            "Number of ports",
+            "Number of port plates × 2",
+            "Second digit of the serial #",
+            "Second-last digit of the serial #",
+            "First digit of the serial #",
+            "Last digit of the serial #",
+            "Voltage, rounded up"
+        ];
+        const edgeworkSortingMethods = ["the greatest number moves on.", "the lowest number moves on.", "modulo the two numbers by 20 and convert them to word form. The first number in alphabetical order moves on.","modulo the two numbers by 20 and convert them to word form. The last number in alphabetical order moves on."];
+
+        const setContent = (colorNames, partyNamesAndIcons, colorNumbers, partyNumbers, votingMethods, sortingMethods, edgeworkMethods, edgeworkSortingMethods) => {
+            let colorTable = document.querySelector("#colortable")
+            while (colorTable.rows.length > 1)
+                colorTable.deleteRow(1);
+            for(let rowIndex=0;rowIndex<5;rowIndex++){
+                let row = colorTable.insertRow(-1);
+                for(let cellIndex=0;cellIndex<3;cellIndex++){
+                    let cell = row.insertCell(-1);
+                    cell.innerHTML = `${colorNames[rowIndex*3+cellIndex]} (${colorNumbers[rowIndex*3+cellIndex]})`;
+                    cell.id = colorNames[rowIndex*3+cellIndex].toLowerCase();
+                }
+            }
+
+            const a = document.querySelectorAll(".st1");
+            for(let i = 0; i < votingMethods.length; i++)
+                a[i].textContent = votingMethods[i];
+            
+            const b = document.querySelectorAll(".partyCell");
+            for(let i = 0; i < b.length; i++){
+                b[i].innerHTML = `<img src="img/Presidential Elections/${partyNamesAndIcons[i][0]}" class="party"><p ${partyNamesAndIcons[i].length == 3 ? "style=\"font-size: "+partyNamesAndIcons[i][2]+"px\"" : ""}><b>${partyNamesAndIcons[i][1]}</b> ${partyNamesAndIcons[i][1] == "Quack Quack" ? "Quack" : "Party"} (${partyNumbers[i]})</p>`;
+            }
+
+            const c = document.querySelectorAll(".sort td:nth-child(3)");
+            for(let i = 0; i < c.length; i++)
+                c[i].textContent = "... " + sortingMethods[i];
+
+            const d = document.querySelectorAll(".it");
+            for(let i = 0; i < d.length; i++)
+                d[i].textContent = edgeworkMethods[i];
+
+            const e = document.querySelectorAll(".edgerule");
+            e[0].innerHTML = edgeworkSortingMethods[0] === "the lowest number moves on." ? "the <b>lowest</b> number moves on." : edgeworkSortingMethods[0];
+            e[1].innerHTML = edgeworkSortingMethods[1] === "the greatest number moves on." ? "the <b>greatest</b> number moves on." : edgeworkSortingMethods[1];
+            e[2].innerHTML = edgeworkSortingMethods[2] === "modulo the two numbers by 20 and convert them to word form. The last number in alphabetical order moves on." ? "modulo the two numbers by 20 and convert them to word form. The <b>last</b> number in alphabetical order moves on." : edgeworkSortingMethods[2];
+        };
+
+        // use spread operator to clone instead of shuffling in place
+        const shuffle = (rnd, array) => rnd.shuffleFisherYates([...array]);
+
+        const setDefaultRules = rnd => setContent(colorNames, partyNamesAndIcons, colorNumbers, partyNumbers, votingMethods, sortingMethods, edgeworkMethods, edgeworkSortingMethods);
+
+        const setRules = rnd => {
+            setContent(shuffle(rnd,colorNames), shuffle(rnd,partyNamesAndIcons), shuffle(rnd,colorNumbers), shuffle(rnd,partyNumbers), shuffle(rnd, votingMethods), shuffle(rnd, sortingMethods), shuffle(rnd, edgeworkMethods), shuffle(rnd, edgeworkSortingMethods));
+        };
+    
+    </script>
 </head>
 <body>
     <div class="section">
@@ -66,9 +217,9 @@
                     <tr>
                         <td style="text-align: right; width: 35%">
                             <p>Arrange an eight-person tournament bracket. Use the italicized values to determine which voting system moves on.</p>
-                            <p>In the first round, the greatest number moves on.</p>
-                            <p>In the second round, the lowest number moves on.</p>
-                            <p>In the third round, modulo the two numbers by 20 and convert them to word form. The first number in alphabetical order moves on.</p>
+                            <p>In the first round, <span class="edgerule">the greatest number moves on.</span></p>
+                            <p>In the second round, <span class="edgerule">the lowest number moves on.</span></p>
+                            <p>In the third round, <span class="edgerule">modulo the two numbers by 20 and convert them to word form. The first number in alphabetical order moves on.</span></p>
                             <p>In the case of a tie, the highest position on the chart moves on.</p>
                         </td>
                         <td class="nohighlight" style="width: 65%">
@@ -257,7 +408,12 @@
                 <table style="width: 100%; border: hidden">
                     <tr>
                         <td style="width: 50%">
-                            <table style="text-align: center; margin: auto; font-size: 14px">
+                            <table style="text-align: center; margin: auto; font-size: 14px" id="colortable">
+                                <colgroup>
+                                    <col style="width: 33%">
+                                    <col style="width: 33%">
+                                    <col style="width: 33%">
+                                </colgroup>
                                 <tr>
                                     <td colspan=3>Color Names**</td>
                                 </tr>
@@ -282,9 +438,9 @@
                                     <td style="background-color: #111177; color: white">Navy (6)</td>
                                 </tr>
                                 <tr>
-                                    <td style="background-color: #111111; color: white; width: 33%">Black (1)</td>
-                                    <td style="background-color: #999999; color: black; width: 33%">Gray (9)</td>
-                                    <td style="background-color: #EEEEEE; color: black; width: 33%">White (11)</td>
+                                    <td style="background-color: #111111; color: white">Black (1)</td>
+                                    <td style="background-color: #999999; color: black">Gray (9)</td>
+                                    <td style="background-color: #EEEEEE; color: black">White (11)</td>
                                 </tr>
                             </table>
                         </td>
@@ -320,32 +476,38 @@
                 </table>
                 <br>
                 <table style="text-align: center; margin: auto; font-size: 13px">
+                    <colgroup>
+                        <col style="width: 25%">
+                        <col style="width: 25%">
+                        <col style="width: 25%">
+                        <col style="width: 25%">
+                    </colgroup>
                     <tr>
                         <td colspan=4>Party Names</td>
                     </tr>
                     <tr>
-                        <td style="width: 25%"><img src="img/Presidential Elections/tortoise.svg" class="party"><p><b>Slowpoke</b> Party (7)</p></td>
-                        <td style="width: 25%"><img src="img/Presidential Elections/monkey.svg" class="party"><p><b>Mischief</b> Party (15)</p></td>
-                        <td style="width: 25%"><img src="img/Presidential Elections/paranoia.svg" class="party"><p><b>Conspiracy</b> Party (4)</p></td>
-                        <td style="width: 25%"><img src="img/Presidential Elections/guillotine.svg" class="party"><p style="font-size: 12px"><b>Trivia Murder</b> Party (2)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/tortoise.svg" class="party"><p><b>Slowpoke</b> Party (7)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/monkey.svg" class="party"><p><b>Mischief</b> Party (15)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/paranoia.svg" class="party"><p><b>Conspiracy</b> Party (4)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/guillotine.svg" class="party"><p style="font-size: 12px"><b>Trivia Murder</b> Party (2)</p></td>
                     </tr>
                     <tr>
-                        <td><img src="img/Presidential Elections/receive-money.svg" class="party"><p style="font-size: 9.5px"><b>Rent Is Too Damn Low</b> Party (9)</p></td>
-                        <td><img src="img/Presidential Elections/cryo-chamber.svg" class="party"><p><b>Experimental</b> Party (8)</p></td>
-                        <td><img src="img/Presidential Elections/duck.svg" class="party"><p><b>Quack Quack</b> Quack (12)</p></td>
-                        <td><img src="img/Presidential Elections/pinata.svg" class="party"><p><b>Birthday</b> Party (13)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/receive-money.svg" class="party"><p style="font-size: 9.5px"><b>Rent Is Too Damn Low</b> Party (9)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/cryo-chamber.svg" class="party"><p><b>Experimental</b> Party (8)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/duck.svg" class="party"><p><b>Quack Quack</b> Quack (12)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/pinata.svg" class="party"><p><b>Birthday</b> Party (13)</p></td>
                     </tr>
                     <tr>
-                        <td><img src="img/Presidential Elections/crab.svg" class="party"><p style="font-size: 12px"><b>Carcinization</b> Party (6)</p></td>
-                        <td><img src="img/Presidential Elections/shoebill.svg" class="party"><p><b>Vine Boom</b> Party (11)</p></td>
-                        <td><img src="img/Presidential Elections/robot.svg" class="party"><p><b>Android</b> Party (3)</p></td>
-                        <td><img src="img/Presidential Elections/gas-mask.svg" class="party"><p><b>Toxicity</b> Party (16)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/crab.svg" class="party"><p style="font-size: 12px"><b>Carcinization</b> Party (6)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/shoebill.svg" class="party"><p><b>Vine Boom</b> Party (11)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/robot.svg" class="party"><p><b>Android</b> Party (3)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/gas-mask.svg" class="party"><p><b>Toxicity</b> Party (16)</p></td>
                     </tr>
                     <tr>
-                        <td><img src="img/Presidential Elections/koala.svg" class="party"><p><b>Little Guy</b> Party (1)</p></td>
-                        <td><img src="img/Presidential Elections/telepathy.svg" class="party"><p><b>Vote For This</b> Party (5)</p></td>
-                        <td><img src="img/Presidential Elections/jason-mask.svg" class="party"><p><b>Aaaaaaaah</b> Party (14)</p></td>
-                        <td><img src="img/Presidential Elections/feline.svg" class="party"><p><b>Catpeople</b> Party (10)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/koala.svg" class="party"><p><b>Little Guy</b> Party (1)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/telepathy.svg" class="party"><p><b>Vote For This</b> Party (5)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/jason-mask.svg" class="party"><p><b>Aaaaaaaah</b> Party (14)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/feline.svg" class="party"><p><b>Catpeople</b> Party (10)</p></td>
                     </tr>
                 </table>
             </div>
