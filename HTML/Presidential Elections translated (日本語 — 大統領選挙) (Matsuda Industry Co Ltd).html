@@ -9,6 +9,8 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
     <style>
         table { margin: 1em auto; }
         img.tournament { width: 100%; }
@@ -29,12 +31,164 @@
         .dark svg path { stroke: #DDD; }
         .dark svg path:not(.green) { fill: #222; }
         .dark svg text:not(.black) { fill: #DDD; }
-        text.it { font-style: italic; }
+        text.it { 
+            font-style: italic; 
+            font-size: 2.5px; 
+        }
         svg text {
             user-select: none;
             pointer-events: none;
         }
+
+        #red { background-color: #EE5555; color: black }
+        #green { background-color: #55EE55; color: black }
+        #blue { background-color: #5588EE; color: black }
+        #yellow { background-color: #EEEE55; color: black }
+        #magenta { background-color: #EE55EE; color: black }
+        #cyan { background-color: #55EEEE; color: black }
+        #orange { background-color: #EE9955; color: black }
+        #purple { background-color: #9955EE; color: white }
+        #brown { background-color: #995522; color: white }
+        #crimson { background-color: #771111; color: white }
+        #forest { background-color: #117711; color: white }
+        #navy { background-color: #111177; color: white }
+        #black { background-color: #111111; color: white }
+        #gray { background-color: #999999; color: black }
+        #white { background-color: #EEEEEE; color: black }
     </style>
+    <script>
+        const colorNames = ["Red", "Green", "Blue", "Yellow", "Magenta", "Cyan", "Orange", "Purple", "Brown", "Crimson", "Forest", "Navy", "Black", "Gray", "White"];
+        const partyNamesAndIcons = [
+            ["tortoise.svg", "のろま党<br>(Slowpoke"],
+            ["monkey.svg", "いたずら党<br>(Mischief"],
+            ["paranoia.svg", "陰謀党<br>(Conspiracy"],
+            ["guillotine.svg", "トリビア殺人党<br>(Trivia Murder","12"],
+            ["receive-money.svg", "家賃クソ低い党<br>(Rent Is Too Damn Low","9.5"],
+            ["cryo-chamber.svg", "実験党<br>(Experimental","12"],
+            ["duck.svg", "クワックワックワッ<br>(Quack Quack"],
+            ["pinata.svg", "誕生日党<br>(Birthday"],
+            ["crab.svg", "カニ化党<br>(Carcinization","12"],
+            ["shoebill.svg", "Vine Boom党<br>(Vine Boom"],
+            ["robot.svg", "アンドロイド党<br>(Android"],
+            ["gas-mask.svg", "有毒党<br>(Toxicity"],
+            ["koala.svg", "平凡党<br>(Little Guy"],
+            ["telepathy.svg", "投票してね党<br>(Vote For This","12"],
+            ["jason-mask.svg", "あああああぁぁぁぁ党<br>(Aaaaaaaah"],
+            ["feline.svg", "猫人間党<br>(Catpeople"],
+            ["anthem.svg","絶対音感党<br>(Perfect Pitch","12"],
+            ["heart-organ.svg","支持政党<br>(Follow Your"],
+            ["axolotl.svg","絶滅危惧党<br>(Endangered"],
+            ["fire-bowl.svg","放火党<br>(Arson"],
+            ["gecko.svg","トカゲ人間党<br>(Reptilian"],
+            ["ouroboros.svg","党党<br>(Party"],
+            ["oppression.svg","そろそろお開き党<br>(It's So Over"],
+            ["sitting-dog.svg","犬人間党<br>(Dogpeople"],
+            ["warp-pipe.svg","スーパーマリオパーティ<br>(Super Mario","12"]
+        ];
+        const colorNumbers = ["12","5","13","3","7","4","8","10","14","15","2","6","1","9","11"]
+        const partyNumbers = ["7","15","4","2","9","8","12","13","6","11","3","16","1","5","14","10"]
+        const votingMethods = ["比較多数得票制", "比較少数得票制", "優先順位付投票制", "クームス方式", "ボルダ得点", "認定投票", "STV", "コンドルセ方式"];
+        const sortingMethods = [
+            "色の名前のアルファベット順に並べ替える。",
+            "色の名前の文字数で並べ替える(降順)。",
+            "色の名前表の読み順で並べ替える。",
+            "右上から時計回りに並べ替える。",
+            "候補者の名前の最後の 3 文字のスクラブルスコアで並べ替える(降順)。",
+            "左下から時計回りに並べ替える。",
+            "党の英語名の横にある番号順で並べ替える(降順)。",
+            "党の名前の表の読み順で並べ替える。",
+            "候補者の名前のアルファベット順で並べ替える。",
+            "色の名前の横にある番号順で並べ替える(降順)。",
+            "党の英語名の文字数で並べ替える(降順)。",
+            "右下から時計回りに並べ替える。",
+            "党の英語名のアルファベット順で並べ替える。",
+            "候補者の名前の最初の 3 文字のスクラブルスコアで並べ替える(降順)。",
+            "候補者の名前の最初と最後の文字のスクラブルスコアで並べ替える(降順)。",
+            "候補者の名前の文字数で並べ替える(降順)。",
+            "左上から時計回りに並べ替える。",
+            "直前の文字が投票したものと同じ方式で並べ替える。*",
+            "読み順で並べ替える。",
+            // Extra sorting methods
+            "色の名前の逆のアルファベット順に並べ替える。",
+            "色の名前の文字数で並べ替える(昇順)。",
+            "色の名前表の逆の読み順で並べ替える。",
+            "右上から反時計回りに並べ替える。",
+            "候補者の名前の最後の 3 文字のスクラブルスコアで並べ替える(昇順)",
+            "左下から反時計回りに並べ替える。",
+            "党の英語名の横にある番号順で並べ替える(昇順)。",
+            "党の名前の表の逆の読み順で並べ替える。",
+            "候補者の名前の逆のアルファベット順で並べ替える。",
+            "色の名前の横にある番号順で並べ替える(昇順)。",
+            "党の英語名の文字数で並べ替える(昇順)。",
+            "右下から反時計回りに並べ替える。",
+            "党の英語名の逆のアルファベット順で並べ替える。",
+            "候補者の名前の最初の 3 文字のスクラブルスコアで並べ替える(昇順)。",
+            "候補者の名前の最初と最後の文字のスクラブルスコアで並べ替える(昇順)。",
+            "候補者の名前の文字数で並べ替える(昇順)。",
+            "左上から反時計回りに並べ替える。",
+            "逆の読み順で並べ替える。"
+        ];
+        const edgeworkMethods = [
+            "単3バッテリーの個数",
+            "単1バッテリーの個数 × 2",
+            "点灯したインジケーターの個数 × 2",
+            "点灯していないインジケーターの個数 × 2",
+            "ポートの個数",
+            "ポートプレートの個数 × 2",
+            "シリアルナンバーの2番目の数字",
+            "シリアルナンバーの最後から2番目の数字",
+            "シリアルナンバーの最後の数字",
+            "シリアルナンバーの最初の数字",
+            "電圧計の値、小数点以下を切り上げる"
+        ];
+        const edgeworkSortingMethods = ["より大きい数字の方が次に進む。", "より小さい数字の方が次に進む。", "それぞれ2つの数字を20で割った余りを求める。その数字を英単語形式に変換する。アルファベット順で最初の数字が次に進む。","それぞれ2つの数字を20で割った余りを求める。その数字を英単語形式に変換する。アルファベット順で最後の数字が次に進む。"];
+
+        const setContent = (colorNames, partyNamesAndIcons, colorNumbers, partyNumbers, votingMethods, sortingMethods, edgeworkMethods, edgeworkSortingMethods) => {
+            let colorTable = document.querySelector("#colortable")
+            while (colorTable.rows.length > 1)
+                colorTable.deleteRow(1);
+            for(let rowIndex=0;rowIndex<5;rowIndex++){
+                let row = colorTable.insertRow(-1);
+                for(let cellIndex=0;cellIndex<3;cellIndex++){
+                    let cell = row.insertCell(-1);
+                    cell.innerHTML = `${colorNames[rowIndex*3+cellIndex]} (${colorNumbers[rowIndex*3+cellIndex]})`;
+                    cell.id = colorNames[rowIndex*3+cellIndex].toLowerCase();
+                }
+            }
+
+            const a = document.querySelectorAll(".st1");
+            for(let i = 0; i < votingMethods.length; i++)
+                a[i].textContent = votingMethods[i];
+            
+            const b = document.querySelectorAll(".partyCell");
+            for(let i = 0; i < b.length; i++){
+                b[i].innerHTML = `<img src="img/Presidential Elections/${partyNamesAndIcons[i][0]}" class="party"><p ${partyNamesAndIcons[i].length == 3 ? "style=\"font-size: "+partyNamesAndIcons[i][2]+"px\"" : ""}><b>${partyNamesAndIcons[i][1]}</b> ${partyNamesAndIcons[i][1] == "Quack Quack" ? "Quack" : "Party"}) (${partyNumbers[i]})</p>`;
+            }
+
+            const c = document.querySelectorAll(".sort td:nth-child(3)");
+            for(let i = 0; i < c.length; i++)
+                c[i].textContent = "…" + sortingMethods[i];
+
+            const d = document.querySelectorAll(".it");
+            for(let i = 0; i < d.length; i++)
+                d[i].textContent = edgeworkMethods[i];
+
+            const e = document.querySelectorAll(".edgerule");
+            e[0].innerHTML = edgeworkSortingMethods[0] === "より小さい数字の方が次に進む。" ? "より<b>小さい</b>数字の方が次に進む。" : edgeworkSortingMethods[0];
+            e[1].innerHTML = edgeworkSortingMethods[1] === "より大きい数字の方が次に進む。" ? "より<b>大きい</b>数字の方が次に進む。" : edgeworkSortingMethods[1];
+            e[2].innerHTML = edgeworkSortingMethods[2] === "それぞれ2つの数字を20で割った余りを求める。その数字を英単語形式に変換する。アルファベット順で最後の数字が次に進む。" ? "それぞれ2つの数字を20で割った余りを求める。その数字を英単語形式に変換する。アルファベット順で<b>最後</b>の数字が次に進む。" : edgeworkSortingMethods[2];
+        };
+
+        // use spread operator to clone instead of shuffling in place
+        const shuffle = (rnd, array) => rnd.shuffleFisherYates([...array]);
+
+        const setDefaultRules = rnd => setContent(colorNames, partyNamesAndIcons, colorNumbers, partyNumbers, votingMethods, sortingMethods, edgeworkMethods, edgeworkSortingMethods);
+
+        const setRules = rnd => {
+            setContent(shuffle(rnd,colorNames), shuffle(rnd,partyNamesAndIcons), shuffle(rnd,colorNumbers), shuffle(rnd,partyNumbers), shuffle(rnd, votingMethods), shuffle(rnd, sortingMethods), shuffle(rnd, edgeworkMethods), shuffle(rnd, edgeworkSortingMethods));
+        };
+    
+    </script>
 </head>
 <body>
     <div class="section">
@@ -45,11 +199,11 @@
             </div>
             <div class="page-content">
                 <img src="img/Component/Presidential Elections.svg" class="diagram">
-                <h2>モジュール詳細:大統領選挙</h2>
+                <h2>モジュール詳細：大統領選挙</h2>
                 <p class="flavour-text">このモジュールはロシアでプレイするとかなり楽になるのですが…。</p>
-                
+
                 <ul>
-                    <li>シリアルナンバーの6つの文字は、政党の色とシンボルで表されているモジュール上の4人の大統領候補に票を投じた。
+                    <li>シリアルナンバーの6つの文字は、モジュールに搭載された4人の大統領候補に、政党の色とシンボルで表された票を投じた。
                         <ul>
                             <li>ボタンにカーソルを合わせると、候補者の名前を見ることができる。</li>
                         </ul>
@@ -60,22 +214,22 @@
                         </ul>
                     </li>
                 </ul>
-                
+
                 <h3>適切な投票システムを見つける</h3>
                 <p>この選挙の投票システムは、爆弾によって異なる。それぞれのシステムには、関連した値が設定されている。以下のチャートを使用し、その値を求める。</p>
                 <table style="border: hidden">
                     <tr>
-                        <td style="width: 30%; text-align: right">
+                        <td style="text-align: left; width: 35%">
                             <p>8つのブロックがあるトーナメント表を用意する。斜体で書かれた値を使用し、どの投票システムが次に進むかを判断する。</p>
-                            <p>1回戦では、より大きい数字の方が次に進む。</p>
-                            <p>2回戦では、より小さい数字の方が次に進む。</p>
-                            <p>3回戦では、それぞれ2つの数字を20で割った余りを求める。その数字を英単語形式に変換する。アルファベット順で最初の数字が次に進む。</p>
+                            <p>1回戦では、<span class="edgerule">より大きい数字の方が次に進む。</span></p>
+                            <p>2回戦では、<span class="edgerule">より小さい数字の方が次に進む。</span></p>
+                            <p>3回戦では、<span class="edgerule">それぞれ2つの数字を20で割った余りを求める。その数字を英単語形式に変換する。アルファベット順で最初の数字が次に進む。</span></p>
                             <p>同点の場合は、チャートで上に書かれている方が次に進む。</p>
                         </td>
-                        <td style="width: 70%" class="nohighlight">
-                            <svg class="tournament" viewBox="0 0 120 150" xmlns="http://www.w3.org/2000/svg" text-anchor="middle" font-size="3.2">
+                        <td class="nohighlight" style="width: 65%">
+                            <svg class="tournament" viewBox="0 0 120 150" xmlns="http://www.w3.org/2000/svg" text-anchor="middle" font-size="3.6" font-family="Arial">
                                 <style>
-                                    .st1{ font-size: 6px; font-weight: bold; } .st2{ font-size: 2.7px; }
+                                    .st1{ font-size: 5px; font-weight: bold; }
                                 </style>
                                 <g stroke="#000">
                                     <path transform="translate(0 -50)" d="M2.962 51.107h53.045v13.866H2.962z" class="highlightable" fill="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5"/>
@@ -112,18 +266,18 @@
                                 <text class="st1" x="29.5" y="27">比較少数得票制</text>
                                 <text class="st1" x="29.5" y="46">優先順位付投票制</text>
                                 <text class="st1" x="29.5" y="65">クームス方式</text>
-                                <text class="st1" x="29.5" y="85">ボルダ得点</text>
-                                <text class="st1" x="29.5" y="103.5">認定投票</text>
-                                <text class="st1" x="29.5" y="123">STV</text>
-                                <text class="st1" x="29.5" y="142">コンドルセ方式</text>
+                                <text class="st1" x="29.5" y="84">ボルダ得点</text>
+                                <text class="st1" x="29.5" y="103">認定投票</text>
+                                <text class="st1" x="29.5" y="122">STV</text>
+                                <text class="st1" x="29.5" y="141">コンドルセ方式</text>
                                 <text class="it" x="29.5" y="12.5">単3バッテリーの個数</text>
                                 <text class="it" x="29.5" y="31.5">単1バッテリーの個数 × 2 </text>
                                 <text class="it" x="29.5" y="50.5">点灯したインジケーターの個数 × 2</text>
-                                <text class="it st2" x="29.5" y="69.5">点灯していないインジケーターの個数 × 2</text>
+                                <text class="it" x="29.5" y="69.5">点灯していないインジケーターの個数 × 2</text>
                                 <text class="it" x="29.5" y="89">ポートの個数</text>
                                 <text class="it" x="29.5" y="108">ポートプレートの個数 × 2</text>
-                                <text class="it" x="29.5" y="127">シリアルナンバーの二番目の数字</text>
-                                <text class="it st2" x="29.5" y="146">シリアルナンバーの最後から二番目の数字</text>
+                                <text class="it" x="29.5" y="127">シリアルナンバーの2番目の数字</text>
+                                <text class="it" x="29.5" y="146.5">シリアルナンバーの最後から2番目の数字</text>
                                 <text font-size="4" x="68" y="19">- - - - -</text>
                                 <text font-size="4" x="68" y="57">- - - - -</text>
                                 <text font-size="4" x="68" y="95.5">- - - - -</text>
@@ -148,7 +302,7 @@
                 <h3>票を見つける</h3>
                 <p>投票は、4人の候補者を並べたリストで構成される。それぞれの文字は、投票における候補者の優先順位の方式が異なっている。</p>
                 <p>既に使用されている段を使用する文字がある場合、使用されていない段に到達するまで表を下に移動し、代わりにそのルールを使用する(表の一番下を過ぎる場合、ループして上に戻る)。結果が同点の場合、モジュールでの読み順を使用する。</p>
-                <table style="width: 100%; font-size: 14px">
+                <table class="sort">
                     <tr>
                         <th style="width: 10%" colspan=2>文字</th>
                         <th style="width: 95%">この文字が投じた票では、候補者を…</th>
@@ -258,7 +412,12 @@
                 <table style="width: 100%; border: hidden">
                     <tr>
                         <td style="width: 50%">
-                            <table style="text-align: center; margin: auto; font-size: 14px">
+                            <table style="text-align: center; margin: auto; font-size: 14px" id="colortable">
+                                <colgroup>
+                                    <col style="width: 33%">
+                                    <col style="width: 33%">
+                                    <col style="width: 33%">
+                                </colgroup>
                                 <tr>
                                     <td colspan=3>色の名前**</td>
                                 </tr>
@@ -283,9 +442,9 @@
                                     <td style="background-color: #111177; color: white">Navy (6)</td>
                                 </tr>
                                 <tr>
-                                    <td style="background-color: #111111; color: white; width: 33%">Black (1)</td>
-                                    <td style="background-color: #999999; color: black; width: 33%">Gray (9)</td>
-                                    <td style="background-color: #EEEEEE; color: black; width: 33%">White (11)</td>
+                                    <td style="background-color: #111111; color: white">Black (1)</td>
+                                    <td style="background-color: #999999; color: black">Gray (9)</td>
+                                    <td style="background-color: #EEEEEE; color: black">White (11)</td>
                                 </tr>
                             </table>
                         </td>
@@ -321,32 +480,38 @@
                 </table>
                 <br>
                 <table style="text-align: center; margin: auto; font-size: 13px">
+                    <colgroup>
+                        <col style="width: 25%">
+                        <col style="width: 25%">
+                        <col style="width: 25%">
+                        <col style="width: 25%">
+                    </colgroup>
                     <tr>
                         <td colspan=4>党名(太字部分のみを考慮する)</td>
                     </tr>
                     <tr>
-                        <td style="width: 25%"><img src="img/Presidential Elections/tortoise.svg" class="party"><p><b>のろま党</b><br>(<b>Slowpoke</b> Party) (7)</p></td>
-                        <td style="width: 25%"><img src="img/Presidential Elections/monkey.svg" class="party"><p><b>いたずら党</b><br>(<b>Mischief</b> Party) (15)</p></td>
-                        <td style="width: 25%"><img src="img/Presidential Elections/paranoia.svg" class="party"><p><b>陰謀党</b><br>(<b>Conspiracy</b> Party) (4)</p></td>
-                        <td style="width: 25%"><img src="img/Presidential Elections/guillotine.svg" class="party"><p style="font-size: 12px"><b>トリビア殺人党</b><br>(<b>Trivia Murder</b> Party) (2)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/tortoise.svg" class="party"><p><b>のろま党<br>(Slowpoke</b> Party) (7)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/monkey.svg" class="party"><p><b>いたずら党<br>(Mischief</b> Party) (15)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/paranoia.svg" class="party"><p><b>陰謀党<br>(Conspiracy</b> Party) (4)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/guillotine.svg" class="party"><p style="font-size: 12px"><b>トリビア殺人党<br>(Trivia Murder</b> Party) (2)</p></td>
                     </tr>
                     <tr>
-                        <td><img src="img/Presidential Elections/receive-money.svg" class="party"><p style="font-size: 9.5px"><b>家賃クソ低い党</b><br>(<b>Rent Is Too Damn Low</b> Party) (9)</p></td>
-                        <td><img src="img/Presidential Elections/cryo-chamber.svg" class="party"><p><b>実験党</b><br>(<b>Experimental</b> Party) (8)</p></td>
-                        <td><img src="img/Presidential Elections/duck.svg" class="party"><p><b>クワックワックワッ</b><br>(<b>Quack Quack</b> Quack) (12)</p></td>
-                        <td><img src="img/Presidential Elections/pinata.svg" class="party"><p><b>誕生日党</b><br>(<b>Birthday</b> Party) (13)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/receive-money.svg" class="party"><p style="font-size: 9.5px"><b>家賃クソ低い党<br>(Rent Is Too Damn Low</b> Party) (9)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/cryo-chamber.svg" class="party"><p><b>実験党<br>(Experimental</b> Party) (8)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/duck.svg" class="party"><p><b>クワックワックワッ<br>(Quack Quack</b> Quack) (12)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/pinata.svg" class="party"><p><b>誕生日党<br>(Birthday</b> Party) (13)</p></td>
                     </tr>
                     <tr>
-                        <td><img src="img/Presidential Elections/crab.svg" class="party"><p style="font-size: 12px"><b>カニ化党</b><br>(<b>Carcinization</b> Party) (6)</p></td>
-                        <td><img src="img/Presidential Elections/shoebill.svg" class="party"><p><b>Vine Boom党</b><br>(<b>Vine Boom</b> Party) (11)</p></td>
-                        <td><img src="img/Presidential Elections/robot.svg" class="party"><p><b>アンドロイド党</b><br>(<b>Android</b> Party) (3)</p></td>
-                        <td><img src="img/Presidential Elections/gas-mask.svg" class="party"><p><b>有毒党</b><br>(<b>Toxicity</b> Party) (16)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/crab.svg" class="party"><p style="font-size: 12px"><b>カニ化党<br>(Carcinization</b> Party) (6)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/shoebill.svg" class="party"><p><b>Vine Boom党<br>(Vine Boom</b> Party) (11)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/robot.svg" class="party"><p><b>アンドロイド党<br>(Android</b> Party) (3)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/gas-mask.svg" class="party"><p><b>有毒党<br>(Toxicity</b> Party) (16)</p></td>
                     </tr>
                     <tr>
-                        <td><img src="img/Presidential Elections/koala.svg" class="party"><p><b>平凡党</b><br>(<b>Little Guy</b> Party) (1)</p></td>
-                        <td><img src="img/Presidential Elections/telepathy.svg" class="party"><p><b>投票してね党</b><br>(<b>Vote For This</b> Party) (5)</p></td>
-                        <td><img src="img/Presidential Elections/jason-mask.svg" class="party"><p><b>あああああぁぁぁぁ党</b><br>(<b>Aaaaaaaah</b> Party) (14)</p></td>
-                        <td><img src="img/Presidential Elections/feline.svg" class="party"><p><b>猫人間党</b><br>(<b>Catpeople</b> Party) (10)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/koala.svg" class="party"><p><b>平凡党<br>(Little Guy</b> Party) (1)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/telepathy.svg" class="party"><p><b>投票してね党<br>(Vote For This</b> Party) (5)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/jason-mask.svg" class="party"><p><b>あああああぁぁぁぁ党<br>(Aaaaaaaah</b> Party) (14)</p></td>
+                        <td class="partyCell"><img src="img/Presidential Elections/feline.svg" class="party"><p><b>猫人間党<br>(Catpeople</b> Party) (10)</p></td>
                     </tr>
                 </table>
             </div>
@@ -360,30 +525,30 @@
             <div class="page-content">
                 <h2>付録 V073: 投票システム</h2>
                 <p>このモジュールで使用する8種類の投票システムの概要を説明する。</p>
-                
-                <h4>比較多数得票制</h4>
+
+                <h4>比較多数得票制:</h4>
                 <p>それぞれの投票について、<b>最初に</b>リストアップされた候補者を見る。その候補者のスコアに1を加算する。候補者の順位を<b>高いものから低いものに</b>並べる。</p>
-                
-                <h4>比較少数得票制</h4>
+
+                <h4>比較少数得票制:</h4>
                 <p>それぞれの投票について、<b>最後に</b>リストアップされた候補者を見る。その候補者のスコアに1を加算する。候補者の順位を<b>低いものから高いものに</b>並べる。</p>
-                
-                <h4>優先順位付投票制</h4>
+
+                <h4>優先順位付投票制:</h4>
                 <p>それぞれの投票について、<b>最初に</b>リストアップされた候補者を見る。その候補者のスコアに1を加算する。</p>
                 <ol>
                     <li>得票数が<b>最も低い</b>候補者は「脱落」し、<b>最下位</b>となる。このような候補者が複数いる場合、読み順で<b>最後となる</b>候補者を使用する。</li>
                     <li>この候補者のスコアは他の候補者に再配分される。この候補者のスコアに貢献したそれぞれの投票について、<b>最初に</b>リストアップされた脱落していない候補者にスコアを移す。</li>
                     <li>手順1と2を2回繰り返し、最後から2番目と3番目の順位を求める。脱落されなかった候補者が1位となる。</li>
                 </ol>
-                
-                <h4>クームス方式</h4>
+
+                <h4>クームス法:</h4>
                 <p>それぞれの投票について、<b>最後に</b>リストアップされた候補者を見る。その候補者のスコアに1を加算する。</p>
                 <ol>
                     <li>得票数が<b>最も高い</b>候補者は「脱落」し、<b>最下位</b>となる。このような候補者が複数いる場合、読み順で<b>最後となる</b>候補者を使用する。</li>
                     <li>彼らのスコアは他の候補者に再配分される。この候補者のスコアに貢献したそれぞれの投票について、<b>最後に</b>リストアップされた脱落していない候補者にスコアを移す。</li>
                     <li>手順1と2を2回繰り返し、最後から2番目と3番目の順位を求める。脱落されなかった候補者が1位となる。</li>
                 </ol>
-                
-                <h4>ボルダ得点</h4>
+
+                <h4>ボルダ得点:</h4>
                 <p>それぞれの投票について、最初にリストアップされた候補者のスコアに4を、2番目にリストアップされた候補者のスコアに3を、3番目にリストアップされた候補者のスコアに2を、最後にリストアップされた候補者のスコアに1をそれぞれ加算する。候補者の順位を<b>高いものから低いもの</b>に並べ替える。</p>
             </div>
             <div class="page-footer relative-footer">ページ 4/5</div>
@@ -394,10 +559,10 @@
                 <span class="page-header-section-title">大統領選挙</span>
             </div>
             <div class="page-content">
-                
-                <h4>認定投票</h4>
+
+                <h4>認定投票:</h4>
                 <p>シリアルナンバーの N 番目の文字について、<b>最初に</b>リストアップされた N 人の候補者を見る。 (Nが 1、2、3 でない場合、Nから3を引く。)それらの候補者のスコアに1を加算する。 候補者の順位を<b>高いものから低いもの</b>に並べ替える。</p>
-                
+
                 <h4>STV (単記移譲式投票)</h4>
                 <p>それぞれの投票について、<b>最初に</b>リストアップされた候補者を見る。その候補者のスコアに1を加算する。</p>
                 <ol>
@@ -405,12 +570,12 @@
                     <li>この候補者のスコアは他の候補者に再配分される。この候補者のスコアに貢献したそれぞれの投票について、<b>最初に</b>リストアップされた脱落していない候補者にスコアを移す。</li>
                     <li>手順1と2を2回繰り返し、2位と3位を求める。脱落されなかった候補者が最下位となる。</li>
                 </ol>
-                
-                <h4>コンドルセ方式</h4>
-                <p>次のような表を作成する。段は対戦の勝者を表し、列は対戦の敗者を表す。</p>
+
+                <h4>コンドルセ法</h4>
+                <p>次のような表を作成する。段は対戦の勝者を表し、列は対戦の敗者を表す。:</p>
                 <table style="margin: auto">
                     <tr>
-                        <td style="border-top: hidden; border-left: hidden"></td>
+                        <td style="border-top: hidden; border-left: hidden;"></td>
                         <td>A</td>
                         <td>B</td>
                         <td>C</td>
@@ -418,7 +583,7 @@
                     </tr>
                     <tr>
                         <td>A</td>
-                        <td class="black"></td>
+                        <td style="background-color: black"></td>
                         <td>0</td>
                         <td>0</td>
                         <td>0</td>
@@ -426,7 +591,7 @@
                     <tr>
                         <td>B</td>
                         <td>0</td>
-                        <td class="black"></td>
+                        <td style="background-color: black"></td>
                         <td>0</td>
                         <td>0</td>
                     </tr>
@@ -434,7 +599,7 @@
                         <td>C</td>
                         <td>0</td>
                         <td>0</td>
-                        <td class="black"></td>
+                        <td style="background-color: black"></td>
                         <td>0</td>
                     </tr>
                     <tr>
@@ -442,16 +607,16 @@
                         <td>0</td>
                         <td>0</td>
                         <td>0</td>
-                        <td class="black"></td>
+                        <td style="background-color: black"></td>
                     </tr>
                 </table>
-                <p>それぞれの投票ごとに、各対戦結果に対応するセルに 1 を追加する。<br>例として、投票が ABCD の場合 ([段, 列] 座標形式を使用)</p>
+                <p>それぞれの投票ごとに、各対戦結果に対応するセルに 1 を追加する。<br>例として、投票が ABCD の場合 ([段, 列] 座標形式を使用):</p>
                 <ul>
                     <li>A は B、 C、 Dに勝ったため、 (A, B)、 (A, C)、 (A, D) のセルに 1 を足す。</li>
                     <li>B は C と Dに勝ったため、 (B, C)、 (B, D)のセルに 1 を足す。</li>
                     <li>C は Dに勝ったため、(C, D)のセルに 1 を足す。</li>
                 </ul>
-                <p>他のどの候補者よりも勝利数が多い(言い換えると、その段のすべてのセルが3より大きい)候補者が勝利する。残りの候補を、その段の数字の和の降順に並べ替える。もしそのような候補者がいない場合、直ちにすべての候補者をその段の数字の和の降順で並べ替える。</p>
+                <p>他のどの候補者よりも勝利数が多い（言い換えると、その段のすべてのセルが3より大きい）候補者が勝利する。残りの候補を、その段の数字の和の降順に並べ替える。もしそのような候補者がいない場合、直ちにすべての候補者をその段の数字の和の降順で並べ替える。</p>
             </div>
             <div class="page-footer relative-footer">ページ 5/5</div>
         </div>
