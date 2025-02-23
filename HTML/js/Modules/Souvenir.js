@@ -325,7 +325,7 @@ let SouvenirModuleData = [
 	{ name: "More Code",	id: "MoreCode",	questions: ["What was the flashing word?"] },
 	{ name: "Morse Buttons",	id: "morseButtons",	questions: ["What were the characters and colors flashed by each button?"] },
 	{ name: "Morse War",	id: "MorseWar",	questions: ["What were the LEDs?","What code was transmitted?"] },
-	{ name: "Morse-A-Maze",	id: "MorseAMaze",	questions: ["What were the starting and ending location?","What was the morse code word played?"] },
+	{ name: "Morse-A-Maze",	id: "MorseAMaze",	questions: ["What were the starting and ending location?","What was the Morse code word played?"] },
 	{ name: "Morsematics",	id: "MorseV2",	questions: ["What were the received letters?"] },
 	{ name: "Mouse in the Maze",	id: "MouseInTheMaze",	questions: ["What color was the torus?","Which color sphere was the goal?"] },
 	{ name: "Mssngv Wls",	id: "MssngvWls",	questions: ["What was the missing vowel?"] },
