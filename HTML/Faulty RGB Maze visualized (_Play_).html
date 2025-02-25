@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Faulty RGB Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+            $(function() {
+            // 0 - black; 1 - white; 2 - black + E; 3 - white + E
+            const defectiveData = [[
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 0, 1, 1, 0],
+            [0, 1, 1, 0, 1, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 0, 1, 1, 0],
+            [0, 1, 1, 0, 1, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0]
+            ],[
+            [1, 0, 0, 1, 0, 0, 1],
+            [0, 0, 1, 0, 1, 0, 0],
+            [0, 1, 0, 0, 0, 1, 0],
+            [1, 0, 0, 1, 0, 0, 1],
+            [0, 1, 0, 0, 0, 1, 0],
+            [0, 0, 1, 0, 1, 0, 0],
+            [1, 0, 0, 1, 0, 0, 1] 
+            ],[
+            [1, 0, 1, 0, 1, 0, 1],
+            [0, 1, 0, 1, 0, 1, 0],
+            [1, 0, 1, 0, 1, 0, 1],
+            [0, 1, 0, 1, 0, 1, 0],
+            [1, 0, 1, 0, 1, 0, 1],
+            [0, 1, 0, 1, 0, 1, 0],
+            [1, 0, 1, 0, 1, 0, 1] 
+            ],[
+            [0, 0, 1, 0, 1, 0, 0],
+            [0, 1, 0, 0, 0, 1, 0],
+            [1, 0, 0, 1, 0, 0, 1],
+            [0, 0, 1, 0, 1, 0, 0],
+            [1, 0, 0, 1, 0, 0, 1],
+            [0, 1, 0, 0, 0, 1, 0],
+            [0, 0, 1, 0, 1, 0, 0]
+            ],[
+            [0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0]
+            ],[
+            [0, 1, 0, 0, 0, 1, 0],
+            [1, 0, 0, 1, 0, 0, 1],
+            [0, 0, 1, 0, 1, 0, 0],
+            [0, 1, 0, 0, 0, 1, 0],
+            [0, 0, 1, 0, 1, 0, 0],
+            [1, 0, 0, 1, 0, 0, 1],
+            [0, 1, 0, 0, 0, 1, 0]
+            ],[
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 1, 1, 1, 0],
+            [0, 1, 0, 0, 0, 1, 0],
+            [0, 1, 0, 0, 0, 1, 0],
+            [0, 1, 0, 0, 0, 1, 0],
+            [0, 1, 1, 1, 1, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0]
+            ],[
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 1, 3, 1, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0]
+            ],[
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 3, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0]
+            ],[
+            [0, 1, 0, 1, 0, 1, 0],
+            [1, 0, 1, 0, 1, 0, 1],
+            [0, 1, 0, 1, 0, 1, 0],
+            [1, 0, 1, 0, 1, 0, 1],
+            [0, 1, 0, 1, 0, 1, 0],
+            [1, 0, 1, 0, 1, 0, 1],
+            [0, 1, 0, 1, 0, 1, 0]
+            ],[
+            [1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 0, 1, 1, 1],
+            [1, 1, 0, 0, 0, 1, 1],
+            [1, 0, 0, 2, 0, 0, 1],
+            [1, 1, 0, 0, 0, 1, 1],
+            [1, 1, 1, 0, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1]
+            ],[
+            [0, 1, 0, 1, 0, 1, 0],
+            [0, 1, 0, 1, 0, 1, 0],
+            [0, 1, 0, 1, 0, 1, 0],
+            [0, 1, 0, 1, 0, 1, 0],
+            [0, 1, 0, 1, 0, 1, 0],
+            [0, 1, 0, 1, 0, 1, 0],
+            [0, 1, 0, 1, 0, 1, 0]
+            ],[
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 3, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0]
+            ],[
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0]
+            ]];
+            const wallPaths = ["M0 0 h 10", "M10 0 v 10", "M0 0 v 10", "M0 10 h 10"];
+            const defectiveGrids = document.getElementsByClassName("grid");
+            for (let i = 0; i < 14; i++) {
+                const grid = defectiveGrids[i];
+                for (const [y, row] of defectiveData[i].entries()) {
+                    for (const [x, defectiveState] of row.entries()) {
+                        const cell = MakeSvgElem("g", { transform: `translate (${x * 10} ${y * 10})`});
+                        for (const wall of wallPaths) {
+                            cell.append(MakeSvgElem("path", { d: wall, class: "wall", stroke: "#FFFFFF"}));
+                        }
+                        grid.append(cell);
+                        let cellColour = "#000";
+                        if (defectiveState == 1 || defectiveState == 3) {
+                            cellColour = "#DDD";
+                        }
+                        grid.append(MakeSvgElem("rect", {class: "cell highlightable", width: 10, height: 10, x: x * 10, y: y * 10, fill: cellColour}));
+                        let textClass = "";
+                        if (defectiveState == 2 || defectiveState == 3) {
+                            if (defectiveState == 2) {
+                                textClass = "text-white";
+                            }
+                            else {
+                                textClass = "text-black";
+                            }
+                            grid.append(MakeSvgElem("text", { x: x * 10 + 1.2, y: y * 10 + 8.55, class: textClass }, "E"));
+                        }
+                    }
+                }
+            };
+        });
+    </script>
+    <style>
+        .text-black {
+            font-size: 70%;
+        }
+
+        .text-white {
+            font-size: 70%;
+            stroke: #DDD;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Faulty RGB Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Faulty RGB Maze.svg" class="diagram">
+                <h2>On the Subject of Faulty RGB Mazes</h2>
+                <p class="flavour-text">If the module’s really faulty, why are the defective spaces so symmetrical?</p>
+                <p>Refer to the <a href="Faulty RGB Maze.html">original manual</a> or/and the <a href="Faulty RGB Maze interactive (Andrio Celos).html">interactive manual</a> for instructions.</p>
+                <p>Below, for each of the hexadecimal numbers’ grids, bright spaces represent the defective spaces, and spaces with the letter “E” represent the location the maze was entered from.</p>
+                <div class="hstack">
+                    <p>1:</p>
+                    <svg class="grid 1" viewBox="-5, -5, 100, 100"></svg>
+                    <p>2:</p>
+                    <svg class="grid 2" viewBox="-5, -5, 100, 100"></svg>
+                    <p>3:</p>
+                    <svg class="grid 3" viewBox="-5, -5, 100, 100"></svg>
+                    <p>4:</p>
+                    <svg class="grid 4" viewBox="-5, -5, 100, 100"></svg>
+                </div>
+                <div class="hstack">
+                    <p>5:</p>
+                    <svg class="grid 5" viewBox="-5, -5, 100, 100"></svg>
+                    <p>6:</p>
+                    <svg class="grid 6" viewBox="-5, -5, 100, 100"></svg>
+                    <p>7:</p>
+                    <svg class="grid 7" viewBox="-5, -5, 100, 100"></svg>
+                    <p>8:</p>
+                    <svg class="grid 8" viewBox="-5, -5, 100, 100"></svg>
+                </div>
+                <div class="hstack">
+                    <p>9:</p>
+                    <svg class="grid 9" viewBox="-5, -5, 100, 100"></svg>
+                    <p>a:</p>
+                    <svg class="grid a" viewBox="-5, -5, 100, 100"></svg>
+                    <p>b:</p>
+                    <svg class="grid b" viewBox="-5, -5, 100, 100"></svg>
+                    <p>c:</p>
+                    <svg class="grid c" viewBox="-5, -5, 100, 100"></svg>
+                </div>
+                <div class="hstack">
+                    <p>d:</p>
+                    <svg class="grid d" viewBox="-5, -5, 104.4, 104.4"></svg>
+                    <p>e:</p>
+                    <svg class="grid e" viewBox="-5, -5, 104.4, 104.4"></svg>
+                    <p>&nbsp;</p>
+                    <svg viewBox="-5, -5, 100, 100"></svg>
+                    <p>&nbsp;</p>
+                    <svg viewBox="-5, -5, 100, 100"></svg>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
