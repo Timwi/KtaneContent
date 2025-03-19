@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Провода — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/font-cyrillic.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var WireColor = ["чёрный", "синий", "красный", "белый", "жёлтый"];
+        var WireColorPlural = ["чёрных", "синих", "красных", "белых", "жёлтых"];
+        var MIN_WIRES = 3;
+        var MAX_WIRES = 6;
+        var LOGGING = false;
+
+        // SOLUTIONS (player actions)
+        // These correspond to the Solution instances. Their text may be parametrized with a color.
+        var WireIndex0 = { id: 'wire0', Text: color => "режьте первый провод" };
+        var WireIndex1 = { id: 'wire1', Text: color => "режьте второй провод" };
+        var WireIndex2 = { id: 'wire2', Text: color => "режьте третий провод" };
+        var WireIndex3 = { id: 'wire3', Text: color => "режьте четвёртый провод" };
+        var WireIndex4 = { id: 'wire4', Text: color => "режьте пятый провод" };
+        var WireLast = { id: 'wire_last', Text: color => "режьте последний провод" };
+        var WireColorExactlyOne = { id: "wirecolor", Text: color => `режьте ${color} провод` };
+        var WireColorCutFirst = { id: "wirecolorfirst", Text: color => `режьте первый ${color} провод` };
+        var WireColorCutLast = { id: "wirecolorlast", Text: color => `режьте последний ${color} провод` };
+
+        // QUERIES (conditions)
+        // These correspond to the QueryableProperty instances. Their text may be parametrized with a color.
+        var IsExactlyOneColorWire = {
+            id: "isExactlyOneColorWire",
+            Text: color => `${color} провод только один`,
+            UsesColor: true,
+            ColorAvailableForSolution: true,
+            WiresInvolvedInQuery: 1,
+            AdditionalSolutions: [WireColorExactlyOne],
+            CompoundQueryOnly: false
+        };
+
+        var MoreThanOneColorWire = {
+            id: "isMoreThanOneColorWire",
+            Text: color => `${color} проводов больше одного`,
+            UsesColor: true,
+            ColorAvailableForSolution: true,
+            WiresInvolvedInQuery: 2,
+            AdditionalSolutions: [WireColorCutFirst, WireColorCutLast],
+            CompoundQueryOnly: false
+        };
+
+        var IsExactlyZeroColorWire = {
+            id: "isExactlyZeroColorWire",
+            Text: color => `${color} проводов нет`,
+            UsesColor: true,
+            ColorAvailableForSolution: false,
+            WiresInvolvedInQuery: 0,
+            AdditionalSolutions: [],
+            CompoundQueryOnly: false
+        };
+
+        var LastWireIsColor = {
+            id: "isLastWireColor",
+            Text: color => `последний провод - ${color}`,
+            UsesColor: true,
+            ColorAvailableForSolution: true,
+            WiresInvolvedInQuery: 1,
+            AdditionalSolutions: [],
+            CompoundQueryOnly: false
+        };
+
+        var DoesSerialNumberStartWithLetter = { id: "doesSerialNumberStartWithLetter", Text: color => "серийный номер начинается с буквы", CompoundQueryOnly: true };
+        var IsSerialNumberOdd = { id: "isSerialNumberOdd", Text: color => "последняя цифра серийного номера нечётная", CompoundQueryOnly: true };
+        function IsPortPresent(port) { return { id: `portPresent_${port}`, Text: color => `на бомбе присутствует ${port === 'RJ-45' ? 'n' : ''} ${port} порт`, CompoundQueryOnly: true }; }
+        var EmptyPortPlate = { id: "emptyPlatePresent", Text: color => "на бомбе присутствует пустая плата для портов", CompoundQueryOnly: true };
+
+        class Rule
+        {
+            // Both ‘queries’ and ‘solution’ are expected to be an object of the following structure:
+            // {
+            //    Obj: <the QueryableProperty or Solution instance>,
+            //    Color: <the color to parametrize the query or solution by (optional)>
+            // }
+            constructor(queries, solution)
+            {
+                this.Queries = queries;
+                this.Solution = solution;
+            }
+
+            GetQueryString()
+            {
+                return this.Queries.map(q => q.Obj.Text(q.Color)).join(", и ");
+            }
+
+            GetSolutionString()
+            {
+                return this.Solution.Text;
+            }
+
+            GetString(isOtherwise)
+            {
+                return `${this.Queries.length ? (isOtherwise ? 'Иначе, если ' : 'Если ') + this.GetQueryString() + ', ' : (isOtherwise ? 'Иначе, ' : '')}${this.Solution.Obj.Text(this.Solution.Color)}.`;
+            }
+        }
+
+        function IsWireQueryValid(rule)
+        {
+            if (rule.Queries.Count === 1)
+                return true;
+            function has(obj, color) { return rule.Queries.filter(q => q.Obj.id === obj.id && q.Color === color).length; }
+            for (var i = 0; i < 4; i++)
+            {
+                var c = WireColor[i];
+                if ([has(IsExactlyOneColorWire, c), has(IsExactlyZeroColorWire, c), has(MoreThanOneColorWire, c)].filter(q => q).length >= 2)
+                    return false;
+                if (!has(LastWireIsColor, c))
+                    continue;
+                if (has(IsExactlyZeroColorWire, c))
+                    return false;
+                for (var j = i + 1; j < 5; j++)
+                    if (has(LastWireIsColor, WireColor[j]))
+                        return false;
+            }
+            return true;
+        }
+
+        function GetNumRules(rnd)
+        {
+            return (rnd.nextDouble(LOGGING) < 0.6) ? 3 : 4;
+        }
+
+        function GetNumQueriesForRule(rnd)
+        {
+            return (rnd.nextDouble(LOGGING) < 0.6) ? 1 : 2;
+        }
+
+        function CalculatePossibleQueryableProperties(queryWeights, querySets, wiresAvailableInQuery, compoundQueriesAllowed)
+        {
+            var list = [];
+            for (var i = 0; i < querySets.length; i++)
+            {
+                if (LOGGING)
+                    console.log(`Query Set #${i} (${querySets[i].length} / ${wiresAvailableInQuery})`);
+                for (var j = 0; j < querySets[i].length; j++)
+                {
+                    if (LOGGING)
+                        console.log(`  -- Query #${j} = ${querySets[i][j].id}`);
+                    if (!querySets[i][j].CompoundQueryOnly || compoundQueriesAllowed)
+                        if ((querySets[i][j].WiresInvolvedInQuery || 0) <= wiresAvailableInQuery)
+                        {
+                            if (LOGGING)
+                                console.log(`  -- -- ✓`);
+                            list.push(querySets[i][j]);
+                        }
+                }
+            }
+
+            for (var i = 0; i < list.length; i++)
+                if (!(list[i].id in queryWeights))
+                    queryWeights[list[i].id] = 1;
+
+            return list;
+        }
+
+        function SelectQueryableProperty(rnd, queryWeights, possibleQueryableProperties)
+        {
+            if (LOGGING)
+                console.log(`SelectQueryableProperty(list = ${possibleQueryableProperties.length})`);
+            var num = 0;
+            for (var i = 0; i < possibleQueryableProperties.length; i++)
+            {
+                if (!(possibleQueryableProperties[i].id in queryWeights))
+                    queryWeights[possibleQueryableProperties[i].id] = 1;
+                num += queryWeights[possibleQueryableProperties[i].id];
+            }
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < possibleQueryableProperties.length; i++)
+            {
+                if (num2 < queryWeights[possibleQueryableProperties[i].id])
+                {
+                    queryWeights[possibleQueryableProperties[i].id] = queryWeights[possibleQueryableProperties[i].id] * .1;
+                    return possibleQueryableProperties[i];
+                }
+                num2 -= queryWeights[possibleQueryableProperties[i].id];
+            }
+            return possibleQueryableProperties[rnd.next(0, possibleQueryableProperties.length)];
+        }
+
+        function CalculatePossibleSolutions(solutionWeights, wireCount, rule)
+        {
+            var list = [];
+            list.push(WireIndex0);
+            list.push(WireIndex1);
+            list.push(WireLast);
+            if (wireCount >= 4)
+                list.push(WireIndex2);
+            if (wireCount >= 5)
+                list.push(WireIndex3);
+            if (wireCount >= 6)
+                list.push(WireIndex4);
+
+            for (var i = 0; i < rule.Queries.length; i++)
+                if (('AdditionalSolutions' in rule.Queries[i].Obj) && rule.Queries[i].Obj.AdditionalSolutions.length)
+                    for (var j = 0; j < rule.Queries[i].Obj.AdditionalSolutions.length; j++)
+                        list.push(rule.Queries[i].Obj.AdditionalSolutions[j]);
+
+            for (var k = 0; k < list.length; k++)
+                if (!(list[k].id in solutionWeights))
+                    solutionWeights[list[k].id] = 1;
+            return list;
+        }
+
+        function SelectSolution(rnd, weights, list)
+        {
+            if (LOGGING)
+                console.log(`SelectSolution(list = ${list.length})`);
+            var num = 0;
+            for (var i = 0; i < list.length; i++)
+                num += weights[list[i].id];
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < list.length; i++)
+            {
+                if (num2 < weights[list[i].id])
+                {
+                    weights[list[i].id] = weights[list[i].id] * .05;
+                    return list[i];
+                }
+                num2 -= weights[list[i].id];
+            }
+            return list[rnd.next(0, list.length)];
+        }
+
+        function setRules(rnd)
+        {
+            var serialNumberQueries = [DoesSerialNumberStartWithLetter, IsSerialNumberOdd];
+            var wireQueries = [IsExactlyOneColorWire, IsExactlyZeroColorWire, LastWireIsColor, MoreThanOneColorWire];
+            var portQueries = ["DVI-D", "PS/2", "RJ-45", "Двухканальный RCA", "параллельный", "серийный"].map(p => IsPortPresent(p));
+            portQueries.push(EmptyPortPlate);
+            for (var i = MIN_WIRES; i <= MAX_WIRES; i++)
+            {
+                var list2 = [];
+                var list = [];
+                list.push(serialNumberQueries);
+                list.push(wireQueries);
+                if (rnd.seed !== 1)
+                    list.push(portQueries);
+                var queryWeights = {};
+                var solutionWeights = {};
+                var numRules = GetNumRules(rnd);
+                for (var j = 0; j < numRules; j++)
+                {
+                    var listOfWireColors = WireColor.slice(0);
+                    var rule = new Rule([], null);
+                    var numQueriesForRule = GetNumQueriesForRule(rnd);
+                    var list3 = [];
+                    var num = i - 1;
+                    for (var k = 0; k < numQueriesForRule; k++)
+                    {
+                        var compoundQueriesAllowed = k > 0;
+                        var possibleQueryableProperties = CalculatePossibleQueryableProperties(queryWeights, list, num, compoundQueriesAllowed);
+                        if (LOGGING)
+                        {
+                            console.log("queryWeights:");
+                            for (var key in queryWeights)
+                                console.log(`  -- ${key} = ${queryWeights[key]}`);
+                        }
+                        var query = { Obj: SelectQueryableProperty(rnd, queryWeights, possibleQueryableProperties) };
+                        if (LOGGING)
+                            console.log(`query = ${query.Obj.id}`);
+                        if ('WiresInvolvedInQuery' in query.Obj)
+                            num -= query.Obj.WiresInvolvedInQuery;
+                        if (('UsesColor' in query.Obj) && query.Obj.UsesColor)
+                        {
+                            var wireColorIx = rnd.next(0, listOfWireColors.length, LOGGING);
+                            var wireColor = listOfWireColors[wireColorIx];
+                            listOfWireColors.splice(wireColorIx, 1);
+                            query.Color = wireColor;
+                            if (query.Obj.ColorAvailableForSolution)
+                                list3.push(wireColor);
+                        }
+                        rule.Queries.push(query);
+                    }
+
+                    var possibleSolutions = CalculatePossibleSolutions(solutionWeights, i, rule);
+                    rule.Solution = { Obj: SelectSolution(rnd, solutionWeights, possibleSolutions) };
+                    if (list3.length > 0)
+                        rule.Solution.Color = list3[rnd.next(0, list3.length, LOGGING)];
+
+                    if (rnd.seed === 1 || IsWireQueryValid(rule))
+                        list2.push(rule);
+                    else
+                        j--;    // Previous rule was invalid.
+                }
+
+                list2 = list2.map((inf, ix) => { return { obj: inf, ix: ix }; });
+                list2.sort((a, b) =>
+                {
+                    var p = b.obj.Queries.length - a.obj.Queries.length;
+                    return p === 0 ? a.ix - b.ix : p;
+                });
+                list2 = list2.map(inf => inf.obj);
+
+                // Exclusive to Russian: Fix plurality issues with some rules.
+                for (var l = 0; l < list2.length; l++)
+                {
+                    for (var m = 0; m < list2[l].Queries.length; m++)
+                    {
+                        var id = list2[l].Queries[m].Obj.id
+                        if (id == "isMoreThanOneColorWire" || id == "isExactlyZeroColorWire")
+                        {
+                            var singularColor = list2[l].Queries[m].Color
+                            list2[l].Queries[m].Color = WireColorPlural[WireColor.indexOf(singularColor)]
+                        }
+                    }
+                }
+
+                var rule2 = new Rule([], null);
+                var list4 = CalculatePossibleSolutions(solutionWeights, i, rule2);
+                if (rnd.seed !== 1)
+                {   // Enforce no redundant rules.
+                    var forbiddenId = list2[list2.length - 1].Solution.Obj.id;
+                    list4 = list4.filter(l => l.id !== forbiddenId);
+                }
+                rule2.Solution = { Obj: list4[rnd.next(0, list4.length, LOGGING)] };
+                list2.push(rule2);
+                document.getElementById(`wires-${i}`).innerHTML = `<strong><em>${i} проводов:</em></strong><br>${list2.map((rl, rlIx) => rl.GetString(rlIx > 0)).join('<br>')}`;
+            }
+        }
+
+        function setDefaultRules()
+        {
+            document.getElementById('wires-3').innerHTML = `
+                    <strong><em>3 провода:</em></strong><br>
+                    Если красных проводов нет, режьте второй провод.<br>
+                    Иначе, если последний провод - белый, режьте последний провод.<br>
+                    Иначе, если синих проводов больше одного, режьте последний синий провод.<br>
+                    Иначе, режьте последний провод.`;
+            document.getElementById('wires-4').innerHTML = `
+                    <strong><em>4 провода:</em></strong><br>
+                    Если красных проводов больше одного, и последняя цифра серийного номера нечётная, режьте последний красный провод.<br>
+                    Иначе, если последний провод - жёлтый, и красных проводов нет, режьте первый провод.<br>
+                    Иначе, если синий провод только один, режьте первый провод.<br>
+                    Иначе, если жёлтых проводов больше одного, режьте последний провод.<br>
+                    Иначе, режьте второй провод.`;
+            document.getElementById('wires-5').innerHTML = `
+                    <strong><em>5 проводов:</em></strong><br>
+                    Если последний провод - чёрный, и последняя цифра серийного номера нечётная, режьте четвёртый провод.<br>
+                    Иначе, красный провод только один, и жёлтых проводов больше одного, режьте первый провод.<br>
+                    Иначе, чёрных проводов нет, режьте второй провод.<br>
+                    Иначе, режьте первый провод.`;
+            document.getElementById('wires-6').innerHTML = `
+                    <strong><em>6 проводов:</em></strong><br>
+                    Если жёлтых проводов нет, и последняя цифра серийного номера нечётная, режьте третий провод.<br>
+                    Иначе, если жёлтый провод только один, и белых проводов больше одного, режьте четвёртый провод.<br>
+                    Иначе, если красных проводов нет, режьте последний провод.<br>
+                    Иначе, режьте четвёртый провод.`;
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Провода</span>
+            </div>
+            <div class="page-footer absolute-footer"></div>
+            <div class="page-content">
+                <img src="img/Component/Wires.svg" class="diagram">
+                <h2>О проводах</h2>
+                <p class="flavour-text">Провода — кровь электроники! Стоп, нет, электричество — кровь. Провода, скорее, артерии. Вены? Неважно…</p>
+                <ul>
+                    <li>Этот модуль содержит от 3 до 6 проводов.</li>
+                    <li>Только <em>один</em> правильный провод необходимо перерезать для того, чтобы обезвредить модуль.</li>
+                    <li>Нумерация проводов отсчитывается, начиная с самого верхнего.</li>
+                </ul>
+                <table>
+                    <tr>
+                        <td id='wires-3'>
+                            <strong><em>3 провода:</em></strong><br>
+                            Если красных проводов нет, режьте второй провод.<br>
+                            Иначе, если последний провод - белый, режьте последний провод.<br>
+                            Иначе, если синих проводов больше одного, режьте последний синий провод.<br>
+                            Иначе, режьте последний провод.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id='wires-4'>
+                            <strong><em>4 провода:</em></strong><br>
+                            Если красных проводов больше одного, и последняя цифра серийного номера нечётная, режьте последний красный провод.<br>
+                            Иначе, если последний провод - жёлтый, и красных проводов нет, режьте первый провод.<br>
+                            Иначе, если синий провод только один, режьте первый провод.<br>
+                            Иначе, если жёлтых проводов больше одного, режьте последний провод.<br>
+                            Иначе, режьте второй провод.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id='wires-5'>
+                            <strong><em>5 проводов:</em></strong><br>
+                            Если последний провод - чёрный, и последняя цифра серийного номера нечётная, режьте четвёртый провод.<br>
+                            Иначе, красный провод только один, и жёлтых проводов больше одного, режьте первый провод.<br>
+                            Иначе, чёрных проводов нет, режьте второй провод.<br>
+                            Иначе, режьте первый провод.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id='wires-6'>
+                            <strong><em>6 проводов:</em></strong><br>
+                            Если жёлтых проводов нет, и последняя цифра серийного номера нечётная, режьте третий провод.<br>
+                            Иначе, если жёлтый провод только один, и белых проводов больше одного, режьте четвёртый провод.<br>
+                            Иначе, если красных проводов нет, режьте последний провод.<br>
+                            Иначе, режьте четвёртый провод.
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Стр. 1 из 1</div>
+        </div>
+    </div>
+</body>
+</html>

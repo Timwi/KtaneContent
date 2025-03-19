@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Память — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/font-cyrillic.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var NUM_STAGES = 5;
+
+        function toOrdinal(num)
+        {
+            if (num == 3) return "3-ем"
+            else return num + "-ом"
+        }
+
+        function setRules(rnd)
+        {
+            var weights = {};
+            var flag = true;
+            for (var i = 0; i < NUM_STAGES; i++)
+            {
+                flag = !flag;
+                var tag = document.getElementById(`memory-stage-${i + 1}`);
+                tag.innerHTML = '';
+                for (var j = 1; j <= 4; j++)
+                {
+                    var digit = rnd.next(1, 5);
+                    var stage = i > 0 ? rnd.next(1, i + 1) : null;
+                    var rule = translateRule(SelectSolution(rnd, weights, CreateSolutionsList(weights, i, flag)), digit, stage);
+                    var highlightable = document.createElement('span');
+                    highlightable.classList.add("highlightable");
+                    highlightable.appendChild(document.createTextNode(`Если на экране цифра "${j}", ${rule}.`));
+                    tag.appendChild(highlightable);
+                    if (j != 4)
+                        tag.appendChild(document.createElement('br'));
+                }
+            }
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function translateRule(id, targetDigit, targetStage)
+        {
+            switch (id)
+            {
+                case 0: return "нажмите кнопку на первой позиции";
+                case 1: return "нажмите кнопку на второй позиции";
+                case 2: return "нажмите кнопку на третьей позиции";
+                case 3: return "нажмите кнопку на четвёртой позиции";
+                case 4: return `нажмите кнопку со значением "${targetDigit}"`;
+                case 5: return `нажмите кнопку на той же позиции, которую вы нажали на ${toOrdinal(targetStage)} этапе`;
+                case 6: return `нажмите кнопку с тем же значением, которое вы нажали на ${toOrdinal(targetStage)} этапе`;
+            }
+        }
+
+        function CreateSolutionsList(weights, stage, usePreviousIndex)
+        {
+            var list = [];
+            list.push(0);
+            list.push(1);
+            list.push(2);
+            list.push(3);
+            list.push(4);
+            if (stage > 0)
+            {
+                if (usePreviousIndex)
+                    list.push(5);
+                else
+                    list.push(6);
+            }
+            for (var i = 0; i < list.length; i++)
+            {
+                var current = list[i];
+                if (!(current in weights))
+                    weights[current] = 1;
+            }
+            if (stage > 2)
+            {
+                weights[5] = 1;
+                weights[6] = 1;
+            }
+            return list;
+        }
+
+        function SelectSolution(rnd, weights, list)
+        {
+            var num = 0;
+            for (var i = 0; i < list.length; i++)
+                num += weights[list[i]];
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < list.length; i++)
+            {
+                if (num2 < weights[list[i]])
+                {
+                    weights[list[i]] = weights[list[i]] * .05;
+                    return list[i];
+                }
+                num2 -= weights[list[i]];
+            }
+            return list[rnd.next(0, list.length)];
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Память</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Memory.svg" class="diagram">
+                <h2>О памяти</h2>
+                <p class="flavour-text">Память — хрупкая штуковина, как и всё остальное в момент разрыва бомбы, так что будьте внимательней!</p>
+                <ul>
+                    <li>Нажмите правильную кнопку, чтобы перевести модуль на следующий этап. Завершите все этапы, чтобы обезвредить модуль.</li>
+                    <li>Нажатие неверной кнопки вернёт модуль на первый этап.</li>
+                    <li>Позиции кнопок отсчитываются слева направо.</li>
+                </ul>
+                <div class="memory-rules">
+                    <h4>Этап 1:</h4>
+                    <p id="memory-stage-1">Если на экране цифра "1", нажмите кнопку на второй позиции.<br>Если на экране цифра "2", нажмите кнопку на второй позиции.<br>Если на экране цифра "3", нажмите кнопку на третьей позиции.<br>Если на экране цифра "4", нажмите кнопку на четвёртой позиции.<br></p>
+                    <h4>Этап 2:</h4>
+                    <p id="memory-stage-2">Если на экране цифра "1", нажмите кнопку со значением "4".<br>Если на экране цифра "2", нажмите кнопку на той же позиции, которую вы нажали на 1-ом этапе.<br>Если на экране цифра "3", нажмите кнопку на первой позиции.<br>Если на экране цифра "4", нажмите кнопку на той же позиции, которую вы нажали на 1-ом этапе.<br></p>
+                    <h4>Этап 3:</h4>
+                    <p id="memory-stage-3">Если на экране цифра "1", нажмите кнопку с тем же значением, которое вы нажали на 2-ом этапе.<br>Если на экране цифра "2", нажмите кнопку с тем же значением, которое вы нажали на 1-ом этапе.<br>Если на экране цифра "3", нажмите кнопку на третьей позиции.<br>Если на экране цифра "4", нажмите кнопку со значением "4".<br></p>
+                    <h4>Этап 4:</h4>
+                    <p id="memory-stage-4">Если на экране цифра "1", нажмите кнопку на той же позиции, которую вы нажали на 1-ом этапе.<br>Если на экране цифра "2", нажмите кнопку на первой позиции.<br>Если на экране цифра "3", нажмите кнопку на той же позиции, которую вы нажали на 2-ом этапе.<br>Если на экране цифра "4", нажмите кнопку на той же позиции, которую вы нажали на 2-ом этапе.<br></p>
+                    <h4>Этап 5:</h4>
+                    <p id="memory-stage-5">Если на экране цифра "1", нажмите кнопку с тем же значением, которое вы нажали на 1-ом этапе.<br>Если на экране цифра "2", нажмите кнопку с тем же значением, которое вы нажали на 2-ом этапе.<br>Если на экране цифра "3", нажмите кнопку с тем же значением, которое вы нажали на 4-ом этапе.<br>Если на экране цифра "4", нажмите кнопку с тем же значением, которое вы нажали на 3-ем этапе.<br></p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Стр. 1 из 1</div>
+        </div>
+    </div>
+</body>
+</html>
