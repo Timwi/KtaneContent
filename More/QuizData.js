@@ -3,7 +3,6 @@ const everything = {
 		'Alphabet': {
 			'CSS': 'textonly',
 			'RandomizeLeft': true,
-			'RandomizeRight': true,
 			'Groups': ['letters', 'numbers'],
 			'Items': [
 				[
