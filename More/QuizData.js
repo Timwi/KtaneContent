@@ -508,7 +508,7 @@ const everything = {
 			]
 		},
 		'Emoji Math': {
-			'CSS': 'flags',
+			'CSS': 'textonly',
 			'RandomizeLeft': true,
 			'Groups': ['emoticons', 'numbers'],
 			'Items': [
