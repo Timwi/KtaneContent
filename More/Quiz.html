@@ -28,6 +28,18 @@
                 a.onclick = function() { startQuiz(a.dataset.thing, everything[a.dataset.cat][a.dataset.thing]); return false; };
             });
         }
+        
+        // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+        /* Randomize array in-place using Durstenfeld shuffle algorithm and return it */
+        function shuffleArray(array) {
+            for (var i = array.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+            return array
+        }
 
         function startQuiz(thing, inf)
         {
@@ -36,6 +48,8 @@
             const numTotalItems = itemGroups.reduce((p, n) => p + n.length, 0);
             const hasSounds = inf.SoundPath;
             const hasVideos = inf.VideoPath;
+
+            let questionsQueue = [];
 
             const quiz = document.getElementById('quiz');
             quiz.innerHTML = `
@@ -61,7 +75,14 @@
 
                 clearTimeout(timeout);
                 timeout = null;
-                let itemIx = (Math.random() * numTotalItems) | 0;
+                
+                //if queue is too small (needs at least length 4 to insert wrong answers back into), add copie(s) of all the questions to queue in a random order
+                while (questionsQueue.length < 4) {
+                    [].push.apply(questionsQueue, shuffleArray([...Array(numTotalItems).keys()]));
+                }
+                //get question from queue
+                let itemIx = questionsQueue.shift();
+
                 let groupIx = 0;
                 while (itemIx > itemGroups[groupIx].length) {
                     itemIx -= itemGroups[groupIx].length;
@@ -129,6 +150,9 @@
                             });
                             timeout = setTimeout(showQuestion, 700);
                         } else {
+                            //the option clicked was wrong; reinsert it to the queue, lets say in three questions
+                            questionsQueue.splice(3, 0, itemIx);
+
                             btn.classList.add('wrong');
                             document.getElementById('answers').querySelectorAll('button.correct-answer').forEach((item) => {
                                 item.classList.add('correct');
