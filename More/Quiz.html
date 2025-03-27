@@ -4,6 +4,7 @@
     <meta name="viewport" content="initial-scale=1">
     <title>Quiz</title>
     <script src="QuizData.js"></script>
+    <script src="../HTML/js/Utilities/array-utils.js"></script>
     <script>
         let timeout;
         let mode = 2;
@@ -37,6 +38,8 @@
             const hasSounds = inf.SoundPath;
             const hasVideos = inf.VideoPath;
 
+            const questionsQueue = [];
+
             const quiz = document.getElementById('quiz');
             quiz.innerHTML = `
                 <h1 id='header'>${thing}<${''}/h1>
@@ -61,7 +64,14 @@
 
                 clearTimeout(timeout);
                 timeout = null;
-                let itemIx = (Math.random() * numTotalItems) | 0;
+                
+                //if queue is too small (needs at least length 4 to insert wrong answers back into), add copie(s) of all the questions to queue in a random order
+                while (questionsQueue.length < 4) {
+                    [].push.apply(questionsQueue, ShuffleFisherYates([...Array(numTotalItems).keys()]));
+                }
+                //get question from queue
+                let itemIx = questionsQueue.shift();
+
                 let groupIx = 0;
                 while (itemIx > itemGroups[groupIx].length) {
                     itemIx -= itemGroups[groupIx].length;
@@ -129,6 +139,9 @@
                             });
                             timeout = setTimeout(showQuestion, 700);
                         } else {
+                            //the option clicked was wrong; reinsert it to the queue, lets say in three questions
+                            questionsQueue.splice(3, 0, itemIx);
+
                             btn.classList.add('wrong');
                             document.getElementById('answers').querySelectorAll('button.correct-answer').forEach((item) => {
                                 item.classList.add('correct');
