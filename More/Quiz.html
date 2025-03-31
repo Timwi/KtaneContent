@@ -82,17 +82,20 @@
                 if (hasSounds) { querySide = 0; }
 
                 //select from possibly multiple correct answers
-                let ansIx = ((Math.random() * (item.length - 1)) | 0) + 1;
-                document.getElementById('challenge').innerHTML = item[ querySide ? 0 : ansIx ];
+                let ansIx = ((Math.random() * (item.length - 1)) | 0);
+                document.getElementById('challenge').innerHTML = querySide ? item[0] : item[1][ansIx];
 
+                //generate array of answer options:
+                //for each alternative answer for each item, generate an answer object and add it to the answers array
                 let answers = [];
-                let maxLength = Math.max(...itemGroups[groupIx].map(it => it.length));
-                for (let i = 1; i < maxLength; ++i) {
-                    const a = itemGroups[groupIx].map((item, ix) => ({ correct: ix === itemIx, item: item [ querySide ? i : 0 ] }));
-                    for (let j = 0; j < a.length; ++j) {
-                        if (a[j].item) { answers.push(a[j]); }
-                    }
-                }
+                itemGroups[groupIx].forEach((answer)=>{
+                    [].push.apply(answers, answer[1].map((answerValue)=>(
+                        {
+                            correct: querySide ? item[1].includes(answerValue) : answer[1].includes(item[1][ansIx]),
+                            item: querySide ? answerValue : answer[0]
+                        }
+                    )))
+                })
                 //remove duplicate answer choices
                 function onlyUnique(value, index, arr) {
                     for (let i = 0; i < arr.length; ++i) {
