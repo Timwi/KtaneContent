@@ -15,52 +15,52 @@
 
             document.getElementById('quiz').innerHTML = `
                 <h1>PRACTICE<${''}/h1>
-                ${Object.keys(everything).map(category => `
+                ${Object.keys(allQuizzes).map(category => `
                     <h2>${category}<${''}/h2>
                     <menu>
-                      ${Object.keys(everything[category]).map(thing => `
-                          <a href='#' class='start' data-cat='${category}' data-thing='${thing}'><li>${thing}<${''}/li><${''}/a>
+                      ${Object.keys(allQuizzes[category]).map(quizName => `
+                          <a href='#' class='start' data-cat='${category}' data-quizName='${quizName}'><li>${quizName}<${''}/li><${''}/a>
                       `).join('')}
                     <${''}/menu>
                 `).join('')}
             `;
 
             Array.from(document.querySelectorAll('a.start')).forEach(a => {
-                a.onclick = function() { startQuiz(a.dataset.thing, everything[a.dataset.cat][a.dataset.thing]); return false; };
+                a.onclick = function() { startQuiz(a.dataset.quizName, allQuizzes[a.dataset.cat][a.dataset.quizName]); return false; };
             });
         }
 
-        function startQuiz(thing, inf)
+        function startQuiz(quizName, quizData)
         {
             mode = 2;
-            const itemGroups = inf.Items;
+            const itemGroups = quizData.Items;
             const numTotalItems = itemGroups.reduce((p, n) => p + n.length, 0);
-            const hasSounds = inf.SoundPath;
-            const hasVideos = inf.VideoPath;
+            const hasSounds = quizData.SoundPath;
+            const hasVideos = quizData.VideoPath;
 
             const questionsQueue = [];
 
             const quiz = document.getElementById('quiz');
             quiz.innerHTML = `
-                <h1 id='header'>${thing}<${''}/h1>
+                <h1 id='header'>${quizName}<${''}/h1>
                 <div id='challenge'><${''}/div>
                 <div id='answers'><${''}/div>
                 <button id='back-button'>&lt; Back<${''}/button>
             `;
             if (!hasSounds) quiz.innerHTML += "<button id='mode-button'></button>";
-            quiz.className = inf.CSS;
+            quiz.className = quizData.CSS;
 
             function updateModeButton() {
                 const btn = document.getElementById('mode-button');
-                if (btn) btn.innerHTML = mode === 2 ? 'Display both' : `Display only ${inf.Groups[mode]}`;
+                if (btn) btn.innerHTML = mode === 2 ? 'Display both' : `Display only ${quizData.Groups[mode]}`;
             }
             updateModeButton();
 
             function showQuestion()
             {
-                window.location.hash = thing;
-                const limitLeftAnswers = inf.LimitLeftAnswers;
-                const limitRightAnswers = inf.LimitRightAnswers;
+                window.location.hash = quizName;
+                const limitLeftAnswers = quizData.LimitLeftAnswers;
+                const limitRightAnswers = quizData.LimitRightAnswers;
 
                 clearTimeout(timeout);
                 timeout = null;
@@ -116,7 +116,7 @@
                         answers.shift();
                 }
 
-                if (first ? inf.RandomizeRight : inf.RandomizeLeft)
+                if (first ? quizData.RandomizeRight : quizData.RandomizeLeft)
                     for (let i = answers.length - 1; i > 0; i--) {
                         let j = (Math.random() * (i + 1)) | 0;
                         let temp = answers[i];
@@ -146,12 +146,12 @@
                             document.getElementById('answers').querySelectorAll('button.correct-answer').forEach((item) => {
                                 item.classList.add('correct');
                             });
-                            if (inf.DelayShowWrongRight && first) {
-                                let t = Math.floor(inf.DelayShowWrongRight * 1000);
+                            if (quizData.DelayShowWrongRight && first) {
+                                let t = Math.floor(quizData.DelayShowWrongRight * 1000);
                                 timeout = setTimeout(showQuestion, t);
                             }
-                            else if (inf.DelayShowWrongLeft && !first) {
-                                let t = Math.floor(inf.DelayShowWrongLeft * 1000);
+                            else if (quizData.DelayShowWrongLeft && !first) {
+                                let t = Math.floor(quizData.DelayShowWrongLeft * 1000);
                                 timeout = setTimeout(showQuestion, t);
                             }
                             else
@@ -184,7 +184,7 @@
                             }
                             else
                             {
-                                audio.src = `../HTML/audio/${inf.SoundPath}/${sound}`;
+                                audio.src = `../HTML/audio/${quizData.SoundPath}/${sound}`;
                                 audio.onerror = () => { button.classList.remove("playing"); button.classList.add("failed"); };
                                 audio.onended = () => button.classList.remove("playing");
                                 audio.play();
@@ -196,13 +196,13 @@
                     }
                 }
                 else if (hasVideos) {
-                    const shouldLoop = inf.VideoLoops;
+                    const shouldLoop = quizData.VideoLoops;
                     // const video = document.createElement("video");
                     const videos = document.getElementsByTagName("video");
                     for (video of videos)
                     {
                         const vid = video.dataset.vid;
-                        video.src = `../HTML/video/${inf.VideoPath}/${vid}`;
+                        video.src = `../HTML/video/${quizData.VideoPath}/${vid}`;
                         if (shouldLoop) {
                             video.play();
                         }
