@@ -21,7 +21,7 @@ const everything = {
 					['Y', '25'], ['Z', '26']
 				]
 			]
-		},			
+		},
 		'Braille': {
 			'CSS': 'zoo braille',
 			'RandomizeRight': true,
@@ -41,7 +41,7 @@ const everything = {
 					['U', 'U'], ['V', 'V'],
 					['W', 'W'], ['X', 'X'],
 					['Y', 'Y'], ['Z', 'Z'],
-					['and', '&'], ['for', ':'],
+					['and', '&amp;'], ['for', ':'],
 					['the', '&gt;'], ['with', '/'],
 					['ar', '('], ['bb', ')'],
 					['cc', '@'], ['ch', ']'],
@@ -50,7 +50,7 @@ const everything = {
 					['ff', '}'], ['gg', '['],
 					['gh', '='], ['in', '^'],
 					['ing', '+'], ['of', '-'],
-					['ou', '&gt;'], ['ow', '!'],
+					['ou', '&lt;'], ['ow', '!'],
 					['sh', '$'], ['st', '?'],
 					['th', '*'], ['wh', ';']
 				]
@@ -84,7 +84,7 @@ const everything = {
 			'Groups': ['ligatures', 'braille'],
 			'Items': [
 				[
-					['and', '&'], ['for', ':'],
+					['and', '&amp;'], ['for', ':'],
 					['the', '&gt;'], ['with', '/'],
 					['ar', '('], ['bb', ')'],
 					['cc', '@'], ['ch', ']'],
@@ -93,7 +93,7 @@ const everything = {
 					['ff', '}'], ['gg', '['],
 					['gh', '='], ['in', '^'],
 					['ing', '+'], ['of', '-'],
-					['ou', '&gt;'], ['ow', '!'],
+					['ou', '&lt;'], ['ow', '!'],
 					['sh', '$'], ['st', '?'],
 					['th', '*'], ['wh', ';']
 				]
@@ -938,7 +938,7 @@ const everything = {
 					['SKO', 'Shoe' ],
 					['HANDDUK', 'Towel' ],
 					['ENHÖRNING', 'Unicorn' ],
-					['TROLLKARL', 'Wizard' ]	
+					['TROLLKARL', 'Wizard' ]
 				]
 			]
 		},
@@ -1131,7 +1131,7 @@ const everything = {
 					['6', 'Blue']
 				]
 			]
-		},	
+		},
 		'Monsplodes': {
 			'CSS': 'flags monsplode',
 			'RandomizeRight': true,
@@ -1225,7 +1225,7 @@ const everything = {
 				]
 			]
 		},
-		
+
 		'Two Bits': {
 			'CSS': 'textonly',
 			'RandomizeRight': true,
@@ -1247,7 +1247,7 @@ const everything = {
 					['24', 'cz'], ['25', 'zv'],
 					['26', 'cv'], ['27', 'gc'],
 					['28', 'bt'], ['29', 'gt'],
-					['30', 'bz'], ['31', 'pk'],	
+					['30', 'bz'], ['31', 'pk'],
 					['32', 'kz'], ['33', 'kg'],
 					['34', 'vd'], ['35', 'ce'],
 					['36', 'vb'], ['37', 'kd'],
