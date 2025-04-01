@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>音階ダイヤル — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    $(function() {
+        const interval = ["P1", "MI2", "MA2", "MI3", "MA3", "P4", "TT", "P5", "MI6", "MA6", "MI7", "MA7"];
+
+        // Based on code from Samfundev’s Listening interactive
+        $("table.intervals th").each(function(i) {
+            var elem = $(this);
+            var audio = $("<audio>")
+            .on("error", function() {
+                button.addClass("failed");
+            })
+            .attr("src", "../HTML/audio/Scalar Dials/Interval" + interval[i] + ".wav")
+            .on("ended", function() {
+                button.removeClass("playing");
+            })
+            .appendTo(elem);
+
+            var button = $("<a href='#' class='play-button'>▶</a>")
+            .click(function() {
+                if (button.hasClass("playing")) {
+                    button.removeClass("playing");
+                    audio[0].pause();
+                    audio[0].currentTime = 0;
+                } else {
+                    button.addClass("playing");
+                    audio[0].play();
+                }
+                return false;
+            })
+            .prependTo(elem);
+        });
+
+        let measHeight = 7.4;
+        const stave = [
+            [ 1.5,14.9,35.5,43.5,51.7,72,81.4,89.5,102.2,115.2,128.7,138.5 ],
+            [ 1.5,21.5,29.2,38.2,56.8,64.1,77.8,86.6,95.8,116,124.9,138.5 ],
+            [ 1.5,14.6,20.2,28.5,41.5,47.2,58.7,70,83,91.6,100,108.4,115.8,122.4,131.2,138.5 ],
+            [ 1.5,10.3,19.7,40.5,48.5,57.4,78.2,98.4,119.2,138.5 ],
+            [ 1.5,14.4,27.5,40.5,52.2,57.8,66.6,75.2,84,96.7,116.5,125,138.5 ],
+            [ 1.5,12.9,20.5,28.2,48.2,55.5,67.2,76,83.4,103.7,123.8,131,138.5 ],
+            [ 1.5,8.9,27.8,41.5,49.5,58.5,66.3,73.8,83.2,103.7,122.8,130.5,138.5 ],
+            [ 1.5,14.9,34.3,53,73.8,86.2,106.8,116.5,128.7,138.5 ],
+            [ 1.5,21.7,35.2,44.4,50.5,57.6,78.2,85.7,104.3,117.8,138.5 ],
+            [ 1.5,9.9,18.5,36.2,49.2,67.2,78.4,85.2 ],
+        ];
+        const intervalMeasure = [ 0,14.5,27.5,38.5,50.5,59.5,69,87.5,97,108.3,117.6,128.8,140 ];
+        const intervalScale = 4.5;
+        $("img.music:not(.multi, .color), h4").addClass("highlightable");
+
+        let holder1 = $(".sheet.musicholder");
+        let sheetSvg = MakeSvgTag(630,800).appendTo(holder1);
+        stave.forEach((staff, s) => {
+            staff.forEach((meas, m) => {
+                if (m < staff.length - 1) {
+                    let box = MakeSvgElem("rect", {
+                        class:"highlightable", width:((staff[m+1] - meas) * intervalScale),
+                        height:(measHeight*intervalScale), x:(meas*intervalScale), y:(80 + 0.9*intervalScale * s*16.66),
+                        fill:"transparent"
+                    });
+                    sheetSvg.append(box);
+                }
+            });
+        });
+
+        measHeight = 9.5;
+        let holder2 = $(".interval.musicholder");
+        let intervalSvg = MakeSvgTag(630,81.6).appendTo(holder2);
+        intervalMeasure.forEach((meas, i) => {
+            if (i < intervalMeasure.length - 1) {
+                let box = MakeSvgElem("rect", {
+                    class:"highlightable", width:((intervalMeasure[i+1] - meas) * intervalScale),
+                    height:(measHeight*intervalScale), x:(meas*intervalScale), y:(1*intervalScale), fill:"transparent"
+                });
+                intervalSvg.append(box);
+            }
+        });
+    });
+    </script>
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+        .strip-change-one td,
+        .strip-change-one th {
+            padding: .3em .5em .2em;
+        }
+        .alpha td, .alpha th {
+            padding: 5px 3px 3px 3px;
+            line-height: 14px;
+            width: 43px;
+        }
+        td { text-align: center; }
+        img {
+            display: block;
+            margin: auto;
+        }
+        .dark img.music { filter: invert(87%); }
+        img.music:not(.multi) { width: 94%; }
+        /* img.music.color { width: 100%; } */
+        img.music.small { width: 13cm; }
+        .dark img.music.color {
+            filter: invert(87%) hue-rotate(180deg);
+        }
+        .musicholder {
+            position: relative;
+            width: 100%;
+        }
+        .sheet.musicholder { height: 230mm; }
+        @media screen and (max-width: 900px) {
+            .sheet.musicholder { margin-bottom: 42mm; }
+        }
+        .interval.musicholder {
+            height: 24mm;
+        }
+        .musicholder img.music {
+            position: absolute;
+            width: 100%;
+        }
+        .musicholder svg {
+            position: absolute;
+            width: 100%;
+        }
+
+        .dark a, a {
+            display: inline-block;
+            margin-right: .5em;
+            text-decoration: none;
+            color: white;
+            font-size: 80%;
+            transition: color .1s;
+
+            background: #008;
+            border-radius: 50%;
+            width: 1.5em;
+            height: 1.5em;
+            text-align: center;
+            padding-left: .1em;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+
+        a:hover:not(.failed):not(.playing) {
+            color: #ff8;
+        }
+
+        a.playing {
+            color: #8f8;
+        }
+
+        a.failed {
+            cursor: not-allowed;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-00">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">音階ダイヤル</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Scalar Dials.svg" class="diagram">
+                <h2>モジュール詳細：音階ダイヤル</h2>
+                <p class="flavour-text">*クルッ* 待って、何か聞こえなかった？ *クルッ*</p>
+                <ol>
+                    <li>モジュールには、3つのダイヤル、それぞれの上にある小型のディスプレー、3つの音符と1つの音部記号を表示している上部の大型ディスプレー、及び左上にSUBMITボタンがある。</li>
+                    <li>各ダイヤルは0～9とその真上に表示している音符を循環させる。ダイヤルを回すと、あるスケール(音階)を構成する音が再生される。</li>
+                    <li>ダイヤルの真上の画面を押すとダイヤルが現在設定している音が再生される。大型ディスプレーを押すと、残り時間に応じて3つの音のいずれか一つが再生される。</li>
+                    <li>ダイヤルは左から1、2、3と読み取られる。</li>
+                    <li>各ダイヤルを正しい方向に設定し、正しいタイミングで送信することでモジュールを解除することが出来る。</li>
+                    <li>間違った方向に設定したり、間違ったタイミングで押すとミスが記録される。</li>
+                </ol>
+
+                <h3>ステップ1：初期位置</h3>
+                <p>ダイヤルごとに、以下の手順に従う。</p>
+                <ul>
+                    <li>A：大型ディスプレーが再生する音符の位置は「3 - (残り分数を3で割った余り)」で求められる。</li>
+                    <li>B：このダイヤルが再生しているメジャースケールを判別する。これは、ダイヤルを一番低い音が鳴る位置に設定し、それと大型ディスプレーが再生する音を比較することで判別できる。</li>
+                    <li>C：以下の表に対し、このダイヤルのスケールを段に、ダイヤルと同じ位置にある大型ディスプレーの音符を列に使用する。</li>
+                    <li>D：表の交点から得られる数字が、そのダイヤルの初期位置である。</li>
+                </ul>
+                <table class="alpha">
+                    <tr><th class='corner'></th><th>C/B#</th><th>C#/Db</th><th>D</th><th>D#/Eb</th><th>E/Fb</th><th>F/E#</th><th>F#/Gb</th><th>G</th><th>G#/Ab</th><th>A</th><th>A#/Bb</th><th>B/Cb</th></tr>
+                    <tr><th>C</th><td>8</td><td>1</td><td>3</td><td>1</td><td>6</td><td>9</td><td>5</td><td>7</td><td>4</td><td>0</td><td>2</td><td>0</td></tr>
+                    <tr><th>Db</th><td>1</td><td>2</td><td>4</td><td>3</td><td>6</td><td>2</td><td>9</td><td>5</td><td>1</td><td>7</td><td>0</td><td>8</td></tr>
+                    <tr><th>D</th><td>3</td><td>7</td><td>4</td><td>2</td><td>3</td><td>1</td><td>8</td><td>5</td><td>2</td><td>6</td><td>9</td><td>0</td></tr>
+                    <tr><th>Eb</th><td>1</td><td>9</td><td>5</td><td>4</td><td>3</td><td>0</td><td>7</td><td>2</td><td>8</td><td>4</td><td>3</td><td>6</td></tr>
+                    <tr><th>E</th><td>6</td><td>4</td><td>8</td><td>5</td><td>4</td><td>2</td><td>3</td><td>1</td><td>0</td><td>5</td><td>7</td><td>9</td></tr>
+                    <tr><th>F</th><td>2</td><td>4</td><td>5</td><td>1</td><td>6</td><td>5</td><td>0</td><td>6</td><td>8</td><td>9</td><td>7</td><td>3</td></tr>
+                    <tr><th>F#</th><td>6</td><td>5</td><td>2</td><td>0</td><td>7</td><td>1</td><td>3</td><td>8</td><td>6</td><td>4</td><td>7</td><td>9</td></tr>
+                    <tr><th>G</th><td>2</td><td>4</td><td>8</td><td>9</td><td>5</td><td>3</td><td>7</td><td>1</td><td>8</td><td>7</td><td>0</td><td>6</td></tr>
+                    <tr><th>Ab</th><td>3</td><td>0</td><td>5</td><td>2</td><td>1</td><td>9</td><td>8</td><td>8</td><td>6</td><td>9</td><td>4</td><td>7</td></tr>
+                    <tr><th>A</th><td>7</td><td>5</td><td>3</td><td>0</td><td>9</td><td>6</td><td>8</td><td>9</td><td>4</td><td>2</td><td>0</td><td>1</td></tr>
+                    <tr><th>Bb</th><td>4</td><td>1</td><td>0</td><td>8</td><td>6</td><td>2</td><td>1</td><td>7</td><td>5</td><td>0</td><td>3</td><td>9</td></tr>
+                    <tr><th>B</th><td>0</td><td>1</td><td>1</td><td>6</td><td>2</td><td>2</td><td>8</td><td>9</td><td>7</td><td>5</td><td>3</td><td>4</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/8</div>
+        </div>
+
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">音階ダイヤル</span>
+            </div>
+            <div class="page-content">
+                <h4 style="text-align:center">Cスケール</h4>
+                <img src="img/Scalar Dials/CScale.png" class="music small">
+                <h4 style="text-align:center">Dbスケール</h4>
+                <img src="img/Scalar Dials/DbScale.png" class="music small">
+                <h4 style="text-align:center">Dスケール</h4>
+                <img src="img/Scalar Dials/DScale.png" class="music small">
+                <h4 style="text-align:center">Ebスケール</h4>
+                <img src="img/Scalar Dials/EbScale.png" class="music small">
+                <h4 style="text-align:center">Eスケール</h4>
+                <img src="img/Scalar Dials/EScale.png" class="music small">
+                <h4 style="text-align:center">Fスケール</h4>
+                <img src="img/Scalar Dials/FScale.png" class="music small">
+                <h4 style="text-align:center">F#スケール</h4>
+                <img src="img/Scalar Dials/GbScale.png" class="music small">
+            </div>
+            <div class="page-footer relative-footer">ページ 2/8</div>
+        </div>
+
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">音階ダイヤル</span>
+            </div>
+            <div class="page-content">
+                <h4 style="text-align:center">Gスケール</h4>
+                <img src="img/Scalar Dials/GScale.png" class="music small">
+                <h4 style="text-align:center">Abスケール</h4>
+                <img src="img/Scalar Dials/AbScale.png" class="music small">
+                <h4 style="text-align:center">Aスケール</h4>
+                <img src="img/Scalar Dials/AScale.png" class="music small">
+                <h4 style="text-align:center">Bbスケール</h4>
+                <img src="img/Scalar Dials/BbScale.png" class="music small">
+                <h4 style="text-align:center">Bスケール</h4>
+                <img src="img/Scalar Dials/BScale.png" class="music small">
+
+                <h3>ステップ2：最終位置</h3>
+                <p>ダイヤルごとに、以下の手順に従う。</p>
+                <ul>
+                    <li>A：以下の楽譜から、このダイヤルの真上にある音符と全く同じものを探す。</li>
+                    <li>B：以下の楽譜から、このダイヤルと同じ位置にある大型ディスプレーの音符と全く同じものを探す。</li>
+                    <li>C：楽譜から見つけた2つの音符の間にある音符の個数を数える。ただし、以下の音符のみをカウントする。
+                    <ul>
+                        <li>このダイヤルの真上の画面の背景が白い場合、線に重なっている音符(赤色の音符)のみをカウントする。</li>
+                        <li>それ以外の場合、空白に重なっている音符(青色の音符)のみをカウントする。</li>
+                    </ul></li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">ページ 3/8</div>
+        </div>
+
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">音階ダイヤル</span>
+            </div>
+            <div class="page-content">
+                <ul>
+                    <li>D：10で割った余りを求め、このダイヤルをその数字に設定する。</li>
+                </ul>
+                <div class="sheet musicholder">
+                    <img src="img/Scalar Dials/SheetMusicTable.png" class="music color">
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 4/8</div>
+        </div>
+
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">音階ダイヤル</span>
+            </div>
+            <div class="page-content">
+                <h3>ステップ3： 押すタイミング</h3>
+                <p>ダイヤルが現在再生する音とダイヤルの画面上に表示されている音符の音程を求める。ダイヤルの画面の音部記号は大型ディスプレーの音部記号と同じものである。</p>
+                <p><b>注意：2つの音が1オクターブ以上離れている場合、高い方の音を取得し、P1-M7の範囲になるまでそれを1オクターブ下げる。</b></p>
+                <p>これを全てのダイヤル/画面に対して行い、音程とダイヤル/画面の位置を以下の表に使用して数字を取得する。</p>
+                <table>
+                    <tr><th class='corner'></th><th>1つ目</th><th>2つ目</th><th>3つ目</th></tr>
+                    <tr><th>P1</th><td>9</td><td>6</td><td>7</td></tr>
+                    <tr><th>m2</th><td>13</td><td>11</td><td>12</td></tr>
+                    <tr><th>M2</th><td>5</td><td>5</td><td>13</td></tr>
+                    <tr><th>m3</th><td>8</td><td>3</td><td>4</td></tr>
+                    <tr><th>M3</th><td>12</td><td>9</td><td>8</td></tr>
+                    <tr><th>P4</th><td>2</td><td>12</td><td>11</td></tr>
+                    <tr><th>TT</th><td>10</td><td>7</td><td>6</td></tr>
+                    <tr><th>P5</th><td>3</td><td>10</td><td>2</td></tr>
+                    <tr><th>m6</th><td>11</td><td>8</td><td>10</td></tr>
+                    <tr><th>M6</th><td>6</td><td>13</td><td>9</td></tr>
+                    <tr><th>m7</th><td>4</td><td>2</td><td>3</td></tr>
+                    <tr><th>M7</th><td>7</td><td>4</td><td>5</td></tr>
+                </table>
+                <p>3つの数字を掛け合わせニ進数に変換する。二進数への変換は、数字を2で割った余り(0または1)をこれまでに求めた余りの左に記入し続けることで行える。これを割られる数字が0になるまで行う。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 5/8</div>
+        </div>
+
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">音階ダイヤル</span>
+            </div>
+            <div class="page-content">
+                <h4 style="text-align:center">例</h4>
+                <p style="text-align:center">
+                    780 / 2 = 390 余り：0<br>
+                    390 / 2 = 195 余り：0<br>
+                    195 / 2 = 97 余り：1<br>
+                    97 / 2 = 48 余り：1<br>
+                    48 / 2 = 24 余り：0<br>
+                    24 / 2 = 12 余り：0<br>
+                    12 / 2 = 6 余り：0<br>
+                    6 / 2 = 3 余り：0<br>
+                    3 / 2 = 1 余り：1<br>
+                    1 / 2 = 0 余り：1<br>
+                    二進数： 1100001100
+                </p>
+                <p>二進数の桁数が3の倍数ではない場合、桁数が3の倍数になるように二進数の前にゼロを追加する。</p>
+                <p>3つの画面の背景を読み順で取得し二進数の各桁の真上に記入し、各桁に対応する色が割り当てられるまで3色の並びを繰り返し記入する。</p>
+                <h4 style="text-align:center">例</h4>
+                <p style="text-align:center">
+                    二進数：001100001100<br>
+                    色のパターン：白 黒 黒(WBB)<br>
+                </p>
+                <table>
+                    <tr><th>W</th><th>B</th><th>B</th><th>W</th><th>B</th><th>B</th><th>W</th><th>B</th><th>B</th><th>W</th><th>B</th><th>B</th></tr>
+                    <tr><th>0</th><th>0</th><th>1</th><th>1</th><th>0</th><th>0</th><th>0</th><th>0</th><th>1</th><th>1</th><th>0</th><th>0</th></tr>
+                </table>
+                <p>S = 0とする。各桁と色の組み合わせに対して、</p>
+                <ul>
+                    <li>色が白で桁が1の場合、Sに1を足す。</li>
+                    <li>そうでなければ、色が黒で桁が0の場合、Sに1を足す。</li>
+                </ul>
+                <p>Sを10で割った余りを求め、カウントダウンタイマーの秒数の下一桁がこの数字になったときに送信する。</p>
+
+                <h3>音部記号、音符記号、変化記号、なんじゃそりゃ！</h3>
+                <p>音部記号は書かれた音符のピッチを示すために用いられる。これは楽譜の各行の初めに記入されている。以下は各音部記号ごとの再生される音を示している。英数字のペアは以下のキーボードの鍵盤を参照している。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 6/8</div>
+        </div>
+
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">音階ダイヤル</span>
+            </div>
+            <div class="page-content">
+                <h4 style="text-align:center">ト音記号</h4>
+                <img src="img/Scalar Dials/TrebleNotes.png" class="music">
+                <h4 style="text-align:center">ヘ音記号</h4>
+                <img src="img/Scalar Dials/BassNotes.png" class="music">
+                <h4 style="text-align:center">ハ音記号</h4>
+                <img src="img/Scalar Dials/AltoNotes.png" class="music">
+                <h4 style="text-align:center">キーボード</h4>
+                <img src="img/Scalar Dials/KeyboardNotes.png" class="music">
+                <p>音符の横に#またはbの記号がある場合、その音符は1半音上/下になる。</p>
+                <p>半音とは、キーボード上で隣り合っている鍵盤のことである。例えば、G#はGとAの鍵盤の間にある。BbはAとBの鍵盤の間にある。つまりE#はFと同じ意味になり、Fbはその逆を意味する。B#とCbに対しても同じことがいえる。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 7/8</div>
+        </div>
+
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">音階ダイヤル</span>
+            </div>
+            <div class="page-content">
+                <h3>音程</h3>
+                <p>音程とは2つのピッチの差を示す。我々の耳が識別できる音程は12種類ある。以下の音符は、以下のオーディオファイルに読み順で対応している。</p>
+                <div class="interval musicholder">
+                    <img src="img/Scalar Dials/Intervals.png" class="music multi">
+                </div>
+
+                <table class="intervals">
+                    <tr><td>音声</td><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
+                    <tr><td>音程</td><td>P1</td><td>m2</td><td>M2</td><td>m3</td><td>M3</td><td>P4</td><td>TT</td><td>P5</td><td>m6</td><td>M6</td><td>m7</td><td>M7</td></tr>
+                    <tr><td>半音の差</td><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td></tr>
+                </table>
+                <p>ただし、2つの音がM7より高い位置にあるように聞こえることもある。その場合は、低い方の音を1オクターブ上げるか、高い方の音を1オクターブ下げ、P1～M7の範囲内に収まるようにする。</p>
+                <p>オクターブとは12半音差を意味する。2音はP1のように似た音程になるが、一方の音がもう一方より高くなる。</p>
+                <p>2つの音の差を得るときは、モジュールに書かれた音符に対しても同じようにする。</p>
+            </div>
+            <div class="page-footer relative-footer">ページ 8/8</div>
+        </div>
+    </div>
+</body>
+</html>
