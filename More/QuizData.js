@@ -1,4 +1,4 @@
-const everything = {
+const allQuizzes = {
 	'General': {
 		'Alphabet': {
 			'CSS': 'textonly',
