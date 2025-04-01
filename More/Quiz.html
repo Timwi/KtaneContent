@@ -84,18 +84,21 @@
                 //select query from possibly multiple correct answers
                 let queryIx = ((Math.random() * (item.length - 1)) | 0) + 1;
                 document.getElementById('challenge').innerHTML = item[ querySide ? 0 : queryIx ];
-                //generate array of choices
+                //generate array of answers
+                let correctAnswers = item.slice(1)
                 let answers = [];
                 let maxLength = Math.max(...itemGroups[groupIx].map(it => it.length));
-                for (let i = 1; i < maxLength; ++i) {
-                    const a = itemGroups[groupIx].map((item, ix) => ({ correct: ix === itemIx, item: item [ querySide ? i : 0 ] }));
-                    for (let j = 0; j < a.length; ++j)
-                        if (a[j].item) answers.push(a[j]);
-                }
-                //remove duplicate answer choices
+                itemGroups[groupIx].forEach((thisItem)=>{
+                    if (querySide) {
+                        [].push.apply(answers, thisItem.slice(1).map(answer=>({correct: correctAnswers.includes(answer), answer: answer})));
+                    } else {
+                        answers.push({correct: thisItem.slice(1).includes(item[queryIx]), answer: thisItem[0]})
+                    }
+                });
+                //remove duplicate answers
                 function onlyUnique(value, index, arr) {
                     for (let i = 0; i < arr.length; ++i) {
-                        if (arr[i].correct == value.correct && arr[i].item == value.item)
+                        if (arr[i].correct == value.correct && arr[i].answer == value.answer)
                             return i === index;
                     }
                     return false;
@@ -120,7 +123,7 @@
                     ShuffleFisherYates(answers)
 
                 document.getElementById('answers').innerHTML = answers
-                    .map(answ => `<button${answ.correct ? ' data-correct="1" class="correct-answer"' : ''}>${answ.item}<${''}/button> `)
+                    .map(answ => `<button${answ.correct ? ' data-correct="1" class="correct-answer"' : ''}>${answ.answer}<${''}/button> `)
                     .join('');
                 Array.from(document.getElementById('answers').querySelectorAll('button')).forEach(btn => {
                     btn.onclick = function() {
