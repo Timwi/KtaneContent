@@ -184,6 +184,7 @@ let SouvenirModuleData = [
 	{ name: "Factory Maze",	id: "factoryMaze",	questions: ["What room did you start in?"] },
 	{ name: "Faerie Fires",	id: "FaerieFiresModule",	questions: ["What were the faeries' colors and pitches?"] },
 	{ name: "Fast Math",	id: "fastMath",	questions: ["What was the last pair of letters?"] },
+	{ name: "Fast Playfair Cipher",	id: "FastPlayfairCipher",	questions: ["What was the last displayed message?"] },
 	{ name: "Faulty Buttons",	id: "GSFaultyButtons",	questions: ["Which button did each button refer to?"] },
 	{ name: "Faulty RGB Maze",	id: "faultyrgbMaze",	questions: ["Where were the exit and keys of the maze?","What was the maze number for each maze?"] },
 	{ name: "Find the Date",	id: "DateFinder",	questions: ["What were the day, month, and year for each stage?"] },
