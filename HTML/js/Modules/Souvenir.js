@@ -229,7 +229,7 @@ let SouvenirModuleData = [
 	{ name: "Gridlock",	id: "GridlockModule",	questions: ["What was the starting color?","What were the starting and ending locations?"] },
 	{ name: "Grocery Store",	id: "groceryStore",	questions: ["What was the first item shown?"] },
 	{ name: "Gryphons",	id: "gryphons",	questions: ["What were the gryphon’s name and age?"] },
-	{ name: "Guess Who?",	id: "GuessWho",	questions: ["How many times did YES flash?"] },
+	{ name: "Guess Who?",	id: "GuessWho",	questions: ["Which colors flashed “YES”?"] },
 	{ name: "Gyromaze",	id: "gyromaze",	questions: ["What were the LED colors?"] },
 	{ name: "h",	id: "Averageh",	questions: ["What was the transmitted letter?"] },
 	{ name: "Halli Galli",	id: "halliGalli",	questions: ["Which fruit was there five of and in what counts?"] },
