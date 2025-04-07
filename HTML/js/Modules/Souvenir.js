@@ -71,6 +71,7 @@ let SouvenirModuleData = [
 	{ name: "Broken Guitar Chords",	id: "BrokenGuitarChordsModule",	questions: ["What was the displayed chord?","Which string was broken?"] },
 	{ name: "Brown Cipher",	id: "brownCipher",	questions: ["What was on each screen?"] },
 	{ name: "Brush Strokes",	id: "brushStrokes",	questions: ["What was the color of the middle contact point?"] },
+	{ name: "The Bulb",	id: "TheBulbModule",	questions: ["Was the bulb initially lit?"] },
 	{ name: "Burger Alarm",	id: "burgerAlarm",	questions: ["What were the displayed digits?","What were the order numbers?"] },
 	{ name: "Burglar Alarm",	id: "burglarAlarm",	questions: ["What were the displayed digits?"] },
 	{ name: "The Button",	id: "BigButton",	questions: ["What color did the light glow?"] },
