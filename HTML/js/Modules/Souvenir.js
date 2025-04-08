@@ -497,7 +497,7 @@ let SouvenirModuleData = [
 	{ name: "Sign Language",	id: "signLanguage",	questions: ["What was the deciphered word?"] },
 	{ name: "Silly Slots",	id: "SillySlots",	questions: ["What were the slots in each stage?"] },
 	{ name: "Silo Authorization",	id: "siloAuthorization",	questions: ["What were the message type, encrypted message, and received authorization code?"] },
-	{ name: "Simon Said",	id: "simonSaidModule",	questions: ["What was the final sequence of presses?"] },
+	{ name: "Simon Said",	id: "simonSaidModule",	questions: ["What colors flashed in the final sequence?"] },
 	{ name: "Simon Samples",	id: "simonSamples",	questions: ["What were the call samples in each stage?"] },
 	{ name: "Simon Says",	id: "Simon",	questions: ["Which colors flashed in the final sequence?"] },
 	{ name: "Simon Scrambles",	id: "simonScrambles",	questions: ["What was the flashing color sequence?"] },
