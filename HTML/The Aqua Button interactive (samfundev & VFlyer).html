@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>The Aqua Button Interactive — Keep Talking and Nobody Explodes Mod</title>
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+    $(function() {
+        var interactive = $(".interactive");
+        let snRef = [ "" ];
+        class Cell {
+            constructor(element, type, x, y) {
+                this.element = element;
+                this.type = type;
+                this.x = x;
+                this.y = y;
+                this._selected = false;
+
+                this.element.mouseup(event => {
+                    if (event.which == 1 || event.which == 3) {
+                        this.selected = true;
+                        firstState = undefined;
+                        return false;
+                    }
+                });
+            }
+
+            set selected(state) {
+                if (this._selected == state) return;
+
+                this._selected = state;
+                this.element.toggleClass("selected", state);
+
+                if (state) {
+                    if (selectedCell) selectedCell.selected = false;
+
+                    selectedCell = this;
+                    currentX = selectedCell.x;
+                    currentY = selectedCell.y;
+                } else {
+                    selectedCell = null;
+                    currentX = currentY = undefined;
+                }
+            }
+        }
+
+        class PuzzleCell extends Cell {
+            constructor(element, x, y) {
+                super(element, "puzzle", x, y)
+
+                this.state = 0;
+
+                this.element.mousedown(event => {
+                    if (event.which == 1 || event.which == 3) {
+                        this.selected = true;
+                        this.element.trigger("updateState", firstState = (this.state == 0 ? event.which : 0));
+
+                        return false;
+                    }
+                }).contextmenu(() => false)
+                .mouseenter(event => {
+                    if ((event.which == 1 || event.which == 3) && firstState != undefined) {
+                        this.selected = true;
+                        this.element.trigger("updateState", firstState);
+                    }
+                }).on("updateState", (event, newState) => {
+                    this.state = newState;
+                    this.element.text(this.state == 3 ? "•" : "").css("background-color", this.state == 1 ? "rgb(127, 127, 127)" : "");
+                });
+            }
+        }
+        var numberCells = [];
+        var puzzleCells = [];
+        var grid = [];
+
+        var selectedCell;
+
+        var currentX;
+        var currentY;
+        const directions = {
+            Left: [-1, 0],
+            Right: [1, 0],
+            Up: [0, -1],
+            Down: [0, 1]
+        };
+
+        var firstState;
+
+        function selectNextCell(forward = true, offsetOverride) {
+            var cellArray;
+            var otherArray;
+            cellArray = numberCells;
+            otherArray = numberCells;
+
+            if (cellArray) {
+                let index = cellArray.indexOf(selectedCell);
+                let offset = offsetOverride;
+                if (offsetOverride == undefined) {
+                    if (selectedCell.type == "number") {
+                        offset = forward ? 3 - index % 3 : -index % 3 - 3;
+                        if (index + offset < 0) offset = -3;
+                    }
+                }
+
+                let newIndex = (cellArray.indexOf(selectedCell) + offset);
+                if (newIndex >= cellArray.length) {
+                    otherArray[newIndex - cellArray.length].selected = true;
+                } else if (newIndex < 0) {
+                    otherArray[newIndex + otherArray.length].selected = true;
+                } else {
+                    cellArray[newIndex].selected = true;
+                }
+            }
+        }
+
+        $(document).mouseup(function() {
+            if (selectedCell && (event.which == 1 || event.which == 3)) selectedCell.selected = false;
+        }).keydown(function(event) {
+            if (selectedCell) {
+                var index;
+                if (event.key.startsWith("Arrow")) {
+                    let direction = directions[event.key.substring(5)];
+                    if (direction) {
+                        let previousX = currentX;
+                        currentX += direction[0];
+                        currentY += direction[1];
+                        if (previousX == 3 && currentX == 2 && currentY < 6) { // Left to top wrap
+                            currentX = currentY;
+                            currentY = 3;
+                        } else if (previousX != 3 && currentX < 6 && currentY == 2) { // Top to left wrap
+                            currentY = currentX;
+                            currentX = 3;
+                        }
+
+                        let cell = grid[currentX + currentY * 10];
+                        if (cell) {
+                            cell.selected = true;
+                        } else {
+                            currentX -= direction[0];
+                            currentY -= direction[1];
+                        }
+
+                        return false;
+                    }
+                } if (selectedCell.type == "number") {
+                    let index = numberCells.indexOf(selectedCell);
+                    if (event.key == " ") {
+                        selectNextCell();
+                        return false;
+                    } else if (event.key == "Backspace") {
+                        selectNextCell(false);
+                        return false;
+                    } else {
+                        var number = event.key == "`" ? 0 : parseInt(event.key);
+                        if (!isNaN(number) && number < 7) {
+                            selectedCell.element.text(number);
+                            selectNextCell(true, 1);
+                        }
+                    }
+                }
+            }
+        }).mouseup(function(event) {
+            if (event.which == 1 || event.which == 3) firstState = undefined;
+        });
+
+        for (var y = 0; y < 9; y++) {
+            var row = $("<tr>").appendTo(interactive);
+            for (var x = 0; x < 9; x++) {
+                if (y < 3 && x < 3 && (x != 0 || y != 0)) continue;
+
+                let element = $("<td>").appendTo(row);
+
+                if (y == 0 && x == 0) {
+                    element.attr("colspan", "3").attr("rowspan", "3");
+                } else {
+                    let cell;
+                    if (y < 3 || x < 3) {
+                        cell = new Cell(element.text("0"), "number", x, y);
+
+                        if (x < 3) {
+                            numberCells.push(cell);
+                        } else {
+                            numberCells[(x - 3) * 3 + y] = cell;
+                        }
+                    } else {
+                        cell = new PuzzleCell(element, x, y);
+
+                        puzzleCells.push(cell);
+                    }
+
+                    grid[x + y * 10] = cell;
+                }
+            }
+        }
+        console.log(puzzleCells);
+        let secondHalfNumCells = numberCells.slice(18).reverse();
+        console.log(secondHalfNumCells);
+        for (let x = 0; x < 18; x += 3)
+        {
+            let cellSub = secondHalfNumCells[x];
+            secondHalfNumCells[x] = secondHalfNumCells[x + 2];
+            secondHalfNumCells[x + 2] = cellSub;
+        }
+        
+        numberCells.splice(18,18,...secondHalfNumCells);
+        console.log(numberCells);
+        $("button.reset").click(function() {
+            numberCells[0].selected = true;
+            numberCells.forEach(function(cell) {
+                cell.element.text("0");
+            });
+
+            puzzleCells.forEach(function(cell) {
+                cell.element.trigger("updateState", 0);
+            });
+
+            return false;
+        }).click();
+    });
+    </script>
+    <style>
+        .interactive {
+            margin: 0 auto;
+            background: white;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            margin-bottom: 15px;
+            height: 312px;
+        }
+        .dark .interactive {
+            background-color: #222;
+        }
+
+        .interactive td {
+            padding: 3px;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            position: relative;
+            background-clip: padding-box;
+        }
+
+        .interactive td.selected::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 6px;
+            height: 6px;
+            background: black;
+            border-radius: 50%;
+        }
+        .dark .interactive td.selected::after {
+            background: #FFF;
+        }
+
+        .settings {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        hr {
+            margin: .25em 0;
+            border: none;
+            border-top: 1px solid black;
+        }
+
+        button {
+            pointer-events: all;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: color 1s, background-color 1s;
+        }
+
+        button:hover {
+            color: white;
+            background-color: black;
+        }
+        
+        .table-div .nonogram {
+            width: 9cm;
+            float: right;
+            clear: right;
+            margin-bottom: .5cm;
+            margin-left: .5cm;
+        }
+        .table-div .fruits {
+            width: 9cm;
+            float: right;
+            clear: right;
+            margin-bottom: .5cm;
+            margin-left: .5cm;
+        }
+        .table-div table {
+            width: 100%;
+            border: none;
+        }
+        .table-div table td, .table-div table th {
+            text-align: center;
+            padding: .1em .6em 0;
+            line-height: 1.3;
+        }
+        .table-div table td.corner { border: none; }
+        table.fruits img { height: 1.5cm; }
+        table.fruits th { width: 90px; }
+        table.fruits td { font-size: 16pt; }
+        table.nonogram th { font-size: 14pt; }
+        @media screen and (max-width: 900px) {
+            .table-div {
+                float: none;
+                margin: .5cm auto;
+            }
+        }
+        caption {
+            caption-side: bottom;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">The Aqua Button</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/The Aqua Button.svg" class="diagram">
+                <h2>On the Nonograms of The Aqua Button</h2>
+                <p class="flavour-text">We had it once. We will do it again.</p>
+                <p>Refer to the <a href="The Aqua Button.html">original manual</a> for the instructions.</p>
+                <p><a href="Braille.html">Braille manual</a></p>
+                <div class='table-div'>
+                    <table class='fruits'>
+                        <caption>Table F</caption>
+                        <tr>
+                            <td class='corner'></td>
+                            <th>Red</th>
+                            <th>Yellow</th>
+                            <th>Blue</th>
+                        </tr>
+                        <tr>
+                            <td><img src="img/The%20Aqua%20Button/apple.png"></td>
+                            <td>3&nbsp;2</td>
+                            <td>4</td>
+                            <td>1&nbsp;4</td>
+                        </tr>
+                        <tr>
+                            <td><img src="img/The%20Aqua%20Button/banana.png"></td>
+                            <td>2&nbsp;3</td>
+                            <td>4&nbsp;1</td>
+                            <td>1&nbsp;2</td>
+                        </tr>
+                        <tr>
+                            <td><img src="img/The%20Aqua%20Button/cherry.png"></td>
+                            <td>2&nbsp;2</td>
+                            <td>2&nbsp;1&nbsp;1</td>
+                            <td>1&nbsp;2&nbsp;1</td>
+                        </tr>
+                        <tr>
+                            <td><img src="img/The%20Aqua%20Button/grape.png"></td>
+                            <td>6</td>
+                            <td>0</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td><img src="img/The%20Aqua%20Button/lemon.png"></td>
+                            <td>2&nbsp;1</td>
+                            <td>1&nbsp;1&nbsp;1</td>
+                            <td>1&nbsp;3</td>
+                        </tr>
+                        <tr>
+                            <td><img src="img/The%20Aqua%20Button/pineapple.png"></td>
+                            <td>3</td>
+                            <td>3&nbsp;1</td>
+                            <td>1&nbsp;1&nbsp;2</td>
+                        </tr>
+                        <tr>
+                            <td><img src="img/The%20Aqua%20Button/strawberry.png"></td>
+                            <td>1&nbsp;1</td>
+                            <td>5</td>
+                            <td>1</td>
+                        </tr>
+                    </table>
+                    <table class='nonogram'>
+                        <caption>Table N</caption>
+                        <tr>
+                            <td class='corner'></td>
+                            <th>I<br>J<br>K</th><th>L<br>M<br>N</th><th>O<br>P<br>Q</th><th>R<br>S<br>T</th><th>U<br>V<br>W</th><th>X<br>Y<br>Z</th>
+                        </tr>
+                        <tr>
+                            <th>F G H</th>
+                            <td></td><td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr>
+                            <th>C D E</th>
+                            <td></td><td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr>
+                            <th>9 A B</th>
+                            <td></td><td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr>
+                            <th>6 7 8</th>
+                            <td></td><td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr>
+                            <th>3 4 5</th>
+                            <td></td><td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr>
+                            <th>0 1 2</th>
+                            <td></td><td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                    </table>
+                </div>
+                <table class="interactive"></table>
+                <div class="settings">
+                    <button class="reset">Reset</button>
+                </div>
+                <table class="centered">
+                    <tr>
+                        <th>Interaction</th>
+                        <th>Action</th>
+                    </tr>
+                    <tr>
+                        <th>Click a cell</th>
+                        <td>Toggle between filled and empty</td>
+                    </tr>
+                    <tr>
+                        <th>Right-click a cell</th>
+                        <td>Toggle between crossed out and empty</td>
+                    </tr>
+                    <tr>
+                        <th>Click a number</th>
+                        <td>Select that cell</td>
+                    </tr>
+                    <tr>
+                        <th>Type a number</th>
+                        <td>Set that number of a numbered cell</td>
+                    </tr>
+                    <tr>
+                        <th>Press space</th>
+                        <td>Selects the next set of numbers</td>
+                    </tr>
+                    <tr>
+                        <th>Press backspace</th>
+                        <td>Does the reverse of the space key</td>
+                    </tr>
+                </table>
+                
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
