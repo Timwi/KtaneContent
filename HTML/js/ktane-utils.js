@@ -11,8 +11,15 @@
 */
 
 let protocol = location.protocol;
+let currentScript = document.currentScript || (function() {
+    let scripts = document.getElementsByTagName('script');
+    return scripts[scripts.length - 1];
+})();
+
+let currentScriptSrc = currentScript.src;
+let scriptDir = currentScriptSrc.substring(0, currentScriptSrc.lastIndexOf('/') + 1);
 let e = document.createElement("script");
-e.src = "../HTML/js/jquery.3.7.0.min.js";
+e.src = scriptDir + "jquery.3.7.0.min.js";
 
 // The Manual Merger implements its own version of ktane-utils in order
 // to work globally across all loaded manuals, so we shouldn't initialize
