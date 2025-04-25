@@ -11,6 +11,7 @@
     />
     <script>
       var missionDetails;
+      var tocDetail;
       var moduleInfo;
 
       function showMessage(str, error=false) {
@@ -121,7 +122,14 @@
             (a, b) => a + b,
             0
           );
+
+          const $toc = document.createElement("span")
+          $toc.setAttribute("data-tooltip", mission.ToCTitle + " - " + mission.ToCSectionTitle)
+          $toc.setAttribute("data-tooltip-position", "top")
+          $toc.innerText = mission.ToCLetter + "\u00a0" + mission.ToCNum        
+
           const rows = [
+            $toc,
             mission.Title,
             mission.Description,
             mission.BombCount,
@@ -175,14 +183,49 @@
           getRepo(),
           (async () => {
             try {
-              missionDetails = await (
+              // Instead of missionDetail API call, do tocDetail call
+              // We will construct a combined tocDetail/missionDetail object from this
+              // The only thing that makes them different is either missions split by ToC sections (tocDetail), or a plain list of missions (missionDetail)
+              tocDetail = await (
                 await fetch(
-                  `http://localhost:8095/missionDetail?steamID=${steamID}`
+                  `http://localhost:8095/tocDetail?steamID=${steamID}`
                 )
               ).json();
             } catch {
               document.getElementById("demilError").className = "show";
             }
+
+            // Reduce tocDetail entries to a list of Missions (with added ToC data)
+            var toc_missions = tocDetail.ToCs.reduce((acc, cur, toc_index) => {
+              var sections = cur.Sections
+              
+              // Avoid making the table too wide, use letters as top level indices
+              // We will add a hover tooltip with the full name
+              // ASCII 65 = 'A'
+              var toc_letter = String.fromCharCode(65+toc_index)
+              var toc_title = cur.Title
+              
+              sections = sections.reduce((acc, cur) => {
+                var missions = cur.Missions
+                missions = missions.map((mission, toc_sec_index) => {
+                  // Add entries to every mission with ToC information
+                  mission.ToCTitle = toc_title
+                  mission.ToCSectionTitle = cur.Title
+                  mission.ToCLetter = toc_letter
+                  mission.ToCNum = cur.SectionNum + "." + (toc_sec_index + 1)
+                  return mission
+                })
+                return acc.concat(missions)
+              }, [])
+              return acc.concat(sections)
+            }, [])
+
+            // Add list of Missions to tocDetail object
+            tocDetail.Missions = toc_missions
+
+            // With the mission list added to tocDetails, it fulfills the structure of the object from the missionDetails API call.
+            // We assign this combined tocDetails/missionDetails object to missionDetails. Everything that relies on missionDetails still works
+            missionDetails = tocDetail
 
             setData(steamID);
             document.getElementsByTagName("h2")[0].innerHTML =
@@ -299,6 +342,126 @@
       input {
         margin: 8px;
       }
+      /* Tooltip styling modified version of Wenk (https://github.com/tiaanduplessis/wenk). */
+      /* MIT License */
+      /* Copyright © 2018 Tiaan du Plessis <tiaanduplessis@hotmail.com> */
+      :root {
+        --tooltip-font-size: 13px;
+        --tooltip-font-color: #fff;
+        --tooltip-bg-color: rgba(17, 17, 17, .8);
+        --tooltip-length-small: 80px;
+        --tooltip-length-medium: 150px;
+        --tooltip-length-large: 260px;
+      }
+      
+      [data-tooltip] {
+        cursor: help;
+        position: relative;
+        &:after {
+            position: absolute;
+            font-size: var(--tooltip-font-size);
+            border-radius: .4rem;
+            content: attr(data-tooltip);
+            padding: .8rem;
+            background-color: var(--tooltip-bg-color);
+            box-shadow: 0 0 14px rgba(0, 0, 0, 0.1);
+            color: var(--tooltip-font-color);
+            line-height: 1.25rem;
+            text-align: left;
+            z-index: 1;
+            pointer-events: none;
+            display: block;
+            opacity: 0;
+            visibility: hidden;
+            transition: all .1s;
+            bottom: 100%;
+            left: 50%;
+            transform: translate(-50%, 10px);
+            white-space: pre;
+            width: auto;
+        }
+        &:after {
+            opacity: 0;
+        }
+        &:hover {
+            overflow: visible;
+            &:after {
+                display: block;
+                opacity: 1;
+                visibility: visible;
+                transform: translate(-50%, -10px);
+            }
+        }
+    
+        &[data-tooltip-position="bottom"] {
+            &:after {
+                bottom: auto;
+                top: 100%;
+                left: 50%;
+                transform: translate(-50%, -10px);
+            }
+            &:hover {
+                &:after {
+                    transform: translate(-50%, 10px);
+                }
+            }
+        }
+    
+        &[data-tooltip-position="left"] {
+            &:after {
+                bottom: auto;
+                left: auto;
+                top: 50%;
+                right: 100%;
+                transform: translate(10px, -50%);
+            }
+            &:hover {
+                &:after {
+                    transform: translate(-10px, -50%);
+                }
+            }
+        }
+    
+        &[data-tooltip-position="right"] {
+            &:after {
+                bottom: auto;
+                top: 50%;
+                left: 100%;
+                transform: translate(-10px, -50%);
+            }
+            &:hover {
+                &:after {
+                    transform: translate(10px, -50%);
+                }
+            }
+        }
+    
+        &[data-tooltip-length="small"]:after {
+            white-space: normal;
+            width: var(--tooltip-length-small);
+        }
+        &[data-tooltip-length="medium"]:after {
+            white-space: normal;
+            width: var(--tooltip-length-medium);
+        }
+        &[data-tooltip-length="large"]:after {
+            white-space: normal;
+            width: var(--tooltip-length-large);
+        }
+        &[data-tooltip-length="fit"]:after {
+            white-space: normal;
+            width: 100%;
+        }
+    
+        &[data-tooltip-align="right"]:after {
+            text-align: right;
+        }
+        &[data-tooltip-align="center"]:after {
+            text-align: center;
+        }
+      }
+      /* End of modified Wenk tooltip styling. */ 
+      /* End of MIT Licensed code */
     </style>
   </head>
   <body>
@@ -310,6 +473,7 @@
       <table id="table">
         <thead>
           <tr>
+            <th>ToC</th>
             <th>Mission Name</th>
             <th>Description</th>
             <th>Bomb Count</th>
