@@ -6442,7 +6442,7 @@ let parseData = [
 					const columnHieroglyphsRegex = /Column Hieroglyphs: (.+)/
 					const rowHieroglyphsRegex = /Row Hieroglyphs: (.+)/
 
-					
+
 
 					var lines = readMultiple(5);
 					const linesBroken = lines.split('\n');
@@ -6456,7 +6456,7 @@ let parseData = [
 
 					const columnHieroglyphsMatch = readLine().match(columnHieroglyphsRegex);
 					const columnHieroglyphs = columnHieroglyphsMatch[1].split(', ')
-					
+
 					const rowHieroglyphsMatch = readLine().match(rowHieroglyphsRegex);
 					const rowHieroglyphs = rowHieroglyphsMatch[1].split(', ')
 
@@ -6527,7 +6527,7 @@ let parseData = [
 				}
 			},
 
-			
+
 			{ regex: /.+/ }
 		]
 	},
@@ -9541,10 +9541,10 @@ let parseData = [
 					return true;
 				}
 			},
-			{ 
+			{
 				regex: /.+/,
 				handler: function (matches, module) {
-					module.dropdown[1].push(matches.input);			
+					module.dropdown[1].push(matches.input);
 				}
 			}
 		]
@@ -15685,7 +15685,7 @@ let parseData = [
 				handler: function (matches, module) {
 					const colorTextSize = 12;
 					const colorTextYOffset = -5;
-					
+
 					currentStage = matches[1];
 
 					if (!module.dimension) {
@@ -15798,7 +15798,7 @@ let parseData = [
 			{
 				regex: /Incorrectly submitted ([x#]{15})\. Strike\./,
 				handler: function (matches, module) {
-					
+
 					const gridLines = matches[1].split('');
 					module.stageDropdowns[module.currentStage - 1][1].push({ obj: module.makeSubmissionGrid(gridLines), label: "Incorrectly submitted:", nobullet: true })
 					module.stageDropdowns = [];
@@ -15912,7 +15912,7 @@ let parseData = [
 			{
 				regex: /The robot types are: (.+)\./,
 				handler: function (matches, module) {
-					
+
 
 					module.push(matches[0]);
 					module.attemptNum = 1;
@@ -16414,43 +16414,32 @@ let parseData = [
 						module.push(module.SetInfo.Node);
 					}
 
-					var moduleXY = module.SetInfo.XY(matches[1]);
-					var manualXY = module.SetInfo.XY(matches[2]);
+					let moduleXY = module.SetInfo.XY(matches[1]);
+					let manualXY = module.SetInfo.XY(matches[2]);
 
-					var pathData =
-						// pacman
-						matches[2] === 'A1' ? "M76 670c-8.3 14.3-26.7 19.3-41 11s-19.3-26.7-11-41 26.7-19.3 41-11c4.6 2.7 8.3 6.4 11 11l-26 15z" :
-							// cross
-							matches[2] === 'B1' ? "M120 625a10 10 0 0 0-5.6 18.3L132 655l-17.6 11.7a10 10 0 1 0 11.2 16.6L150 667l24.4 16.3a10 10 0 1 0 11.2-16.6L168 655l17.6-11.7a10 10 0 0 0-5.8-18.4 10 10 0 0 0-5.4 1.7L150 643l-24.4-16.3a10 10 0 0 0-5-1.8z" :
-								// triangle
-								matches[2] === 'C1' ? "M210 685l40-60 40 60z" :
-									// tepee
-									matches[2] === 'A2' ? "M50 725l-40 60h28l12-18 12 18h28l-40-60z" :
-										// tshirt
-										matches[2] === 'B2' ? "M110 725v30h20v30h40v-30h20v-30h-30c0 5.5-4.5 10-10 10s-10-4.5-10-10z" :
-											// arrow
-											matches[2] === 'C2' ? "M250 725l40 35h-20v25h-40v-25h-20z" :
-												// diamond
-												matches[2] === 'A3' ? "M50 825l40 30-40 30-40-30z" :
-													// hotel
-													matches[2] === 'B3' ? "M110 825h30v20h20v-20h30v60h-30v-20h-20v20h-30z" :
-														// star
-														matches[2] === 'C3' ? "M550 830l6.7 20.8h21.8l-17.7 12.7 6.8 20.8-17.6-13-17.6 13 6.8-20.8-17.7-12.8h21.8z" : null;
+					let pathDataDict = {
+						/* pacman	*/ A1: "M76 670c-8.3 14.3-26.7 19.3-41 11s-19.3-26.7-11-41 26.7-19.3 41-11c4.6 2.7 8.3 6.4 11 11l-26 15z",
+						/* cross	*/ B1: "M120 625a10 10 0 0 0-5.6 18.3L132 655l-17.6 11.7a10 10 0 1 0 11.2 16.6L150 667l24.4 16.3a10 10 0 1 0 11.2-16.6L168 655l17.6-11.7a10 10 0 0 0-5.8-18.4 10 10 0 0 0-5.4 1.7L150 643l-24.4-16.3a10 10 0 0 0-5-1.8z",
+						/* triangle	*/ C1: "M210 685l40-60 40 60z",
+						/* tepee	*/ A2: "M50 725l-40 60h28l12-18 12 18h28l-40-60z",
+						/* tshirt	*/ B2: "M110 725v30h20v30h40v-30h20v-30h-30c0 5.5-4.5 10-10 10s-10-4.5-10-10z",
+						/* arrow	*/ C2: "M250 725l40 35h-20v25h-40v-25h-20z",
+						/* diamond	*/ A3: "M50 825l40 30-40 30-40-30z",
+						/* hotel	*/ B3: "M110 825h30v20h20v-20h30v60h-30v-20h-20v20h-30z",
+						/* star	*/ C3: "M550 830l6.7 20.8h21.8l-17.7 12.7 6.8 20.8-17.6-13-17.6 13 6.8-20.8-17.7-12.8h21.8z"
+					};
+					let pathData = pathDataDict[matches[2]];
 
-					var symbolSvg = "<path d='!data!' fill='!fill!' stroke='black' stroke-width='5' transform='translate(!x!, !y!)!transform!'/>"
-						.replace(/!data!/g, pathData)
-						.replace(/!x!/g, 100 * moduleXY.X - 100 * manualXY.X)
-						.replace(/!y!/g, 100 * moduleXY.Y - 100 * manualXY.Y - 600)
-						.replace(/!fill!/g, matches[3] === 'filled' ? 'black' : matches[3] === 'wavy' ? 'url(#Wavy' + module.SetInfo.WavyId + ')' : 'none')
-						.replace(/!transform!/, matches[2] === 'C3' ? "matrix(1.25 0 0 1 -437.5 -2.77)" : '');
+					let symbolSvg = `<path stroke='black' stroke-width='5'
+						d='${pathData}'
+						fill='${matches[3] === 'filled' ? 'black' : matches[3] === 'wavy' ? 'url(#Wavy' + module.SetInfo.WavyId + ')' : 'none'}'
+						transform='translate(${100 * moduleXY.X - 100 * manualXY.X}, ${100 * moduleXY.Y - 100 * manualXY.Y - 600})${matches[2] === 'C3' ? "matrix(1.25 0 0 1 -437.5 -2.77)" : ''}'
+					/>`;
 
 					if (matches[4] !== '0')
-						symbolSvg += "<path d='!data!' fill='black' stroke='none' transform='translate(!x!, !y!)'/>"
-							.replace(/!x!/g, 100 * moduleXY.X)
-							.replace(/!y!/g, 100 * moduleXY.Y)
-							.replace(/!data!/g, matches[4] === '1'
-								? "M56.3 10a6.3 6.3 0 1 1-12.6 0 6.3 6.3 0 1 1 12.6 0z"
-								: "M68.8 10c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3zm-25 0c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3z");
+						symbolSvg += `<path fill='black' stroke='none' transform='translate(${100 * moduleXY.X}, ${100 * moduleXY.Y})' d='${matches[4] === '1'
+							? "M56.3 10a6.3 6.3 0 1 1-12.6 0 6.3 6.3 0 1 1 12.6 0z"
+							: "M68.8 10c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3zm-25 0c0 3.5-2.8 6.3-6.3 6.3s-6.3-2.8-6.3-6.3 2.8-6.3 6.3-6.3 6.3 2.8 6.3 6.3z"}'/>`;
 
 					module.SetInfo.Symbols[moduleXY.X + 3 * moduleXY.Y] = symbolSvg;
 					return true;
@@ -16460,15 +16449,21 @@ let parseData = [
 				regex: /^Solution: ([ABC][123]), ([ABC][123]), ([ABC][123])/,
 				handler: function (matches, module) {
 
-					var framesSvg = '';
-					for (var i = 1; i <= 3; i++) {
-						var xy = module.SetInfo.XY(matches[i]);
-						framesSvg += "<rect x='!x!' y='!y!' width='100' height='100' stroke-width='3' stroke='#3c2' fill='none' />"
-							.replace(/!x!/g, 100 * xy.X)
-							.replace(/!y!/g, 100 * xy.Y);
+					let framesSvg = '';
+					for (let i = 1; i <= 3; i++) {
+						let xy = module.SetInfo.XY(matches[i]);
+						framesSvg += `<rect x='${100 * xy.X}' y='${100 * xy.Y}' width='100' height='100' stroke-width='3' stroke='#3c2' fill='none' />`;
 					}
 
-					module.SetInfo.Node.obj = $("<svg viewBox='-5 -5 310 310'><defs><pattern id='Wavy" + module.SetInfo.WavyId + "' height='5.2' width='30.1' patternUnits='userSpaceOnUse'><path d='M 7.597,0.061 C 5.079,-0.187 2.656,0.302 -0.01,1.788 L -0.01,3.061 C 2.773,1.431 5.173,1.052 7.472,1.280 C 9.770,1.508 11.969,2.361 14.253,3.218 C 18.820,4.931 23.804,6.676 30.066,3.061 L 30.062,1.788 C 23.622,5.497 19.246,3.770 14.691,2.061 C 12.413,1.207 10.115,0.311 7.597,0.061 z' /></pattern></defs>" + framesSvg + module.SetInfo.Symbols.join('') + "</svg>")
+					module.SetInfo.Node.obj = $(`
+						<svg viewBox='-5 -5 310 310'>
+							<defs>
+								<pattern id='Wavy${module.SetInfo.WavyId}' height='5.2' width='30.1' patternUnits='userSpaceOnUse'>
+									<path d='M 7.597,0.061 C 5.079,-0.187 2.656,0.302 -0.01,1.788 L -0.01,3.061 C 2.773,1.431 5.173,1.052 7.472,1.280 C 9.770,1.508 11.969,2.361 14.253,3.218 C 18.820,4.931 23.804,6.676 30.066,3.061 L 30.062,1.788 C 23.622,5.497 19.246,3.770 14.691,2.061 C 12.413,1.207 10.115,0.311 7.597,0.061 z' />
+								</pattern>
+							</defs>
+							${framesSvg + module.SetInfo.Symbols.join('')}
+						</svg>`)
 						.css({ display: 'block', width: '12cm' });
 					return true;
 				}
@@ -16507,9 +16502,7 @@ let parseData = [
 				handler: function (matches, module) {
 					module.shapes = readLines(9).map(l => l.match(/([CSD])([CSD])([CSD])([CSD])([CSD])([CSD])([CSD])([CSD])([CSD])/).slice(1, 10));
 
-					module.stripedRID = Math.floor(Math.random() * 2147483647);
-					module.stripedBID = Math.floor(Math.random() * 2147483647);
-					module.stripedYID = Math.floor(Math.random() * 2147483647);
+					let stripedID = Math.floor(Math.random() * 2147483647);
 
 					const shapes = {
 						'D': 'm5 20-5-10 5-10 5 10z',
@@ -16518,22 +16511,21 @@ let parseData = [
 					};
 					const colors = { 'R': '#F00', 'B': '#00F', 'Y': '#FF0' };
 					const positions = { 1: [0], 2: [-7.5, 7.5], 3: [-15, 0, 15] };
-					const stripedIds = { 'R': module.stripedRID, 'B': module.stripedBID, 'Y': module.stripedYID };
 					const xs = [0, 55, 110, 175, 230, 285, 350, 405, 460];
 					const ys = [0, 35, 70, 115, 150, 185, 230, 265, 300];
 
-					let svg = `<svg viewbox='0 0 510 330'>` +
-						`<defs>` +
-						`<pattern id='striped${module.stripedRID}' height='3' width='50' patternUnits='userSpaceOnUse'><line x1='0', x2='50' y1='0' y2='0' stroke="#F00" stroke-width="2"/></pattern>` +
-						`<pattern id='striped${module.stripedBID}' height='3' width='50' patternUnits='userSpaceOnUse'><line x1='0', x2='50' y1='0' y2='0' stroke="#00F" stroke-width="2"/></pattern>` +
-						`<pattern id='striped${module.stripedYID}' height='3' width='50' patternUnits='userSpaceOnUse'><line x1='0', x2='50' y1='0' y2='0' stroke="#FF0" stroke-width="2"/></pattern>` +
-						`</defs>`;
+					let svg = `<svg viewbox='0 0 510 330'>
+						<defs>
+							<pattern id='striped-R-${stripedID}' height='3' width='50' patternUnits='userSpaceOnUse'><line x1='0', x2='50' y1='0' y2='0' stroke="#F00" stroke-width="2"/></pattern>
+							<pattern id='striped-B-${stripedID}' height='3' width='50' patternUnits='userSpaceOnUse'><line x1='0', x2='50' y1='0' y2='0' stroke="#00F" stroke-width="2"/></pattern>
+							<pattern id='striped-Y-${stripedID}' height='3' width='50' patternUnits='userSpaceOnUse'><line x1='0', x2='50' y1='0' y2='0' stroke="#FF0" stroke-width="2"/></pattern>
+						</defs>`;
 
 					for (let y = 0; y < 9; y++) {
 						for (let x = 0; x < 9; x++) {
 							let index = 9 * y + x;
-							let group = `<g transform='translate(${xs[x]}, ${ys[y]})'>`
-							group += `<rect width='50' height='30' x='0' y='0' rx='5' fill='#DDD'/>`
+							svg += `<g transform='translate(${xs[x]}, ${ys[y]})'>`;
+							svg += `<rect width='50' height='30' x='0' y='0' rx='5' fill='#DDD'/>`;
 							let color = colors[module.cols[index]];
 							for (let symbol = 0; symbol < module.nums[y][x] - '0'; symbol++) {
 								let pos = positions[module.nums[y][x] - '0'][symbol];
@@ -16547,14 +16539,10 @@ let parseData = [
 								else if (fillVal == '■')
 									fill = color;
 								else if (fillVal == '◪')
-									fill = `url(#striped${stripedIds[module.cols[y][x]]})`;
-
-
-
-								group += `<path d='${shape}' fill='${fill}' stroke='${color}' transform='translate(${pos + 20}, 5)' stroke-width='2'/>`;
+									fill = `url(#striped-${module.cols[y][x]}-${stripedID})`;
+								svg += `<path d='${shape}' fill='${fill}' stroke='${color}' transform='translate(${pos + 20}, 5)' stroke-width='2'/>`;
 							}
-							group += '</g>';
-							svg += group;
+							svg += '</g>';
 						}
 					}
 					svg += '</svg>';
@@ -16628,53 +16616,54 @@ let parseData = [
 			{
 				regex: /Grid:/,
 				handler: function (matches, module) {
+					let id = Math.floor(Math.random() * 2147483647);
 					let svg =
 						`<svg viewBox='-5 -5 510 510' style='width: 5in'>
 						<defs>
-							<pattern id='cross' width='100' height='100' patternUnits='userSpaceOnUse'>
+							<pattern id='cross-${id}' width='100' height='100' patternUnits='userSpaceOnUse'>
 								<line x1='50' x2='50' y1='0' y2='100' stroke='#000' stroke-width='15'/>
 								<line x1='0' x2='100' y1='50' y2='50' stroke='#000' stroke-width='15'/>
 							</pattern>
 
-							<pattern id='diagonal' width='25' height='25' patternUnits='userSpaceOnUse'>
-								  <line x1='0' x2='25' y1='25' y2='0' stroke='#000' stroke-width='8'/>
-								  <path d='M0 5.6569 5.6569 0 0 0Z' fill='#000'/>
-								  <path d='M19.3431 25 25 19.3431 25 25Z' fill='#000'/>
+							<pattern id='diagonal-${id}' width='25' height='25' patternUnits='userSpaceOnUse'>
+								<line x1='0' x2='25' y1='25' y2='0' stroke='#000' stroke-width='8'/>
+								<path d='M0 5.6569 5.6569 0 0 0Z' fill='#000'/>
+								<path d='M19.3431 25 25 19.3431 25 25Z' fill='#000'/>
 							</pattern>
 
-							<pattern id='dots' width='50' height='50' patternUnits='userSpaceOnUse'>
+							<pattern id='dots-${id}' width='50' height='50' patternUnits='userSpaceOnUse'>
 								<circle r='12.5' cx='12.5' cy='12.5' fill='#000'/>
 								<circle r='12.5' cx='37.5' cy='37.5' fill='#000'/>
 							</pattern>
 
-							<pattern id='empty' width='100' height='100' patternUnits='userSpaceOnUse'>
+							<pattern id='empty-${id}' width='100' height='100' patternUnits='userSpaceOnUse'>
 							</pattern>
 
-							<pattern id='filled' width='100' height='100' patternUnits='userSpaceOnUse'>
+							<pattern id='filled-${id}' width='100' height='100' patternUnits='userSpaceOnUse'>
 								<rect x='0' y='0' width='100' height='100' fill='#000'/>
 							</pattern>
 
-							<pattern id='horizontal' width='100' height='20' patternUnits='userSpaceOnUse'>
+							<pattern id='horizontal-${id}' width='100' height='20' patternUnits='userSpaceOnUse'>
 								<rect x='0' y='6' width='100' height='8' fill='#000'/>
 							</pattern>
 
-							<pattern id='vertical' width='20' height='100' patternUnits='userSpaceOnUse'>
+							<pattern id='vertical-${id}' width='20' height='100' patternUnits='userSpaceOnUse'>
 								<rect x='6' y='0' width='8' height='100' fill='#000'/>
 							</pattern>
 
-							<pattern id='x' width='100' height='100' patternUnits='userSpaceOnUse'>
+							<pattern id='x-${id}' width='100' height='100' patternUnits='userSpaceOnUse'>
 								<line x1='0' x2='100' y1='0' y2='100' stroke='#000' stroke-width='15'/>
 								<line x1='0' x2='100' y1='100' y2='0' stroke='#000' stroke-width='15'/>
 							</pattern>
 
-							<path id='circle' d='M0 50A50 50 0 00100 50 50 50 0 000 50'/>
-							<path id='diamond' d='m5 45 40-40a7 7 0 0110 0l40 40a7 7 0 010 10l-40 40a7 7 0 01-10 0l-40-40a7 7 0 010-10'/>
-							<path id='heart' d='M50 100Q-5 65 0 25T50 20Q95-15 100 25T50 100Z'/>
-							<path id='octagon' d='M96.2 69.1 69.1 96.2 30.9 96.2 3.8 69.1 3.8 30.9 30.9 3.8 69.1 3.8 96.2 30.9Z'/>
-							<path id='square' d='M0 0H100V100H0Z'/>
-							<path id='star' d='M50 0 61.8 38.2 100 38.2 69.1 61.8 80.9 100 50 76.4 19.1 100 30.9 61.8 0 38.2 38.2 38.2Z'/>
-							<path id='trapezoid' d='M0 80 25 20 75 20 100 80z'/>
-							<path id='triangle' d='M0 100 100 100 50 0z'/>
+							<path id='circle-${id}' d='M0 50A50 50 0 00100 50 50 50 0 000 50'/>
+							<path id='diamond-${id}' d='m5 45 40-40a7 7 0 0110 0l40 40a7 7 0 010 10l-40 40a7 7 0 01-10 0l-40-40a7 7 0 010-10'/>
+							<path id='heart-${id}' d='M50 100Q-5 65 0 25T50 20Q95-15 100 25T50 100Z'/>
+							<path id='octagon-${id}' d='M96.2 69.1 69.1 96.2 30.9 96.2 3.8 69.1 3.8 30.9 30.9 3.8 69.1 3.8 96.2 30.9Z'/>
+							<path id='square-${id}' d='M0 0H100V100H0Z'/>
+							<path id='star-${id}' d='M50 0 61.8 38.2 100 38.2 69.1 61.8 80.9 100 50 76.4 19.1 100 30.9 61.8 0 38.2 38.2 38.2Z'/>
+							<path id='trapezoid-${id}' d='M0 80 25 20 75 20 100 80z'/>
+							<path id='triangle-${id}' d='M0 100 100 100 50 0z'/>
 						</defs>`;
 					let lines = readTaggedLines(6);
 					const letters = ['A', 'B', 'C', 'D', 'E'];
@@ -16689,9 +16678,10 @@ let parseData = [
 						for (let col = 0; col < 5; col++) {
 							let cell = grid[row][col];
 							svg += `<rect x='${100 * col}' y='${100 * row}' width='100' height='100' fill='${row == ansRow && col == ansCol ? '#AFA' : '#FFF'}' stroke='#000' stroke-width='5'/>`;
-							svg += `<g transform='translate(${100 * col + 10}, ${100 * row + 10})'><use href='#${shapeAbbrs[cell[0]]}' fill='url(#${fillAbbrs[cell[1]]})' stroke='#000' stroke-width='3' transform='scale(0.8)'/></g>`;
+							svg += `<g transform='translate(${100 * col + 10}, ${100 * row + 10})'><use href='#${shapeAbbrs[cell[0]]}-${id}' fill='url(#${fillAbbrs[cell[1]]}-${id})' stroke='#000' stroke-width='3' transform='scale(0.8)'/></g>`;
 						}
 					}
+					svg += '</svg>';
 					module.push({ label: 'Displayed grid and correct answer:', obj: svg });
 				}
 			},
@@ -17293,7 +17283,7 @@ let parseData = [
 				regex: /Pressed (Red|Green|Blue|Cyan|Magenta|Yellow)/,
 				handler: function (matches, module) {
 					const loggedLine = readTaggedLine();
-					
+
 					if(loggedLine === "Time for the shape!") {
 						module.currentArr[1][1][1].push(matches[0]);
 						linen--;
@@ -18456,7 +18446,7 @@ let parseData = [
 		moduleID: "GSSuitsAndColours",
 		loggingTag: "Suits and Colours",
 		matches: [
-			{ 
+			{
 				regex: /Board .:/,
 				handler: function (matches, module) {
 					module.push({ label: matches.input, obj: pre(readLines(3).join('\n')) });
