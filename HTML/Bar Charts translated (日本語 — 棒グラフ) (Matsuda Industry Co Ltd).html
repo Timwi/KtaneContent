@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>棒グラフ — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+        
+        .diagram {
+            filter: grayscale(100%);
+        }
+        
+        .big-number {
+            text-align: center;
+            font-size: 18pt;
+        }
+        
+        .equalise th, .equalise td {
+            width: 25%;
+        }
+
+        .page-footer::before { content: 'ページ '; }
+        .page-footer::after { content: '/3'; }
+    </style>
+    <script>
+        const variableSets = {
+            "C# のデータ型": ["Character", "String", "Integer", "Long", "Boolean", "Double", "Float"],
+            "宇宙大作戦の登場人物": ["Spock", "McCoy", "Scott", "Chekov", "Uhura", "Kirk", "Sulu"],
+            "ジェームズ・ボンドを演じた俳優": ["Craig", "Brosnan", "Connery", "Lazenby", "Dalton", "Moore", "Niven"],
+            "基本図形": ["Capsule", "Octahedron", "Cylinder", "Cube", "Cone", "Torus", "Prism", "Sphere"],
+            "準惑星": ["Eris", "Makemake", "Sedna", "Haumea", "Pluto", "Ceres", "Pallas", "Quaoar"],
+            "難解プログラミング言語": ["Funciton", "Shakespeare", "Brainf---", "Malbolge", "Piet", "Befunge", "Chef", "Intercal"],
+            "乗り物": ["Trains", "Lorries", "Cars", "Boats", "Planes", "Buses", "Bikes", "Tractors"],
+            "コーヒーの種類": ["Espresso", "Cappuccino", "Doppio", "Macchiato", "Flat White", "Latte", "Americano", "Cortado", "Mocha"],
+            "人気のウェブサイト": ["Reddit", "Instagram", "YouTube", "Craigslist", "Google", "Facebook", "Amazon", "Twitter", "Wikipedia", "eBay"],
+            "アルファベット4文字の国": ["Togo", "Peru", "Iraq", "Chad", "Laos", "Mali", "Oman", "Fiji", "Cuba", "Iran", "Niue"],
+            "果物": ["Lemon", "Grape", "Banana", "Cherry", "Orange", "Mango", "Apple", "Pineapple", "Watermelon", "Strawberry", "Kiwi"],
+            "打楽器": ["Tambourine", "Bass Drum", "Vibraphone", "Gong", "Glockenspiel", "Snare Drum", "Timpani", "Xylophone", "Marimba", "Triangle", "Cymbals"],
+            "ペット": ["Hamster", "Ferret", "Bird", "Dog", "Tortoise", "Snake", "Cat", "Horse", "Spider", "Fish", "Rabbit"],
+            "通貨": ["Rand", "Rouble", "Dollar", "Peso", "Dinar", "Krone", "Rupee", "Pound", "Franc", "Yen", "Euro", "Lira"],
+            "黄道十二星座": ["Capricorn", "Gemini", "Taurus", "Aquarius", "Sagittarius", "Leo", "Pisces", "Cancer", "Virgo", "Scorpio", "Libra", "Aries"],
+            "ビスケット": ["Bourbon", "Party Ring", "Ginger Nut", "Finger", "Oreo", "Rich Tea", "Nice", "Hobnobs", "Chocolate Chip", "Garibaldi", "Shortbread", "Malted Milk", "Digestive"],
+            "ルネサンス音楽の作曲家": ["Lasso", "Tallis", "Byrd", "Monteverdi", "Taverner", "Janequin", "Palestrina", "Gesualdo", "Kirbye", "Prez", "Vautor", "Morley", "Gibbons", "Weelkes"],
+            "バニラモジュール": ["Morse Code", "Knobs", "Simon Says", "The Button", "Capacitor Discharge", "Wires", "Wire Sequences", "Passwords", "Venting Gas", "Memory", "Mazes", "Complicated Wires", "Keypads", "Who's on First"],
+            "20世紀の作曲家": ["Copland", "Bernstein", "Prokofiev", "Williams", "Cage", "Holst", "Schoenberg", "Debussy", "Bartók", "Elgar", "Gershwin", "Ravel", "Stravinsky", "Britten", "Strauss"],
+            "ヨーロッパの首都": ["Budapest", "Prague", "Stockholm", "Rome", "Paris", "Lisbon", "Minsk", "Vienna", "Moscow", "Madrid", "Bucharest", "London", "Kyiv", "Warsaw", "Brussels", "Glasgow", "Riga", "Berlin", "Athens"],
+            "打楽器以外の楽器": ["Viola", "Euphonium", "Trumpet", "Cor Anglais", "Bassoon", "Clarinet", "Trombone", "Flugelhorn", "Piccolo", "Harp", "French Horn", "Flute", "Oboe", "Tuba", "Violin", "Double Bass", "Cello", "Saxophone", "Cornet"],
+            "BFDIの登場人物": ["Golf Ball", "Coiny", "Pin", "Ice Cube", "Spongy", "David", "Woody", "Snowball", "Pen", "Pencil", "Bubble", "Teardrop", "Eraser", "Flower", "Needle", "Rocky", "Firey", "Match", "Blocky", "Leafy", "Tennis Ball"],
+        },
+            colors = ["赤", "黄", "緑", "青"],
+            rules = ["左端の", "左から2番目の", "右から2番目の", "右端の", "最も短い", "2番目に短い", "2番目に長い", "最も長い", "順番の最初になる"],
+            yAxis = [["Popularity", "短い", "長い"], ["Frequency", "長い", "短い"], ["Responses", "左端の", "右端の"], ["Occurances", "右端の", "左端の"], ["Density", "値の小さい", "値の大きい"], ["Magnitude", "値の大きい", "値の小さい"]];
+
+        const setContent = (variableSets, colors, rules, yAxis) => {
+            const a = document.querySelectorAll(".list-table");
+            // a is an array of tables. Delete every row except the first one.
+            for (const table of a)
+                while (table.rows.length > 1)
+                    table.deleteRow(1);
+
+            // Add a row for each entry of variableSets. First column is key, second is array of values separated by commas, third column in the length of the values array
+            const entries = Object.entries(variableSets);
+            for (let i = 0; i < entries.length; i++)
+            {
+                const row = a[i < 13 ? 0 : 1].insertRow(-1);
+                let cell = row.insertCell(0); //first column, make it th
+
+                // use innerHTML - 20th Century Composers has html content
+                cell.innerHTML = entries[i][0];
+                cell.outerHTML = "<th>" + cell.innerHTML + "</th>";
+                cell = row.insertCell(1);
+                cell.className = "nohighlight";
+                cell.innerHTML = entries[i][1].map(t=>"<span class='highlightable'>"+t+"</span>").join(", ");
+                cell = row.insertCell(2);
+                cell.className = "big-number";
+                cell.textContent = entries[i][1].length;
+            }
+
+            const b = document.querySelector(".equalise");
+                for (let j = 0; j < 4; j++)
+                    b.cells[j].textContent = colors[j];
+
+            const c = document.querySelector("#b-rules");
+            c.innerHTML = `B = ${rules[0]}棒、${rules[1]}棒 、${rules[2]}棒の値の合計とする。この値が3未満になるまで3を引き続け、最後に1を加える &mdash; つまり、順番の最初になる棒を飛ばして左からB番目の棒が、2番目の棒になる。`;
+        
+            const d = document.querySelector("#if-y-axis");
+            const e = document.querySelector("#else-y-axis");
+            d.innerHTML = `左側の単位が「${yAxis[0][0]}」の場合、2本の順番が決まっていない棒のうち、${yAxis[0][1]}棒が3番目、${yAxis[0][2]}棒が4番目となる。`;
+            e.innerHTML = `そうでない場合、左側の単位が「${yAxis[1][0]}」の場合、${yAxis[1][1]}棒が3番目、${yAxis[1][2]}棒が4番目となる。`;
+        };
+
+        // use spread operator to clone instead of shuffling in place
+        const shuffle = (rnd, array) => rnd.shuffleFisherYates([...array]);
+
+        const setDefaultRules = rnd => setContent(variableSets, colors, ["左端の", "最も短い", "順番の最初になる"], yAxis);
+
+        const setRules = rnd => {
+            const sets = {};
+            for (const key in variableSets)
+                sets[key] = shuffle(rnd, variableSets[key]);
+
+            setContent(sets, shuffle(rnd, colors), shuffle(rnd, rules), shuffle(rnd, yAxis));
+        };
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">棒グラフ</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Bar Charts.svg" class="diagram">
+                <h2>モジュール詳細：棒グラフ</h2>
+                <p class="flavour-text">「グラフに目盛りがない！」と熊手を振り回しながら、人々は叫ぶ。<br />私は言う、「でたらめだ」と。</p>
+
+                <p>4本の棒を順番に押して、モジュールを解除する。このマニュアルの残りの部分は、その順番について説明する。</p>
+                
+                <p>棒の長さ（短いものから長いものの順番）、色、ラベルに注意する。4つのラベルはすべて、同一のカテゴリに属しており、それを特定する必要がある &mdash; これらのカテゴリについては<i>付録D474</i>を参照すること。</p>
+                <p>それぞれのカテゴリにはラベルのリストがある &mdash; 表示された各ラベルの「値」は、そのカテゴリのリストにおける先頭から数えた時の位置である(例えば、カテゴリの1番目のときの値は1、5番目のときの値は5など)。 A = これらの値の合計とする。AがL(= そのリストの要素数)より小さくなるまでをLを引き続け、それから1を加える(例えば、4つの値の合計が12で、リストの要素数が8の場合、 A ＝ 12 － 8 ＋ 1 ＝ 5)。</p>
+                
+                <p>リストのAの位置にあるラベルがモジュールに表示される場合、その棒が順番の最初になる。そうでない場合、Aから4を引いて4より小さくしてから1を加える &mdash; つまり、A番目に短い棒が順番の最初になる。</p>
+                
+                <p>次に、それぞれの棒にその色に応じた値を割り当てる:</p>
+                <table>
+                <tr class="equalise"><th>赤</th><th>黄</th><th>緑</th><th>青</th></tr>
+                <tr class="big-number"><td>0</td><td>1</td><td>2</td><td>3</td></tr>
+                </table>
+                
+                <p id="b-rules">B = 左端の棒、最も短い棒、順番の最初になる棒の値の合計とする。この値が3未満になるまで3を引き続け、最後に1を加える &mdash; 順番の最初になる棒を飛ばして左からB番目の棒が、2番目の棒になる。</p>
+                
+                <ul>
+                <li id="if-y-axis">左側の単位が「Popularity」の場合、2本の順番が決まっていない棒のうち、短い棒が3番目、長い棒が4番目となる。</li>
+                <li id="else-y-axis">そうでない場合、左側の単位が「Frequency」の場合、長い棒が3番目、短い棒が4番目となる。</li>
+                </ul>
+                
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">棒グラフ</span>
+            </div>
+            <div class="page-content">
+                
+                <h2>付録 D474: カテゴリとリスト</h2>
+                <p class="comment">モジュール上では省略されている要素もあることに注意する。</p>
+                <table class="list-table">
+                <tr><th>カテゴリ</th><th>リスト</th><th>要素</th></tr>
+                <tr><th>C# のデータ型</th><td>Character, String, Integer, Long, Boolean, Double, Float</td>
+                <td class="big-number">7</td></tr>
+                <tr><th>宇宙大作戦の登場人物</th><td>Spock, McCoy, Scott, Chekov, Uhura, Kirk, Sulu</td>
+                <td class="big-number">7</td></tr>
+                <tr><th>ジェームズ・ボンドを演じた俳優</th><td>Craig, Brosnan, Connery, Lazenby, Dalton, Moore, Niven</td>
+                <td class="big-number">7</td></tr>
+                <tr><th>基本図形</th><td>Capsule, Octahedron, Cylinder, Cube, Cone, Torus, Prism, Sphere</td>
+                <td class="big-number">8</td></tr>
+                <tr><th>準惑星</th><td>Eris, Makemake, Sedna, Haumea, Pluto, Ceres, Pallas, Quaoar</td>
+                <td class="big-number">8</td></tr>
+                <tr><th>難解プログラミング言語</th><td>Funciton, Shakespeare, Brainf---, Malbolge, Piet, Befunge, Chef, Intercal</td>
+                <td class="big-number">8</td></tr>
+                <tr><th>乗り物</th><td>Trains, Lorries, Cars, Boats, Planes, Buses, Bikes, Tractors</td>
+                <td class="big-number">8</td></tr>
+                <tr><th>コーヒーの種類</th><td>Espresso, Cappuccino, Doppio, Macchiato, Flat White, Latte, Americano, Cortado, Mocha</td>
+                <td class="big-number">9</td></tr>
+                <tr><th>人気のウェブサイト</th><td>Reddit, Instagram, YouTube, Craigslist, Google, Facebook, Amazon, Twitter, Wikipedia, eBay</td>
+                <td class="big-number">10</td></tr>
+                <tr><th>アルファベット4文字の国</th><td>Togo, Peru, Iraq, Chad, Laos, Mali, Oman, Fiji, Cuba, Iran, Niue</td>
+                <td class="big-number">11</td></tr>
+                <tr><th>果物</th><td>Lemon, Grape, Banana, Cherry, Orange, Mango, Apple, Pineapple, Watermelon, Strawberry, Kiwi</td>
+                <td class="big-number">11</td></tr>
+                <tr><th>打楽器</th><td>Tambourine, Bass Drum, Vibraphone, Gong, Glockenspiel, Snare Drum, Timpani, Xylophone, Marimba, Triangle, Cymbals</td>
+                <td class="big-number">11</td></tr>
+                <tr><th>ペット</th><td>Hamster, Ferret, Bird, Dog, Tortoise, Snake, Cat, Horse, Spider, Fish, Rabbit</td>
+                <td class="big-number">11</td></tr>
+                </table>
+                
+                </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+                
+                <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">棒グラフ</span>
+            </div>
+            <div class="page-content">
+                <h2>付録 D474 (続き)</h2>
+                <table class="list-table">
+                <tr><th>カテゴリ</th><th>リスト</th><th>要素</th></tr>
+                <tr><th>通貨</th><td>Rand, Rouble, Dollar, Peso, Dinar, Krone, Rupee, Pound, Franc, Yen, Euro, Lira</td>
+                <td class="big-number">12</td></tr>
+                <tr><th>黄道十二星座</th><td>Capricorn, Gemini, Taurus, Aquarius, Sagittarius, Leo, Pisces, Cancer, Virgo, Scorpio, Libra, Aries</td>
+                <td class="big-number">12</td></tr>
+                <tr><th>ビスケット</th><td>Bourbon, Party Ring, Ginger Nut, Finger, Oreo, Rich Tea, Nice, Hobnobs, Chocolate Chip, Garibaldi, Shortbread, Malted Milk, Digestive</td>
+                <td class="big-number">13</td></tr>
+                <tr><th>ルネサンス音楽の作曲家</th><td>Lasso, Tallis, Byrd, Monteverdi, Taverner, Janequin, Palestrina, Gesualdo, Kirbye, Prez, Vautor, Morley, Gibbons, Weelkes</td>
+                <td class="big-number">14</td></tr>
+                <tr><th>バニラモジュール</th><td>Morse Code, Knobs, Simon Says, The Button, Capacitor Discharge, Wires, Wire Sequences, Passwords, Venting Gas, Memory, Mazes, Complicated Wires, Keypads, Who's on First</td>
+                <td class="big-number">14</td></tr>
+                <tr><th>20世紀の作曲家</th><td>Copland, Bernstein, Prokofiev, Williams, Cage, Holst, Schoenberg, Debussy, Bartók, Elgar, Gershwin, Ravel, Stravinsky, Britten, Strauss</td>
+                <td class="big-number">15</td></tr>
+                <tr><th>ヨーロッパの首都</th><td>Budapest, Prague, Stockholm, Rome, Paris, Lisbon, Minsk, Vienna, Moscow, Madrid, Bucharest, London, Kyiv, Warsaw, Brussels, Glasgow, Riga, Berlin, Athens</td>
+                <td class="big-number">19</td></tr>
+                <tr><th>打楽器以外の楽器</th><td>Viola, Euphonium, Trumpet, Cor Anglais, Bassoon, Clarinet, Trombone, Flugelhorn, Piccolo, Harp, French Horn, Flute, Oboe, Tuba, Violin, Double Bass, Cello, Saxophone, Cornet</td>
+                <td class="big-number">19</td></tr>
+                <tr><th>BFDIの登場人物</th><td>Golf Ball, Coiny, Pin, Ice Cube, Spongy, David, Woody, Snowball, Pen, Pencil, Bubble, Teardrop, Eraser, Flower, Needle, Rocky, Firey, Match, Blocky, Leafy, Tennis Ball</td>
+                <td class="big-number">21</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+    </div>
+</body>
+</html>
