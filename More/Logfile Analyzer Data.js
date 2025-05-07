@@ -9522,6 +9522,56 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "literalMaze",
+		loggingTag: "Literal Maze",
+		matches: [
+			{
+				regex: /Letters on module:(( [A-Z]{4}){4})/,
+				handler: function(matches, module) {
+					module.LiteralMazeLetters = matches[1].replace(/ /g, '');
+					return true;
+				}
+			},
+			{
+				regex: /Tiles: ([\d,]+)/,
+				handler: function(matches, module) {
+					let tiles = matches[1].split(',').map(str => +str);
+					let svg = `<svg class='literal-maze' viewBox='-.1 -.1 4.2 4.2' font-size='.8' text-anchor='middle' stroke-linecap='square'>`;
+					let path = '';
+					for (let i = 0; i < 16; i++)
+					{
+						if ((tiles[i] & 1) && i < 4)
+							path += `M ${i % 4} ${(i/4)|0} h 1`;
+						if (tiles[i] & 2)
+							path += `M ${i % 4 + 1} ${(i/4)|0} v 1`;
+						if (tiles[i] & 4)
+							path += `M ${i % 4} ${((i/4)|0) + 1} h 1`;
+						if ((tiles[i] & 8) && i % 4 === 0)
+							path += `M ${i % 4} ${(i/4)|0} v 1`;
+						svg += `<text x='${i % 4 + .5}' y='${((i/4)|0) + .8}'>${module.LiteralMazeLetters[i]}</text>`;
+					}
+					svg += `<path class='maze-walls' d='${path}' />`;
+					svg += '</svg>';
+					module.push({ label: 'Maze:', obj: $(svg) });
+					return true;
+				}
+			},
+			{
+				regex: /^.*(tile \d|cell \d).*$/i,
+				handler: function(matches, module) {
+					module.push($(`<p>${matches[0].replace(/(tile|cell) (\d+)/ig, (_, w, t) => w.toLowerCase() === 'tile' ? `<svg class='literal-maze-tile' viewBox='-.1 -.1 1.2 1.2'><path d='
+						${t & 1 ? 'M 0 0 h 1' : ''}
+						${t & 2 ? 'M 1 0 v 1' : ''}
+						${t & 4 ? 'M 0 1 h 1' : ''}
+						${t & 8 ? 'M 0 0 v 1' : ''}
+					' /></svg>` : `${w} ${String.fromCharCode(65 + (+t % 4))}${((t/4)|0)+1}`)}</p>`));
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "RGBLogicMalfunction",
 		loggingTag: "Malfunctioning RGB Logic",
 		matches: [
