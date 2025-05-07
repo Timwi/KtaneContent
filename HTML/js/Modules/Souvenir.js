@@ -297,6 +297,7 @@ let SouvenirModuleData = [
 	{ name: "Linq",	id: "Linq",	questions: ["What were the functions?"] },
 	{ name: "Lion’s Share",	id: "LionsShareModule",	questions: ["Which year was displayed?","Which lions were present but removed?"] },
 	{ name: "Listening",	id: "Listening",	questions: ["What sound played?"] },
+	{ name: "Literal Maze",	id: "literalMaze",	questions: ["Which letter was in each position?"] },
 	{ name: "Logic Gates",	id: "logicGates",	questions: ["What were the logic gates?"] },
 	{ name: "Logical Buttons",	id: "logicalButtonsModule",	questions: ["What were the colors and labels of each button in each stage?","What were the final operators in each stage?"] },
 	{ name: "Lombax Cubes",	id: "lgndLombaxCubes",	questions: ["What were the letters on the button?"] },
