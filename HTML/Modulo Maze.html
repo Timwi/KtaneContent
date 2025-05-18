@@ -1,0 +1,309 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Modulo Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+    const numbers = // Copied from module's C# code and converted braces into brackets
+    [
+        [
+            [123456789,536870912,694201337,107073645,300607630,387420489,999999937,314159265,],
+            [575360377,693147180,107089272,249671583,668697120,110121132,765876987,723518202,],
+            [131175320,598421052,442534320,712152325,696969696,135792468,100000000,741852963,],
+            [142857142,742185396,610983610,112358132,301029995,587389241,338767493,137032963,],
+            [570901557,316645697,700025764,634365634,248163264,927138244,122537500,918273645,],
+            [369258147,500000000,116612994,856714178,770679848,610185421,707106781,835449785,],
+            [543999678,439286205,179769313,999999999,123165144,268435455,100101102,999998997,],
+            [433494437,599074578,359382420,479001600,999950884,316227766,165580141,987654321,],
+        ],
+        [
+            [214748364,742140251,627876556,130133763,438252165,204118008,560165106,524567116,],
+            [182157108,585759291,111111111,747653702,384088425,258324263,123581321,608998907,],
+            [123454321,742085809,549382716,122522400,510152025,436843313,309160393,662343750,],
+            [132468750,392781243,461123993,110998910,288657941,668716161,538155684,205729257,],
+            [451931892,816645697,714212835,309431985,904493600,128899892,255075100,169343516,],
+            [544332211,218122150,548696840,816243240,465825544,988211769,149162536,612182430,],
+            [887641867,698970004,429615927,743030421,176457270,858764812,496481100,333666999,],
+            [365634365,751836735,123498765,135798642,124789653,146897532,257914190,138532110,],
+        ],
+        [
+            [696759006,905697844,230311103,649728076,834729156,769693318,864208642,420420420,],
+            [966771429,102563898,989940351,618094567,248015873,611024109,829220721,135791357,],
+            [729784841,994924126,334525266,728382715,371960709,454756609,284753857,496130341,],
+            [525252525,371502244,400441484,339169357,685134170,444889332,235711131,948584405,],
+            [146891012,152399025,539853990,265573747,101643241,769230769,701388689,135791113,],
+            [215346978,847858478,383827090,941685896,225256289,402615083,345676543,365636671,],
+            [659861091,291129149,435849042,176366828,288804781,152182067,686193202,172195665,],
+            [721956656,142857143,193185113,187231325,561439334,114715126,102470729,127512000,],
+        ],
+        [
+            [568795307,659258263,154091885,174261807,400939866,707242517,188082729,101010101,],
+            [599131575,953502316,281476625,277471328,488281250,313538439,538538101,587399824,],
+            [303603054,570069270,112370464,215414082,711554733,871557427,371816138,216795867,],
+            [652653654,885534336,482569096,601815023,156561154,202502020,315229419,172351820,],
+            [581624697,976913950,259319679,121110987,563354690,695044568,121229150,637971511,],
+            [646471609,575222039,118117116,725741562,886792452,400160060,101001000,572899616,],
+            [690204512,493553415,174524064,382725000,100349676,474785954,502341056,890123456,],
+            [746268656,114300523,252110142,212019801,751325007,132934038,122333444,926052826,],
+        ],
+        [
+            [553635370,761819572,576789200,235921564,555262893,861068738,410583593,992510034,],
+            [583279850,194352396,294927593,534968177,301740931,123569042,345823199,838759384,],
+            [513694319,415823058,760235931,103591928,769010253,776139513,943258238,265937349,],
+            [683919304,667105934,593103589,286078592,468106264,305832693,908573238,235623891,],
+            [193848599,301953843,104769347,753929482,564353103,312642543,602395199,888156328,],
+            [113151345,583295011,252590210,102358468,789089130,967195312,810363252,954836092,],
+            [432980415,891205250,573057439,438583492,392019681,486178092,683112043,178539510,],
+            [348393920,615395288,464341909,184525130,342951108,915186083,603583429,328562831,],
+        ],
+        [
+            [161109900,252119101,343128302,434137503,525146704,616155905,797165106,888174307,],
+            [951289827,142299028,233208229,324217430,415226631,596235832,687245033,778254208,],
+            [841369726,932378947,123388148,214397349,395306550,486315751,577324934,668334109,],
+            [731449625,822458846,913468059,194477260,285486461,376495652,467404835,558414010,],
+            [621529524,712538745,893547958,984557163,175566362,266575553,357584736,448593911,],
+            [511609423,692618644,783627857,874637056,965646255,156655454,247664637,338673812,],
+            [491789322,582798543,673707742,764716941,855726140,946735339,137744538,228753713,],
+            [381869221,472878420,563887619,654896818,745806017,836815216,927824415,118833614,],
+        ],
+        [
+            [572326583,295619290,133164163,493651969,247682041,107188277,374097532,177323244,],
+            [708137692,380847010,181203515,727555916,393258626,188370018,763636753,416457152,],
+            [201869031,832332195,461090578,228198571,968868776,551445203,282784024,126127161,],
+            [460717441,227976603,967704500,550666181,282306691,125866568,459505223,227255700,],
+            [963924681,548138056,280758381,125021847,455579495,224923277,951711094,539979182,],
+            [275769590,122305916,442996429,217470148,912846639,514122388,260041659,113803394,],
+            [404000104,194603848,795244053,436919775,213883596,894235017,501798118,252590542,],
+            [109808189,385892954,184112251,742166833,402631787,193808140,791198333,434293451,],
+        ]
+    ];
+    $(function() {
+        const mazesvg = 
+        [
+        $("svg.maze0"),
+        $("svg.maze1"),
+        $("svg.maze2"),
+        $("svg.maze3"),
+        $("svg.maze4"),
+        $("svg.maze5"),
+        $("svg.maze6"),
+        ];
+        for (let maze = 0; maze < mazesvg.length; maze++)
+        {
+            for (let row = 0; row < 8; row++)
+            {
+                for (let col = 0; col < 8; col++)
+                {
+                    let cell = MakeSvgElem("rect", {
+                        class: "highlightable", x:(5 + 60 * col), y:(5 + 30 * row),
+                        width:60, height:30, fill:"transparent"
+                    });
+                    
+                    let text = MakeSvgElem("text", {
+                        x: (35 + col * 60),
+                        y: (22.5 + row * 30),
+                        fill: "#000",
+                        "text-anchor":"middle",
+                        "font-size":"10px"
+                    });
+                    text.innerHTML = numbers[maze][row][col];
+                    mazesvg[maze].append(text);
+                    mazesvg[maze].append(cell);
+                }
+            }
+        }
+    });
+    </script>
+    <!-- Remove the whole style tag if empty -->
+    <style>
+        /* Remove this if you do not have any tables */
+        table {
+            margin: 1em auto;
+            border: none;
+        }
+
+        /* Remove this if you only have a single page */
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 5'; }
+        
+        svg.maze {
+            width: 780px;
+        }
+        svg.maze path {
+            stroke: #000;
+            stroke-width: 1;
+            fill: transparent;
+        }
+        svg.maze rect {
+            fill: transparent;
+        }
+        .dark svg.maze path {
+            filter: invert(90%);
+        }
+        .dark svg text{
+            fill: #fff;
+        }
+        
+        .small {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Modulo Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Modulo Maze.svg" class="diagram">
+                <h2>On the Subject of Modulo Maze</h2>
+                <p class="flavour-text">Today’s lottery numbers are: Two, One Four Seven, Four Eight Three, Six Four Seven.</p>
+
+                <p>This module consists of 4 arrows and 2 displays. The display at the bottom has a number between 1000000000 and 2147483647.
+                The display on the right represents the goal, where the letter is the column from left to right, and the digit is the row from top to bottom.
+                The color of the module is randomized, but is irrelevant to the solving process.</p>
+                <p>To solve the module, navigate a maze such that you are on the goal position when the displayed number becomes 0.</p>
+                <p>When you press an arrow, not only will you move in the maze, the bottom number will change. 
+                More specifically, if the displayed number (X) is greater than the number in the space you move to (Y),
+                the displayed number will become X modulo Y. If the displayed number is smaller, the displayed number will become Y modulo X.</p>
+                <p>Reaching a display of 0 when you're not at the goal position will incur a strike and regenerate the module.
+                Walking into a wall also incurs a strike and regenerates the module, regardless of your position.
+                However, if you move to the goal position and the resulting number is not 0, no penalty is incurred.</p>
+                <p>There can and will be more than one possible solution to the module.</p>
+                <p>All mazes are 8x8, and have unique numbers.</p>
+                <p>To determine the maze used, take the displayed number (upon module generation), and subtract the sum of the digits in the serial number.
+                Take the result modulo 7, and use the corresponding maze.</p>
+                <p>Then, to determine your starting position, take the displayed number (upon module generation),
+                and subtract the sum of the alphabetic positions of the letters (A1Z26) in the serial number.
+                Take the result modulo 64 to get your starting position in the maze in reading order, with the top-left space being 0.</p>
+                <p>An example will be provided on the last page.</p>
+                <p><b>NOTE:</b> If you are going to copy and paste numbers from the mazes, you will need to double-click the space immediately to the left of that cell.
+                The remedy to this issue is currently not known.</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <!-- 
+        Horizontal spaces are in increments of 60 pixels.
+        Vertical spaces are in increments of 30 pixels.
+        -->
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Modulo Maze</span>
+            </div>
+            <div class="page-content">
+                <h3>Maze 0</h3>
+                <svg class="maze maze0" viewbox="0 0 570 250">
+                <path d="M 5 5 h120v30h60m-60 -30h180v30h120m-60 0v30m-60 -60h180v240h
+                -240v-30h60m-60 30h-60v-30h-60m60 30h-180v-30h60m-60 0v-90h120v30h-60m0 
+                30h120v-30h60v-30m0 30v30h120v-30h60v60h-60m-60 -30v-120h-60v-30m180 90
+                h-60v-30h60v-30m-60 30h-180v-30h-120v30m60 -30v60h60m-180 0v-120m0 30h60"/>
+                </svg>
+                <h3>Maze 1</h3>
+                <svg class="maze maze1" viewbox="0 0 570 250">
+                <path d="M 5 5 h240v30m0 -30h240v30h-60m60 0v120h-60m60 0v90h-240v-30m0 
+                30h-180v-30h60m-60 30h-60v-60h60m-60 0v-60h60v30h60v-30h60v-30m0 30v90
+                m-60 -30h180m60 0v30h-60v-90h60m0 30v30h60v30m0 -90v-60m0 30h-60v-60h-60
+                m0 30v30h-60v60m120 -90h-180v-30h-120m120 30h-60v30h-60v-30h-60m0 60v-120"/>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Modulo Maze</span>
+            </div>
+            <div class="page-content">
+                <h3>Maze 2</h3>
+                <svg class="maze maze2" viewbox="0 0 570 250">
+                <path d="M 5 5 h120v30m0 -30h60v30m0 -30h240v90m0 -30h-120m120 -60h60v120
+                h-120v-30h-180v-30h-120m0 -30v90h60v-30m60 0v30h60m0 -30v-60h120m120 90v90
+                m-60 0h60v30h-180v-30h60v-60m-60 -30v30h120v30m-120 0h-60v-30h-60v60h120
+                m0 30h-180v-90h-60v60m60 30h-120v-240"/>
+                </svg>
+                <h3>Maze 3</h3>
+                <svg class="maze maze3" viewbox="0 0 570 250">
+                <path d="M 5 5 h60v60m0 -60h180v120m0 -120h120v60h-60v-30m60 -30h120
+                v60h-60m0 -30v60m60 -30v60h-120v-30h-60v60h60v30h60v30m0 -30v-30m-60 30v30
+                h-60m180 -90v120h-240v-90m-60 0v30m-120 0h240m-60 60h-240v-30h180m-180 0
+                v-90h120m60 0v-90m-60 0v120h-60m120 -60h-120m-60 30v-120"/>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+        
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Modulo Maze</span>
+            </div>
+            <div class="page-content">
+                <h3>Maze 4</h3>
+                <svg class="maze maze4" viewbox="0 0 570 250">
+                <path d="M 5 5 h60v30m0 -30h240v60h120m-120 -60h180v30h-120m120 0v180m0 -60
+                h-60m0 30h-60m0 -60h60v-30h-120v60h60v30h-60v30h180v30h-300v-30h-60v-30h-60
+                v-30m0 60h-60m180 30h-180v-150h180v-30h-60v-30h120v120m0 60v-30h-60v-30h-60
+                v-30h-60m180 0h-60v30m-180 -60v-30h60m-60 0v-60"/>
+                </svg>
+                <h3>Maze 5</h3>
+                <svg class="maze maze5" viewbox="0 0 570 250">
+                <path d="M 5 5 h480v240h-60v-210h-360m300 0v180m0 -60h-60v-30h-180m120 0v-30
+                h-180v60h180v60h-60v-30m-60 0v-30m300 90h-120v-60m0 60h-180v-30m0 30h-60v-30
+                m0 30h-60v-60h60m-60 0v-120h300v30m-300 -30v-60"/>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+        
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Modulo Maze</span>
+            </div>
+            <div class="page-content">
+                <h3>Maze 6</h3>
+                <svg class="maze maze6" viewbox="0 0 570 250">
+                <path d="M 5 5 h180v30m0 -30h300v90h-60m60 0v30h-240m0 -90h180v30m-60 0v60
+                m-60 0v-90m180 90v120h-120v-30h60v-30h-120m60 0v-30h60m-60 90h-60v-30m0 30
+                h-120v-30h60v-30m-60 60h-180v-90h120m0 60h-60v-60m-60 0v-30h180v30m120 0h-120
+                v30h-60m-120 -60v-60h60v30h120v-30m60 30v-30h-120v-30h-60m-60 30v-60"/>
+                </svg>
+                <h3>Example</h3>
+                <p>Starting Number: 1686214380 // Serial Number: 3U3TG1 // Goal: G3</p>
+                <p>1686214380-3-3-1=1686214373 (Subtract the sum of the serial digits)
+                <br>1686214373%7=4 (Take the result modulo 7; our maze is 4)</p>
+                <p>1686214380-21-20-7=1686214332 (Subtract the sum of the serial letters)
+                1686214332%64=60 (Take the result modulo 64; our starting position is 60, or E8)</p>
+                <p>We are going from E8 to G3 in Maze 4. Possible Solution: UULUDRUUURRRL</p>
+                <p class="small">
+                Up to E7: 1686214380%392019681=118135656
+                <br>Up to E6: 789089130%118135656=80275194
+                <br>Left to D6: 102358468%80275194=22083274
+                <br>Up to D5: 753929482%22083274=3098166
+                <br>Down to D6: 102358468%3098166=118990
+                <br>Right to E6: 789089130%118990=66440
+                <br>Up to E5: 564353103%66440=11743
+                <br>Up to E4: 468106264%11743=6798
+                <br>Up to E3: 769010253%6798=99
+                <br>Right to F3: 776139513%99=6
+                <br>Right to G3: 943258238%6=2
+                <br>Right to H3: 265937349%2=1
+                <br>Left to G3: 943258238%1=0
+                </p>
+            </div>
+            <div class="page-footer relative-footer">5</div>
+        </div>
+    </div>
+</body>
+</html>
