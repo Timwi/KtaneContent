@@ -15,52 +15,52 @@
 
             document.getElementById('quiz').innerHTML = `
                 <h1>PRACTICE<${''}/h1>
-                ${Object.keys(everything).map(category => `
+                ${Object.keys(allQuizzes).map(category => `
                     <h2>${category}<${''}/h2>
                     <menu>
-                      ${Object.keys(everything[category]).map(thing => `
-                          <a href='#' class='start' data-cat='${category}' data-thing='${thing}'><li>${thing}<${''}/li><${''}/a>
+                      ${Object.keys(allQuizzes[category]).map(quizName => `
+                          <a href='#' class='start' data-cat='${category}' data-quiz-name='${quizName}'><li>${quizName}<${''}/li><${''}/a>
                       `).join('')}
                     <${''}/menu>
                 `).join('')}
             `;
 
             Array.from(document.querySelectorAll('a.start')).forEach(a => {
-                a.onclick = function() { startQuiz(a.dataset.thing, everything[a.dataset.cat][a.dataset.thing]); return false; };
+                a.onclick = function() { startQuiz(a.dataset.quizName, allQuizzes[a.dataset.cat][a.dataset.quizName]); return false; };
             });
         }
 
-        function startQuiz(thing, inf)
+        function startQuiz(quizName, quizData)
         {
             mode = 2;
-            const itemGroups = inf.Items;
+            const itemGroups = quizData.Items;
             const numTotalItems = itemGroups.reduce((p, n) => p + n.length, 0);
-            const hasSounds = inf.SoundPath;
-            const hasVideos = inf.VideoPath;
+            const hasSounds = quizData.SoundPath;
+            const hasVideos = quizData.VideoPath;
 
             const questionsQueue = [];
 
             const quiz = document.getElementById('quiz');
             quiz.innerHTML = `
-                <h1 id='header'>${thing}<${''}/h1>
+                <h1 id='header'>${quizName}<${''}/h1>
                 <div id='challenge'><${''}/div>
                 <div id='answers'><${''}/div>
                 <button id='back-button'>&lt; Back<${''}/button>
             `;
             if (!hasSounds) quiz.innerHTML += "<button id='mode-button'></button>";
-            quiz.className = inf.CSS;
+            quiz.className = quizData.CSS;
 
             function updateModeButton() {
                 const btn = document.getElementById('mode-button');
-                if (btn) btn.innerHTML = mode === 2 ? 'Display both' : `Display only ${inf.Groups[mode]}`;
+                if (btn) btn.innerHTML = mode === 2 ? 'Display both' : `Display only ${quizData.Groups[mode]}`;
             }
             updateModeButton();
 
             function showQuestion()
             {
-                window.location.hash = thing;
-                const limitLeftAnswers = inf.LimitLeftAnswers;
-                const limitRightAnswers = inf.LimitRightAnswers;
+                window.location.hash = quizName;
+                const limitLeftAnswers = quizData.LimitLeftAnswers;
+                const limitRightAnswers = quizData.LimitRightAnswers;
 
                 clearTimeout(timeout);
                 timeout = null;
@@ -72,37 +72,45 @@
                 //get question from queue
                 let itemIx = questionsQueue.shift();
 
+                //group index for quizzes with multiple groups of items
                 let groupIx = 0;
-                while (itemIx > itemGroups[groupIx].length) {
+                //find correct group and index within that group that the random selection belongs to
+                while (itemIx >= itemGroups[groupIx].length) {
                     itemIx -= itemGroups[groupIx].length;
                     groupIx++;
                 }
                 const item = itemGroups[groupIx][itemIx];
-                let first = mode < 2 ? (1 - mode) : ((Math.random() * 2) | 0);
-                if (hasSounds) first = 0;
+                //query side in the code refers to the first element in each of the item arrays inside an Items array
+                //the right side, which may contain more than one possible answer, is referred to as the "answers"
+                //both the left and right side may be either the query or the answer during the quiz
+                let querySide = mode < 2 ? (1 - mode) : ((Math.random() * 2) | 0);
+                if (hasSounds) querySide = 0;
 
-                //select from possibly multiple correct answers
-                let ansIx = ((Math.random() * (item.length - 1)) | 0) + 1;
-                document.getElementById('challenge').innerHTML = item[ first ? 0 : ansIx ];
-
+                //select query from possibly multiple correct answers
+                let queryIx = ((Math.random() * (item.length - 1)) | 0) + 1;
+                document.getElementById('challenge').innerHTML = item[ querySide ? 0 : queryIx ];
+                //generate array of answers
+                let correctAnswers = item.slice(1)
                 let answers = [];
                 let maxLength = Math.max(...itemGroups[groupIx].map(it => it.length));
-                for (let i = 1; i < maxLength; ++i) {
-                    const a = itemGroups[groupIx].map((item, ix) => ({ correct: ix === itemIx, item: item [ first ? i : 0 ] }));
-                    for (let j = 0; j < a.length; ++j)
-                        if (a[j].item) answers.push(a[j]);
-                }
-                //remove duplicate answer choices
+                itemGroups[groupIx].forEach((thisItem)=>{
+                    if (querySide) {
+                        [].push.apply(answers, thisItem.slice(1).map(answer=>({correct: correctAnswers.includes(answer), answer: answer})));
+                    } else {
+                        answers.push({correct: thisItem.slice(1).includes(item[queryIx]), answer: thisItem[0]})
+                    }
+                });
+                //remove duplicate answers
                 function onlyUnique(value, index, arr) {
                     for (let i = 0; i < arr.length; ++i) {
-                        if (arr[i].correct == value.correct && arr[i].item == value.item)
+                        if (arr[i].correct == value.correct && arr[i].answer == value.answer)
                             return i === index;
                     }
                     return false;
                 }
                 answers = answers.filter(onlyUnique);
 
-                let answerLimit = first ? limitRightAnswers : limitLeftAnswers;
+                let answerLimit = querySide ? limitRightAnswers : limitLeftAnswers;
                 function limitQuantity(value) {
                     if (value.correct || this.count < answerLimit) {
                         this.count++;
@@ -116,16 +124,11 @@
                         answers.shift();
                 }
 
-                if (first ? inf.RandomizeRight : inf.RandomizeLeft)
-                    for (let i = answers.length - 1; i > 0; i--) {
-                        let j = (Math.random() * (i + 1)) | 0;
-                        let temp = answers[i];
-                        answers[i] = answers[j];
-                        answers[j] = temp;
-                    }
+                if (querySide ? quizData.RandomizeRight : quizData.RandomizeLeft)
+                    ShuffleFisherYates(answers);
 
                 document.getElementById('answers').innerHTML = answers
-                    .map(answ => `<button${answ.correct ? ' data-correct="1" class="correct-answer"' : ''}>${answ.item}<${''}/button> `)
+                    .map(answ => `<button${answ.correct ? ' data-correct="1" class="correct-answer"' : ''}>${answ.answer}<${''}/button> `)
                     .join('');
                 Array.from(document.getElementById('answers').querySelectorAll('button')).forEach(btn => {
                     btn.onclick = function() {
@@ -146,12 +149,12 @@
                             document.getElementById('answers').querySelectorAll('button.correct-answer').forEach((item) => {
                                 item.classList.add('correct');
                             });
-                            if (inf.DelayShowWrongRight && first) {
-                                let t = Math.floor(inf.DelayShowWrongRight * 1000);
+                            if (quizData.DelayShowWrongRight && querySide) {
+                                let t = Math.floor(quizData.DelayShowWrongRight * 1000);
                                 timeout = setTimeout(showQuestion, t);
                             }
-                            else if (inf.DelayShowWrongLeft && !first) {
-                                let t = Math.floor(inf.DelayShowWrongLeft * 1000);
+                            else if (quizData.DelayShowWrongLeft && !querySide) {
+                                let t = Math.floor(quizData.DelayShowWrongLeft * 1000);
                                 timeout = setTimeout(showQuestion, t);
                             }
                             else
@@ -161,8 +164,8 @@
                     };
                 });
 
-                document.getElementById('challenge').className = first ? 'left' : 'right';
-                document.getElementById('answers').className = first ? 'right' : 'left';
+                document.getElementById('challenge').className = querySide ? 'left' : 'right';
+                document.getElementById('answers').className = querySide ? 'right' : 'left';
 
                 if (hasSounds) {
                     const audio = document.createElement("audio");
@@ -184,7 +187,7 @@
                             }
                             else
                             {
-                                audio.src = `../HTML/audio/${inf.SoundPath}/${sound}`;
+                                audio.src = `../HTML/audio/${quizData.SoundPath}/${sound}`;
                                 audio.onerror = () => { button.classList.remove("playing"); button.classList.add("failed"); };
                                 audio.onended = () => button.classList.remove("playing");
                                 audio.play();
@@ -196,13 +199,13 @@
                     }
                 }
                 else if (hasVideos) {
-                    const shouldLoop = inf.VideoLoops;
+                    const shouldLoop = quizData.VideoLoops;
                     // const video = document.createElement("video");
                     const videos = document.getElementsByTagName("video");
                     for (video of videos)
                     {
                         const vid = video.dataset.vid;
-                        video.src = `../HTML/video/${inf.VideoPath}/${vid}`;
+                        video.src = `../HTML/video/${quizData.VideoPath}/${vid}`;
                         if (shouldLoop) {
                             video.play();
                         }
