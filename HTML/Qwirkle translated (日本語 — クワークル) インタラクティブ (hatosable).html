@@ -9,220 +9,235 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
-    <style>
-        body{
-            -webkit-print-color-adjust:exact;
+<style>
+    body {
+        -webkit-print-color-adjust: exact;
+    }
+    .black {
+        background-color: #000;
+        color: #FFF;
+        padding: 2px;
+        font-family: 'NotoSans';
+        font-weight: bold;
+        font-size: 13px;
+    }
+    div > table {
+        float: left;
+    }
+    div.grid > table {
+        display: inline-block;
+    }
+    div:not(.grid) > table {
+        margin-bottom: 1em;
+    }
+    .grid::after {
+        content: "";
+        clear: both;
+        display: table;
+    }
+    #interactive-table {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        border: 2px solid;
+        border-radius: 5px;
+        align-items: center;
+        user-select: none;
+        width: 50%;
+        transform-origin: center center;
+    }
+    #interactive-table div {
+        aspect-ratio: 1;
+        border: 1px solid;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    #interactive-table div > img {
+        width: 90%;
+        user-select: none;
+    }
+    #cell-palette {
+        margin-left: 20px;
+    }
+    #cell-palette select {
+        margin-bottom: 10px;
+        width: 100%;
+    }
+    #cell-container {
+        display: flex;
+        gap: 20px;
+    }
+</style>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const patternList = ["square", "diamond", "cross", "circle", "8star", "4star"];
+        const colorList = ["red", "blue", "green", "yellow", "orange", "purple"];
+
+        let selectedColor = "red";
+        let selectedPattern = "square";
+
+        let rotateCount = 0;    // 時計回り回転数（90度単位）
+        let reverseX = 0;       // 左右反転フラグ（0 or 1）
+        let reverseY = 0;       // 上下反転フラグ（0 or 1）
+        let currentTransform = 'rotate(0deg) rotateX(0deg) rotateY(0deg)';
+
+        const interactiveTable = document.getElementById("interactive-table");
+        const colorSelect = document.getElementById("color-select");
+        const patternSelect = document.getElementById("pattern-select");
+        const previewImg = document.getElementById("preview-img");
+
+        // セルを49個作成し追加
+        for (let i = 0; i < 49; i++) {
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+            cell.addEventListener("click", () => toggleSymbol(cell));
+            cell.addEventListener("contextmenu", e => {
+                e.preventDefault();
+                toggleSymbol(cell, true);
+            });
+            interactiveTable.appendChild(cell);
+        }
+
+        // 画像プリロード
+        const preload = [];
+        for (const pattern of patternList) {
+            for (const color of colorList) {
+                const img = new Image();
+                img.src = `img/Qwirkle/${color}_${pattern}.png`;
+                preload.push(img);
+            }
+        }
+
+        // プレビュー更新
+        function updatePreview() {
+            previewImg.src = `img/Qwirkle/${selectedColor}_${selectedPattern}.png`;
+        }
+
+        // セレクト変更時の共通処理
+        colorSelect.addEventListener("change", (e) => {
+            selectedColor = e.target.value;
+            updatePreview();
+        });
+        patternSelect.addEventListener("change", (e) => {
+            selectedPattern = e.target.value;
+            updatePreview();
+        });
+
+        // 初期プレビュー設定
+        updatePreview();
+
+        // セルのタイルのON/OFF切り替え
+        function toggleSymbol(cell) {
+            if (cell.firstChild) {
+                cell.removeChild(cell.firstChild);
+            } else {
+                // 画像がなければ配置
+                const img = document.createElement("img");
+                img.src = `img/Qwirkle/${selectedColor}_${selectedPattern}.png`;
+                cell.appendChild(img);
+            }
+        }
+
+        // 回転・反転ボタンの処理
+        function rotate(event) {
+            const id = event.target.id;
+
+            if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+
+            if (id === "rotate-do") {
+                rotateCount += document.getElementById("rotate-cw").checked ? 1 : -1;
+            } else if (id === "rotate-X") {
+                // 左右反転切り替え（反転する軸をrotateCountの回転状態で判断）
+                if (Math.abs(rotateCount) % 4 === 1 || Math.abs(rotateCount) % 4 === 3) {
+                    reverseY = (reverseY + 1) % 2;
+                } else {
+                    reverseX = (reverseX + 1) % 2;
+                }
+            } else if (id === "rotate-Y") {
+                // 上下反転切り替え（反転する軸をrotateCountの回転状態で判断）
+                if (Math.abs(rotateCount) % 4 === 1 || Math.abs(rotateCount) % 4 === 3) {
+                    reverseX = (reverseX + 1) % 2;
+                } else {
+                    reverseY = (reverseY + 1) % 2;
+                }
+            } else if (id === "resetrotate") {
+                rotateCount = 0;
+                reverseX = 0;
+                reverseY = 0;
+            }
+            animateTransform();
+            // 4回転すると元に戻る
+            rotateCount = ((rotateCount % 4) + 4) % 4;
+
+            updateTransform();
 
         }
 
-        .black {
-            background-color: #000;
-            color: #FFF;
-            padding: 2px;
-            font-family: 'NotoSans';
-            font-weight: bold;
-            font-size: 13px;
+        // CSS transform更新
+        function updateTransform() {
+            currentTransform = `rotate(${rotateCount * 90}deg) rotateX(${reverseY * 180}deg) rotateY(${reverseX * 180}deg)`;
+            interactiveTable.style.transform = currentTransform;
         }
 
-        div>table {
-            float: left;
+        // アニメーション実行
+        function animateTransform() {
+            interactiveTable.animate(
+                [
+                    { transform: currentTransform },
+                    { transform: `rotate(${rotateCount * 90}deg) rotateX(${reverseY * 180}deg) rotateY(${reverseX * 180}deg)` }
+                ],
+                {
+                    duration: 500,
+                    fill: "forwards",
+                    easing: "ease"
+                }
+            );
         }
 
-        div.grid>table{
-            display: inline-block;
-        }
+        // 全セルリセット
+        function resetAll() {
+            rotateCount = 0;
+            reverseX = 0;
+            reverseY = 0;
+            updateTransform();
 
-        div:not(.grid)>table {
-            margin-bottom: 1em;
-        }
-
-        .grid::after { /* clearfix */
-            content: "";
-            clear: both;
-            display: table;
-        }
-
-        #interactive-table {
-            margin-top: 20px;
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            border: 2px solid;
-            border-radius: 5px;
-            align-items: center;
-            user-select: none;
-            width: 50%;
-
-        }
-
-        #interactive-table div {
-            aspect-ratio: 1;
-            border: 1px solid;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #interactive-table div>img {
-            width: 90%;
-            user-select: none;
-        }
-    </style>
-    <script>
-     var click=0;
-     var reverseX=0;
-     var reverseY=0;
-     var nowdeg= 'rotate(0deg) rotateX(0deg) rotateY(0deg)';
-     const patternlist = ["square","diamond","cross","circle","8star","4star","none"];
-     const colorlist = ["red","blue","green","yellow","orange","purple","none"];
-     window.addEventListener("DOMContentLoaded", () => {
-     const table = document.querySelector("#interactive-table");
-         for (let i = 0; i < 49; i++) {
-             const cell = document.createElement("div");
-             cell.classList.add("cell");              
-             cell.addEventListener("click", e=>toggleSymbol(e.currentTarget,"left",event));
-             cell.addEventListener("contextmenu", e=>{toggleSymbol(e.currentTarget,"false",event);e.preventDefault()});
-             table.appendChild(cell);     
-         }
-         preload = [];
-         for (let i = 0; i < patternlist.length-1;i++){
-             var p = patternlist[i];
-             for(let j = 0;j < colorlist.length-1;j++){
-              var imgcash = new Image();
-              imgcash.src = "img/Qwirkle/"+colorlist[j]+"_"+patternlist[i]+".png";
-              preload.push(imgcash);
-             }
-         }
-
-         function toggleSymbol(cell,click,e) {
-          if(e.shiftKey&&click=="left"){
-           DeleteSymbol(cell);
-          }else{
-                 const img = document.createElement("img");
-                 var src = cell.firstElementChild;
-                 if(src!=null){
-                  src=src.getAttribute('src');
-                  src=src.replace("img/Qwirkle/", "");
-                  src=src.replace("png","");
-                  var nowcolor="";
-                  var nowpattern="";
-
-                  for(var i=0; src.charAt( i )!="_"; i++) {
-                      nowcolor += src.charAt( i );
-                      }
-                  for(var j=i+1; src.charAt( j )!="."; j++) {
-                     nowpattern += src.charAt( j );
-                    }
+            const cells = interactiveTable.getElementsByClassName("cell");
+            for (const cell of cells) {
+                cell.style.backgroundColor = "white";
+                if (cell.firstChild) {
                     cell.removeChild(cell.firstChild);
-                    if(nowcolor!="none"){
-                    if(click=="left"){
-                     img.src = "img/Qwirkle/"+colorlist[(colorlist.indexOf(nowcolor)+1)%6]+"_"+patternlist[(patternlist.indexOf(nowpattern))%6]+".png";
-                    }else{
-                     img.src = "img/Qwirkle/"+colorlist[(colorlist.indexOf(nowcolor))%6]+"_"+patternlist[(patternlist.indexOf(nowpattern)+1)%6]+".png";
-                    }
-
-                    }
-                 }else{
-                  img.src = "img/Qwirkle/red_square.png";   
-                 }
-                 cell.appendChild(img);
-               }
-              }
-              
-     });
-     function DeleteSymbol(cell){
-      if(cell.firstChild!=null){
-      cell.removeChild(cell.firstChild);
-      }
-     }
-     function Rotate() {
-         if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
-             return;
-         if(event.target.id=="rotate-do"){//cw,ccw
-         if (document.querySelector("#rotate-cw").checked) {//clockwise
-          click++;    
-         }
-         else{//c-clockwise
-          click--;
-         }
-        }
-        if(event.target.id=="rotate-X"){//up-side
-         if(Math.abs(click)==3||Math.abs(click)==1){//if inverted
-          reverseY++;
-         reverseY = reverseY%2;
-         }else{
-         reverseX++;
-         reverseX = reverseX%2;
-         }
-        }
-        if(event.target.id=="rotate-Y"){//left-side
-         if(Math.abs(click)==3||Math.abs(click)==1){//if inverted
-          reverseX++;
-         reverseX = reverseX%2;
-         }else{
-         reverseY++;
-         reverseY = reverseY%2;
-         }
-        }
-        if(event.target.id=="resetrotate"){
-         reverseX=0;
-         reverseY=0;
-         click=0;
-        }
-        Animate();
-        if(Math.abs(click)==4){click = 0};
-        nowdeg = 'rotate('+click*90+'deg) rotateX('+reverseY*180+'deg) rotateY('+reverseX*180+'deg)';
-        document.querySelector(`#interactive-table`).style.transform = 'rotate('+click*90+'deg) rotateX('+reverseY*180+'deg) rotateY('+reverseX*180+'deg)';
-       }
-
-       function Animate() {
-
-        document.querySelector(`#interactive-table`).animate(
-            [
-            { transform: nowdeg },
-            { transform: 'rotate('+click*90+'deg) rotateX('+reverseY*180+'deg) rotateY('+reverseX*180+'deg)' }
-           ],
-           {
-            duration: 500,
-            fill: "forwards",
-            easing: 'ease',
-           }
-          );
-         }
-
-       function Reset() {
-        reverseX=0;
-        reverseY=0;
-        click=0;
-        var celllist=document.getElementsByClassName('cell');
-        for(i=0;i<celllist.length;i++){
-        celllist[i].style.backgroundColor = "white";
-        if(celllist[i].childElementCount!=0){
-        celllist[i].removeChild(celllist[i].firstChild);
-        }
-      }
+                }
+            }
         }
 
- </script>
+        // 回転ボタン類にイベント設定
+        ["rotate-do", "rotate-X", "rotate-Y", "resetrotate"].forEach(id => {
+            document.getElementById(id).addEventListener("click", rotate);
+        });
+        document.getElementById("resetall").addEventListener("click", resetAll);
+
+    });
+</script>
 </head>
 <body>
-    <div class="section">
-        <div class="page page-bg-01">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">クワークル</span>
-            </div>
-            <div class="page-content">
-                <img src="img/Component/Qwirkle.svg" class="diagram">
-                <h2>モジュール詳細：クワークル</h2>
-                <p class="flavour-text">これらのシンボルによって、あなたは星を見ることができるのです！おっと、もう見てましたか。</p>
-                <p>このモジュールは、ボードゲーム「Qwirkle(クワークル)」の有効な状態と、配置可能なタイルを表示する。矢印ボタンで使用するタイルを変更する。モジュールを解除するには、状態が有効なままとなるように、4つのタイルを配置する。最初のタイルを置くと、ボードは見えなくなる。タイルが1つ配置されるごとに、ボードはある法則に従って並べ替えられるが、その様子も見えない。</p>
-                <p>連続するタイルの直線内において、すべてのシンボルが同じ形で異なる色であるか、同じ色で異なる形である場合、その状態は有効である。ラインの長さは6タイルを超えることはできない。タイルは他のタイルに直交して隣接する空のセルにのみ配置することができる。</p>
-
-                <p>以下の表を参照し、それぞれの配置後に状態がどのように変化するか確認する。</p>
-
-                <table>
-                    <tbody><tr>
+<div class="section">
+    <div class="page page-bg-01">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">クワークル</span>
+        </div>
+        <div class="page-content">
+            <img src="img/Component/Qwirkle.svg" class="diagram" alt="Qwirkle Diagram" />
+            <h2>モジュール詳細：クワークル</h2>
+            <p class="flavour-text">これらのシンボルによって、あなたは星を見ることができるのです！おっと、もう見てましたか。</p>
+            <p>このモジュールは、ボードゲーム「Qwirkle(クワークル)」の有効な状態と、配置可能なタイルを表示する。矢印ボタンで使用するタイルを変更する。モジュールを解除するには、状態が有効なままとなるように、4つのタイルを配置する。最初のタイルを置くと、ボードは見えなくなる。タイルが1つ配置されるごとに、ボードはある法則に従って並べ替えられるが、その様子も見えない。</p>
+            <p>連続するタイルの直線内において、すべてのシンボルが同じ形で異なる色であるか、同じ色で異なる形である場合、その状態は有効である。ラインの長さは6タイルを超えることはできない。タイルは他のタイルに直交して隣接する空のセルにのみ配置することができる。</p>
+            <p>以下の表を参照し、それぞれの配置後に状態がどのように変化するか確認する。</p>
+            <table>
+                <tbody>
+                    <tr>
                         <th>…の後</th>
                         <th>もし…</th>
                         <th>その場合</th>
@@ -242,28 +257,60 @@
                     </tr>
                     <tr>
                         <td>3回目の配置</td>
-                        <td>前に配置された3枚のタイルのうち、<br>ちょうど2枚が同じ色</td>
+                        <td>前に配置された3枚のタイルのうち、<br />ちょうど2枚が同じ色</td>
                         <td>時計回りに 90° 回転</td>
                         <td>反時計回りに 90° 回転</td>
                     </tr>
-                </tbody></table>
-                <div style="display: inline-block;">
-                 <input type="radio" id="rotate-ccw" name="rotate" value="left" checked>
-                 <label for="rotate-ccw">反時計90°</label>
-                 <input type="radio" id="rotate-cw" name="rotate" value="right">
-                 <label for="rotate-cw">時計90°</label>
-             </div>
-             <div style="display: inline-block;">
-              <input type="button" id="rotate-do" value="回転" onclick=Rotate()>
-              <input type="button" id="rotate-Y" value="上下反転" onclick=Rotate()>
-              <input type="button" id="rotate-X" value="左右反転" onclick=Rotate()>
-              <input style="right: 50px;" type="button" id="resetrotate" value="回転をリセット" onclick=Rotate()>
-              <input style="right: 50px;" type="button" id="resetall" value="全てリセット" onclick=Reset()>
-          </div>
-          <p>左クリック：セルの背景色を変更する<br>右クリック:セルのシンボルを変更する<br>Shift+クリック:セルのシンボルを削除する</p>
-                <div id="interactive-table"></div>
+                </tbody>
+            </table>
+            <div style="display: inline-block;">
+                <input type="radio" id="rotate-ccw" name="rotate" value="left" checked />
+                <label for="rotate-ccw">反時計90°</label>
+                <input type="radio" id="rotate-cw" name="rotate" value="right" />
+                <label for="rotate-cw">時計90°</label>
             </div>
-           <div class="page-footer relative-footer">ページ 1/1</div>
+            <div style="display: inline-block;">
+                <input type="button" id="rotate-do" value="回転" />
+                <input type="button" id="rotate-Y" value="上下反転" />
+                <input type="button" id="rotate-X" value="左右反転" />
+                <input type="button" id="resetrotate" value="回転をリセット" />
+                <input type="button" id="resetall" value="全てリセット" />
+            </div>
+            <p>パレットを使用して配置したいタイルを設定し、グリッド内のセルを押すとそこにタイルを配置する。すでに配置されているセルをもう一度押すと、そのセルを空にできる。</p>
+            <div id="cell-container">
+                <div id="interactive-table"></div>
+                <div id="cell-palette">
+                    <h3>パレット</h3>
+                    <div>
+                        <label>色:</label><br />
+                        <select id="color-select">
+                            <option value="red">赤</option>
+                            <option value="blue">青</option>
+                            <option value="green">緑</option>
+                            <option value="yellow">黄</option>
+                            <option value="orange">オレンジ</option>
+                            <option value="purple">紫</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>図形:</label><br />
+                        <select id="pattern-select">
+                            <option value="square">四角</option>
+                            <option value="diamond">ダイヤ</option>
+                            <option value="cross">十字</option>
+                            <option value="circle">丸</option>
+                            <option value="8star">8つ星</option>
+                            <option value="4star">4つ星</option>
+                        </select>
+                        <div id="preview-area">
+                            <label>プレビュー:</label><br />
+                            <img id="preview-img" src="img/Qwirkle/red_square.png" style="width: 80px; height: 80px;" alt="プレビュー" />
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">ページ 1/1</div>
         </div>
     </div>
 </body>
