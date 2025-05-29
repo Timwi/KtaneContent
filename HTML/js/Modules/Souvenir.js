@@ -181,7 +181,7 @@ let SouvenirModuleData = [
 	{ name: "Encrypted Morse",	id: "EncryptedMorse",	questions: ["What were the received call and sent response?"] },
 	{ name: "Encryption Bingo",	id: "encryptionBingo",	questions: ["What was the first encoding used?"] },
 	{ name: "English Entries",	id: "EnglishEntries",	questions: ["What was the displayed quote?"] },
-	{ name: "Enigma Cycle",	id: "enigmaCycle",	questions: ["What were the message and response?"] },
+	{ name: "Enigma Cycle",	id: "enigmaCycle",	questions: ["Which direction were the dials pointing?","What was written on each dial?"] },
 	{ name: "Entry Number Four",	id: "GSEntryNumberFour",	questions: ["What were the numbers shown?"] },
 	{ name: "Entry Number One",	id: "GSEntryNumberOne",	questions: ["What were the numbers shown?"] },
 	{ name: "Equations X",	id: "equationsXModule",	questions: ["What was the displayed symbol?"] },
