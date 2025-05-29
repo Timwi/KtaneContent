@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:float="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>LED Grid — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .page-content {
+            font-size: 11pt;
+        }
+
+        .led-grid {
+            border-collapse: collapse;
+            float: left;
+            display: inline;
+            margin: 10px auto;
+        }
+
+        .led-grid-row-header {
+            background-color: black;
+            color: white;
+            text-align: center;
+        }
+
+        .led-grid td {
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        table.grid {
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            user-select: none;
+            position: relative;
+            left: 0%;
+        }
+
+        .floating-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 220px;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            z-index: 10000;
+            overflow: auto;
+            max-height: 80vh;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .palette {
+            display: grid;
+            grid-template-columns: repeat(3, 32px); /* Fixed 32px columns for swatches */
+            gap: 8px;
+            padding: 0;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .color-swatch {
+            width: 32px;
+            height: 32px;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .color-swatch.selected {
+            border-color: black;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
+        }
+
+        button#clear-btn {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f8f8f8;
+            transition: background-color 0.2s ease;
+        }
+
+        button#clear-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        table.grid {
+            border-collapse: collapse;
+            margin: 0 auto;
+            user-select: none;
+        }
+
+        table.grid td {
+            width: 60px; /* Fixed square size */
+            height: 60px; /* Equal to width for square shape */
+            border: 1px solid #aaa;
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            color: black;
+            position: relative;
+            box-sizing: border-box; /* Ensure padding/border don't affect size */
+            line-height: 30px; /* Center text vertically */
+        }
+
+        table.grid td::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 26px; /* Slightly smaller than cell for border visibility */
+            height: 26px; /* Square shape */
+            border-radius: 4px;
+            z-index: 0;
+        }
+
+        table.grid td[data-color="white"]::before { background-color: white; border: 1px solid #ccc;}
+        table.grid td[data-color="red"]::before { background-color: red; }
+        table.grid td[data-color="blue"]::before { background-color: blue; }
+        table.grid td[data-color="yellow"]::before { background-color: yellow; }
+        table.grid td[data-color="black"]::before { background-color: black; }
+        table.grid td[data-color="green"]::before { background-color: green; }
+        table.grid td[data-color="purple"]::before { background-color: purple; }
+        table.grid td[data-color="orange"]::before { background-color: orange; }
+        table.grid td[data-color="pink"]::before { background-color: pink; }
+
+        table.grid td span.letter {
+            position: relative;
+            z-index: 1;
+        }
+
+        .color-swatch.white { background: white; }
+        .color-swatch.red { background: red; }
+        .color-swatch.blue { background: blue; }
+        .color-swatch.yellow { background: yellow; }
+        .color-swatch.black { background: black; }
+        .color-swatch.green { background: green; }
+        .color-swatch.purple { background: purple; }
+        .color-swatch.orange { background: orange; }
+        .color-swatch.pink { background: pink; }
+    </style>
+</head>
+<body>
+<div class="section">
+    <div class="page page-bg-01">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">LED Grid</span>
+        </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/LED Grid.svg">
+            <h2>On the Subject of LED Grid</h2>
+            <p class="flavour-text">Maybe they were Christmas lights in a previous life?</p>
+
+            <table class="led-grid">
+                <tbody>
+                <tr>
+                    <tr><td colspan="2" class="led-grid-row-header"><strong>0</strong> unlit LEDs</td></tr>
+                    <td>no <span style="color:ORANGE; background-color:black; padding: 2px 4px;"><strong>ORANGE</strong></span></td>
+                    <td>C D A B</td>
+                </tr>
+                <tr>
+                    <td><strong>> 2</strong> <span style="color:RED;"><strong>RED</strong></span></td>
+                    <td>D A C B</td>
+                </tr>
+                <tr>
+                    <td><strong>> 1</strong> <strong>pairs</strong></td>
+                    <td>B A C D</td>
+                </tr>
+                <tr>
+                    <td>Bottom row all same</td>
+                    <td>A C D B</td>
+                </tr>
+                <tr>
+                    <td>Otherwise</td>
+                    <td>B C D A</td>
+                </tr>
+
+                <tr><td colspan="2" class="led-grid-row-header"><strong>1</strong> unlit LED</td></tr>
+                <tr>
+                    <td>all <strong>UNIQUE</strong></td>
+                    <td>D C B A</td>
+                </tr>
+                <tr>
+                    <td>Top row all same</td>
+                    <td>A D B C</td>
+                </tr>
+                <tr>
+                    <td><strong>EXACTLY</strong> <strong>3</strong> <span style="color:RED;"><strong>RED</strong></span>, <span style="color:PINK; background-color:black; padding: 2px 4px;"><strong>PINK</strong></span> or <span style="color:PURPLE;"><strong>PURPLE</strong></span></td>
+                    <td>C B A D</td>
+                </tr>
+                <tr>
+                    <td><strong>EXACTLY</strong> <strong>1</strong> <span style="color:WHITE; background-color:black; padding: 2px 4px;"><strong>WHITE</strong></span>, <strong>2</strong> <span style="color:BLUE;"><strong>BLUE</strong></span> or <strong>3</strong> <span style="color:YELLOW; background-color:black; padding: 2px 4px;"><strong>YELLOW</strong></span></td>
+                    <td>B A D C</td>
+                </tr>
+                <tr>
+                    <td>Otherwise</td>
+                    <td>D B A C</td>
+                </tr>
+
+                <tr><td colspan="2" class="led-grid-row-header"><strong>2</strong> unlit LED</td></tr>
+                <tr>
+                    <td><strong>> 2</strong> <span style="color:PURPLE;"><strong>PURPLE</strong></span></td>
+                    <td>A D C B</td>
+                </tr>
+                <tr>
+                    <td><strong>EXACTLY</strong> <strong>2 pairs</strong> </td>
+                    <td>B C A D</td>
+                </tr>
+                <tr>
+                    <td><strong>> 0</strong> <span style="color:WHITE; background-color:black; padding: 2px 4px;"><strong>WHITE</strong></span>, <span style="color:ORANGE; background-color:black; padding: 2px 4px;"><strong>ORANGE</strong></span> AND <span style="color:PINK; background-color:black; padding: 2px 4px;"><strong>PINK</strong></span></td>
+                    <td>D B C A</td>
+                </tr>
+                <tr>
+                    <td><strong>EXACTLY</strong> <strong>1</strong> <span style="color:GREEN;"><strong>GREEN</strong></span>, <strong>2</strong> <span style="color:YELLOW; background-color:black; padding: 2px 4px;"><strong>YELLOW</strong></span>, <strong>3</strong> <span style="color:RED;"><strong>RED</strong></span> or <strong>4</strong> <span style="color:BLUE;"><strong>BLUE</strong></span></td>
+                    <td>C A D B</td>
+                </tr>
+                <tr>
+                    <td>Otherwise</td>
+                    <td>C D B A</td>
+                </tr>
+
+                <tr><td colspan="2" class="led-grid-row-header"><strong>3</strong> unlit LED</td></tr>
+                <tr>
+                    <td><strong>EXACTLY</strong> <strong>2</strong> <span style="color:ORANGE; background-color:black; padding: 2px 4px;"><strong>ORANGE</strong></span></td>
+                    <td>B D A C</td>
+                </tr>
+                <tr>
+                    <td><strong>> 1 pair</strong></td>
+                    <td>C A B D</td>
+                </tr>
+                <tr>
+                    <td><strong>0</strong> <span style="color:PURPLE;"><strong>PURPLE</strong></span></td>
+                    <td>D C A B</td>
+                </tr>
+                <tr>
+                    <td><strong>> 0</strong> <span style="color:RED;"><strong>RED</strong></span> AND <span style="color:YELLOW; background-color:black; padding: 2px 4px;"><strong>YELLOW</strong></span></td>
+                    <td>A C B D</td>
+                </tr>
+                <tr>
+                    <td>Otherwise</td>
+                    <td>B D C A</td>
+                </tr>
+
+                <tr><td colspan="2" class="led-grid-row-header"><strong>4</strong> unlit LED</td></tr>
+                <tr>
+                    <td>Middle row all same</td>
+                    <td>B C D A</td>
+                </tr>
+                <tr>
+                    <td><strong>> 1</strong> <span style="color:GREEN;"><strong>GREEN</strong></span> LEDs</td>
+                    <td>A B D C</td>
+                </tr>
+                <tr>
+                    <td><strong>EXACTLY</strong> <strong>2</strong> pairs</td>
+                    <td>C B D A</td>
+                </tr>
+                <tr>
+                    <td><strong>0</strong> <span style="color:PINK; background-color:black; padding: 2px 4px;"><strong>PINK</strong></span></td>
+                    <td>D A B C</td>
+                </tr>
+                <tr>
+                    <td>Otherwise</td>
+                    <td>A B C D</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="floating-panel" aria-label="Color selection panel">
+                <div class="palette" aria-label="Color palette">
+                    <div class="color-swatch white selected" data-color="white" title="White"></div>
+                    <div class="color-swatch red" data-color="red" title="Red"></div>
+                    <div class="color-swatch blue" data-color="blue" title="Blue"></div>
+                    <div class="color-swatch yellow" data-color="yellow" title="Yellow"></div>
+                    <div class="color-swatch black" data-color="black" title="Black"></div>
+                    <div class="color-swatch green" data-color="green" title="Green"></div>
+                    <div class="color-swatch purple" data-color="purple" title="Purple"></div>
+                    <div class="color-swatch orange" data-color="orange" title="Orange"></div>
+                    <div class="color-swatch pink" data-color="pink" title="Pink"></div>
+                </div>
+                <table class="grid" aria-label="Color grid"></table>
+                <button id="clear-btn">Clear</button>
+            </div>
+
+            <script>
+                // Letters for colors in reading order
+                const colorLetters = {
+                    white: "W",
+                    red: "R",
+                    blue: "B",
+                    yellow: "Y",
+                    black: "K",
+                    green: "G",
+                    purple: "P",
+                    orange: "O",
+                    pink: "I",
+                };
+
+                const gridSize = 3;
+                const grid = document.querySelector("table.grid");
+                let selectedColor = "white";
+
+                // Create grid cells
+                for (let r = 0; r < gridSize; r++) {
+                    const tr = document.createElement("tr");
+                    for (let c = 0; c < gridSize; c++) {
+                        const td = document.createElement("td");
+                        td.dataset.color = ""; // no color initially
+                        const span = document.createElement("span");
+                        span.className = "letter";
+                        span.textContent = ""; // empty at start
+                        td.appendChild(span);
+                        tr.appendChild(td);
+
+                        // Paint cell on click
+                        td.addEventListener("click", () => {
+                            if (selectedColor) {
+                                td.dataset.color = selectedColor;
+                                span.textContent = colorLetters[selectedColor];
+                            }
+                        });
+                    }
+                    grid.appendChild(tr);
+                }
+
+                // Palette selection logic
+                const paletteSwatches = document.querySelectorAll(".color-swatch");
+                paletteSwatches.forEach(swatch => {
+                    swatch.addEventListener("click", () => {
+                        paletteSwatches.forEach(s => s.classList.remove("selected"));
+                        swatch.classList.add("selected");
+                        selectedColor = swatch.dataset.color;
+                    });
+                });
+
+                // Clear button resets all cells
+                document.getElementById("clear-btn").addEventListener("click", () => {
+                    grid.querySelectorAll("td").forEach(td => {
+                        td.dataset.color = "";
+                        td.querySelector(".letter").textContent = "";
+                    });
+                });
+            </script>
+        </div>
+        <div class="page-footer relative-footer">Page 1 of 1</div>
+    </div>
+</div>
+</body>
+</html>
