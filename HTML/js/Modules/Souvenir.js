@@ -433,6 +433,7 @@ let SouvenirModuleData = [
 	{ name: "Pie Flash",	id: "pieFlash",	questions: ["What numbers were displayed?"] },
 	{ name: "Pigpen Cycle",	id: "pigpenCycle",	questions: ["Which direction were the dials pointing?","What was written on each dial?"] },
 	{ name: "The Pink Button",	id: "PinkButtonModule",	questions: ["What were the displayed words and their colors?"] },
+	{ name: "Pinpoint",	id: "pinpoint",	questions: ["What were the given point coordinates and distances?"] },
 	{ name: "Pixel Cipher",	id: "pixelcipher",	questions: ["What was the keyword?"] },
 	{ name: "Placeholder Talk",	id: "placeholderTalk",	questions: ["What was the entire first phrase?","What was the calculated value for second phrase?"] },
 	{ name: "Placement Roulette",	id: "PlacementRouletteModule",	questions: ["What were the character, track, and vehicle listed?"] },
