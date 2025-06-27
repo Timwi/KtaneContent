@@ -129,7 +129,7 @@ KtaneTheWeakestLinkData = {
       "Category": "KTANE"
     },
     {
-      "Question": "Which position in Chess is always a rook",
+      "Question": "Which position in Chess is always a rook?",
       "Answers": ["4th"],
       "WrongAnswers": ["1st"],
       "Category": "KTANE"
@@ -337,7 +337,7 @@ KtaneTheWeakestLinkData = {
       "Category": "KTANE"
     },
     {
-      "Question": "How many possible shapes are there in Shape Shift? ",
+      "Question": "How many possible shapes are there in Shape Shift?",
       "Answers": ["16"],
       "WrongAnswers": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
       "Category": "KTANE"
@@ -407,7 +407,7 @@ KtaneTheWeakestLinkData = {
       "Category": "KTANE"
     },
     {
-      "Question": "In Yahtzee, you keep the outlier if your first roll is what? ",
+      "Question": "In Yahtzee, you keep the outlier if your first roll is what?",
       "Answers": ["Small Straight"],
       "WrongAnswers": ["Full house", "Pair", "2 pairs"],
       "Category": "KTANE"
@@ -522,7 +522,7 @@ KtaneTheWeakestLinkData = {
       "Category": "KTANE"
     },
     {
-      "Question": "All fruits are 25% more per pound on what day in Cheap Checkout",
+      "Question": "All fruits are 25% more per pound on what day in Cheap Checkout?",
       "Answers": ["Friday"],
       "WrongAnswers": [
         "Sunday",
@@ -535,7 +535,7 @@ KtaneTheWeakestLinkData = {
       "Category": "KTANE"
     },
     {
-      "Question": "Lines, Arrows, and WHAT are possible hand shapes from The Clock",
+      "Question": "Lines, Arrows, and WHAT are possible hand shapes from The Clock?",
       "Answers": ["Spades"],
       "WrongAnswers": ["Hearts"],
       "Category": "KTANE"
@@ -851,7 +851,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Geography"
     },
     {
-      "Question": "Mount Olympus is the highest mountain in which European country? ",
+      "Question": "Mount Olympus is the highest mountain in which European country?",
       "Answers": ["Greece"],
       "WrongAnswers": ["France", "Russia", "Lithuania"],
       "Category": "Geography"
@@ -917,7 +917,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Geography"
     },
     {
-      "Question": "The towns of El Paso and San Antonio are in which US state",
+      "Question": "The towns of El Paso and San Antonio are in which US state?",
       "Answers": ["Texas"],
       "WrongAnswers": ["South America"],
       "Category": "Geography"
@@ -1025,13 +1025,13 @@ KtaneTheWeakestLinkData = {
       "Category": "Geography"
     },
     {
-      "Question": "In America, the Golden Gate Bridge is a feature of which city? ",
+      "Question": "In America, the Golden Gate Bridge is a feature of which city?",
       "Answers": ["San Francisco"],
       "WrongAnswers": ["New York"],
       "Category": "Geography"
     },
     {
-      "Question": "Vietnam has land borders with Laos, Cambodia and which other country? ",
+      "Question": "Vietnam has land borders with Laos, Cambodia and which other country?",
       "Answers": ["China"],
       "WrongAnswers": ["Thailand"],
       "Category": "Geography"
@@ -1111,7 +1111,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Geography"
     },
     {
-      "Question": "What word means the order of lessons in schools and the running of trains and buses? ",
+      "Question": "What word means the order of lessons in schools and the running of trains and buses?",
       "Answers": ["Timetable"],
       "WrongAnswers": ["automobile", "period"],
       "Category": "Language"
@@ -1123,7 +1123,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Language"
     },
     {
-      "Question": "In the modern English alphabet, which is the penultimate letter",
+      "Question": "In the modern English alphabet, which is the penultimate letter?",
       "Answers": ["Y"],
       "WrongAnswers": [
         "A",
@@ -1173,7 +1173,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Language"
     },
     {
-      "Question": "Which 'H' means the emergence of young creatures from eggs",
+      "Question": "Which 'H' means the emergence of young creatures from eggs?",
       "Answers": ["Hatching"],
       "WrongAnswers": ["Hernia"],
       "Category": "Language"
@@ -1203,13 +1203,13 @@ KtaneTheWeakestLinkData = {
       "Category": "Language"
     },
     {
-      "Question": "What word that means 'existing' precedes 'room' and is another name for the lounge in a house",
+      "Question": "What word that means 'existing' precedes 'room' and is another name for the lounge in a house?",
       "Answers": ["Living"],
       "WrongAnswers": ["Live", "Life"],
       "Category": "Language"
     },
     {
-      "Question": "What is the name of the large absorbent cloth used to dry the body after a bath or shower? ",
+      "Question": "What is the name of the large absorbent cloth used to dry the body after a bath or shower?",
       "Answers": ["Towel", "Rag"],
       "WrongAnswers": ["Shamwow", "Scrub daddy"],
       "Category": "Language"
@@ -1369,7 +1369,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Language"
     },
     {
-      "Question": "What common Latin phrase literally means “something for something”",
+      "Question": "What common Latin phrase literally means “something for something”?",
       "Answers": ["Quid Pro Quo"],
       "WrongAnswers": ["sum fo sum"],
       "Category": "Language"
@@ -1482,7 +1482,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Language"
     },
     {
-      "Question": " In phonetics, what “s” is used for a fricative consonant sound, in which the top of the tongue is brought near the roof of the mouth and air is pushed past the tongue to make a hissing sound",
+      "Question": "In phonetics, what “s” is used for a fricative consonant sound, in which the top of the tongue is brought near the roof of the mouth and air is pushed past the tongue to make a hissing sound?",
       "Answers": ["Sibilant"],
       "WrongAnswers": ["Whispering"],
       "Category": "Language"
@@ -1620,7 +1620,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Wildlife"
     },
     {
-      "Question": "Which mammal is known to have the most powerful bite in the world",
+      "Question": "Which mammal is known to have the most powerful bite in the world?",
       "Answers": ["Hippopotamus", "Hippo"],
       "WrongAnswers": ["Crocodile", "Alligator", "Turtle", "Shark"],
       "Category": "Wildlife"
@@ -1770,7 +1770,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Wildlife"
     },
     {
-      "Question": "What type of reptile can detach its tail when it’s in danger and then regrow it",
+      "Question": "What type of reptile can detach its tail when it’s in danger and then regrow it?",
       "Answers": ["Lizard"],
       "WrongAnswers": ["wolf"],
       "Category": "Wildlife"
@@ -1818,7 +1818,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Biology"
     },
     {
-      "Question": "What 'V' is a dilute acetic acid and is used as a condiment",
+      "Question": "What 'V' is a dilute acetic acid and is used as a condiment?",
       "Answers": ["Vinegar"],
       "WrongAnswers": ["Bicarbonate of soda"],
       "Category": "Biology"
@@ -1920,7 +1920,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Biology"
     },
     {
-      "Question": "What “i” refers to the attachment between a newly born organism and its caretaker? ",
+      "Question": "What “i” refers to the attachment between a newly born organism and its caretaker?",
       "Answers": ["Imprinting"],
       "WrongAnswers": ["Intelligence", "Umbilical cord"],
       "Category": "Biology"
@@ -2322,7 +2322,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Other"
     },
     {
-      "Question": "Wholegrain, Dijon and English are varieties of which condiment",
+      "Question": "Wholegrain, Dijon and English are varieties of which condiment?",
       "Answers": ["Mustard"],
       "WrongAnswers": ["Rice"],
       "Category": "Other"
@@ -2436,7 +2436,7 @@ KtaneTheWeakestLinkData = {
       "Category": "History"
     },
     {
-      "Question": "Which Indian leader, whose last name began with 'G', took the name Mahatma? ",
+      "Question": "Which Indian leader, whose last name began with 'G', took the name Mahatma?",
       "Answers": ["Gandhi"],
       "WrongAnswers": [
         "Mikhail Gorbachev",
