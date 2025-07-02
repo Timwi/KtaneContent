@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>LED Grid Interactive — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script type="module">
+        const COLOR_LETTERS = {
+            white: "W", red: "R", blue: "B", yellow: "Y", black: "K",
+            green: "G", purple: "P", orange: "O", pink: "I"
+        };
+        const GRID_SIZE = 3;
+        const grid = document.querySelector(".grid");
+        let highlightedCell = null;
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+            const tr = document.createElement("tr");
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const td = document.createElement("td");
+                td.dataset.color = "";
+                const span = document.createElement("span");
+                span.className = "letter";
+                td.appendChild(span);
+                tr.appendChild(td);
+                td.addEventListener("click", () => {
+                    grid.querySelectorAll("td").forEach(t => t.classList.remove("highlighted"));
+                    td.classList.add("highlighted");
+                    highlightedCell = td;
+                });
+            }
+            grid.appendChild(tr);
+        }
+        highlightedCell = grid.querySelector("td");
+        highlightedCell.classList.add("highlighted");
+
+        document.querySelectorAll(".color-swatch").forEach(swatch => {
+            swatch.addEventListener("click", () => {
+                if (!highlightedCell) return;
+                const color = swatch.dataset.color;
+                highlightedCell.dataset.color = color;
+                highlightedCell.classList.add("colored");
+                highlightedCell.querySelector(".letter").textContent = COLOR_LETTERS[color];
+                const cells = Array.from(grid.querySelectorAll("td"));
+                const currentIndex = cells.indexOf(highlightedCell);
+                const nextIndex = (currentIndex + 1) % cells.length;
+                highlightedCell.classList.remove("highlighted");
+                highlightedCell = cells[nextIndex];
+                highlightedCell.classList.add("highlighted");
+            });
+        });
+
+        // Clear selected cell
+        document.getElementById("clear-btn").addEventListener("click", () => {
+            if (!highlightedCell) return;
+            highlightedCell.dataset.color = "";
+            highlightedCell.classList.remove("colored");
+            highlightedCell.querySelector(".letter").textContent = "";
+            highlightedCell.classList.remove("highlighted");
+            highlightedCell = null;
+        });
+
+        // Clear all cells
+        document.getElementById("clear-all-btn").addEventListener("click", () => {
+            grid.querySelectorAll("td").forEach(td => {
+                td.dataset.color = "";
+                td.classList.remove("colored", "highlighted");
+                td.querySelector(".letter").textContent = "";
+            });
+            highlightedCell = grid.querySelector("td");
+            highlightedCell.classList.add("highlighted");
+        });
+    </script>
+    <style>
+        .page-content { font-size: 11pt; }
+
+        .led-grid {
+            border-collapse: collapse;
+            float: left;
+            margin: 10px auto;
+        }
+
+        .led-grid-row-header {
+            background: #000;
+            color: #fff;
+            text-align: center;
+        }
+
+        .led-grid td { text-align: center; }
+
+        .floating-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 220px;
+            background: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            z-index: 1000;
+            max-height: 80vh;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            user-select: none;
+        }
+
+        .palette {
+            display: grid;
+            grid-template-columns: repeat(4, 32px);
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .color-swatch {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .color-swatch.black {
+            width: 152px;
+            height: 32px;
+            margin: 0 0 0 0;
+            grid-column: 1 / -1;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .color-swatch.selected {
+            border-color: #000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
+        }
+
+        button {
+            padding: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f8f8f8;
+            transition: background 0.2s ease;
+        }
+
+        button:hover { background: #e0e0e0; }
+
+        .grid {
+            border-collapse: collapse;
+            margin: 0 auto;
+            user-select: none;
+        }
+
+        .grid td {
+            width: 60px;
+            height: 60px;
+            border: 1px solid #aaa;
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            color: #000;
+            position: relative;
+            box-sizing: border-box;
+            line-height: 30px;
+        }
+
+        .grid td.highlighted {
+            outline: 2px solid #000;
+            outline-offset: -2px;
+        }
+
+        .grid td::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 26px;
+            height: 26px;
+            border-radius: 4px;
+            z-index: 0;
+            transition: background 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .grid td.colored::before { opacity: 1; }
+
+        .grid td[data-color="white"]::before { background: #fff; border: 1px solid #ccc; }
+        .grid td[data-color="red"]::before { background: red; }
+        .grid td[data-color="blue"]::before { background: blue; }
+        .grid td[data-color="yellow"]::before { background: yellow; }
+        .grid td[data-color="black"]::before { background: black; }
+        .grid td[data-color="green"]::before { background: green; }
+        .grid td[data-color="purple"]::before { background: purple; }
+        .grid td[data-color="orange"]::before { background: orange; }
+        .grid td[data-color="pink"]::before { background: pink; }
+
+        .grid td span.letter {
+            position: relative;
+            z-index: 1;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .grid td.colored span.letter { opacity: 1; }
+        .grid td[data-color="blue"] span.letter { color: white; }
+        .grid td[data-color="black"] span.letter { color: white; }
+        .grid td[data-color="purple"] span.letter { color: white; }
+        .grid td[data-color="red"] span.letter { color: white; }
+        .grid td[data-color="green"] span.letter { color: white; }
+
+        .color-swatch.white { background: white; }
+        .color-swatch.red { background: red; color: white; }
+        .color-swatch.blue { background: blue; color: white; }
+        .color-swatch.yellow { background: yellow; }
+        .color-swatch.black { background: black; color: white; }
+        .color-swatch.green { background: green; color: white; }
+        .color-swatch.purple { background: purple; color: white; }
+        .color-swatch.orange { background: orange; }
+        .color-swatch.pink { background: pink; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">LED Grid</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/LED Grid.svg">
+                <h2>On the Subject of LED Gridn't</h2>
+                <p class="flavour-text">Maybe they were Christmas lights in a previous life?</p>
+
+                <table class="led-grid">
+                    <tbody>
+                        <tr><td colspan="2" class="led-grid-row-header"><strong>0</strong> unlit LEDs</td></tr>
+                        <tr><td>no <span style="color:ORANGE; background:#000; padding: 2px 4px;"><strong>ORANGE</strong></span></td><td>C D A B</td></tr>
+                        <tr><td><strong>> 2</strong> <span style="color:RED;"><strong>RED</strong></span></td><td>D A C B</td></tr>
+                        <tr><td><strong>> 1</strong> <strong>pairs</strong></td><td>B A C D</td></tr>
+                        <tr><td>Bottom row all same</td><td>A C D B</td></tr>
+                        <tr><td>Otherwise</td><td>B C D A</td></tr>
+                        <tr><td colspan="2" class="led-grid-row-header"><strong>1</strong> unlit LED</td></tr>
+                        <tr><td>all <strong>UNIQUE</strong></td><td>D C B A</td></tr>
+                        <tr><td>Top row all same</td><td>A D B C</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>3</strong> <span style="color:RED;"><strong>RED</strong></span>, <span style="color:PINK; background:#000; padding: 2px 4px;"><strong>PINK</strong></span> or <span style="color:PURPLE;"><strong>PURPLE</strong></span></td><td>C B A D</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>1</strong> <span style="color:WHITE; background:#000; padding: 2px 4px;"><strong>WHITE</strong></span>, <strong>2</strong> <span style="color:BLUE;"><strong>BLUE</strong></span> or <strong>3</strong> <span style="color:YELLOW; background:#000; padding: 2px 4px;"><strong>YELLOW</strong></span></td><td>B A D C</td></tr>
+                        <tr><td>Otherwise</td><td>D B A C</td></tr>
+                        <tr><td colspan="2" class="led-grid-row-header"><strong>2</strong> unlit LED</td></tr>
+                        <tr><td><strong>> 2</strong> <span style="color:PURPLE;"><strong>PURPLE</strong></span></td><td>A D C B</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>2 pairs</strong></td><td>B C A D</td></tr>
+                        <tr><td><strong>> 0</strong> <span style="color:WHITE; background:#000; padding: 2px 4px;"><strong>WHITE</strong></span>, <span style="color:ORANGE; background:#000; padding: 2px 4px;"><strong>ORANGE</strong></span> AND <span style="color:PINK; background:#000; padding: 2px 4px;"><strong>PINK</strong></span></td><td>D B C A</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>1</strong> <span style="color:GREEN;"><strong>GREEN</strong></span>, <strong>2</strong> <span style="color:YELLOW; background:#000; padding: 2px 4px;"><strong>YELLOW</strong></span>, <strong>3</strong> <span style="color:RED;"><strong>RED</strong></span> or <strong>4</strong> <span style="color:BLUE;"><strong>BLUE</strong></span></td><td>C A D B</td></tr>
+                        <tr><td>Otherwise</td><td>C D B A</td></tr>
+                        <tr><td colspan="2" class="led-grid-row-header"><strong>3</strong> unlit LED</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>2</strong> <span style="color:ORANGE; background:#000; padding: 2px 4px;"><strong>ORANGE</strong></span></td><td>B D A C</td></tr>
+                        <tr><td><strong>> 1 pair</strong></td><td>C A B D</td></tr>
+                        <tr><td><strong>0</strong> <span style="color:PURPLE;"><strong>PURPLE</strong></span></td><td>D C A B</td></tr>
+                        <tr><td><strong>> 0</strong> <span style="color:RED;"><strong>RED</strong></span> AND <span style="color:YELLOW; background:#000; padding: 2px 4px;"><strong>YELLOW</strong></span></td><td>A C B D</td></tr>
+                        <tr><td>Otherwise</td><td>B D C A</td></tr>
+                        <tr><td colspan="2" class="led-grid-row-header"><strong>4</strong> unlit LED</td></tr>
+                        <tr><td>Middle row all same</td><td>B C D A</td></tr>
+                        <tr><td><strong>> 1</strong> <span style="color:GREEN;"><strong>GREEN</strong></span> LEDs</td><td>A B D C</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>2</strong> pairs</td><td>C B D A</td></tr>
+                        <tr><td><strong>0</strong> <span style="color:PINK; background:#000; padding: 2px 4px;"><strong>PINK</strong></span></td><td>D A B C</td></tr>
+                        <tr><td>Otherwise</td><td>A B C D</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="floating-panel">
+                    <div class="palette">
+                        <div class="color-swatch white" data-color="white" title="White">W</div>
+                        <div class="color-swatch red" data-color="red" title="Red">R</div>
+                        <div class="color-swatch blue" data-color="blue" title="Blue">B</div>
+                        <div class="color-swatch yellow" data-color="yellow" title="Yellow">Y</div>
+                        <div class="color-swatch pink" data-color="pink" title="Pink">I</div>
+                        <div class="color-swatch green" data-color="green" title="Green">G</div>
+                        <div class="color-swatch orange" data-color="orange" title="Orange">O</div>
+                        <div class="color-swatch purple" data-color="purple" title="Purple">P</div>
+                        <div class="color-swatch black" data-color="black" title="Black">B</div>
+                    </div>
+                    <table class="grid"></table>
+                    <button id="clear-btn">Clear Cell</button>
+                    <button id="clear-all-btn">Clear All</button>
+                </div>
+
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
