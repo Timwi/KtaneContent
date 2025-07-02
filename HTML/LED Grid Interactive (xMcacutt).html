@@ -8,6 +8,72 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script type="module">
+        const COLOR_LETTERS = {
+            white: "W", red: "R", blue: "B", yellow: "Y", black: "K",
+            green: "G", purple: "P", orange: "O", pink: "I"
+        };
+        const GRID_SIZE = 3;
+        const grid = document.querySelector(".grid");
+        let highlightedCell = null;
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+            const tr = document.createElement("tr");
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const td = document.createElement("td");
+                td.dataset.color = "";
+                const span = document.createElement("span");
+                span.className = "letter";
+                td.appendChild(span);
+                tr.appendChild(td);
+                td.addEventListener("click", () => {
+                    grid.querySelectorAll("td").forEach(t => t.classList.remove("highlighted"));
+                    td.classList.add("highlighted");
+                    highlightedCell = td;
+                });
+            }
+            grid.appendChild(tr);
+        }
+        highlightedCell = grid.querySelector("td");
+        highlightedCell.classList.add("highlighted");
+
+        document.querySelectorAll(".color-swatch").forEach(swatch => {
+            swatch.addEventListener("click", () => {
+                if (!highlightedCell) return;
+                const color = swatch.dataset.color;
+                highlightedCell.dataset.color = color;
+                highlightedCell.classList.add("colored");
+                highlightedCell.querySelector(".letter").textContent = COLOR_LETTERS[color];
+                const cells = Array.from(grid.querySelectorAll("td"));
+                const currentIndex = cells.indexOf(highlightedCell);
+                const nextIndex = (currentIndex + 1) % cells.length;
+                highlightedCell.classList.remove("highlighted");
+                highlightedCell = cells[nextIndex];
+                highlightedCell.classList.add("highlighted");
+            });
+        });
+
+        // Clear selected cell
+        document.getElementById("clear-btn").addEventListener("click", () => {
+            if (!highlightedCell) return;
+            highlightedCell.dataset.color = "";
+            highlightedCell.classList.remove("colored");
+            highlightedCell.querySelector(".letter").textContent = "";
+            highlightedCell.classList.remove("highlighted");
+            highlightedCell = null;
+        });
+
+        // Clear all cells
+        document.getElementById("clear-all-btn").addEventListener("click", () => {
+            grid.querySelectorAll("td").forEach(td => {
+                td.dataset.color = "";
+                td.classList.remove("colored", "highlighted");
+                td.querySelector(".letter").textContent = "";
+            });
+            highlightedCell = grid.querySelector("td");
+            highlightedCell.classList.add("highlighted");
+        });
+    </script>
     <style>
         .page-content { font-size: 11pt; }
 
@@ -165,138 +231,72 @@
     </style>
 </head>
 <body>
-<div class="section">
-    <div class="page page-bg-01">
-        <div class="page-header">
-            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-            <span class="page-header-section-title">LED Grid</span>
-        </div>
-        <div class="page-content">
-            <img class="diagram" src="img/Component/LED Grid.svg">
-            <h2>On the Subject of LED Gridn't</h2>
-            <p class="flavour-text">Maybe they were Christmas lights in a previous life?</p>
-
-            <table class="led-grid">
-                <tbody>
-                <tr><td colspan="2" class="led-grid-row-header"><strong>0</strong> unlit LEDs</td></tr>
-                <tr><td>no <span style="color:ORANGE; background:#000; padding: 2px 4px;"><strong>ORANGE</strong></span></td><td>C D A B</td></tr>
-                <tr><td><strong>> 2</strong> <span style="color:RED;"><strong>RED</strong></span></td><td>D A C B</td></tr>
-                <tr><td><strong>> 1</strong> <strong>pairs</strong></td><td>B A C D</td></tr>
-                <tr><td>Bottom row all same</td><td>A C D B</td></tr>
-                <tr><td>Otherwise</td><td>B C D A</td></tr>
-                <tr><td colspan="2" class="led-grid-row-header"><strong>1</strong> unlit LED</td></tr>
-                <tr><td>all <strong>UNIQUE</strong></td><td>D C B A</td></tr>
-                <tr><td>Top row all same</td><td>A D B C</td></tr>
-                <tr><td><strong>EXACTLY</strong> <strong>3</strong> <span style="color:RED;"><strong>RED</strong></span>, <span style="color:PINK; background:#000; padding: 2px 4px;"><strong>PINK</strong></span> or <span style="color:PURPLE;"><strong>PURPLE</strong></span></td><td>C B A D</td></tr>
-                <tr><td><strong>EXACTLY</strong> <strong>1</strong> <span style="color:WHITE; background:#000; padding: 2px 4px;"><strong>WHITE</strong></span>, <strong>2</strong> <span style="color:BLUE;"><strong>BLUE</strong></span> or <strong>3</strong> <span style="color:YELLOW; background:#000; padding: 2px 4px;"><strong>YELLOW</strong></span></td><td>B A D C</td></tr>
-                <tr><td>Otherwise</td><td>D B A C</td></tr>
-                <tr><td colspan="2" class="led-grid-row-header"><strong>2</strong> unlit LED</td></tr>
-                <tr><td><strong>> 2</strong> <span style="color:PURPLE;"><strong>PURPLE</strong></span></td><td>A D C B</td></tr>
-                <tr><td><strong>EXACTLY</strong> <strong>2 pairs</strong></td><td>B C A D</td></tr>
-                <tr><td><strong>> 0</strong> <span style="color:WHITE; background:#000; padding: 2px 4px;"><strong>WHITE</strong></span>, <span style="color:ORANGE; background:#000; padding: 2px 4px;"><strong>ORANGE</strong></span> AND <span style="color:PINK; background:#000; padding: 2px 4px;"><strong>PINK</strong></span></td><td>D B C A</td></tr>
-                <tr><td><strong>EXACTLY</strong> <strong>1</strong> <span style="color:GREEN;"><strong>GREEN</strong></span>, <strong>2</strong> <span style="color:YELLOW; background:#000; padding: 2px 4px;"><strong>YELLOW</strong></span>, <strong>3</strong> <span style="color:RED;"><strong>RED</strong></span> or <strong>4</strong> <span style="color:BLUE;"><strong>BLUE</strong></span></td><td>C A D B</td></tr>
-                <tr><td>Otherwise</td><td>C D B A</td></tr>
-                <tr><td colspan="2" class="led-grid-row-header"><strong>3</strong> unlit LED</td></tr>
-                <tr><td><strong>EXACTLY</strong> <strong>2</strong> <span style="color:ORANGE; background:#000; padding: 2px 4px;"><strong>ORANGE</strong></span></td><td>B D A C</td></tr>
-                <tr><td><strong>> 1 pair</strong></td><td>C A B D</td></tr>
-                <tr><td><strong>0</strong> <span style="color:PURPLE;"><strong>PURPLE</strong></span></td><td>D C A B</td></tr>
-                <tr><td><strong>> 0</strong> <span style="color:RED;"><strong>RED</strong></span> AND <span style="color:YELLOW; background:#000; padding: 2px 4px;"><strong>YELLOW</strong></span></td><td>A C B D</td></tr>
-                <tr><td>Otherwise</td><td>B D C A</td></tr>
-                <tr><td colspan="2" class="led-grid-row-header"><strong>4</strong> unlit LED</td></tr>
-                <tr><td>Middle row all same</td><td>B C D A</td></tr>
-                <tr><td><strong>> 1</strong> <span style="color:GREEN;"><strong>GREEN</strong></span> LEDs</td><td>A B D C</td></tr>
-                <tr><td><strong>EXACTLY</strong> <strong>2</strong> pairs</td><td>C B D A</td></tr>
-                <tr><td><strong>0</strong> <span style="color:PINK; background:#000; padding: 2px 4px;"><strong>PINK</strong></span></td><td>D A B C</td></tr>
-                <tr><td>Otherwise</td><td>A B C D</td></tr>
-                </tbody>
-            </table>
-
-            <div class="floating-panel">
-                <div class="palette">
-                    <div class="color-swatch white" data-color="white" title="White">W</div>
-                    <div class="color-swatch red" data-color="red" title="Red">R</div>
-                    <div class="color-swatch blue" data-color="blue" title="Blue">B</div>
-                    <div class="color-swatch yellow" data-color="yellow" title="Yellow">Y</div>
-                    <div class="color-swatch pink" data-color="pink" title="Pink">I</div>
-                    <div class="color-swatch green" data-color="green" title="Green">G</div>
-                    <div class="color-swatch orange" data-color="orange" title="Orange">O</div>
-                    <div class="color-swatch purple" data-color="purple" title="Purple">P</div>
-                    <div class="color-swatch black" data-color="black" title="Black">B</div>
-                </div>
-                <table class="grid"></table>
-                <button id="clear-btn">Clear Cell</button>
-                <button id="clear-all-btn">Clear All</button>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">LED Grid</span>
             </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/LED Grid.svg">
+                <h2>On the Subject of LED Gridn't</h2>
+                <p class="flavour-text">Maybe they were Christmas lights in a previous life?</p>
 
-            <script>
-                const COLOR_LETTERS = {
-                    white: "W", red: "R", blue: "B", yellow: "Y", black: "K",
-                    green: "G", purple: "P", orange: "O", pink: "I"
-                };
-                const GRID_SIZE = 3;
-                const grid = document.querySelector(".grid");
-                let highlightedCell = null;
+                <table class="led-grid">
+                    <tbody>
+                        <tr><td colspan="2" class="led-grid-row-header"><strong>0</strong> unlit LEDs</td></tr>
+                        <tr><td>no <span style="color:ORANGE; background:#000; padding: 2px 4px;"><strong>ORANGE</strong></span></td><td>C D A B</td></tr>
+                        <tr><td><strong>> 2</strong> <span style="color:RED;"><strong>RED</strong></span></td><td>D A C B</td></tr>
+                        <tr><td><strong>> 1</strong> <strong>pairs</strong></td><td>B A C D</td></tr>
+                        <tr><td>Bottom row all same</td><td>A C D B</td></tr>
+                        <tr><td>Otherwise</td><td>B C D A</td></tr>
+                        <tr><td colspan="2" class="led-grid-row-header"><strong>1</strong> unlit LED</td></tr>
+                        <tr><td>all <strong>UNIQUE</strong></td><td>D C B A</td></tr>
+                        <tr><td>Top row all same</td><td>A D B C</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>3</strong> <span style="color:RED;"><strong>RED</strong></span>, <span style="color:PINK; background:#000; padding: 2px 4px;"><strong>PINK</strong></span> or <span style="color:PURPLE;"><strong>PURPLE</strong></span></td><td>C B A D</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>1</strong> <span style="color:WHITE; background:#000; padding: 2px 4px;"><strong>WHITE</strong></span>, <strong>2</strong> <span style="color:BLUE;"><strong>BLUE</strong></span> or <strong>3</strong> <span style="color:YELLOW; background:#000; padding: 2px 4px;"><strong>YELLOW</strong></span></td><td>B A D C</td></tr>
+                        <tr><td>Otherwise</td><td>D B A C</td></tr>
+                        <tr><td colspan="2" class="led-grid-row-header"><strong>2</strong> unlit LED</td></tr>
+                        <tr><td><strong>> 2</strong> <span style="color:PURPLE;"><strong>PURPLE</strong></span></td><td>A D C B</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>2 pairs</strong></td><td>B C A D</td></tr>
+                        <tr><td><strong>> 0</strong> <span style="color:WHITE; background:#000; padding: 2px 4px;"><strong>WHITE</strong></span>, <span style="color:ORANGE; background:#000; padding: 2px 4px;"><strong>ORANGE</strong></span> AND <span style="color:PINK; background:#000; padding: 2px 4px;"><strong>PINK</strong></span></td><td>D B C A</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>1</strong> <span style="color:GREEN;"><strong>GREEN</strong></span>, <strong>2</strong> <span style="color:YELLOW; background:#000; padding: 2px 4px;"><strong>YELLOW</strong></span>, <strong>3</strong> <span style="color:RED;"><strong>RED</strong></span> or <strong>4</strong> <span style="color:BLUE;"><strong>BLUE</strong></span></td><td>C A D B</td></tr>
+                        <tr><td>Otherwise</td><td>C D B A</td></tr>
+                        <tr><td colspan="2" class="led-grid-row-header"><strong>3</strong> unlit LED</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>2</strong> <span style="color:ORANGE; background:#000; padding: 2px 4px;"><strong>ORANGE</strong></span></td><td>B D A C</td></tr>
+                        <tr><td><strong>> 1 pair</strong></td><td>C A B D</td></tr>
+                        <tr><td><strong>0</strong> <span style="color:PURPLE;"><strong>PURPLE</strong></span></td><td>D C A B</td></tr>
+                        <tr><td><strong>> 0</strong> <span style="color:RED;"><strong>RED</strong></span> AND <span style="color:YELLOW; background:#000; padding: 2px 4px;"><strong>YELLOW</strong></span></td><td>A C B D</td></tr>
+                        <tr><td>Otherwise</td><td>B D C A</td></tr>
+                        <tr><td colspan="2" class="led-grid-row-header"><strong>4</strong> unlit LED</td></tr>
+                        <tr><td>Middle row all same</td><td>B C D A</td></tr>
+                        <tr><td><strong>> 1</strong> <span style="color:GREEN;"><strong>GREEN</strong></span> LEDs</td><td>A B D C</td></tr>
+                        <tr><td><strong>EXACTLY</strong> <strong>2</strong> pairs</td><td>C B D A</td></tr>
+                        <tr><td><strong>0</strong> <span style="color:PINK; background:#000; padding: 2px 4px;"><strong>PINK</strong></span></td><td>D A B C</td></tr>
+                        <tr><td>Otherwise</td><td>A B C D</td></tr>
+                    </tbody>
+                </table>
 
-                for (let r = 0; r < GRID_SIZE; r++) {
-                    const tr = document.createElement("tr");
-                    for (let c = 0; c < GRID_SIZE; c++) {
-                        const td = document.createElement("td");
-                        td.dataset.color = "";
-                        const span = document.createElement("span");
-                        span.className = "letter";
-                        td.appendChild(span);
-                        tr.appendChild(td);
-                        td.addEventListener("click", () => {
-                            grid.querySelectorAll("td").forEach(t => t.classList.remove("highlighted"));
-                            td.classList.add("highlighted");
-                            highlightedCell = td;
-                        });
-                    }
-                    grid.appendChild(tr);
-                }
-                highlightedCell = grid.querySelector("td");
-                highlightedCell.classList.add("highlighted");
+                <div class="floating-panel">
+                    <div class="palette">
+                        <div class="color-swatch white" data-color="white" title="White">W</div>
+                        <div class="color-swatch red" data-color="red" title="Red">R</div>
+                        <div class="color-swatch blue" data-color="blue" title="Blue">B</div>
+                        <div class="color-swatch yellow" data-color="yellow" title="Yellow">Y</div>
+                        <div class="color-swatch pink" data-color="pink" title="Pink">I</div>
+                        <div class="color-swatch green" data-color="green" title="Green">G</div>
+                        <div class="color-swatch orange" data-color="orange" title="Orange">O</div>
+                        <div class="color-swatch purple" data-color="purple" title="Purple">P</div>
+                        <div class="color-swatch black" data-color="black" title="Black">B</div>
+                    </div>
+                    <table class="grid"></table>
+                    <button id="clear-btn">Clear Cell</button>
+                    <button id="clear-all-btn">Clear All</button>
+                </div>
 
-                document.querySelectorAll(".color-swatch").forEach(swatch => {
-                    swatch.addEventListener("click", () => {
-                        if (!highlightedCell) return;
-                        const color = swatch.dataset.color;
-                        highlightedCell.dataset.color = color;
-                        highlightedCell.classList.add("colored");
-                        highlightedCell.querySelector(".letter").textContent = COLOR_LETTERS[color];
-                        const cells = Array.from(grid.querySelectorAll("td"));
-                        const currentIndex = cells.indexOf(highlightedCell);
-                        const nextIndex = (currentIndex + 1) % cells.length;
-                        highlightedCell.classList.remove("highlighted");
-                        highlightedCell = cells[nextIndex];
-                        highlightedCell.classList.add("highlighted");
-                    });
-                });
-
-                // Clear selected cell
-                document.getElementById("clear-btn").addEventListener("click", () => {
-                    if (!highlightedCell) return;
-                    highlightedCell.dataset.color = "";
-                    highlightedCell.classList.remove("colored");
-                    highlightedCell.querySelector(".letter").textContent = "";
-                    highlightedCell.classList.remove("highlighted");
-                    highlightedCell = null;
-                });
-
-                // Clear all cells
-                document.getElementById("clear-all-btn").addEventListener("click", () => {
-                    grid.querySelectorAll("td").forEach(td => {
-                        td.dataset.color = "";
-                        td.classList.remove("colored", "highlighted");
-                        td.querySelector(".letter").textContent = "";
-                    });
-                    highlightedCell = grid.querySelector("td");
-                    highlightedCell.classList.add("highlighted");
-                });
-            </script>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
-        <div class="page-footer relative-footer">Page 1 of 1</div>
     </div>
-</div>
 </body>
 </html>
