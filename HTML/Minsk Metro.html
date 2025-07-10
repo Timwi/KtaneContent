@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Minsk Metro — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        span.footnote-marker {
+            vertical-align: super;
+            font-size: 70%;
+        }
+        p.footnote {
+            font-size: 70%;
+        }
+        div.footnotes {
+            position: relative;
+            margin-top: 2em;
+            padding-top: 1em;
+        }
+        div.footnotes:before {
+            border-top: 1px solid black;
+            left: 0;
+            top: 0;
+            position: absolute;
+            width: 50mm;
+            content: '';
+        }
+        .dark div.footnotes:before {
+            border-top-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Minsk Metro</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Minsk Metro.svg" class="diagram">
+                <h2>On the Subject of Minsk Metro</h2>
+                <p class="flavour-text">Solving this module is just like taking metro! Unfortunately, it also takes as long as taking metro...</p>
+                <ul>
+                    <li>Initially, there are going to be an LED, LEAVE, ENTER, ▲ and ▼ buttons, and a number display.</li>
+                    <li>To solve the module, you have to get to a certain station of Minsk Metro.</li>
+                    <li>To enter the metro, press the ENTER button. Narrators will tell* the station that you’re on and its number will appear on the display.</li>
+                    <li>
+                        To find the destination line, take the number of your starting line (the first digit of your starting station), then subtract the value of the first serial number character in base-36 divided by 12, rounded down.
+                        Subtract 1 and then take the final number modulo 4. If that results in 0, replace it with 4. This is the number of your destination line.
+                    </li>
+                    <li>
+                        To find the destination station, treat the third and the fifth serial number characters as one number in base-36.
+                        Take this number modulo the number of stations on the destination line and look it up in the “Stations” table. The table is zero-indexed with the top-most station as number 0.
+                    </li>
+                </ul>
+                <h3>Buttons</h3>
+                <ul>
+                    <li>
+                        When you are on any station, pressing ▲ or ▼ will queue a train to get into. ▲ means way to stations with bigger number, ▼ - to smaller**.
+                        You will get in the train when doors are opened. You can unqueue a train by pressing the button again.
+                    </li>
+                    <li>When you are on any station, pressing the LEAVE button will submit the current station. If the submitted station is correct, the module will solve. Otherwise, a strike will be given.</li>
+                    <li>When you are on a train, pressing LEAVE will lead to leaving the train as soon as it stops or immediately if the train is currently on a station.</li>
+                    <li>When you are on a transfer station, pressing ENTER will lead to transferring to another line. Pressing ENTER on a non-transfer station will do nothing.</li>
+                </ul>
+                <h3>Display</h3>
+                <p>The display will show the number of either the station you were on last time (in the cases of taking a train or transferring) or the current station.</p>
+
+                <div class="footnotes">
+                    <p class="footnote"><sup>*</sup> There will be two narrators: one will speak Belarusian, the other - English. Be aware that all station names are still in Belarusian.</p>
+                    <p class="footnote"><sup>**</sup> In the Kalcavaja line ▲ will also get you from 426 to 410, and ▼ will also get you from 410 to 426.</p>
+                </div>
+
+
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 4</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Minsk Metro</span>
+            </div>
+            <div class="page-content">
+                <h3>LED</h3>
+                <p>The LED can tell in which state the module is on.</p>
+                <ul>
+                    <li>Black: You are outside a station. Either you haven’t started solving the module yet or have already solved it.</li>
+                    <li>Red: You are currently on a station and no train is on the station right now.</li>
+                    <li>Green: You are currently on a station and the train doors are open. You can enter the train.</li>
+                    <li>Blue: You are currently on a train and the doors are closed.</li>
+                    <li>Cyan: You are currently on a train and the doors are open. You can leave the train.</li>
+                    <li>Yellow: You are currently on a station and the train doors are closing.</li>
+                    <li>Magenta: You are currently on a train and the doors are closing.</li>
+                    <li>White: You are currently transferring.</li>
+                </ul>
+                <h3>Narrators</h3>
+                <p>The narrators will guide your way across Minsk Metro. They will tell you where you can transfer or remind you that the current stop is the last one on the line and so on.</p>
+                <h3>Mechanics</h3>
+                <p>To replicate metro experience, there are several mechanics to make this journey less boring.</p>
+                <ul>
+                    <li>
+                        A ride between two stations will take 100 UOT***. Doors on non-last stops will be open for 25 UOT, on last stops - 45 UOT.
+                        Transfers will take 40 UOT. Number of UOTs remaining can be checked while hovering the display.
+                    </li>
+                    <li>If you don’t leave a train on the last stop of a line, you’ll be kicked out by security. In that case, the module will give you a strike.</li>
+                    <li>
+                        If you press LEAVE when doors are closing, you <b>will</b> leave the train, but a “soft” strike will be given.
+                        If you decide to press ▲ or ▼ when doors are closing, you <b>will</b> enter the train, but a “soft” strike will be given.
+                        Every two “soft” strikes will lead to a real strike.
+                    </li>
+                </ul>
+
+                <div class="footnotes">
+                    <p class="footnote">
+                        <sup>***</sup> UOT - unit of time. 1 UOT will take 0.8-1.2 seconds without a failsafe.
+                        If the starting time on the bomb is too small then the length of UOT becomes shorter, giving you less time to react.
+                        The exact length of UOT is always random.
+                    </p>
+                </div>
+
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Minsk Metro</span>
+            </div>
+            <div class="page-content">
+                <ul>
+                    <li>You can leave trains on any station without submitting and be there for as long as needed. The module will still function as usual and you won’t move from this station.</li>
+                </ul>
+                <h3>Failsafe</h3>
+                <p>If the bomb’s starting time is less than 60 minutes, then the UOT’s length will be decreased. For example, if the starting time is 30 minutes, then it will halve.</p>
+                <h3>Stations</h3>
+                <p>If there is another number beside the number of a station, then you can transfer to the station with that number.</p>
+                <table>
+                    <tr>
+                        <th colspan="3" style="background-color: #1b59dc; color:#ffffff">Maskoŭskaja line (17 st.)</th>
+                        <th colspan="3" style="background-color: #e31e25; color:#ffffff">Aŭtazavodskaja line (16 st.)</th>
+                    </tr>
+                    <tr><td>Smalenskaja</td><td colspan="2">125</td><td>Krasny Bor</td><td colspan="2">224</td></tr>
+                    <tr><td>Uručča</td><td colspan="2">124</td><td>Kamiennaja Horka</td><td colspan="2">223</td></tr>
+                    <tr><td>Barysaŭski trakt</td><td colspan="2">123</td><td>Kuncaŭščyna</td><td colspan="2">222</td></tr>
+                    <tr><td>Uschod</td><td colspan="2">122</td><td>Spartyŭnaja</td><td colspan="2">221</td></tr>
+                    <tr><td>Maskoŭskaja</td><td colspan="2">121</td><td>Puškinskaja</td><td>220</td><td>426</td></tr>
+                    <tr><td>Park Čaluskincaŭ</td><td colspan="2">120</td><td>Maładziožnaja</td><td colspan="2">219</td></tr>
+                    <tr><td>Akademija navuk</td><td>119</td><td>419</td><td>Frunzienskaja</td><td>218</td><td>316</td></tr>
+                    <tr><td>Płošča Jakuba Kołasa</td><td colspan="2">118</td><td>Niamiha</td><td colspan="2">217</td></tr>
+                    <tr><td>Płošča Pieramohi</td><td colspan="2">117</td><td>Kupałaŭskaja</td><td>216</td><td>116</td></tr>
+                    <tr><td>Kastryčnickaja</td><td>116</td><td>216</td><td>Pieršamajskaja</td><td colspan="2">215</td></tr>
+                    <tr><td>Płošča Lenina</td><td>115</td><td>314</td><td>Praletarskaja</td><td colspan="2">214</td></tr>
+                    <tr><td>Instytut kultury</td><td colspan="2">114</td><td>Traktarny zavod</td><td>213</td><td>416</td></tr>
+                    <tr><td>Hrušaŭka</td><td colspan="2">113</td><td>Partyzanskaja</td><td colspan="2">212</td></tr>
+                    <tr><td>Michałova</td><td>112</td><td>411</td><td>Aŭtazavodskaja</td><td colspan="2">211</td></tr>
+                    <tr><td>Piatroŭščyna</td><td colspan="2">111</td><td>Mahiloŭskaja</td><td colspan="2">210</td></tr>
+                    <tr><td>Malinaŭka</td><td colspan="2">110</td><td>Šabany</td><td colspan="2">209</td></tr>
+                    <tr><td>Ščomyślica</td><td colspan="2">109</td><td colspan="3"></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Minsk Metro</span>
+            </div>
+            <div class="page-content">
+                <h3>Stations (cont.)</h3>
+                <table>
+                    <tr>
+                        <th colspan="3" style="background-color: #14ab0f; color:#ffffff">Zielenałužskaja line (14 st.)</th>
+                        <th colspan="3" style="background-color: purple; color:#ffffff">Kalcavaja line (17 st.)</th>
+                    </tr>
+                    <tr><td>Łahojskaja</td><td colspan="2">323</td><td>Civali</td><td>426</td><td>220</td></tr>
+                    <tr><td>Zialony Łuh</td><td colspan="2">322</td><td>Alšeŭskaja</td><td colspan="2">425</td></tr>
+                    <tr><td>Ivana Mieleža</td><td colspan="2">321</td><td>Viaśnianka</td><td colspan="2">424</td></tr>
+                    <tr><td>Park Družby Narodaŭ</td><td>320</td><td>421</td><td>Staravilenski šlach</td><td colspan="2">423</td></tr>
+                    <tr><td>Kamaroŭskaja</td><td colspan="2">319</td><td>Kijeŭski skvier</td><td colspan="2">422</td></tr>
+                    <tr><td>Piarespa</td><td colspan="2">318</td><td>Maksima Bahdanoviča</td><td>421</td><td>320</td></tr>
+                    <tr><td>Prafsajuznaja</td><td colspan="2">317</td><td>Politechničnaja</td><td colspan="2">420</td></tr>
+                    <tr><td>Jubilejnaja płošča</td><td>316</td><td>218</td><td>Drukarskaja</td><td>419</td><td>119</td></tr>
+                    <tr><td>Płošča Franciška Bahuševiča</td><td colspan="2">315</td><td>Bataničny sad</td><td colspan="2">418</td></tr>
+                    <tr><td>Vakzalnaja</td><td>314</td><td>115</td><td>Slapianka</td><td colspan="2">417</td></tr>
+                    <tr><td>Kavalskaja Słabada</td><td colspan="2">313</td><td>Daŭhabrodskaja</td><td>416</td><td>213</td></tr>
+                    <tr><td>Aeradromnaja</td><td>312</td><td>413</td><td>Sierabranka</td><td colspan="2">415</td></tr>
+                    <tr><td>Niemaršanski Sad</td><td colspan="2">311</td><td>Kozyrava</td><td colspan="2">414</td></tr>
+                    <tr><td>Słucki Haściniec</td><td colspan="2">310</td><td>Praśpiekt Miru</td><td>413</td><td>312</td></tr>
+                    <tr><td colspan="3"></td><td>Łakamatyŭnaja</td><td colspan="2">412</td></tr>
+                    <tr><td colspan="3"></td><td>Bieraściejskaja</td><td>411</td><td>112</td></tr>
+                    <tr><td colspan="3"></td><td>Tučynka</td><td colspan="2">410</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 4 of 4</div>
+        </div>
+    </div>
+</body>
+</html>
