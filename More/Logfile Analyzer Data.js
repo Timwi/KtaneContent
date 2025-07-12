@@ -4802,6 +4802,86 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Dandy's Floors",
+		moduleID: "dandysFloors",
+		loggingTag: "Dandy's Floors",
+		matches: [
+			{
+				regex: /Generating the seed:/,
+				handler: function (matches, module) {
+					let seedDropdown = [matches, []];
+					for (let i = 0; i < 6; i++) {
+						seedDropdown[1].push(readTaggedLine());
+						if (!seedDropdown[1][seedDropdown[1].length - 1].match(/which is too long/)) {
+							break;
+						}
+					}
+
+					let seedResult = readTaggedLine();
+					if (!seedResult.match(/Could not generate the run's seed - submit 0 ichor!/)) {
+						seedDropdown[1].push(seedResult);
+						let iterations = [readTaggedLine(), []];
+						for (let i = 0; i < 35; i++) {
+							iterations[1].push(readTaggedLine());
+						}
+						seedDropdown[1].push(iterations);
+						seedDropdown[1].push("Full seed:", pre(readTaggedLine().split(": ")[1].replace(".", "")));
+						module.push(seedDropdown);
+					}
+					else {
+						module.push(seedDropdown);
+						module.push(seedResult);
+					}
+					return true;
+				}
+			},
+			{
+				regex: /Floor #\d:/,
+				handler: function (matches, module) {
+					let floorDropdown = [matches, [readTaggedLine()]];
+
+					let twistedsDropdown = [readTaggedLine()];
+					let twistedCount = twistedsDropdown[0].match(/,/).length + 1;
+					twistedsDropdown.push(readTaggedLines(twistedCount));
+					floorDropdown[1].push(twistedsDropdown);
+
+					floorDropdown[1].push([readTaggedLine(), [readTaggedLine()]]); // Machines dropdown
+
+					let generationDropdown = [readTaggedLine(), [readTaggedLine()]];
+					let itemCount = generationDropdown[1][0].match(/There (is|are) (\d) items? on this floor:/)[2];
+					for (let i = 0; i < itemCount; i++) {
+						generationDropdown[1].push(readTaggedLine());
+					}
+					floorDropdown[1].push(generationDropdown);
+
+					let pickingUpDropdown = [readTaggedLine(), readTaggedLines(itemCount)];
+					let inventoryLine = readTaggedLine();
+					let inventory = inventoryLine.replace(".", "").split(" - ")[1].split(", ");
+					let inventoryItemCount = inventory.filter(x => x != "Empty").length;
+					pickingUpDropdown[1].push(inventoryLine);
+					floorDropdown[1].push(pickingUpDropdown);
+
+					let damageDropdown = [readTaggedLine(), []];
+					let damageLine = readTaggedLine();
+					while (!damageLine.match(/Using items in player's inventory:/)) {
+						damageDropdown[1].push(damageLine);
+						damageLine = readTaggedLine();
+					}
+					floorDropdown[1].push(damageDropdown);
+
+					let itemUsesDropdown = [damageLine, readTaggedLines(inventoryItemCount + 1)];
+					floorDropdown[1].push(itemUsesDropdown);
+
+					floorDropdown[1].push(readTaggedLine()); // "Player's HP after this floor is..."
+
+					module.push(floorDropdown);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "The Dealmaker",
 		moduleID: "thedealmaker",
 		loggingTag: "TheDealmaker"
