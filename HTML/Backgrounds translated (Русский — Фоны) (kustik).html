@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Фоны — Модуль Keep Talking and Nobody Explodes</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/font-cyrillic.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        p.note {
+            font-size: 12pt;
+            font-weight: bold;
+        }
+
+        .dark table, table {
+            text-align: center;
+            border: none;
+            margin: 0 auto;
+            width: 90%;
+        }
+    </style>
+    <script>
+    var options1;
+    var options2;
+    var options3;
+    var possibilities;
+    var ports =
+        [
+            "DVI", "паралельный", "PS/2", "RJ-45", "последовательный", "двухканальный RCA", "компонентный Video",
+            "компонентный Video", "USB", "HDMI", "VGA", "AC", "PCMCIA"
+        ];
+    var indicators =
+        [
+            "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK"
+        ];
+    var indicatorColors =
+        [
+            "Blue", "Gray", "Green", "Magenta", "Orange", "Purple", "Red", "Yellow"
+        ];
+    var coordX =
+        [
+            "A", "D", "C", "D", "B", "F", "E", "B", "C", "E"
+        ];
+    var coordXCopy;
+    var coordY =
+        [
+            "C", "B", "E", "D", "F", "E", "B", "C", "D", "A"
+        ];
+    var coordYCopy;
+    var ManualTable =
+        [
+            3, 2, 9, 1, 7, 4,
+            7, 9, 8, 8, 2, 3,
+            5, 1, 7, 4, 4, 6,
+            6, 4, 2, 6, 8, 5,
+            5, 1, 5, 3, 9, 9,
+            1, 2, 3, 6, 7, 8
+        ];
+    var ManualTableCopy;
+
+    function translateColorsInText(text) {
+        const colorMap = {
+            "red": "красный",
+            "yellow": "жёлтый",
+            "blue": "синий",
+            "orange": "оранжевый",
+            "green": "зелёный",
+            "purple": "фиолетовый",
+            "white": "белый",
+            "gray": "серый",
+            "black": "чёрный",
+            "cyan": "голубой",
+            "magenta": "пурпурный",
+            
+            "Red": "красный",
+            "Yellow": "жёлтый",
+            "Blue": "синий",
+            "Orange": "оранжевый",
+            "Green": "зелёный",
+            "Purple": "фиолетовый",
+            "White": "белый",
+            "Gray": "серый",
+            "Black": "чёрный",
+            "Cyan": "голубой",
+            "Magenta": "пурпурный"
+            
+        };
+        return text.replace(/\b(red|yellow|blue|orange|green|purple|white|gray|black|cyan|magenta|Red|Yellow|Blue|Orange|Green|Purple|White|Gray|Black|Cyan|Magenta|)\b/g, function(match) {
+            return colorMap[match] || match;
+        });
+    }
+
+    function setRules(rnd)
+    {
+        coordXCopy = coordX.slice();
+        coordYCopy = coordY.slice();
+        ManualTableCopy = ManualTable.slice();
+        if (rnd.seed != 1)
+        {
+            rnd.shuffleFisherYates(coordXCopy);
+            rnd.shuffleFisherYates(coordYCopy);
+            rnd.shuffleFisherYates(ManualTableCopy);
+        }
+        for (var j = 0; j < coordXCopy.length; j++)
+            document.getElementById('background-l-' + j).innerHTML = coordXCopy[j];
+        for (var j = 0; j < coordYCopy.length; j++)
+            document.getElementById('background-r-' + j).innerHTML = coordYCopy[j];
+        for (var j = 0; j < ManualTableCopy.length; j++)
+            document.getElementById('background-tbl-' + j).innerHTML = ManualTableCopy[j];
+        var i = rnd.next(0, 2);
+        options1 = [];
+        options2 = [];
+        options3 = [];
+        possibilities = [];
+        chosen = [];
+        AddToOptions(i, rnd.seed == 1);
+        Possibilities();
+        var RuleIndicies = []
+        Swap();
+        for (var j = 0; j < 9; j++)
+        {
+            var value = rnd.next(0, possibilities.length);
+            while (RuleIndicies.includes(value))
+                value = rnd.next(0, possibilities.length);
+            RuleIndicies.push(value);
+            chosen.push(possibilities[RuleIndicies[j]]);
+        }
+        for (var j = 0; j < chosen.length; j++)
+        {
+            var hold = "";
+            chosen[j] = "если " + chosen[j];
+            if (j == 0) hold = chosen[0].substr(0, 1).toUpperCase() + chosen[0].substr(1);
+            else hold = "Иначе, " + chosen[j];
+            
+            // Переводим цвета в тексте
+            hold = translateColorsInText(hold);
+
+            document.getElementById('background-rule-' + j).innerHTML = hold;
+        }
+    }
+    function Swap()
+    {
+        var values = [324, 1487, 393, 1415, 566, 1176, 941, 1308, 556];
+        var newValues = [0, 463, 1308, 1311, 8, 22, 1390, 1350, 28];
+        for (var i = 0; i < values.length; i++)
+        {
+            var hold = possibilities[values[i]];
+            possibilities[values[i]] = possibilities[newValues[i]];
+            possibilities[newValues[i]] = hold;
+        }
+    }
+    function setDefaultRules(rnd)
+    {
+        setRules(rnd);
+    }
+    function AddToOptions(i, r)
+    {
+        options1.push("фона");
+        options1.push("кнопки");
+        DetermineColors(i, r);
+        for (var j = 0; j < ports.length; j++)
+            options3.push(ports[j]);
+        for (var j = 0; j < indicators.length; j++)
+            options3.push(indicators[j]);
+        var listSize = 1;
+        while (listSize < 4)
+        {
+            var coloredArray = ["red", i == 0 ? "orange" : "cyan", "yellow", "green", "blue",
+                i == 0 ? "purple" : "magenta", "white", "gray", "black"];
+            var orderedArray = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+            var intList = [[]];
+            var current = -1;
+            for (var j = 0; j < orderedArray.length; j++)
+            {
+                if (current != -1)
+                    intList.push([]);
+                current++;
+                intList[current].push(coloredArray[j]);
+                if (listSize > 1)
+                {
+                    var list = orderedArray.slice(j + 1);
+                    for (var k = 0; k < list.length; k++)
+                    {
+                        intList[current].push(" или " + coloredArray[list[k]]);
+                        if (listSize > 2)
+                        {
+                            intList[current].pop();
+                            intList[current].push(" " + coloredArray[list[k]]);
+                            var list2 = orderedArray.slice(list[k] + 1);
+                            for (var l = 0; l < list2.length; l++)
+                            {
+                                intList[current].push(" или " + coloredArray[list2[l]]);
+                                current++;
+                                intList.push([]);
+                                intList[current].push(coloredArray[j]);
+                                intList[current].push(" " + coloredArray[list[k]]);
+                            }
+                            intList.pop();
+                            current--;
+                        }
+                        current++;
+                        intList.push([]);
+                        intList[current].push(coloredArray[j]);
+                    }
+                    intList.pop();
+                    current--;
+                }
+            }
+            for (var j = 0; j < intList.length; j++)
+            {
+                var check = [false, false, false];
+                var check2 = [false, false, false];
+                for (var k = 0; k < options2[0].length; k++)
+                {
+                    check[k] = options2[0][k] == intList[j][k];
+                    check2[k] = options2[1][k] == intList[j][k];
+                }
+                if (check.every(x => x == true) || check2.every(x => x == true)) continue;
+                options2.push(intList[j]);
+            }
+            listSize++;
+        }
+    }
+    function DetermineColors(i, r) {
+        if (i == 0)
+        {
+            options2.push(["red", " yellow", " или blue"]);
+            options2.push(["orange", " green", " или purple"]);
+            options2.push(" и red");
+            options2.push(" и yellow");
+            var foot0 = document.getElementById('background-foot-0');
+            var foot1 = document.getElementById('background-foot-1');
+            foot0.innerHTML = foot0.innerHTML.replace("Green", "Yellow");
+            foot1.innerHTML = foot1.innerHTML.replace("Cyan, Yellow, and Magenta", "Orange, Green, and Purple");
+            if (r){
+                document.getElementById('background-foot-2').innerHTML = "****: Если смешать красный и желтый - получится оранжевый, синий и желтый - получится зеленый, красный и синий - получится фиолетовый. Смешивание синего с белым <strong>не</strong> даст синего.";
+            }
+            else
+                document.getElementById('background-foot-2').innerHTML = "****: Если смешать красный и желтый - получится оранжевый, синий и желтый - получится зеленый, красный и синий - получится фиолетовый. Смешивание любого цвета с белым <strong>не</strong> даст первоначального цвета.";
+        }
+        else
+        {
+            options2.push(["red", " green", " или blue"]);
+            options2.push(["cyan", " yellow", " или magenta"]);
+            options2.push(" и red");
+            options2.push(" и green");
+            var foot0 = document.getElementById('background-foot-0');
+            var foot1 = document.getElementById('background-foot-1');
+            foot0.innerHTML = foot0.innerHTML.replace("Yellow", "Green");
+            foot1.innerHTML = foot1.innerHTML.replace("Orange, Green, and Purple", "Cyan, Yellow, and Magenta");
+            document.getElementById('background-foot-2').innerHTML = "****: Если смешать красный и зеленый - получится желтый, синий и зеленый - получится голубой, красный и синий - получится фиолетовый. Смешивание любого цвета с белым <strong>не</strong> даст первоначального цвета."
+        }
+        options2.push(" и blue");
+    }
+    function Possibilities() {
+        var check = false;
+
+        possibilities.push("цвет фона совпадает с цветом кнопки");
+        possibilities.push("цвет фона не совпадает с цветом кнопки");
+        possibilities.push("на кнопке отправки есть цифра");
+        possibilities.push("на кнопке отправки нет цифры");
+        for (var i = 0; i < options2.length; i++) {
+            if (options2[i].length == 2)
+                options2[i] = ("" + options2[i]).replace(",", "");
+            if (i < 2) {
+                var word = i == 0 ? "основной цвет **" : "вторичный цвет ***";
+                possibilities.push("кнопка или фон (или оба) имеют " + word);
+                possibilities.push("только кнопка имеет " + word);
+                possibilities.push("только фон имеет " + word);
+                possibilities.push("либо кнопка, либо фон (но не оба сразу) имеет " + word);
+                var word2 = i == 0 ? "основные цвета **" : "вторичные цвета ***";
+                possibilities.push("и кнопка, и фон имеют " + word2);
+                possibilities.push("ни кнопка, ни фон не имеют " + word2);
+                for (var j = 0; j < 2; j++) {
+                    possibilities.push("цвет " + options1[j] + " — это " + word);
+                    possibilities.push("цвет " + options1[j] + " — не " + word);
+                }
+            }
+            else if (i < 5) {
+                for (var j = 0; j < 2; j++)
+                    possibilities.push("смешать цвет " + options1[j] + options2[i] + ", получится цвет " + (j == 0 ? "кнопки" : "фона") + " ****");
+            }
+            else {
+                //var word = i < 16 ? "— " : "— ";
+                var word = "— ";
+                var word2 = " ";
+                possibilities.push("кнопка или фон (или оба) " + word2 + options2[i]);
+                possibilities.push("только кнопка " + word + options2[i]);
+                possibilities.push("только фон " + word + options2[i]);
+                possibilities.push("либо кнопка, либо фон (но не оба сразу) — " + word2 + options2[i]);
+                possibilities.push("и кнопка, и фон " + word + options2[i]);
+                possibilities.push("ни кнопка, ни фон " + word + options2[i]);
+                for (var j = 0; j < 2; j++) {
+                    possibilities.push("цвет " + options1[j] + " " + word + options2[i]);
+                    possibilities.push("цвет " + options1[j] + " не " + options2[i]);
+                }
+            }
+        }
+
+        possibilities.push("на бомбе нет портов");
+        possibilities.push("на бомбе есть пустая портовая панель");
+        possibilities.push("на бомбе есть только один порт");
+        possibilities.push("на бомбе более двух портов");
+        possibilities.push("на бомбе более одной портовой панели");
+        possibilities.push("на бомбе нет батареек");
+        possibilities.push("на бомбе нечётное количество батареек");
+        possibilities.push("на бомбе чётное количество батареек");
+        possibilities.push("на бомбе нет D-батареек *");
+        possibilities.push("на бомбе есть одна D-батарейка *");
+        possibilities.push("на бомбе более одной D-батарейки *");
+        possibilities.push("на бомбе нет AA-батареек");
+        possibilities.push("на бомбе ровно две AA-батарейки");
+        possibilities.push("на бомбе ровно три AA-батарейки");
+        possibilities.push("на бомбе четыре AA-батарейки");
+        possibilities.push("на бомбе более четырёх AA-батареек");
+        possibilities.push("на бомбе нет батарейных отсеков");
+        possibilities.push("на бомбе ровно один батарейный отсек");
+        possibilities.push("на бомбе более одного батарейного отсека");
+        possibilities.push("на бомбе есть батарейный отсек без батареек");
+        possibilities.push("на бомбе есть батарейный отсек с двумя батарейками");
+        possibilities.push("на бомбе есть батарейный отсек с тремя батарейками");
+        possibilities.push("на бомбе есть несколько отсеков с нечётным количеством батареек");
+        possibilities.push("на бомбе есть батарейный отсек с четырьмя батарейками");
+        possibilities.push("на бомбе есть несколько отсеков с чётным количеством батареек");
+        possibilities.push("на бомбе нет индикаторов");
+        possibilities.push("на бомбе ровно один индикатор");
+        possibilities.push("на бомбе более одного индикатора");
+        possibilities.push("на бомбе нет горящих индикаторов");
+        possibilities.push("на бомбе ровно один горящий индикатор");
+        possibilities.push("на бомбе более одного горящего индикатора");
+        possibilities.push("на бомбе нет негорящих индикаторов");
+        possibilities.push("на бомбе ровно один негорящий индикатор");
+        possibilities.push("на бомбе более одного негорящего индикатора");
+
+        for (var i = 0; i < options3.length; i++) {
+            if (i < 13) {
+                possibilities.push("на бомбе есть " + options3[i]+ " порт");
+                possibilities.push("на бомбе более одного порта " + options3[i]);
+                possibilities.push("на бомбе ровно один " + options3[i]+" порт");
+                possibilities.push("на бомбе нет " + options3[i]+"порта ");
+            } else {
+                possibilities.push("на бомбе есть индикатор " + options3[i]);
+                possibilities.push("на бомбе нет индикатора " + options3[i]);
+                possibilities.push("на бомбе есть горящий индикатор " + options3[i]);
+                possibilities.push("на бомбе нет горящего индикатора " + options3[i]);
+                possibilities.push("на бомбе есть негорящий индикатор " + options3[i]);
+                possibilities.push("на бомбе нет негорящего индикатора " + options3[i]);
+                for (var j = 0; j < indicatorColors.length; j++) {
+                    if (!check)
+                        possibilities.push("на бомбе есть " + indicatorColors[j]+" индикатор");
+                    possibilities.push("на бомбе есть " + indicatorColors[j] + "  индикатор " + options3[i]);
+                }
+                check = true;
+            }
+        }
+
+        possibilities.push("на бомбе нет двухфакторных аутентификаторов");
+        possibilities.push("на бомбе ровно один двухфакторный аутентификатор");
+        possibilities.push("на бомбе более одного двухфакторного аутентификатора");
+        possibilities.push("на бомбе нет виджета Даты производства");
+        possibilities.push("на бомбе есть виджет Даты производства");
+        possibilities.push("на бомбе нет виджета дня недели");
+        possibilities.push("на бомбе есть виджет дня недели");
+        possibilities.push("на бомбе есть оба виджета — Дата производства и день недели");
+        possibilities.push("на бомбе нет случайных часов");
+        possibilities.push("на бомбе менее двух случайных часов");
+        possibilities.push("на бомбе ровно два случайных времени");
+        possibilities.push("на бомбе более двух случайных часов");
+    }
+</script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Мод Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Фоны</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Backgrounds.svg" alt="Диаграмма фонов">
+                <h2>О фонах</h2>
+                <p class="flavour-text">На этот раз вы не только сосредоточены на том, что прямо перед вами. Обязательно обратите внимание на происходящее за кулисами. Мы все знаем, как вы относитесь к взрывам.</p>
+                <p>Этот модуль покажет вам цветную кнопку, счётчик и кнопку отправки. Однако фон может быть определённого цвета. Исходя из цвета фона и цвета кнопки, нажимайте кнопку до тех пор, пока счётчик не достигнет определённого числа, а затем нажмите кнопку отправки.</p>
+                <h3>Шаг 1:</h3>
+                <p>Используйте правила из Таблицы B, чтобы определить пару букв, найдя первые два подходящих условия. Используйте первую букву из первого правила и вторую букву из второго правила.</p>
+                <h3>Шаг 2:</h3>
+                <p>Используя пару букв из Шага 1 и Таблицу A, найдите количество нажатий кнопки перед нажатием отправки. Первая буква располагается слева, вторая — сверху.</p>
+
+                <table>
+                    <caption>ТАБЛИЦА A:</caption>
+                    <tr>
+                        <td class="corner"></td>
+                        <td><strong>A</strong></td>
+                        <td><strong>B</strong></td>
+                        <td><strong>C</strong></td>
+                        <td><strong>D</strong></td>
+                        <td><strong>E</strong></td>
+                        <td><strong>F</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>A</strong></td>
+                        <td><div id="background-tbl-0"></div></td>
+                        <td><div id="background-tbl-1"></div></td>
+                        <td><div id="background-tbl-2"></div></td>
+                        <td><div id="background-tbl-3"></div></td>
+                        <td><div id="background-tbl-4"></div></td>
+                        <td><div id="background-tbl-5"></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>B</strong></td>
+                        <td><div id="background-tbl-6"></div></td>
+                        <td><div id="background-tbl-7"></div></td>
+                        <td><div id="background-tbl-8"></div></td>
+                        <td><div id="background-tbl-9"></div></td>
+                        <td><div id="background-tbl-10"></div></td>
+                        <td><div id="background-tbl-11"></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>C</strong></td>
+                        <td><div id="background-tbl-12"></div></td>
+                        <td><div id="background-tbl-13"></div></td>
+                        <td><div id="background-tbl-14"></div></td>
+                        <td><div id="background-tbl-15"></div></td>
+                        <td><div id="background-tbl-16"></div></td>
+                        <td><div id="background-tbl-17"></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>D</strong></td>
+                        <td><div id="background-tbl-18"></div></td>
+                        <td><div id="background-tbl-19"></div></td>
+                        <td><div id="background-tbl-20"></div></td>
+                        <td><div id="background-tbl-21"></div></td>
+                        <td><div id="background-tbl-22"></div></td>
+                        <td><div id="background-tbl-23"></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>E</strong></td>
+                        <td><div id="background-tbl-24"></div></td>
+                        <td><div id="background-tbl-25"></div></td>
+                        <td><div id="background-tbl-26"></div></td>
+                        <td><div id="background-tbl-27"></div></td>
+                        <td><div id="background-tbl-28"></div></td>
+                        <td><div id="background-tbl-29"></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>F</strong></td>
+                        <td><div id="background-tbl-30"></div></td>
+                        <td><div id="background-tbl-31"></div></td>
+                        <td><div id="background-tbl-32"></div></td>
+                        <td><div id="background-tbl-33"></div></td>
+                        <td><div id="background-tbl-34"></div></td>
+                        <td><div id="background-tbl-35"></div></td>
+                    </tr>
+                </table>
+                <p class="note">(Обратите внимание, если нажать кнопку при счётчике, равном 9, счётчик сбросится на 0.)</p>
+            </div>
+            <div class="page-footer relative-footer">Страница 1 из 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Мод Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Фоны</span>
+            </div>
+            <div class="page-content">
+                <table>
+                    <caption>ТАБЛИЦА B: Правила приоритетов</caption>
+                    <tr>
+                        <td style="width:50%"><strong>ПРАВИЛО</strong></td>
+                        <td><strong>ПЕРВАЯ БУКВА</strong></td>
+                        <td><strong>ВТОРАЯ БУКВА</strong></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-0">Если цвет фона совпадает с цветом кнопки</td>
+                        <td><div id="background-l-0"></div></td>
+                        <td><div id="background-r-0"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-1">Иначе, если кнопка или фон (но не оба) чёрные или белые</td>
+                        <td><div id="background-l-1"></div></td>
+                        <td><div id="background-r-1"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-2">Иначе, если на бомбе нет D-батареек *</td>
+                        <td><div id="background-l-2"></div></td>
+                        <td><div id="background-r-2"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-3">Иначе, если на бомбе нет AA-батареек</td>
+                        <td><div id="background-l-3"></div></td>
+                        <td><div id="background-r-3"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-4">Иначе, если кнопка и фон — основные цвета **</td>
+                        <td><div id="background-l-4"></div></td>
+                        <td><div id="background-r-4"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-5">Иначе, если кнопка — вторичный цвет ***</td>
+                        <td><div id="background-l-5"></div></td>
+                        <td><div id="background-r-5"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-6">Иначе, если есть негорящий индикатор SND</td>
+                        <td><div id="background-l-6"></div></td>
+                        <td><div id="background-r-6"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-7">Иначе, если на бомбе есть последовательный порт</td>
+                        <td><div id="background-l-7"></div></td>
+                        <td><div id="background-r-7"></div></td>
+                    </tr>
+                    <tr>
+                        <td id="background-rule-8">Иначе, если цвет фона, смешанный с синим, создаёт цвет кнопки ****</td>
+                        <td><div id="background-l-8"></div></td>
+                        <td><div id="background-r-8"></div></td>
+                    </tr>
+                    <tr>
+                        <td>Иначе используйте это правило (можно использовать дважды)</td>
+                        <td><div id="background-l-9"></div></td>
+                        <td><div id="background-r-9"></div></td>
+                    </tr>
+                </table>
+                <p>
+                    <span id="background-foot-3" class="comment">*: D-батарейки считаются как батарейный отсек с одной батарейкой.</span>
+                    <span id="background-foot-0" class="comment">**: Основные цвета — красный, жёлтый и синий</span>
+                    <span id="background-foot-1" class="comment">***: Вторичные цвета — оранжевый, зелёный и фиолетовый</span>
+                    <span id="background-foot-2" class="comment">****: Смешивание красного и жёлтого даёт оранжевый, синего и жёлтого — зелёный, красного и синего — фиолетовый. Смешивание синего и белого <strong>не</strong> даёт синий.</span>
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Страница 2 из 2</div>
+        </div>
+    </div>
+</body>
+</html>
