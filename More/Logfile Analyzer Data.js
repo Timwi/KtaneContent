@@ -13315,7 +13315,7 @@ let parseData = [
 		loggingTag: "Papyrus Tiles",
 		matches: [
 			{
-				regex: /([ROGBPI]\s?){8}/,
+				regex: /([ROGBPIY]\s?){8}/,
 				handler: function (matches, module) {
 					const colorDict = {
 						"R": "red",
@@ -13323,7 +13323,8 @@ let parseData = [
 						"G": "green",
 						"B": "blue",
 						"P": "purple",
-						"I": "pink"
+						"I": "pink",
+						"Y": "yellow"
 					};
 					const colors = [matches[0].replaceAll(" ", "")].concat(readTaggedLines(5).map(line => line.replaceAll(" ", "")));
 					const svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 420 320'>").addClass("papyrus-tiles");
