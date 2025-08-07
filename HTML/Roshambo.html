@@ -1,0 +1,207 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Roshambo — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .example { text-align: center; }
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 6'; }
+        .red { color: red; }
+        .yellow { color: yellow; background-color: black; }
+        .blue { color: blue; }
+        .dark .yellow { color: yellow; background-color: transparent; }
+        .dark .blue { color: rgb(0, 162, 255); }
+
+        iframe.vid, div.vid {
+            width:100%;
+            height:65px;
+        }
+        div.vid { overflow: hidden; }
+        #embedded td:first-child {
+            width: 65%;
+            padding: 0.1em 0.1em 0.1em;
+        }
+        #embedded td:last-child { padding: 0.1em 0.1em 0.1em; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Roshambo</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Roshambo.svg" class="diagram">
+                <h2>On the Subject of Roshambo</h2>
+                <p class="flavour-text">No unnaturally long names. No overwhelming number of options. Just a simple game made complex by mind-readers and time-travelers.</p>
+                <ul>
+                    <li>This module contains three buttons showing the hand gestures for Rock-Paper-Scissors.</li>
+                    <li>The buttons will be coloured <span class="red">red</span>, <span class="yellow">yellow</span>, or <span class="blue">blue</span>. They will also be in different positions on the module, constrained to a 3x3 grid.</li>
+                    <li>To solve the module, you must win a 32-player Roshambo (Rock-Paper-Scissors) tournament by correctly predicting who your opponents will be, and what they will play.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Roshambo</span>
+            </div>
+            <div class="page-content">
+                <h3>Determining the Tournament Structure</h3>
+                <p>The tournament has 32 total contestants, consisting of you (*), 3 special guests (-), 27 regular contestants (# or letter), and the long-time reigning champion, the Rock Paper Wizard (!).</p>
+                <p>The tournament has 5 rounds of 1v1s where half of the current contestants get eliminated each round. To determine which contestants will face each other off,</p>
+                <ul>
+                    <li>Take the serial number and convert each character to its word equivalent (0=ZERO, A=ALPHA). Use Appendix I: NATO Phonetic Alphabet Letters at the bottom of <a href="https://ktane.timwi.de/HTML/Bamboozling%20Button%20Grid%20optimized%20(Fang).html">this manual</a>.</li>
+                    <li>Concatenate all of these words and append the alphabet.</li>
+                    <li>Remove all duplicate letters, keeping the left-most to make a 26-letter key.</li>
+                    <li>Concatenate all numbers in the serial number, and modulo 27. Insert a '#' after the letter at this position (0 means put it at the beginning)</li>
+                    <li>Place a '*' at the beginning, and a '!' at the end.</li>
+                    <li>Place a '-' at positions  15, 16, and 23 (0-indexed).</li>
+                    <li>This will yield a 32-character string. Call this the tournament key. Each character represents a contestant in order from lowest seeded to highest seeded, left-to-right. (You are seeded 0, The Rock Paper Wizard is seeded 31)</li>
+                </ul>
+                <div class="example">
+                    <h4>Example:</h4>
+                    <p>Serial number: 2V5BQ9</p>
+                    <p>TWOVICTORFIVEBRAVOQUEBECNINEABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+                    <p>TWOVICRFEBAQUNDGHJKLMPSXYZ</p>
+                    <p>259 % 27 = 16, TWOVICRFEBAQUNDG#HJKLMPSXYZ</p>
+                    <p>*TWOVICRFEBAQUN--DG#HJK-LMPSXYZ!</p>
+                </div>
+                <p>Each round, split the tournament key into pairs. Each contestant will play against the other contestant in their pair. If a contestant loses, remove their character from the tournament key, as they are eliminated. If the contestant ties, the contestant with the lower seed is automatically eliminated (due to time constraints). At the end of each round, concatenate all of the winners to make a new tournament key. Repeat until you have a single winner.</p>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Roshambo</span>
+            </div>
+            <div class="page-content">
+                <h3>Determining the Moves for Regular Contestants</h3>
+                <p>Each regular contestant is represented by a letter (or #) and will pick their moves for the first 3 rounds based off of this letter.</p>
+                <ul>
+                    <li>Take the letter's alphabetical position (A1Z26, #=0).</li>
+                    <li>Convert this number to ternary.</li>
+                    <li>Prepend zeros until the number is 3 digits long.</li>
+                    <li>Reverse the number.</li>
+                    <li>Convert each digit to a move (0=Rock, 1=Paper, 2=Scissors).</li>
+                    <li>These are the moves each contestant will pick each round left-to-right.</li>
+                </ul>
+                <p>For round 4, the contestant will freeze up as they did not think they would make it this far. They will look to the module's surface to determine their next move.</p>
+                <ul>
+                    <li>If the contestant is seeded 0-15, they will pick the input furthest up, disregarding ties.</li>
+                    <li>If the contestant is seeded 16-31, they will pick the input furthest left, disregarding ties.</li>
+                    <li>If all three inputs are tied, they will pick RYB(<span class="red">lit indicators</span>,<span class="yellow">-1</span>, <span class="blue">unlit indicators</span>)*.</li>
+                </ul>
+                <p>Regular contestants are unable to make it to round 5 under normal circumstances as it is a 1v1 between the Rock Paper Wizard and you. If this happens, you have bigger problems.</p>
+                <br>
+                <h3>Determining the Moves for Special guests</h3>
+                <p>Special guests are paid actors and will always pick the move that will get them to lose.</p>
+                <br>
+                <p class="appendix-reference" id="appendix-reference">*See Appendix: RSB-FUNCT for clarification.</p>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Roshambo</span>
+            </div>
+            <div class="page-content">
+                <h3>Determining the Moves for the Rock Paper Wizard</h3>
+                <p>For the first 4 rounds, the Rock Paper Wizard will use their mind-reading powers to always pick the exact move required to beat their opponent.</p>
+                <p>Conveniently, their powers will be disabled on round 5 (due to something about moon phases), and you will have a chance to best them. But do not be fooled, as their decision making is extremely complex. The Rock Paper Wizard will create a list of 8 moves, and condense* this list to get their final move. To obtain each entry of that list,</p>
+                <ol>
+                    <li>Condense* the Rock Paper Wizard's moves from rounds 1 to 4 in order.</li>
+                    <li>Pick RYB(<span class="red">AA batteries / 2</span>, <span class="yellow">-1</span>, <span class="blue">D batteries</span>).</li>
+                    <li>Pick RYB(number of inputs that lie on the <span class="red">corners</span> of the module, <span class="yellow">dead-center times 5</span>, <span class="blue">cardinal edges</span>).</li>
+                    <li>Pick RYB(number of serial number letters that match a letter in <span class="red">"ROCK"</span>, <span class="yellow">"PAER"</span>, <span class="blue">"SIZX"</span>)</li>
+                    <li>Pick RYB(number of serial number digits that match a digit in <span class="red">"089"</span>, <span class="yellow">"135"</span>, <span class="blue">"267"</span>)</li>
+                    <li>Without wrapping,
+                        <ul>
+                            <li>If all the inputs on the module are orthoganly adjacent to another input, take the <span class="red">red</span> input.</li>
+                            <li>Otherwise, if all the inputs on the module are orthoganly or diagonally adjacent to another input, take the <span class="blue">blue</span> input.</li>
+                            <li>Otherwise, take the <span class="yellow">yellow</span> input.</li>
+                        </ul>
+                    </li>
+                    <li>Pick RYB(port plates containing any <span class="red">parallel or serial ports</span>, <span class="yellow">-1</span>, <span class="blue">RJ, DVI, PS2, or RCA ports</span>).</li>
+                    <li>Take the move that beats the condensed* list of your moves from rounds 1 to 4.</li>
+                </ol>
+                <br>
+                <h3>Determining Your Moves</h3>
+                <p>To win the tournament, you must pick the move that will beat each of your opponents each round. After the previous calculations, you should have a list of 5 moves for each of the 5 rounds.</p>
+                <br>
+                <p class="appendix-reference" id="appendix-reference">*See Appendix: RSB-FUNCT for clarification.</p>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Roshambo</span>
+            </div>
+            <div class="page-content">
+                <h3>Competing in the Tournament</h3>
+                <p>Due to the time constraints, the tournament will happen very quickly. Upon pressing a button on the module, the following fanfare will play.</p>
+                <div id="embedded">
+                    <iframe class="vid" src="https://www.youtube.com/embed/eAqB9YXyrno"></iframe>
+                </div>
+                <br>
+                <p>For each of your moves, you must be <b>holding down</b> the associated button on the third beat of every "Dun-Dun-Dudun!". The first one is 3 seconds into the fanfare. To help you, all inputs will be white on the first beat, gray on the second, and your opponent's move will be lit up on the third. Again, you must be holding your desired move when this happens.</p>
+                <p>If you successfully defeat all of your opponents and dethrone the Rock Paper Wizard, you will immediately receive the grand prize of a solved Roshambo module, and all of the buttons will turn green.</p>
+                <p>If at any point you are eliminated, you will be immediately kicked out of the tourney and will receive a strike as a "loser's fee" and all of the buttons will turn red. However, since you are a time-traveler, you will immediately return to before the tournament starts shortly after receiving this fee.</p>
+            </div>
+            <div class="page-footer relative-footer">5</div>
+        </div>
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Roshambo</span>
+            </div>
+            <div class="page-content">
+                <h2>Appendix: RSB-FUNCT</h2>
+                <p>There are two reoccuring functions that appear in this specific Roshambo tournament.</p>
+                <h3>Condense</h3>
+                <p>The condense function is used on a list of moves, and will return one move. The length of this list will always be a power of two. To condense a list of moves...</p>
+                <ul>
+                    <li>Split the list into pairs.</li>
+                    <li>For each pair, convert the two moves into one move.
+                        <ul>
+                            <li>If both moves are the same, take same move.</li>
+                            <li>Otherwise, take the move that is neither of the moves in the pair.</li>
+                        </ul>
+                    </li>
+                    <li>Concatenate all of the new moves.
+                        <ul>
+                            <li>If there is exactly one move left, return this move.</li>
+                            <li>Otherwise, condense this new list of moves.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <br>
+                <h3>Pick RYB(<span class="red">x</span>,<span class="yellow">y</span>,<span class="blue">z</span>)</h3>
+                <p>A Pick RYB(<span class="red">x</span>,<span class="yellow">y</span>,<span class="blue">z</span>) function is always applied to three numbers (<span class="red">x</span>, <span class="yellow">y</span>, <span class="blue">z</span>) and returns a move. To figure out which move to return, compare the three numbers.</p>
+                <ul>
+                    <li>If all three are different values, look at the greatest number.</li>
+                    <li>Otherwise, if two are the same, look at the number that is different from others.</li>
+                    <li>Otherwise, look at <span class="yellow">y</span>.</li>
+                    <li>If the number being looked at is <span class="red">x</span>/<span class="yellow">y</span>/<span class="blue">z</span> use the move that is <span class="red">red</span>/<span class="yellow">yellow</span>/<span class="blue">blue</span>.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">6</div>
+        </div>
+    </div>
+</body>
+</html>
