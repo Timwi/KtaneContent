@@ -20139,6 +20139,251 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "ultimateTicTacToe",
+		loggingTag: "Ultimate Tic Tac Toe",
+		matches: [
+			{
+				regex: /^Grid:$/,
+				handler: function (_, module) {
+					if(!module.attempt) {
+						module.attempt = 1;
+					}
+					else {
+						module.attempt++;
+					}
+					module.turn = 0;
+					module.dropDown = [`Attempt ${module.attempt}`, []];
+					module.coords = [];
+					module.texts = [];
+					const lines = readTaggedLines(9);
+					module.grid = lines.map(l => l.split(' '));
+
+					module.makeMainSVG = (symbolsPlaced) => {
+						const colorDict = {
+							"R": "red",
+							"M": "magenta",
+							"G": "green",
+							"B": "blue",
+							"C": "cyan",
+							"W": "white",
+							"K": "black",
+							"Y": "yellow",
+						};
+						const cellDimension = 40;
+						const smallBoardDimension = cellDimension * 3;
+						const smallBoardGap = 2;
+						const mainBoardDimension = smallBoardDimension * 3 + smallBoardGap * 2;
+						const boardStartPos = -10;
+						const mainSvg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='${boardStartPos} ${boardStartPos} ${mainBoardDimension} ${mainBoardDimension}'>`)
+
+						//create svgs for each small grid
+						//and add them to the main svg
+						const svgs = [];
+
+						for( let row = 0; row < 3; row++) {
+							svgs.push([]);
+							for( let col = 0; col < 3; col++) {
+								const x = col * (smallBoardDimension + smallBoardGap) + boardStartPos;
+								const y = row * (smallBoardDimension + smallBoardGap) + boardStartPos;
+								const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='${boardStartPos} ${boardStartPos} ${smallBoardDimension + Math.abs(boardStartPos)} ${smallBoardDimension + Math.abs(boardStartPos)}'>`)
+								svg.attr("x", x).attr("y", y)
+									.attr("width", smallBoardDimension)
+									.attr("height", smallBoardDimension)
+									.addClass("ultimate-tic-tac-toe")
+									.appendTo(mainSvg);		
+								svgs[row].push(svg)
+							}
+						}
+
+						//color the cells
+						for(let row = 0; row < module.grid.length; row++) {
+							for(let col = 0; col < module.grid[row].length; col++) {
+								const svgRow = Math.floor(row / 3);
+								const svgCol = Math.floor(col / 3);
+								const cellRow = row % 3;
+								const cellCol = col % 3;
+								const color = module.grid[row][col];
+								const dictColor = colorDict[color]
+								const svg = svgs[svgRow][svgCol];
+								const x = cellCol * cellDimension - 1;
+								const y = cellRow * cellDimension - 1;
+
+								$SVG("<rect>")
+									.addClass(dictColor)
+									.attr("width", cellDimension)
+									.attr("height", cellDimension)
+									.attr("x", x)
+									.attr("y", y)
+									.appendTo(svg);		
+									
+								//add color blind text
+								const text = $SVG("<text>")
+									.attr("x", x + cellDimension - 6)
+									.attr("y", y + cellDimension - 4)
+									.text(color.toUpperCase())
+									.addClass("colorblind")
+									.addClass(dictColor)
+								text.appendTo(svg);
+								
+							}
+						}
+
+						const latestCoords = module.coords.slice(symbolsPlaced * -1);
+
+						//add the symbols
+						for(let i = 0; i < module.coords.length; i++) {
+							const coord = module.coords[i];
+							const bigRow = coord.bigRow;
+							const bigCol = coord.bigCol;
+							const smallRow = coord.smallRow;
+							const smallCol = coord.smallCol;
+							const svg = svgs[bigRow][bigCol];
+							const color = module.grid[bigRow * 3 + smallRow][bigCol * 3 + smallCol];
+							const x = smallCol * cellDimension + cellDimension / 2;
+							const y = smallRow * cellDimension + cellDimension / 2 + 2;
+
+							const text = $SVG("<text>")
+								.attr("x", x)
+								.attr("y", y)
+								.text(coord.text)
+								.addClass(colorDict[color])
+							text.appendTo(svg);
+
+							//remove the "latest" class from all moves (with the exception of the latest move(s))
+							if(latestCoords.includes(coord)) {
+								text.addClass("latest");
+							}
+
+							else {
+								text.removeClass("latest");
+							}
+
+							module.texts.push(text)
+						}
+
+						//add lines to see who won each board
+
+						//for each small board, create a 2d array of the board with the symbols being placed
+						for(let row = 0; row < 3; row++) {
+							for(let col = 0; col < 3; col++) {
+								const smallBoard = [['-','-','-'], ['-','-','-'], ['-','-','-']];
+
+								//get all of the symbols in the small board
+								const relevantSymbols = module.coords.filter(coord => coord.bigRow === row && coord.bigCol === col);
+
+								for(const symbol of relevantSymbols) {
+									smallBoard[symbol.smallRow][symbol.smallCol] = symbol.text;
+								}
+
+								//check if the small board has a winner
+								let startingCoord = null;
+								let endingCoord = null;
+
+								for(let i = 0; i < 3; i++) {
+									//horizontal
+									if(smallBoard[i][0] === smallBoard[i][1] && smallBoard[i][1] === smallBoard[i][2] && smallBoard[i][0] !== '-') {
+										const y = i * cellDimension + cellDimension / 2
+										startingCoord = { x: cellDimension / 2, y };
+										endingCoord = { x: smallBoardDimension - cellDimension / 2, y };
+										break;
+									}
+
+									//vertical
+									if(smallBoard[0][i] === smallBoard[1][i] && smallBoard[1][i] === smallBoard[2][i] && smallBoard[0][i] !== '-') {
+										const x = i * cellDimension + cellDimension / 2;
+										startingCoord = { x, y: cellDimension / 2 };
+										endingCoord = { x, y: smallBoardDimension - cellDimension / 2 };
+										break;
+									}
+								}
+
+								//diagonal r
+								if(startingCoord == null && smallBoard[0][0] === smallBoard[1][1] && smallBoard[1][1] === smallBoard[2][2] && smallBoard[0][0] !== '-') {
+									const start = cellDimension / 2
+									const end = smallBoardDimension - cellDimension / 2
+									startingCoord = { x: start, y: start };
+									endingCoord = { x: end, y: end };
+								}
+
+								//diagonal l
+								else if(startingCoord == null && smallBoard[2][0] === smallBoard[1][1] && smallBoard[1][1] === smallBoard[0][2] && smallBoard[2][0] !== '-') {
+									startingCoord = { x: cellDimension / 2 , y: smallBoardDimension - cellDimension / 2 };
+									endingCoord = { x: smallBoardDimension - cellDimension / 2, y: cellDimension / 2 };
+								}
+
+
+								//if there is a winner, draw a line
+								if(startingCoord) {
+									$SVG("<path>")
+									.attr("d", `M ${startingCoord.x} ${startingCoord.y} L ${endingCoord.x} ${endingCoord.y}`)
+									.appendTo(svgs[row][col]);
+								}
+
+							}
+						}
+
+						return mainSvg;
+
+					}
+					module.push(module.dropDown)
+					module.dropDown[1].push(["Grid",[{ nobullet: true, obj: module.makeMainSVG(0) }]])
+					return true;
+				}
+			},
+			{
+				regex: /^Player placed a O in ([ABC][123])\/([ABC][123])\.$/,
+				handler: function (matches, module) {
+					if(!module.turn) {
+						module.turn = 1;
+					}
+					else {
+						module.turn++;
+					}
+
+					const getTargetedCell = (bigCellCoord, smallCellCoord, text) => {
+						return {
+							bigRow: bigCellCoord.charCodeAt(1) - '1'.charCodeAt(0),
+							bigCol: bigCellCoord.charCodeAt(0) - 'A'.charCodeAt(0),
+							smallRow: smallCellCoord.charCodeAt(1) - '1'.charCodeAt(0),
+							smallCol: smallCellCoord.charCodeAt(0) - 'A'.charCodeAt(0),
+							text
+						}
+					}
+					module.coords.push(getTargetedCell(matches[1], matches[2], "O"))
+					let symbolsPlaced = 1;
+
+					const line = readTaggedLine();
+					const bombMatches = line.match(/^Bomb placed a X in ([ABC][123])\/([ABC][123])\.$/);
+					
+					if(bombMatches === null) {
+						linen--; 
+					}
+					else {
+						module.coords.push(getTargetedCell(bombMatches[1], bombMatches[2], "X"))
+						symbolsPlaced++;
+					}
+					const mainSVG = module.makeMainSVG(symbolsPlaced);
+					module.dropDown[1].push([`Turn ${module.turn}`,[{ nobullet: true, obj: mainSVG }]])
+					return true;
+				}
+			},
+			{
+				regex: /Module solved!/,
+				handler: function(matches, module) {
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{ 
+				regex: /(.+)/,
+				handler: function (matches, module) {
+					module.dropDown[1].push(matches[0]);
+				}
+
+			}
+		]
+	},
+	{
 		moduleID: "UltraStores",
 		loggingTag: "UltraStores",
 		displayName: "UltraStores",
