@@ -286,7 +286,7 @@ let SouvenirModuleData = [
 	{ name: "Keypad Maze",	id: "KeypadMaze",	questions: ["Where were the yellow cells?"] },
 	{ name: "Keypad Sequence",	id: "keypadSeq",	questions: ["What symbols were on the keys?"] },
 	{ name: "Keywords",	id: "xtrkeywords",	questions: ["What were the letters on the display?"] },
-	{ name: "The Klaxon",	id: "klaxon",	questions: ["Which modules activated the klaxon?"] },
+	{ name: "The Klaxon",	id: "klaxon",	questions: ["What was the first module to set off the klaxon?"] },
 	{ name: "Know Your Way",	id: "KnowYourWay",	questions: ["Which way was the arrow pointing?","Which LED was green?"] },
 	{ name: "Kooky Keypad",	id: "kookyKeypadModule",	questions: ["What colors were the LEDs?"] },
 	{ name: "Kudosudoku",	id: "KudosudokuModule",	questions: ["Which squares were initially pre-filled?"] },
