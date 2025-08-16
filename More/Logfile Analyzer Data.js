@@ -3101,6 +3101,86 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "kataCheatCheckout",
+		loggingTag: "Cheat Checkout",
+		matches: [
+			{
+				regex: /Raw hack data for hack (\d): (Site: [^\s]+) \((Security Value: \d+), (Website Type: [A-Z]+)\), (Hack Method: [^,]+), (.+)/,
+				handler: function (matches, module) {
+					const firstHack = matches[1] == 1
+					//make a new attempt
+					if(!module.attempt) {
+						module.attempt = 0;
+					}
+					if (firstHack) {
+						module.attempt++;
+						module.dropdown = [[`Attempt ${module.attempt}`], []]
+						module.push(module.dropdown)
+					}
+
+					const website = `${matches[2]} (${matches[3]}, ${matches[4]})`
+					const hackData = [website, matches[5]].concat(matches[6].split(","))
+					module.dropdown[1].push([`Hack ${matches[1]}`, hackData])
+					return true;
+				}
+			},
+			{
+				regex: /The chosen crypto currency is ([A-Za-z]+) \(priced at ([\d.]+)\)\./,
+				handler: function (matches, module) {
+					module.dropdown[1].push(`Crypto currency: ${matches[1]} (${matches[2]})`)
+					return true;
+				}
+			},
+			{
+				regex: /The subtotals for each hack \(in order, taking the percentage if it failed and first rounding to third decimal\): \s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)/,
+				handler: function (matches, module) {
+					const nums = [matches[1], matches[2], matches[3], matches[4], matches[5]]
+					const dropdown = [`Hack subtotal before discount: ${nums.reduce((acc, val) => acc + Number(val) , 0)}`, nums]
+					module.dropdown[1].push(dropdown)
+					return true;
+				}
+			},
+			{
+				regex: /The totals \(After applying discounts, for (?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), and second rounding to third decimal\) for each hack: \s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)/,
+				handler: function (matches, module) {
+					const nums = [matches[1], matches[2], matches[3], matches[4], matches[5]]
+					const total = Math.floor(nums.reduce((acc, val) => acc + Number(val) , 0) * 1000) / 1000;
+					const dropdown = [`Hack subtotal after discount: ${total}`, nums]
+					module.dropdown[1].push(dropdown)
+					return true;
+				}
+			},
+			{
+				regex: /The total price for the hacks in crypto \([a-zA-Z]+ priced at: \d+(?:\.\d+)\) is (\d+(?:\.\d+)) \(Apply the final rounding to third decimal\)/,
+				handler: function (matches, module) {
+					module.dropdown[1].push(`Total price in crypto: ${matches[1]}`)
+					return true;
+				}
+			},
+			{
+				regex: /The total before converting to crypto is \d+(?:\.\d+)\./,
+				handler: function (matches, module) {
+					return true;
+				}
+			},
+			{
+				regex: /Module solved!/,
+				handler: function (matches, module) {
+					module.push(matches[0])
+					return true;
+				}
+			},
+			{ 
+				regex: /.+/,
+				handler: function (matches, module) {
+					module.dropdown[1].push(matches[0])
+					return true;
+				}
+
+			 }
+		]
+	},
+	{
 		moduleID: "ChessModule",
 		loggingTag: "Chess",
 		matches: [
