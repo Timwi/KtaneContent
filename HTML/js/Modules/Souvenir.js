@@ -94,6 +94,7 @@ let SouvenirModuleData = [
 	{ name: "Character Shift",	id: "characterShift",	questions: ["What were the characters on the sliders?"] },
 	{ name: "Character Slots",	id: "characterSlots",	questions: ["Who was displayed in each slot for each stage?"] },
 	{ name: "Cheap Checkout",	id: "CheapCheckoutModule",	questions: ["What were the paid amounts?"] },
+	{ name: "Cheat Checkout",	id: "kataCheatCheckout",	questions: ["What was the cryptocurrency?","What was the site and hack method for each hack?"] },
 	{ name: "Cheep Checkout",	id: "cheepCheckout",	questions: ["Which birds were present?"] },
 	{ name: "Chess",	id: "ChessModule",	questions: ["What were the coordinates?"] },
 	{ name: "Chinese Counting",	id: "chineseCounting",	questions: ["What colors were the LEDs?"] },
