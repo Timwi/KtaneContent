@@ -345,6 +345,7 @@ let SouvenirModuleData = [
 	{ name: "Memory Wires",	id: "memoryWires",	questions: ["What were the wire colours?","What were the displayed digits?"] },
 	{ name: "Metamorse",	id: "metamorse",	questions: ["What was the extracted letter?"] },
 	{ name: "Metapuzzle",	id: "metapuzzle",	questions: ["What was the final answer?"] },
+	{ name: "Minsk Metro",	id: "minskMetro",	questions: ["What was the starting station?"] },
 	{ name: "Mirror",	id: "mirror",	questions: ["What was the second word written by the original ghost?"] },
 	{ name: "Mister Softee",	id: "misterSoftee",	questions: ["Where was the SpongeBob Bar?","Which treats were present?"] },
 	{ name: "Mixometer",	id: "mixometer",	questions: ["What was the position of the submit button?"] },
