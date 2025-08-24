@@ -73,16 +73,17 @@
     <script>
         const load = async () => {
             const validTypes = ["Regular", "Needy"];
-            const request = await fetch("https://ktane.timwi.de/json/raw");
-            const data = (await request.json()).KtaneModules;
-            $(".wd-loading").remove();
             const format = s => s.toLowerCase().replace(/ /g, "").trim();
-            const input = $(".wd-input").show().attr("maxlength", Math.max(...data.map(e => Math.max(e.Name.length, e.ModuleID.length)))).on("input", () => {
+            const request = await fetch("https://ktane.timwi.de/json/raw");
+            const data = (await request.json()).KtaneModules.filter(m => validTypes.includes(m.Type) && !m.TranslationOf).map(m => ({ ...m, FormattedName: format(m.Name), Formatted: format(m.Name + m.ModuleID + (m.SortKey ?? "")) }));
+            console.log(data);
+            $(".wd-loading").remove();
+            const input = $(".wd-input").show().attr("maxlength", Math.max(...data.map(e => Math.max(e.Name.length, e.ModuleID?.length ?? 0)))).on("input", () => {
                 const output = $(".wd-output").empty();
                 const val = format(input.val());
                 if (val.length) {
-                    const eq = n => format(n.Name) === val;
-                    const mods = data.filter(m => validTypes.includes(m.Type) && !m.TranslationOf && ((format(m.Name) + format(m.ModuleID) + format(m.SortKey ?? "")).includes(val))).sort((a, b) => eq(a) && !eq(b) ? -1 : eq(b) && !eq(a) ? 1 : 0).slice(0, 18);
+                    const eq = n => n.FormattedName === val;
+                    const mods = data.filter(m => m.Formatted.includes(val)).sort((a, b) => eq(a) && !eq(b) ? -1 : eq(b) && !eq(a) ? 1 : 0).slice(0, 18);
                     for (const mod of mods) {
                         const parts = mod.Published.split("-").map(n => parseInt(n, 10));
                         output.append($("<div/>").append($("<span/>").text([parts[1], parts[2], parts[0]].join("/")), $("<span/>").text(mod.Name)))
