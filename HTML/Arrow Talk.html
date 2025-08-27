@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -8,12 +8,67 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
-    <style>
-        table {
-            margin: 1em auto;
-        }
-        .dark img:not(.diagram) { filter: invert(80%); }
-    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function()
+        {
+            let methods = arrShuffle([0, 1, 2, 3, 4, 5, 6, RNG(7)]);
+            const colorNames = [ "Red", "Orange", "Yellow", RNG(2) ? "Green" : "Lime", RNG(2) ? "Cyan" : "Aqua", "Blue", RNG(2) ? "Purple" : "Violet", RNG(2) ? "Pink" : "Fuschia" ];
+            const colorParens = [ "⒭", "⒪", "⒴", RNG(2) ? "⒢" : "⒧", RNG(2) ? "⒞" : "⒜", "⒝", "⒱", "⒡" ];
+            const colorHexs = [ "fb1e24", "fa8c0a", "f9ca09", "90e508", "0ab0e4", "303afc", "ae0cfc", "f244a8" ];
+            let redArrow = RNG(8);
+            let angleCode = `<text x="65" y="25" fill="#C0" transform="rotate(22.5 65 65)">T0</text><text x="65" y="25" fill="#C1" transform="rotate(67.5 65 65)">T1</text><text x="65" y="25" fill="#C2" transform="rotate(112.5 65 65)">T2</text><text x="65" y="25" fill="#C3" transform="rotate(157.5 65 65)">T3</text><text x="65" y="25" fill="#C4" transform="rotate(202.5 65 65)">T4</text><text x="65" y="25" fill="#C5" transform="rotate(247.5 65 65)">T5</text><text x="65" y="25" fill="#C6" transform="rotate(292.5 65 65)">T6</text><text x="65" y="25" fill="#C7" transform="rotate(337.5 65 65)">T7</text>`;
+            let angleColors = Array(8).fill("888");
+            for (m = 0; m < 8; m++) {
+                switch (methods[m]) {
+                    case 0: //color
+                        angleCode = angleCode.replace("T"+m, colorNames[(m-redArrow+8)%8]);
+                        angleColors[m] = colorHexs[(m-redArrow+8)%8];
+                    break;
+                    case 1: //clockface
+                        angleCode = angleCode.replace("T"+m, ["12:45", "2:15", "3:45", "5:15", "6:45", "8:15", "9:45", "11:15"][m]);
+                    break;
+                    case 2: //cardinals
+                        angleCode = angleCode.replace("T"+m, ["NNE", "ENE", "ESE", "SSE", "SSW", "WSW", "WNW", "NNW"][m]);
+                    break;
+                    case 3: //command: circled means direction, single arrow means 'then', double arrow means 'from'
+                        angleCode = angleCode.replace("T"+m, [["Ⓤ→Ⓡ", "Ⓡ→Ⓤ", "Ⓡ→Ⓓ", "Ⓓ→Ⓡ", "Ⓓ→Ⓛ", "Ⓛ→Ⓓ", "Ⓛ→Ⓤ", "Ⓤ→Ⓛ"], ["CW⇐Ⓣ", "CCW⇐Ⓡ", "CW⇐Ⓡ", "CCW⇐Ⓑ", "CW⇐Ⓑ", "CCW⇐Ⓛ", "CW⇐Ⓛ", "CCW⇐Ⓣ"]][RNG(2)][m]);
+                    break;
+                    case 4: //degrees
+                        angleCode = angleCode.replace("T"+m, ["22.5°", "67.5°", "112.5°", "157.5°", "202.5°", "247.5°", "292.5°", "337.5°"][m]);
+                    break;
+                    case 5: //coordinates
+                        angleCode = angleCode.replace("T"+m, ["(1,2)", "(2,1)", "(2,-1)", "(1,-2)", "(-1,-2)", "(-2,-1)", "(-2,1)", "(-1,2)"][m]);
+                    break;
+                    default: //clockwise from color: parens mean the corresponding color, double arrow means 'from'
+                        let relativeTo;
+                        do {
+                            relativeTo = RNG(8);
+                        } while (relativeTo == m);
+                        let relativeColor = colorParens[(relativeTo - redArrow + 8) % 8];
+                        angleColors[relativeTo] = colorHexs[(relativeTo - redArrow + 8) % 8];
+                        angleCode = angleCode.replace("T"+m, RNG(2) == 0 ? ((m + 8 - relativeTo) % 8 + "↷⇐" + relativeColor) : (8 - ((m + 8 - relativeTo) % 8) + "↶⇐" + relativeColor));
+                    break;
+                }
+            }
+            for (q = 0; q < 8; q++) { angleCode = angleCode.replace("C"+q, angleColors[q]); }
+            document.getElementById('angleDiagram').innerHTML = angleCode;
+
+            function RNG(x) {
+                return Math.floor(Math.random() * x);
+            }
+
+            function arrShuffle(arr) {
+                let cI = arr.length, rI;
+                while (cI != 0) {
+                    rI = RNG(cI);
+                    cI--;
+                    [arr[cI], arr[rI]] = [
+                    arr[rI], arr[cI]];
+                }
+                return arr;
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="section">
@@ -26,12 +81,12 @@
                 <img src="img/Component/Arrow Talk.svg" class="diagram">
                 <h2>On the Subject of Arrow Talk</h2>
                 <p class="flavour-text">Points towards your doom.</p>
-                <ul>
-                    <li>Press the arrow that is shown on the display. The arrows will want to point outwards then point inwards.</li>
-                    <li>The arrows that are referred to can be referenced below by directions, cardinals, and numbers. For directions, follow them in order.</li>
-                    <li>They will also be referred to (in order of the numbers given in the diagram below) as Bottom Bottom Left, Bottom Bottom Right, Top Top Left, Top Top Right, Left Top Left, Left Bottom Left, Right Top Right, Right Bottom Right.</li>
-                </ul>
-                <img src="img/Arrow Talk/Arrows.svg">
+
+                <p>The displayed phrase corresponds to one arrow on the module.</p>
+                <p>Press the arrow corresponding to this phrase.</p>
+                <p>Repeat the above step until the module solves.</p>
+
+                <svg id="angleDiagram" class="angleDiagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130" font-family="LXGW WenKai Mono TC" font-size="7" text-anchor="middle"></svg>
             </div>
             <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
