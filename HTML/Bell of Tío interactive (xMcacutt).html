@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Bell of Tío — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .grid-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .grid-container {
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .grid-container td {
+            width: 40px;
+            height: 50px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: clip;
+            border: 1px solid #555;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 18px;
+            cursor: pointer;
+            background: white;
+        }
+        .grid-container td.active {
+            background: #e0e0ff;
+        }
+        .dark .grid-container td {
+            background: #222;
+            color: #DDD;
+            border-color: #777;
+        }
+        .dark .grid-container td.active {
+            background: #444466;
+        }
+        svg rect.cell {
+            fill: white;
+            stroke: black;
+            stroke-width: 1;
+            cursor: pointer;
+        }
+        .dark svg rect.cell {
+            fill: #222;
+            stroke: #DDD;
+        }
+        svg rect.cell.active {
+            fill: #e0e0ff;
+        }
+        .dark svg rect.cell.active {
+            fill: #444466;
+        }
+        svg text.letter {
+            font-size: 16px;
+            text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+        }
+        .dark svg text.letter {
+            fill: #DDD;
+        }
+        .controls {
+            display: grid;
+            margin-top: 10px;
+            gap: 15px;
+            margin-left: auto;
+            justify-content: center;
+        }
+        .controls label {
+            width: 80px;
+        }
+        .controls button {
+            padding: 5px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #DDD;
+            font-size: 14px;
+            border: 1px solid #555;
+            transition: background 0.2s;
+            margin-left: auto;
+        }
+        .dark .controls button {
+            background: #555;
+            color: #DDD;
+            border-color: #777;
+        }
+        .controls button:hover {
+            background: #BBB;
+        }
+        .dark .controls button:hover {
+            background: #777;
+        }
+        .controls input, .controls select {
+            padding: 7px;
+            border-radius: 6px;
+            border: 1px solid #555;
+            font-size: 14px;
+            text-align: center;
+        }
+        .dark .controls input, .dark .controls select {
+            background: #333;
+            color: #DDD;
+            border-color: #777;
+        }
+        .control-group-saves {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            gap: 10px;
+            margin-top: -5px;
+            margin-bottom: -5px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .control-group label {
+            font-size: 14px;
+            color: #444;
+        }
+        .dark .control-group label {
+            color: #BBB;
+        }
+    </style>
+    <script>
+        let grid = Array(5).fill().map(() => Array(5).fill(''));
+        let activeCell = null;
+
+        function initializeGrid() {
+            const letters = "".split("");
+            let index = 0;
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    grid[i][j] = letters[index++] || '';
+                }
+            }
+            updateGrid();
+        }
+
+        function updateGrid() {
+            const tbody = document.querySelector('.grid-container tbody');
+            tbody.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const row = document.createElement('tr');
+                for (let j = 0; j < 5; j++) {
+                    const cell = document.createElement('td');
+                    cell.textContent = grid[i][j];
+                    if (activeCell && activeCell.i === i && activeCell.j === j) {
+                        cell.classList.add('active');
+                    }
+                    cell.onclick = () => selectCell(i, j);
+                    row.appendChild(cell);
+                }
+                tbody.appendChild(row);
+            }
+        }
+
+        function selectCell(i, j) {
+            activeCell = { i, j };
+            updateGrid();
+        }
+
+        function normAmount(amount, size) {
+            const n = Number.isFinite(amount) ? amount : 1;
+            return ((n % size) + size) % size;
+        }
+
+        function cycleRow(row, amount = 1) {
+            if (row < 0 || row > 4) return;
+            const n = normAmount(amount, 5);
+            if (n === 0) return;
+            const r = grid[row];
+            grid[row] = r.slice(5 - n).concat(r.slice(0, 5 - n));
+            updateGrid();
+        }
+
+        function cycleColumn(col, amount = 1) {
+            if (col < 0 || col > 4) return;
+            const n = normAmount(amount, 5);
+            if (n === 0) return;
+            const column = grid.map(row => row[col]);
+            const rotated = column.slice(5 - n).concat(column.slice(0, 5 - n));
+            for (let i = 0; i < 5; i++) grid[i][col] = rotated[i];
+            updateGrid();
+        }
+
+        function rotateGrid(direction) {
+            const newGrid = Array(5).fill().map(() => Array(5));
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    if (direction === 'clockwise') {
+                        newGrid[j][4 - i] = grid[i][j];
+                    } else {
+                        newGrid[4 - j][i] = grid[i][j];
+                    }
+                }
+            }
+            grid = newGrid;
+            updateGrid();
+        }
+
+        function cycleOuterRing(direction, amount) {
+            amount = Math.abs(amount) % 16 || 1;
+            const outer = [];
+            for (let j = 0; j < 5; j++) outer.push(grid[0][j]);
+            for (let i = 1; i < 4; i++) outer.push(grid[i][4]);
+            for (let j = 4; j >= 0; j--) outer.push(grid[4][j]);
+            for (let i = 3; i >= 1; i--) outer.push(grid[i][0]);
+            if (direction === 'clockwise') {
+                for (let k = 0; k < amount; k++) outer.unshift(outer.pop());
+            } else {
+                for (let k = 0; k < amount; k++) outer.push(outer.shift());
+            }
+            let index = 0;
+            for (let j = 0; j < 5; j++) grid[0][j] = outer[index++];
+            for (let i = 1; i < 4; i++) grid[i][4] = outer[index++];
+            for (let j = 4; j >= 0; j--) grid[4][j] = outer[index++];
+            for (let i = 3; i >= 1; i--) grid[i][0] = outer[index++];
+            updateGrid();
+        }
+
+        function flipRow(row) {
+            if (row < 0 || row > 4) return;
+            grid[row] = grid[row].slice().reverse();
+            updateGrid();
+        }
+
+        function flipColumn(col) {
+            if (col < 0 || col > 4) return;
+            const column = grid.map(row => row[col]).reverse();
+            for (let i = 0; i < 5; i++) {
+                grid[i][col] = column[i];
+            }
+            updateGrid();
+        }
+
+        function swapRows(row1, row2) {
+            if (row1 < 0 || row1 > 4 || row2 < 0 || row2 > 4 || row1 === row2) return;
+            [grid[row1], grid[row2]] = [grid[row2], grid[row1]];
+            updateGrid();
+        }
+
+        function swapColumns(col1, col2) {
+            if (col1 < 0 || col1 > 4 || col2 < 0 || col2 > 4 || col1 === col2) return;
+            for (let i = 0; i < 5; i++) {
+                [grid[i][col1], grid[i][col2]] = [grid[i][col2], grid[i][col1]];
+            }
+            updateGrid();
+        }
+
+        let savedStates = [];
+
+        function saveState() {
+            if (!savedStates) savedStates = [];  // safety
+            savedStates.push(JSON.parse(JSON.stringify({ grid })));
+            updateStateList();
+        }
+
+        function clearGrid() {
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    grid[i][j] = '';
+                }
+            }
+            activeCell = null;
+            updateGrid();
+        }
+
+        function clearSaves() {
+            savedStates = [];
+            updateStateList();
+        }
+
+        function loadState(index) {
+            if (savedStates[index]) {
+                grid = JSON.parse(JSON.stringify(savedStates[index].grid));
+                activeCell = null;
+                updateGrid();
+            }
+        }
+
+        function updateStateList() {
+            const list = document.querySelector('.state-list');
+            list.innerHTML = '';
+            savedStates.forEach((state, index) => {
+                const button = document.createElement('button');
+                button.textContent = `State ${index + 1}`;
+                button.onclick = () => loadState(index);
+                list.appendChild(button);
+            });
+        }
+
+        function handleKey(event) {
+            if (!activeCell) return;
+            const tgt = event.target;
+            const tag = tgt && tgt.tagName;
+            if (tgt && (tgt.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT')) {
+                return;
+            }
+
+            if (!activeCell) return;
+            const key = event.key;
+            if (key === 'Backspace' || key === 'Delete') {
+                grid[activeCell.i][activeCell.j] = '';
+                updateGrid();
+                event.preventDefault();
+                return;
+            }
+
+            if (key.length === 1 && /^[a-z]$/i.test(key)) {
+                grid[activeCell.i][activeCell.j] = key.toUpperCase();
+                updateGrid();
+            }
+        }
+
+        function handleControls() {
+            document.querySelector('#rotate-btn').onclick = () => {
+                const direction = document.querySelector('#rotate-direction').value;
+                rotateGrid(direction);
+            };
+            document.querySelector('#flip-row-btn').onclick = () => {
+                const row = parseInt(document.querySelector('#flip-row-input').value) - 1;
+                flipRow(row);
+            };
+            document.querySelector('#swap-cols-btn').onclick = () => {
+                const col1 = parseInt(document.querySelector('#swap-col1-input').value) - 1;
+                const col2 = parseInt(document.querySelector('#swap-col2-input').value) - 1;
+                swapColumns(col1, col2);
+            };
+            document.querySelector('#cycle-row-btn').onclick = () => {
+                const row = parseInt(document.querySelector('#cycle-row-input').value) - 1;
+                const amt = parseInt(document.querySelector('#cycle-row-amount').value) || 1;
+                cycleRow(row, amt);
+            };
+            document.querySelector('#cycle-col-btn').onclick = () => {
+                const col = parseInt(document.querySelector('#cycle-col-input').value) - 1;
+                const amt = parseInt(document.querySelector('#cycle-col-amount').value) || 1;
+                cycleColumn(col, amt);
+            };
+            document.querySelector('#swap-rows-btn').onclick = () => {
+                const row1 = parseInt(document.querySelector('#swap-row1-input').value) - 1;
+                const row2 = parseInt(document.querySelector('#swap-row2-input').value) - 1;
+                swapRows(row1, row2);
+            };
+            document.querySelector('#flip-col-btn').onclick = () => {
+                const col = parseInt(document.querySelector('#flip-col-input').value) - 1;
+                flipColumn(col);
+            };
+            document.querySelector('#cycle-outer-btn').onclick = () => {
+                const direction = document.querySelector('#cycle-outer-direction').value;
+                const amount = parseInt(document.querySelector('#cycle-outer-amount').value);
+                cycleOuterRing(direction, amount);
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeGrid();
+            document.addEventListener('keydown', handleKey);
+            handleControls();
+        });
+    </script>
+</head>
+<body>
+<div class="section">
+    <div class="page page-bg-01">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Bell of Tío</span>
+        </div>
+        <div class="page-content">
+            <img src="img/Component/Bell%20of%20Tío.svg" class="diagram">
+            <h2>On the Subject of Bell of Tío</h2>
+            <p class="flavour-text">A. E. *ding* F. *ding* A. E. I. O. U. *ding ding ding* A. B. C. *ding* ...okay, enough!</p>
+            <p>This manual is intended for use by those familiar with the <a href="Bell%20of%20Tío.html">original manual</a></p>
+            <p style="padding-top:35px">Use the controls on the right to manipulate the grid.</p>
+            <div class="grid-wrapper">
+                <table class="grid-container">
+                    <tbody>
+                    </tbody>
+                </table>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Rot Grid</label>
+                        <select id="rotate-direction">
+                            <option value="clockwise">CW</option>
+                            <option value="counterclockwise">CCW</option>
+                        </select>
+                        <button id="rotate-btn">Apply</button>
+                    </div>
+                    <div class="control-group">
+                        <label>Row Flip</label>
+                        <input id="flip-row-input" type="number" min="1" max="5">
+                        <button id="flip-row-btn">Apply</button>
+                    </div>
+                    <div class="control-group">
+                        <label>Col Swap</label>
+                        <input id="swap-col1-input" type="number" min="1" max="5">
+                        <input id="swap-col2-input" type="number" min="1" max="5">
+                        <button id="swap-cols-btn">Apply</button>
+                    </div>
+                    <div class="control-group">
+                        <label>Row Cycle</label>
+                        <input id="cycle-row-input" type="number" min="1" max="5">
+                        <input id="cycle-row-amount" type="number" min="1" max="4">
+                        <button id="cycle-row-btn">Apply</button>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Col Cycle</label>
+                        <input id="cycle-col-input" type="number" min="1" max="5">
+                        <input id="cycle-col-amount" type="number" min="1" max="4">
+                        <button id="cycle-col-btn">Apply</button>
+                    </div>
+                    <div class="control-group">
+                        <label>Row Swap</label>
+                        <input id="swap-row1-input" type="number" min="1" max="5">
+                        <input id="swap-row2-input" type="number" min="1" max="5">
+                        <button id="swap-rows-btn">Apply</button>
+                    </div>
+                    <div class="control-group">
+                        <label>Col Flip</label>
+                        <input id="flip-col-input" type="number" min="1" max="5">
+                        <button id="flip-col-btn">Apply</button>
+                    </div>
+                    <div class="control-group">
+                        <label>Out Cycle</label>
+                        <select id="cycle-outer-direction">
+                            <option value="clockwise">CW</option>
+                            <option value="counterclockwise">CCW</option>
+                        </select>
+                        <input id="cycle-outer-amount" type="number" min="1" max="15">
+                        <button id="cycle-outer-btn">Apply</button>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group-saves" style="padding-top: 20px">
+                <button onclick="saveState()">Save State</button>
+                <button onclick="clearGrid()">Clear Grid</button>
+                <button onclick="clearSaves()">Clear Saves</button>
+            </div>
+            <div class="state-list"></div>
+        </div>
+        <div class="page-footer relative-footer">Page 1 of 1</div>
+    </div>
+</div>
+</body>
+</html>
