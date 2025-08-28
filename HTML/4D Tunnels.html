@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>4D Tunnels — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .symbol {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            opacity: 0.2;
+            transition: opacity 0.4s ease;
+            cursor: pointer;
+            z-index: 2;
+        }
+        .symbol.hovered,
+        .symbol.adjacent {
+            opacity: 1!important;
+        }
+        .symbol.same-cube {
+            opacity: 0.4;
+        }
+        /* Dark mode symbol inversion */
+        .dark .symbol {
+            filter: invert(85%);
+        }
+        #connection-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .connection-line {
+            stroke: black;
+            stroke-width: 1.5;
+            opacity: 0.5;
+        }
+        .dark .connection-line {
+            stroke: white;
+        }
+    </style>
+</head>
+<body>
+<div class="section">
+    <div class="page page-bg-03">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">4D Tunnels</span>
+        </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/4D Tunnels.svg">
+            <h2>On the Subject of 4D Tunnels</h2>
+            <p class="flavour-text">4D Tunnel! Through the mountain!</p>
+            <p>You control a hovercraft inside a hyper-grid of nodes connected by tunnels. Nodes are identified by a unique symbol.
+                Use the six directional buttons to travel through the grid. There’s also a button with a symbol on it, representing your next goal node. Travel there and press the goal button. Repeat this three times to solve the module.</p>
+            <ul>
+                <li>Only a few nodes will show the symbol of that node. Locate some symbols to determine your current location and orientation.</li>
+                <li>The arrow buttons <i>rotate</i> the hovercraft in that direction. After every rotate command, the hovercraft will go <b>one node forward</b>.</li>
+                <li>If you fly into a wall, you’ll get a strike.</li>
+                <li>If you press the goal button while not at the goal node, you’ll get a strike.</li>
+                <li>The buttons with small circular LEDs on them will move you in the fourth dimension. If either is lit or its corresponding screen on the right displays a wall, there is a wall in that direction.</li>
+            </ul>
+            <div id="symbol-container" style="position:relative; width:100%; height:400px;"></div>
+        </div>
+        <div class="page-footer relative-footer">Page 1 of 1</div>
+    </div>
+</div>
+
+<script>
+    const symbols = [
+        "Grid", "Cross", "Hexagon", "Leaf", "Compass", "Sigma", "Database", "Diamond", "Server",
+        "Quarter", "Radio", "Gear", "Shield", "Star", "Sun", "Chart", "Umbrella", "Wind",
+        "Pin", "Pen", "Hourglass", "Cocktail", "Bulb", "Key", "Fire", "Fan", "Map",
+        "Corners", "Crown", "Cyclone", "Circle", "Cookie", "Crop", "Triangle", "Hanger", "Pawn",
+        "Eye", "Feather", "Flag", "Globe", "Heart", "Link", "Lock", "Crossing", "Moon",
+        "Arrow", "Reticule", "Note", "Pentagon", "Palette", "Brain", "Rocket", "Power", "Planet",
+        "Book", "Bookmark", "Shutter", "Law", "Lightning", "Bomb", "Snowflake", "Alarm", "Animation",
+        "Heart monitor", "Anchor", "Medal", "Cube", "Cloud", "Command", "Chip", "Ring", "Drop",
+        "Tag", "Science", "School", "Ball", "Omega", "Send", "Trophy", "Plane", "Target"
+    ];
+
+    const grid_gap = 130;
+    const cube_gap_x = 50;
+    const cube_gap_y = 40;
+    const perspective_x = -50;
+    const perspective_y = 40;
+
+    const container = document.getElementById("symbol-container");
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("id", "connection-layer");
+    svg.setAttribute("width", container.offsetWidth);
+    svg.setAttribute("height", container.offsetHeight);
+    container.appendChild(svg);
+
+    symbols.forEach((name, i) => {
+        const el = document.createElement("img");
+        el.src = `img/4D Tunnels/${name}.svg`;
+        el.className = "symbol highlightable";
+        el.dataset.index = i;
+
+        const inCube = i % 27;
+        const inGrid = inCube % 9;
+
+        const x = (inGrid % 3) * grid_gap + Math.floor(inCube / 9) * cube_gap_x - (cube_gap_x);
+        const y = (Math.floor(inGrid / 3) % 3) * grid_gap + Math.floor(inCube / 9) * cube_gap_y;
+
+        const px = Math.floor(i / 27) * perspective_x;
+        const py = Math.floor(i / 27) * perspective_y;
+
+        el.style.left = (x + px + 245) + "px";
+        el.style.top = (y + py + 15) + "px";
+
+        container.appendChild(el);
+    });
+
+    function getAdjacency(index) {
+        const adj = [];
+        const g = index % 3;
+        const h = Math.floor(index / 3) % 3;
+        const c = Math.floor(index / 9) % 3;
+        const p = Math.floor(index / 27);
+
+        for (let delta of [-1, 1]) {
+            if (g + delta >= 0 && g + delta < 3) adj.push(index + delta);
+            if (h + delta >= 0 && h + delta < 3) adj.push(index + delta * 3);
+            if (c + delta >= 0 && c + delta < 3) adj.push(index + delta * 9);
+            if (p + delta >= 0 && p + delta < 3) adj.push(index + delta * 27);
+        }
+        return adj;
+    }
+
+    document.querySelectorAll('.symbol').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            el.classList.add('hovered');
+            const idx = +el.dataset.index;
+            const adj = getAdjacency(idx);
+
+            const cubeIndex = Math.floor((idx % 27) / 9);
+            document.querySelectorAll(`.symbol`).forEach(sym => {
+                if (Math.floor((sym.dataset.index % 27) / 9) === cubeIndex) {
+                    sym.classList.add('same-cube');
+                }
+            });
+
+            adj.forEach(adjIdx => {
+                const target = document.querySelector(`.symbol[data-index='${adjIdx}']`);
+                if (!target) return;
+
+                target.classList.add('adjacent');
+
+                const x1 = el.offsetLeft + el.offsetWidth / 2;
+                const y1 = el.offsetTop + el.offsetHeight / 2;
+                const x2 = target.offsetLeft + target.offsetWidth / 2;
+                const y2 = target.offsetTop + target.offsetHeight / 2;
+
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                const shorten = el.offsetWidth / 2;
+                const ratio = (dist - shorten) / dist;
+
+                const sx1 = x1 + dx * (shorten / dist);
+                const sy1 = y1 + dy * (shorten / dist);
+                const sx2 = x1 + dx * ratio;
+                const sy2 = y1 + dy * ratio;
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", sx1);
+                line.setAttribute("y1", sy1);
+                line.setAttribute("x2", sx2);
+                line.setAttribute("y2", sy2);
+                line.classList.add("connection-line");
+                svg.appendChild(line);
+            });
+        });
+
+        el.addEventListener('mouseleave', () => {
+            el.classList.remove('hovered');
+            document.querySelectorAll('.symbol').forEach(s => {
+                s.classList.remove('adjacent');
+                s.classList.remove('same-cube');
+            });
+            while (svg.firstChild) svg.removeChild(svg.firstChild);
+        });
+    });
+</script>
+</body>
+</html>
