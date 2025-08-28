@@ -281,7 +281,7 @@ let SouvenirModuleData = [
 	{ name: "Juxtacolored Squares",	id: "JuxtacoloredSquaresModule",	questions: ["What was each square’s color?"] },
 	{ name: "Kanji",	id: "KanjiModule",	questions: ["What was the displayed word in each stage?"] },
 	{ name: "The Kanye Encounter",	id: "TheKanyeEncounter",	questions: ["What food items were shown?"] },
-	{ name: "KayMazey Talk",	id: "KMazeyTalk",	questions: ["What were the starting and ending phrases?"] },
+	{ name: "KayMazey Talk",	id: "KMazeyTalk",	questions: ["What were the starting and goal words?"] },
 	{ name: "Keypad Combinations",	id: "keypadCombinations",	questions: ["What were the numbers, but not part of the answer?"] },
 	{ name: "Keypad Magnified",	id: "keypadMagnified",	questions: ["What was the position of the LED?"] },
 	{ name: "Keypad Maze",	id: "KeypadMaze",	questions: ["Where were the yellow cells?"] },
