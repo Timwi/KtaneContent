@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Telepathy — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <style>
+        #telepathy-table {
+            border: none;
+            margin: 0 auto;
+        }
+        #telepathy-table td {
+            border: none;
+            text-align: center;
+            padding: 0;
+        }
+        #telepathy-table tr:first-child td {
+            padding: 0 0 .3cm 0;
+        }
+        #telepathy-table tr:last-child td {
+            padding: .3cm 0 0 0;
+        }
+        #telepathy-table td:first-child {
+            padding: 0 .2cm 0 0;
+        }
+        #telepathy-table td:last-child {
+            padding: 0 0 0 .2cm;
+        }
+        #telepathy-table svg {
+            width:  .9cm;
+            height: .9cm;
+            display: block;
+            font-size: 14px;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function()
+        {
+            const grid = [ //first digit is the color, second digit is the symbol
+                [  0, 11, 22, 33, 44, 55, 66, 77, 88, 25, 86, 31, 64, 58, 40, 72,  3, 17 ],
+                [ 13, 27, 85, 71, 30, 68,  4, 52, 46, 53, 67, 16, 42, 81,  5, 20, 38, 74 ],
+                [ 87, 45, 36, 62, 51, 14, 23,  8, 70, 46, 30, 52, 13,  4, 71, 68, 27, 85 ],
+                [ 35, 76, 50, 18,  2, 83, 47, 24, 61, 12, 28, 43, 56, 75, 84, 37, 60,  1 ],
+                [ 56, 60,  1, 84, 28, 37, 75, 43, 12, 88, 44, 77,  0, 66, 33, 55, 11, 22 ],
+                [ 21, 82, 48, 57, 73,  6, 10, 65, 34, 70, 51,  8, 87, 23, 62, 14, 45, 36 ],
+                [ 64,  3, 17, 40, 86, 72, 58, 31, 25, 34, 73, 65, 21, 10, 57,  6, 82, 48 ],
+                [ 78, 54, 63, 26, 15, 41, 32, 80,  7, 61,  2, 24, 35, 47, 18, 83, 76, 50 ],
+                [ 42, 38, 74,  5, 67, 20, 81, 16, 53,  7, 15, 80, 78, 32, 26, 41, 54, 63 ],
+                [ 14, 23,  8, 51, 70, 36, 62, 45, 87, 38, 53, 67, 81, 74, 42,  5, 16, 20 ],
+                [ 83, 47, 24,  2, 61, 50, 18, 76, 35,  3, 25, 86, 58, 17, 64, 40, 31, 72 ],
+                [ 41, 32, 80, 15,  7, 63, 26, 54, 78, 60, 12, 28, 75,  1, 56, 84, 43, 37 ],
+                [ 37, 75, 43, 28, 12,  1, 84, 60, 56, 11, 88, 44, 66, 22,  0, 33, 77, 55 ],
+                [ 20, 81, 16, 67, 53, 74,  5, 38, 42, 54,  7, 15, 32, 63, 78, 26, 80, 41 ],
+                [ 55, 66, 77, 44, 88, 22, 33, 11,  0, 82, 34, 73, 10, 48, 21, 57, 65,  6 ],
+                [  6, 10, 65, 73, 34, 48, 57, 82, 21, 76, 61,  2, 47, 50, 35, 18, 24, 83 ],
+                [ 68,  4, 52, 30, 46, 85, 71, 27, 13, 45, 70, 51, 23, 36, 87, 62,  8, 14 ],
+                [ 72, 58, 31, 86, 25, 17, 40,  3, 64, 27, 46, 30,  4, 85, 13, 71, 52, 68 ]
+            ];
+            const colors = [ "039ee0", "f999b5", "25b448", "8e3e0b", "fad200", "9b4da1", "de1352", "f57619", "a1aab3" ];
+            const colorLetters = "BIGNYPROA";
+            const symbols = [
+                `<g stroke="#000" stroke-miterlimit="5" stroke-width=".47"><path fill="#fff" fill-opacity=".5" d="m6.25 5.46 6.12-2.94-2.48 3.5 1.72.25-4.38 2.92 2.16.63-6.37 2.82 2.12-2.95-1.8-.78 4.32-2.95z"/><path d="m11.3 4.01 1.54-.74-2.03 2.88-.92-.13zm-.54 2.82 1.32.2L8.35 9.5l-1.13-.3zM8.54 10.2l1.32.4-6.36 2.8 1.02-1.43 4.02-1.78"/></g>`,
+                `<g stroke="#000" stroke-miterlimit="5" transform="matrix(.6 0 0 .6 -.17 -.64)"><path fill="#fff" fill-opacity=".5" stroke-width=".8" d="m4.64 8.13 7.84-3.38 8.54 3.56-.17 9.56-7.9 4.27-8.19-4.27z"/><path fill="none" stroke-width=".8" d="m4.64 8.13 7.85 3.7 8.53-3.52m-8.53 3.53.46 10.3"/><ellipse cx="12.56" cy="8.12" stroke-width=".66" rx="1.36" ry=".6"/><ellipse cx="13.53" cy="-1.84" stroke-width=".66" rx="1.36" ry=".6" transform="rotate(68)"/><ellipse cx="21.03" cy="-3.22" stroke-width=".66" rx="1.36" ry=".6" transform="rotate(68)"/><ellipse cx="11.77" cy="20.53" stroke-width=".66" rx="1.36" ry=".6" transform="scale(-1 1) rotate(68)"/><ellipse cx="7.64" cy="21.28" stroke-width=".66" rx="1.36" ry=".6" transform="scale(-1 1) rotate(68)"/><ellipse cx="3.53" cy="21.94" stroke-width=".66" rx="1.36" ry=".6" transform="scale(-1 1) rotate(68)"/><path stroke-width=".8" d="m21 9.41 1.4.66-.18 9.48-7.9 4.27-8.19-4.31v-.93l6.82 3.56 7.9-4.27L21 9.4"/></g>`,
+                `<g stroke="#000" stroke-miterlimit="5" stroke-width=".48"><path fill="#fff" fill-opacity=".5" d="m2.08 7.1 2.17-2.45h6.69l2.03 2.53-5.49 5.98z"/><path fill="none" d="m2.08 7.1 10.9.08"/><path fill="none" stroke-linejoin="bevel" d="M4.25 4.65 5.7 7.13l1.96-2.48 1.77 2.5 1.51-2.5M5.7 7.13l1.79 6.03 1.94-6"/><path fill="none" d="m5.3 3.4-.66-1.3m2.72 1.15.05-1.8m1.82 1.9.85-1.3"/><path d="m11.78 5.58 2.03 2.53-5.49 5.98-.84-.93 5.32-5.8"/></g>`,
+                `<g stroke="#000" stroke-miterlimit="5" stroke-width=".48"><path fill="#fff" fill-opacity=".5" d="M3.8 10.55V5.42h1.5V2.75h1.43v-1.1h1.49v.63h1.57v1.43h1.63v7.02c.14 3.6-7.61 3.91-7.62-.18z"/><path fill="none" d="M5.3 5.42v3.46h1.6m-.17-6.13v4.67m1.49-5.14v5.04m1.57-3.61v3.71"/><path d="M9.79 2.96h.64v.75H9.8zm1.63 1.43.65.06-.03 7.4c-.6 3.04-5.54 2.82-6.81 1.28 3 1.08 6.22-.05 6.2-2.41z"/></g>`,
+                `<g stroke="#000" stroke-miterlimit="5"><path fill="#fff" fill-opacity=".5" stroke-width=".48" d="M6.24 10.95c-3.36-4.16.43-8.35 2.38-8.8-2.22 5.81.23 8.3 5.6 8.7a5.2 5.2 0 0 1-7.98.1"/><path fill="#fff" fill-opacity=".5" stroke-width=".41" d="M1.61 3.67c.65-.18.9-.7 1.03-1.28.16.67.48 1.1 1.04 1.15-.56.26-.88.46-.97 1.03-.14-.55-.6-.76-1.1-.9Zm9.06 2.75c.66-.18.9-.68 1.04-1.27.16.66.47 1.1 1.03 1.15-.56.25-.88.46-.97 1.03-.14-.55-.6-.76-1.1-.9zm-7.62 6.04c.66-.18.9-.7 1.04-1.28.16.67.47 1.1 1.03 1.15-.56.26-.88.46-.97 1.03-.14-.55-.6-.76-1.1-.9z"/><path stroke-width=".48" d="m13.4 11.68 1.15.13c-3.34 3.8-7.84 1-8.56-.86 2 1.31 4.4 2.83 7.4.73zm-5.22-8.2.85-.36c-.8 1.59-.85 3.32-.65 5.1a6.18 6.18 0 0 1-.2-4.73z"/></g>`,
+                `<g stroke="#000" stroke-miterlimit="5" stroke-width=".8" transform="matrix(.6 0 0 .6 -.4 -.13)"><path fill="#fff" fill-opacity=".5" d="M3.57 14.84c6.29-7.64 13.47-6.64 19.9.17-6.88 8.33-14.49 6.62-19.9-.17Z"/><ellipse cx="13.31" cy="13.92" fill="none" rx="4.62" ry="4.36"/><circle cx="13.23" cy="13.75" r="2.27"/><path d="m4.58 10.3-1.6-1.92m4.88-2.86 1.67 2.69m3.87-.92.08-2.94m4.12 3.61 1.5-2.19m3.1 4.53 1.94-1.84m-.87 6.78 1.3 1.28c-10.22 11.95-18.4 1.53-19.9-.17 5.88 5.47 12.02 6.28 18.6-1.11z"/></g>`,
+                `<g stroke="#000" stroke-miterlimit="5" stroke-width=".48"><path fill="#fff" fill-opacity=".5" d="M12.97 6.46 9.94 8.88l1.04 3.74-3.24-2.14-3.24 2.15L5.53 8.9 2.5 6.48l3.88-.18 1.35-3.64L9.1 6.3z"/><path d="m12.13 7.12 1.26.06-3.04 2.43 1.05 3.74-3.15-2.08-3.33 2.09.34-1.23 2.48-1.65 2.99 1.98-.8-3.58zm-8.88.06-.34.02 2.53 2.01.08-.33z"/></g>`,
+                `<g stroke="#000" stroke-miterlimit="5" stroke-width=".48"><path fill="#fff" fill-opacity=".5" d="M7.44 6C4.4.76-.63 6.5 3.82 9.21l3.77 3.07 3.83-3.23C15.56 6.21 10.31.51 7.44 6z"/><path d="m5.24 10.27-2.08 1.97"/><path fill="none" d="m3.3 10.9-.14 1.34 1.32-.12m8.15-9.69V3.9l1.43-.02m-1.43.02L10.9 5.65"/><path d="m7.44 12.5.8.63 4.68-4c.8-.97.49-2.82.05-3.4-.1.94-.06 1.9-.74 2.61z"/><path stroke-linejoin="bevel" d="m2.9 8.56 4.54 3.93"/></g>`,
+                `<g stroke="#000" stroke-miterlimit="5" stroke-width=".8" transform="matrix(.6 0 0 .6 -.14 .07)"><circle cx="12.9" cy="13.23" r="5.46" fill="#fff" fill-opacity=".5"/><path fill="none" d="M13.68 5.37V1.5m5.22 5.95 2.58-2.59m-.44 8.34h3.62m-5.58 5.64 2.31 2.32m-8.01.12v3.44m-5.76-6.23-2.46 2.46m.21-7.75H2.28m5.34-5.75L5.5 5.3"/><path d="M10.05 18.22c4.95 1.42 9.87-.6 8.48-6.8a5.7 5.7 0 0 1-.98 7.22c-3.1 2.68-7 .17-7.5-.42z"/></g>`
+            ];
+            document.getElementById('telepathy-table').innerHTML =
+                // top row
+                `<tr><td class='info'></td>${Array(18).fill(null).map((_, c) => `<td class='info'>${c + 1}</td>`).join('')}<td class='info'></td></tr>` +
+                // main rows
+                Array(18).fill(null).map((_, r) => `<tr>
+                    <td class='info'>${String.fromCharCode(65 + r)}</td>
+                    ${Array(18).fill(null).map((_, c) => `
+                        <td class='cell'>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26.46 26.46">
+                                <rect x='.5' y='.5' width='25.46' height='25.46' rx='5' ry='5' fill='#${colors[(grid[r][c]/10)|0]}' />
+                                ${symbols[grid[r][c] % 10]}
+                                <text x='16' y='22'>${colorLetters[(grid[r][c]/10)|0]}</text>
+                            </svg>
+                        </td>
+                    `).join('')}
+                    <td class='info'>${String.fromCharCode(65 + r)}</td>
+                </tr>`).join('') +
+                // bottom row
+                `<tr><td class='info'></td>${Array(18).fill(null).map((_, c) => `<td class='info'>${c + 1}</td>`).join('')}<td class='info'></td></tr>`;
+        });
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Telepathy</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Telepathy.svg" class="diagram">
+                <h2>On the Subject of Telepathy</h2>
+                <p class="flavour-text">You already knew what this flavor text was.</p>
+
+                <p>You and the computer within the module are facing off, head-to-head in a game of Telepathy. You’re a couple questions in now, and you think you have enough information to win. In order to solve the module, deactivate the computer by delivering the fatal blow to its ego through guessing its selected square.</p>
+
+                <p>Displayed on the module are four sets of coordinates which can be used to locate a square in the grid on the next page. You know that:</p>
+                <ul>
+                    <li>Exactly one of the coordinates is in the same <em>row</em> as the computer’s square.</li>
+                    <li>Exactly one of the coordinates is in the same <em>column</em> as the computer’s square.</li>
+                    <li>Exactly one of the coordinates is the same <em>color</em> as the computer’s square.</li>
+                    <li>Exactly one of the coordinates has the same <em>symbol</em> as the computer’s square.</li>
+                    <li>Every coordinate on the module shares exactly one characteristic (row, column, color, symbol) with the computer’s square.</li>
+                    <li>None of the coordinates share any characteristics with each other.</li>
+                </ul>
+
+                <p>After using this information to determine which square belongs to the computer, set the display to match the computer’s square. If the first digit of the serial number is even, submit your answer using the coordinate with the same color as the computer’s square. Otherwise, use the coordinate with the same shape as the computer’s square.</p>
+                <table style="float: right; margin-left: 1em; text-align: center;">
+                    <tr><td>Yellow</td></tr>
+                    <tr><td>browN</td></tr>
+                    <tr><td>Green</td></tr>
+                    <tr><td>pInk</td></tr>
+                    <tr><td style="background-color: black; color: white;">Blue</td></tr>
+                    <tr><td>grAy</td></tr>
+                    <tr><td>Orange</td></tr>
+                    <tr><td>Rose</td></tr>
+                    <tr><td>Purple</td></tr>
+                </table>
+                <p><em>However</em>, if there is an unlit SIG indicator, no RJ-45 port, and no batteries on the bomb, the computer hasn’t actually been turned on. In which case, the computer’s square will default to A1 and all of the above bullet points become invalidated. Set the display to match A1 and submit the coordinate which has the same color <em>and</em> symbol as A1.</p>
+                <p>The cycle of the colors on the module are presented on the right, which starts at <u>blue</u>. The capitalized letter in what is shown on the bottom-right of each cell in the main table.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Telepathy</span>
+            </div>
+            <div class="page-content">
+                <table id='telepathy-table'></table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
