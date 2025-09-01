@@ -9,14 +9,40 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        #symbol-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #grid-inner {
+            position: relative;
+            justify-content: center;
+            align-items: center;
+            transform-origin: center center;
+        }
         .symbol {
             position: absolute;
-            width: 30px;
-            height: 30px;
+            width: 25px;
+            height: 25px;
             opacity: 0.2;
             transition: opacity 0.4s ease;
             cursor: pointer;
             z-index: 2;
+        }
+        .alternate-mode .symbol {
+            opacity: 1;
+            width: 20px;
+            height: 20px;
+        }
+        #connection-layer {
+            position: absolute;
+            overflow: visible;
+            pointer-events: none;
+            z-index: 1;
         }
         .symbol.hovered,
         .symbol.adjacent {
@@ -28,13 +54,6 @@
         .dark .symbol {
             filter: invert(85%);
         }
-        #connection-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 1;
-        }
         .connection-line {
             stroke: black;
             stroke-width: 1.5;
@@ -42,6 +61,9 @@
         }
         .dark .connection-line {
             stroke: white;
+        }
+        ul {
+            font-size: 14px;
         }
     </style>
 </head>
@@ -64,14 +86,19 @@
                 <li>If you fly into a wall, you’ll get a strike.</li>
                 <li>If you press the goal button while not at the goal node, you’ll get a strike.</li>
                 <li>The buttons with small circular LEDs on them will move you in the fourth dimension. If either is lit or its corresponding screen on the right displays a wall, there is a wall in that direction.</li>
+                <li>Clicking the image in the top right of this manual will toggle an alternate view.</li>
             </ul>
-            <div id="symbol-container" style="position:relative; width:100%; height:430px;"></div>
+            <div id="symbol-container">
+                <div id="grid-inner"></div>
+            </div>
         </div>
         <div class="page-footer relative-footer">Page 1 of 1</div>
     </div>
 </div>
 
 <script>
+    let alternateView = false;
+
     const symbols = [
         "Grid", "Cross", "Hexagon", "Leaf", "Compass", "Sigma", "Database", "Diamond", "Server",
         "Quarter", "Radio", "Gear", "Shield", "Star", "Sun", "Chart", "Umbrella", "Wind",
@@ -83,41 +110,6 @@
         "Heart Monitor", "Anchor", "Medal", "Cube", "Cloud", "Command", "Chip", "Ring", "Drop",
         "Tag", "Science", "School", "Ball", "Omega", "Send", "Trophy", "Plane", "Target"
     ];
-
-    const grid_gap = 130;
-    const cube_gap_x = 50;
-    const cube_gap_y = 40;
-    const perspective_x = -50;
-    const perspective_y = 40;
-
-    const container = document.getElementById("symbol-container");
-
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("id", "connection-layer");
-    svg.setAttribute("width", container.offsetWidth.toString());
-    svg.setAttribute("height", container.offsetHeight.toString());
-    container.appendChild(svg);
-
-    symbols.forEach((name, i) => {
-        const el = document.createElement("img");
-        el.src = `img/4D Tunnels/${name}.svg`;
-        el.className = "symbol highlightable";
-        el.dataset.index = i.toString();
-
-        const inCube = i % 27;
-        const inGrid = inCube % 9;
-
-        const x = (inGrid % 3) * grid_gap + Math.floor(inCube / 9) * cube_gap_x - (cube_gap_x);
-        const y = (Math.floor(inGrid / 3) % 3) * grid_gap + Math.floor(inCube / 9) * cube_gap_y;
-
-        const px = Math.floor(i / 27) * perspective_x;
-        const py = Math.floor(i / 27) * perspective_y;
-
-        el.style.left = (x + px + 245) + "px";
-        el.style.top = (y + py + 10) + "px";
-
-        container.appendChild(el);
-    });
 
     function getAdjacency(index) {
         const adj = [];
@@ -135,61 +127,213 @@
         return adj;
     }
 
-    document.querySelectorAll('.symbol').forEach(el => {
-        el.addEventListener('mouseenter', () => {
-            el.classList.add('hovered');
-            const idx = +el.dataset.index;
-            const adj = getAdjacency(idx);
+    function renderGrid() {
+        const gridInner = document.getElementById("grid-inner");
+        gridInner.innerHTML = "";
 
-            const cubeIndex = Math.floor((idx % 27) / 9);
-            document.querySelectorAll(`.symbol`).forEach(sym => {
-                if (Math.floor((sym.dataset.index % 27) / 9) === cubeIndex) {
-                    sym.classList.add('same-cube');
-                }
-            });
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+        svg.setAttribute("id", "connection-layer");
+        gridInner.appendChild(svg);
 
-            adj.forEach(adjIdx => {
-                const target = document.querySelector(`.symbol[data-index='${adjIdx}']`);
-                if (!target) return;
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+        const scale = alternateView ? 30 : 40;
+        const grid_gap = (alternateView ? 47 : 26) * scale
+        const cube_gap_x = (alternateView ? 9 : 10) * scale
+        const cube_gap_y = (alternateView ? 3 : 8) * scale
+        const perspective_x = (alternateView ? -21 : -10) * scale
+        const perspective_y = (alternateView ? 10 : 8) * scale
 
-                target.classList.add('adjacent');
+        const gridWidth = 2 * grid_gap + 2 * cube_gap_x;
+        const gridHeight = 2 * grid_gap + 2 * cube_gap_y;
+        const centerX = gridWidth / 2;
+        const centerY = gridHeight / 2;
 
-                const x1 = el.offsetLeft + el.offsetWidth / 2;
-                const y1 = el.offsetTop + el.offsetHeight / 2;
-                const x2 = target.offsetLeft + target.offsetWidth / 2;
-                const y2 = target.offsetTop + target.offsetHeight / 2;
+        let cx = grid_gap + cube_gap_x - cube_gap_x;
+        let cy = grid_gap + cube_gap_y;
+        cx = (cx + perspective_x - centerX) / 8;
+        cy = (cy + perspective_y + 10 - centerY) / 8;
 
-                const dx = x2 - x1;
-                const dy = y2 - y1;
-                const dist = Math.sqrt(dx * dx + dy * dy);
 
-                const shorten = el.offsetWidth / 2;
-                const ratio = (dist - shorten) / dist;
+        const positions = {};
 
-                const sx1 = x1 + dx * (shorten / dist);
-                const sy1 = y1 + dy * (shorten / dist);
-                const sx2 = x1 + dx * ratio;
-                const sy2 = y1 + dy * ratio;
+        symbols.forEach((name, i) => {
+            const inCube = i % 27;
+            const inGrid = inCube % 9;
 
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", sx1.toString());
-                line.setAttribute("y1", sy1.toString());
-                line.setAttribute("x2", sx2.toString());
-                line.setAttribute("y2", sy2.toString());
-                line.classList.add("connection-line");
-                svg.appendChild(line);
-            });
+            let x1 = (inGrid % 3) * grid_gap + Math.floor(inCube / 9) * cube_gap_x - cube_gap_x;
+            let y1 = (Math.floor(inGrid / 3) % 3) * grid_gap + Math.floor(inCube / 9) * cube_gap_y;
+            let x2 = Math.floor(i / 27) * perspective_x;
+            let y2 = Math.floor(i / 27) * perspective_y;
+
+            const x = (x1 + x2 - centerX) / 8 - cx;
+            const y = (y1 + y2 + 10 - centerY) / 8 - cy;
+
+            positions[name] = {x, y};
+
+            const el = document.createElement("img");
+            el.src = `img/4D Tunnels/${name}.svg`;
+            el.className = "symbol highlightable";
+            el.id = name;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            gridInner.appendChild(el);
+
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
         });
 
-        el.addEventListener('mouseleave', () => {
-            el.classList.remove('hovered');
-            document.querySelectorAll('.symbol').forEach(s => {
-                s.classList.remove('adjacent');
-                s.classList.remove('same-cube');
-            });
-            while (svg.firstChild) svg.removeChild(svg.firstChild);
+        const width = maxX - minX;
+        const height = maxY - minY;
+
+        const offsetX = width / 2;
+        const offsetY = height / 2;
+
+        symbols.forEach((name, i) => {
+            const el = document.getElementById(name);
+            const pos = positions[name];
+            const finalX = pos.x + offsetX;
+            const finalY = pos.y + offsetY;
+
+            el.dataset.index = i.toString();
+            el.dataset.x = finalX.toString();
+            el.dataset.y = finalY.toString();
+
+            el.style.left = `${finalX}px`;
+            el.style.top = `${finalY}px`;
         });
+
+        gridInner.style.width = width + "px";
+        gridInner.style.height = height + "px";
+
+        const symbolContainer = document.getElementById("symbol-container");
+        if (alternateView) {
+            symbolContainer.classList.add("alternate-mode");
+        } else {
+            symbolContainer.classList.remove("alternate-mode");
+        }
+
+        if (alternateView) {
+            symbols.forEach((_, i) => {
+                const adj = getAdjacency(i);
+                const el = document.querySelector(`.symbol[data-index='${i}']`);
+                if (!el) return;
+
+                adj.forEach(adjIdx => {
+                    if (adjIdx < i) return;
+                    const target = document.querySelector(`.symbol[data-index='${adjIdx}']`);
+                    if (!target) return;
+
+                    const x1 = parseFloat(el.dataset.x) + el.offsetWidth / 2;
+                    const y1 = parseFloat(el.dataset.y) + el.offsetHeight / 2;
+                    const x2 = parseFloat(target.dataset.x) + target.offsetWidth / 2;
+                    const y2 = parseFloat(target.dataset.y) + target.offsetHeight / 2;
+
+                    const dx = x2 - x1;
+                    const dy = y2 - y1;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const shorten = el.offsetWidth / 2.5;
+                    const ratio = (dist - shorten) / dist;
+
+                    const sx1 = x1 + dx * (shorten / dist);
+                    const sy1 = y1 + dy * (shorten / dist);
+                    const sx2 = x1 + dx * ratio;
+                    const sy2 = y1 + dy * ratio;
+
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", sx1.toString());
+                    line.setAttribute("y1", sy1.toString());
+                    line.setAttribute("x2", sx2.toString());
+                    line.setAttribute("y2", sy2.toString());
+
+                    const color = getAdjColor(i, adjIdx);
+                    line.setAttribute("stroke", color);
+                    line.setAttribute("stroke-width", "1.2");
+                    svg.appendChild(line);
+                });
+            });
+        } else {
+            document.querySelectorAll('.symbol').forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    el.classList.add('hovered');
+                    const idx = +el.dataset.index;
+                    const adj = getAdjacency(idx);
+
+                    const cubeIndex = Math.floor((idx % 27) / 9);
+                    document.querySelectorAll(`.symbol`).forEach(sym => {
+                        if (Math.floor((sym.dataset.index % 27) / 9) === cubeIndex) {
+                            sym.classList.add('same-cube');
+                        }
+                    });
+
+                    adj.forEach(adjIdx => {
+                        const target = document.querySelector(`.symbol[data-index='${adjIdx}']`);
+                        if (!target) return;
+
+                        target.classList.add('adjacent');
+
+                        const x1 = parseFloat(el.dataset.x) + el.offsetWidth / 2;
+                        const y1 = parseFloat(el.dataset.y) + el.offsetHeight / 2;
+                        const x2 = parseFloat(target.dataset.x) + target.offsetWidth / 2;
+                        const y2 = parseFloat(target.dataset.y) + target.offsetHeight / 2;
+
+                        const dx = x2 - x1;
+                        const dy = y2 - y1;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const shorten = el.offsetWidth / 2;
+                        const ratio = (dist - shorten) / dist;
+
+                        const sx1 = x1 + dx * (shorten / dist);
+                        const sy1 = y1 + dy * (shorten / dist);
+                        const sx2 = x1 + dx * ratio;
+                        const sy2 = y1 + dy * ratio;
+
+                        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("x1", sx1.toString());
+                        line.setAttribute("y1", sy1.toString());
+                        line.setAttribute("x2", sx2.toString());
+                        line.setAttribute("y2", sy2.toString());
+                        line.classList.add("connection-line");
+                        svg.appendChild(line);
+                    });
+                });
+
+                el.addEventListener('mouseleave', () => {
+                    el.classList.remove('hovered');
+                    document.querySelectorAll('.symbol').forEach(s => {
+                        s.classList.remove('adjacent');
+                        s.classList.remove('same-cube');
+                    });
+                    while (svg.firstChild) svg.removeChild(svg.firstChild);
+                });
+            });
+
+        }
+    }
+
+    function getAdjColor(i, j) {
+        const g1 = i % 3, g2 = j % 3;
+        const h1 = Math.floor(i / 3) % 3, h2 = Math.floor(j / 3) % 3;
+        const c1 = Math.floor(i / 9) % 3, c2 = Math.floor(j / 9) % 3;
+        const p1 = Math.floor(i / 27),  p2 = Math.floor(j / 27);
+
+        if (g1 !== g2) return "grey";
+        if (h1 !== h2) return "#25AAC4FF";
+        if (c1 !== c2) return "#C42525FF";
+        if (p1 !== p2) return "#4AC425FF";
+        return "#ffffff00";
+    }
+
+    const diagram = document.querySelector(".diagram");
+    diagram.addEventListener("click", () => {
+        alternateView = !alternateView;
+        renderGrid();
     });
+
+    renderGrid();
 </script>
 </body>
 </html>
