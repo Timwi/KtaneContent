@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='initial-scale=1'>
+    <title>Twodoku — Keep Talking and Nobody Explodes Module</title>
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel='stylesheet' type='text/css' href='css/normalize.css'>
+    <link rel='stylesheet' type='text/css' href='css/main.css'>
+    <script src='js/ktane-utils.js'></script>
+    <script src='js/ruleseed.js'></script>
+    <script src='js/Modules/Twodoku.js'></script>
+    <script src='js/jquery.3.7.0.min.js'></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/set-utils.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/coord-utils.js"></script>
+    <script src='data/Twodoku/Data.js'></script>
+    <style>
+        html {
+            --sqsize: 62px;
+            --tool: 1.54cm;
+            --imgsize: 1.5cm;
+        }
+        .tw-diagrams {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .3cm;
+        }
+        figure {
+            position: absolute;
+            top: calc(var(--sqsize) - 4px);
+            left: calc(var(--sqsize) - 4px);
+        }
+        figure svg {
+            width: 384px;
+        }
+        figure svg .gridlines {
+            stroke: #666;
+        }
+        figcaption {
+            font-weight: bold;
+            text-align: center;
+        }
+        .shapes {
+            display: flex;
+            gap: .5cm;
+            justify-content: center;
+            justify-content: safe center;
+        }
+        .shapes :is(svg, img) {
+            width: var(--imgsize);
+            display: block;
+        }
+        .shapes.shapes-tools {
+            margin: 0 auto;
+            max-width: 530px;
+            gap: 2px;
+        }
+        .shapes th {
+            padding: .1cm .25cm;
+        }
+
+        .shapes-tools {
+            display: grid;
+            grid-template-columns: var(--tool) var(--tool) var(--tool) var(--tool) var(--tool) var(--tool) var(--tool) var(--tool) var(--tool);
+        }
+        .shapes.shapes-tools svg {
+            border: 1px solid;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .dark svg path.lines {
+            stroke: #DDD;
+        }
+        .dark figure svg .gridlines {
+            stroke: #888;
+        }
+        .dark :is(.shapes svg, svg.netsquare) {
+            fill: #DDD;
+        }
+        .dark .shapes img {
+            filter: invert(87%);
+        }
+
+        .zero {
+            font-family: 'Inconsolata';
+        }
+
+        .grid {
+            position: relative;
+            width: calc(var(--sqsize) * 7.2);
+            height: calc(var(--sqsize) * 8);
+        }
+
+        .grid svg text {
+            font-size: 80px;
+            font-family: 'Special Elite';
+        }
+
+        .tools {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 140px;
+        }
+        .number-tools.tools {
+            margin-top: 10px;
+        }
+        @media screen and (max-width: 724px) {
+            .tools {
+                flex-direction: row;
+                flex-wrap: wrap;
+                width: unset;
+            }
+            .number-tools.tools {
+                margin-top: unset;
+                width: 100%;
+            }
+        }
+
+        .tools button {
+            margin: 8px;
+        }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { opacity: 0; }
+
+        .number-tool {
+            width: 35px;
+            height: 35px;
+            border: 1px solid;
+            box-sizing: border-box;
+            cursor: pointer;
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 9px;
+            user-select: none;
+        }
+
+        .square {
+            position: absolute;
+            margin: 2px;
+            width: var(--sqsize);
+            height: var(--sqsize);
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        .dark .square { border-color: #888; }
+
+        .square.numbers, .square.letters {
+            width: var(--sqsize);
+            height: var(--sqsize);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-family: 'Special Elite';
+            opacity: 50%;
+            user-select: none;
+            padding-top: 6px;
+        }
+
+        .netsquare {
+            height: var(--sqsize);
+            width: var(--sqsize);
+            font-size: 40px;
+            line-height: 60px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .reset-grid, .highlight-btn {
+            padding-top: 2px;
+            position: relative;
+            border: 1px solid;
+        }
+        .highlight-btn, .highlighted {
+            background-color: #00FF0066;
+            user-select: none;
+            cursor: pointer;
+        }
+        .highlight-btn {
+            height: 53px;
+            width: 54px;
+        }
+
+        .netsq .bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        .netsq .symbol {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: 70%;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 1;
+        }
+
+        .netsq.tent .symbol {
+            background-image: url('img/Tents/tent.svg');
+        }
+        .netsq.tree .symbol {
+            background-image: url('img/Tents/tree.svg');
+        }
+
+        .netsquare.selected, .shapes-tools svg.selected {
+            border: 5px solid #33F;
+        }
+        .number-tool.selected {
+            border: 3px solid #33F;
+        }
+
+        .dark .netsquare {
+            color: #DDD;
+        }
+
+        .dark svg text { fill: #DDD; }
+
+        .path, .solution {
+            font-family: 'Roboto Mono';
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        :is(.path, .solution) span:not(.str) {
+            display: inline-block;
+            min-width: 120px;
+        }
+        body:not(.solution-shown) :is(.solution, .path),
+        body:not(.solution-shown) .shapes-tools div span,
+        body:not(.play) .solution {
+            color: transparent;
+            font-size: 0;
+        }
+        body:not(.solution-shown) .shapes-tools div {
+            line-height: 0;
+        }
+        .shapes-tools div, .shapes-tools div span {
+            transition: 0.5s;
+            line-height: 1;
+        }
+        .shapes-tools div span {
+            display: block;
+            margin: 0 12px 0 10px;
+            text-align: center;
+            user-select: none;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        body:not(.play, .solve) :is(button.show-sol, .reset-grid),
+        body.play button.read-solve {
+            user-select: none;
+            pointer-events: none;
+            background-color: #666;
+        }
+
+        body:is(.play, .solve) :is(.shapes-tools svg:not(.used), .highlight-btn) {
+            user-select: none;
+            pointer-events: none;
+            opacity: 25%;
+        }
+
+        body:is(.play, .solve) input.transparent-input.qty {
+            user-select: none;
+            pointer-events: none;
+            color: #FF0000CC;
+        }
+        body:is(.play, .solve) .netsq.tree {
+            pointer-events: none;
+        }
+
+        body.play button.read-solve::before,
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';
+        }
+        button.show-sol {
+            padding: 3px 3px 1px;
+            width: 100px;
+        }
+
+        .page {
+            background-position: top;
+            background-repeat: repeat-y;
+        }
+    </style>
+    <script>
+
+    </script>
+</head>
+<body>
+    <div class='section'>
+        <div class='page page-bg-01'>
+            <div class='page-header'>
+                <span class='page-header-doc-title'>Keep Talking and Nobody Explodes Mod</span>
+                <span class='page-header-section-title'>Twodoku</span>
+            </div>
+            <div class='page-content'>
+                <img src='img/Component/Twodoku.svg' class='diagram'>
+                <h2>On the Subject of Twodokus</h2>
+                <p class='flavour-text'>Literally two sudokus.</p>
+
+                <p>The 6×6 grid on the module contains some digits and some geometric shapes. These form two separate 6×6 sudokus, one using the digits 1–6 and one using 6 distinct geometric shapes.</p>
+                <p>One of the two sudokus will have <span id='type-a'>“wide”</span> regions, the other <span id='type-b'>“tall”</span> regions as shown in the diagrams.</p>
+                <p>Once solved, focus on the cells that are highlighted in green. For each of those cells, in reading order, look up the name of the geometric shape in the below table and use the digit to index into that name (e.g. the digit 1 resolves to the first letter). If the word is too short, pretend that it is repeated (e.g. KITEKITE).</p>
+                <p>Enter the resulting solution word using the buttons on the right of the module by selecting the appropriate sections of the alphabet and individual letters.</p>
+                <div class='shapes'>
+                    <table>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 0,25 H 50 V 0 L 100,50 50,100 V 75 H 0 Z' /></svg></th><td>ARROW</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 0,0 50,50 100,0 V 100 L 50,50 0,100 Z' /></svg></th><td>BOWTIE</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 100,50 A 50,50 0 0 1 0,50 50,50 0 0 1 100,50 Z' /></svg></th><td>CIRCLE</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 50,0 90,50 50,100 10,50 Z' /></svg></th><td>DIAMOND</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='m50 2.4 12 36 38 0-31 22 12 36-31-22-31 22 12-36-31-22 38 0z' /></svg></th><td>FIVESTAR</td></tr>
+                    </table>
+                    <table>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='m0 50 25-43.3 50 0 25 43.3-25 43.3-50 0z' /></svg></th><td>HEXAGON</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='m14 .8h26l13 23-13 23h-26l-13-23zm46 26h26l13 23-13 23h-26l-13-23zm-46 26h26l13 23-13 23h-26l-13-23z' /></svg></th><td>HONEYCOMB</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='m72 80q-6.8 0-12-4.5-5.5-4.6-10-14-4.4 8.4-10 13-5.6 5-13 5-6.1 0-11-3.9-4.8-4-7.4-11-2.6-6.7-2.6-15 0-7.9 2.6-15 2.6-6.8 7.4-11 4.9-4.1 11-4.1 7.3 0 13 5.2 5.5 5.2 9.9 14 5-9.9 10-14 5.4-4.4 12-4.4 6.8 0 12 3.9 4.9 3.9 7.4 11 2.6 6.6 2.6 15 0 8.2-2.6 15-2.6 6.7-7.7 11-4.9 4-12 4zm-43-13q4.3 0 7.9-3.8 3.7-3.9 7.3-13-3.3-8.6-7-12-3.7-3.9-8-3.9-5.3 0-8 4.9-2.7 4.9-2.7 12 0 7 2.8 12 2.8 4.6 7.8 4.6zm42 0q3.3 0 6-2.1 2.7-2.1 4.3-5.8 1.5-3.8 1.5-8.2 0-4.4-1.5-8.2-1.5-3.8-4.2-6.1-2.6-2.4-6.2-2.4-4.4 0-8.2 4-3.7 3.9-6.9 12 3.6 8.7 7.3 13 3.7 3.8 7.9 3.8z' /></svg></th><td>INFINITY</td></tr>
+                        <tr><th><img src='img/Twodoku/Julia.png' /></th><td>JULIA</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 50,0 90,20 50,100 10,20 Z' /></svg></th><td>KITE</td></tr>
+                    </table>
+                    <table>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='m74 74a34 62 45 01-68 20 34 62 45 0120-68 34 62 45 0168-20 34 62 45 01-20 68z' /></svg></th><td>OVAL</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 0,25 A 50,50 0 0 0 50,75 50,50 0 0 0 100,25 Z' /></svg></th><td>SEMICIRCLE</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 10 10 90 10 90 90 10 90z' /></svg></th><td>SQUARE</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 0,80 30,20 h 40 L 100,80 z' /></svg></th><td>TRAPEZOID</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 0 100 50 0 100 100z' /></svg></th><td>TRIANGLE</td></tr>
+                    </table>
+                </div>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>
+                        In <strong>Read</strong> mode:
+                        <ul>
+                            <li>Select a <strong>cell</strong> and use the <strong>shape, digit, and green highlight</strong> tools to fill in the puzzle grid. Type <strong>G</strong> to toggle highights on the selected cell. Type <strong>Space/Enter</strong> to skip a cell. Type <strong>1 - 6</strong> to place a digit. Type <strong class="zero">0</strong> to blank out a cell.</li>
+                            <li><strong>Shapes can only be placed in the top grid and digits in the bottom grid.</strong></li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Solve</strong> mode:
+                        <ul>
+                            <li>The cells from the inital read are locked.</li>
+                            <li>Select a <strong>shape or digit</strong> tool and click a cell to place that glyph.</li>
+                            <li>The <strong>Reset</strong> buttons (↻) will clear the grids back to the intial read.</li>
+                            <li>Type <strong>1 - 6</strong> to select a digit tool. Type <strong class="zero">0</strong> to select the blank tool</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Generated</strong> mode:
+                        <ul>
+                            <li>Press the <strong>Manual</strong> button to switch to <strong>Generated</strong> mode.</li>
+                            <li>Have fun solving the generated puzzle!</li>
+                        </ul>
+                    </li>
+                    <li>Click <strong>Swap Grids</strong> to swap the region maps between the grids.</li>
+                    <li>The <strong>Solution</strong> button will show your entered results or the solution to the generated puzzle.</li>
+                    <li>The <strong>Save</strong> button creates a new save state.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>The <strong>Reset Saves</strong> button clears all the saved states.</li>
+                    <li>The <strong>Reset All</strong> button resets the entire interactive.</li>
+                </ul>
+            </div>
+            <div class='page-footer relative-footer'>Page 1 of 2</div>
+        </div>
+        <div class='page page-bg-02'>
+            <div class='page-header'>
+                <span class='page-header-doc-title'>Keep Talking and Nobody Explodes Mod</span>
+                <span class='page-header-section-title'>Twodoku</span>
+            </div>
+            <div class='page-content'>
+                <div class='shapes shapes-tools'>
+                    <div><span>_</span><svg viewBox='-1 -1 102 102'></svg></div>
+                    <div><span>A</span><svg viewBox='-1 -1 102 102' class="first-shape"><path d='M 0,25 H 50 V 0 L 100,50 50,100 V 75 H 0 Z' /></svg></div>
+                    <div><span>B</span><svg viewBox='-1 -1 102 102'><path d='M 0,0 50,50 100,0 V 100 L 50,50 0,100 Z' /></svg></div>
+                    <div><span>C</span><svg viewBox='-1 -1 102 102'><path d='M 100,50 A 50,50 0 0 1 0,50 50,50 0 0 1 100,50 Z' /></svg></div>
+                    <div><span>D</span><svg viewBox='-1 -1 102 102'><path d='M 50,0 90,50 50,100 10,50 Z' /></svg></div>
+                    <div><span>F</span><svg viewBox='-1 -1 102 102'><path d='m50 2.4 12 36 38 0-31 22 12 36-31-22-31 22 12-36-31-22 38 0z' /></svg></div>
+                    <div><span>H</span><svg viewBox='-1 -1 102 102'><path d='m0 50 25-43.3 50 0 25 43.3-25 43.3-50 0z' /></svg></div>
+                    <div><span>N</span><svg viewBox='-1 -1 102 102'><path d='m14 .8h26l13 23-13 23h-26l-13-23zm46 26h26l13 23-13 23h-26l-13-23zm-46 26h26l13 23-13 23h-26l-13-23z' /></svg></div>
+                    <div><span>I</span><svg viewBox='-1 -1 102 102'><path d='m72 80q-6.8 0-12-4.5-5.5-4.6-10-14-4.4 8.4-10 13-5.6 5-13 5-6.1 0-11-3.9-4.8-4-7.4-11-2.6-6.7-2.6-15 0-7.9 2.6-15 2.6-6.8 7.4-11 4.9-4.1 11-4.1 7.3 0 13 5.2 5.5 5.2 9.9 14 5-9.9 10-14 5.4-4.4 12-4.4 6.8 0 12 3.9 4.9 3.9 7.4 11 2.6 6.6 2.6 15 0 8.2-2.6 15-2.6 6.7-7.7 11-4.9 4-12 4zm-43-13q4.3 0 7.9-3.8 3.7-3.9 7.3-13-3.3-8.6-7-12-3.7-3.9-8-3.9-5.3 0-8 4.9-2.7 4.9-2.7 12 0 7 2.8 12 2.8 4.6 7.8 4.6zm42 0q3.3 0 6-2.1 2.7-2.1 4.3-5.8 1.5-3.8 1.5-8.2 0-4.4-1.5-8.2-1.5-3.8-4.2-6.1-2.6-2.4-6.2-2.4-4.4 0-8.2 4-3.7 3.9-6.9 12 3.6 8.7 7.3 13 3.7 3.8 7.9 3.8z' /></svg></div>
+                    <div><span>J</span><svg viewBox='-1 -1 102 102' class="julia"><path d="M0 0h1"/></svg></div>
+                    <div><span>K</span><svg viewBox='-1 -1 102 102'><path d='M 50,0 90,20 50,100 10,20 Z' /></svg></div>
+                    <div><span>O</span><svg viewBox='-1 -1 102 102'><path d='m74 74a34 62 45 01-68 20 34 62 45 0120-68 34 62 45 0168-20 34 62 45 01-20 68z' /></svg></div>
+                    <div><span>E</span><svg viewBox='-1 -1 102 102'><path d='M 0,25 A 50,50 0 0 0 50,75 50,50 0 0 0 100,25 Z' /></svg></div>
+                    <div><span>S</span><svg viewBox='-1 -1 102 102'><path d='M 10 10 90 10 90 90 10 90z' /></svg></div>
+                    <div><span>R</span><svg viewBox='-1 -1 102 102'><path d='M 0,80 30,20 h 40 L 100,80 z' /></svg></div>
+                    <div><span>T</span><svg viewBox='-1 -1 102 102'><path d='M 0 100 50 0 100 100z' /></svg></div>
+                    <div><span>&nbsp;</span><div class="highlight-btn"></div></div>
+
+                </div>
+                <div style="height:1mm"></div>
+                <div class="number-tools hstack gap"></div>
+                <div class="hstack wrap top left">
+                    <div class="tools t1"></div>
+                    <div class='tw-diagrams'>
+                        <div class="grid figure-a g0">
+                            <figure class='tw-diagram'>
+                                <svg xmlns='http://www.w3.org/svg/2000' viewBox='-.1 -.1 6.2 6.2' fill='none' stroke='black'>
+                                    <path class="lines gridlines" stroke-width='.02' d='M1 0v6M2 0v6M3 0v6M4 0v6M5 0v6M0 1h6M0 2h6M0 3h6M0 4h6M0 5h6' />
+                                    <path class="lines" id='frame-a' stroke-width='.1' d='M0 0 6 0 6 6 0 6zM3 0v6M0 2h6M0 4h6' />
+                                </svg>
+                                <figcaption id='caption-a'>SHAPES - “Wide” regions</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                </div>
+                <div class="hstack left path g0"><span>Result:</span><span class="str"></span></div>
+                <div style="height:1mm"></div>
+                <div class="hstack left solution g0"><span>Solution:</span><span class="str"></span></div>
+                <div class="hstack wrap top left">
+                    <div class="tools number-tools vstack gap"></div>
+                    <div class='tw-diagrams'>
+                        <div class="grid figure-b g1">
+                            <figure class='tw-diagram figure-b'>
+                                <svg xmlns='http://www.w3.org/svg/2000' viewBox='-.1 -.1 6.2 6.2' fill='none' stroke='black'>
+                                    <path class="lines gridlines" stroke-width='.02' d='M1 0v6M2 0v6M3 0v6M4 0v6M5 0v6M0 1h6M0 2h6M0 3h6M0 4h6M0 5h6' />
+                                    <path class="lines" id='frame-b' stroke-width='.1' d='M0 0 6 0 6 6 0 6zM2 0v6M4 0v6M0 3h6' />
+                                </svg>
+                                <figcaption id='caption-b'>DIGITS - “Tall” regions</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                </div>
+                <div class="hstack left path g1"><span>Result:</span><span class="str"></span></div>
+                <div style="height:1mm"></div>
+                <div class="hstack left solution g1"><span>Solution:</span><span class="str"></span></div>
+
+                <div style="height:5mm"></div>
+                <div class="saves hstack wrap left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack left" style="margin-top:5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+            </div>
+            <div class='page-footer relative-footer'>Page 2 of 2</div>
+        </div>
+    </div>
+    <script>
+        let regionsA, regionsB;
+        function setDefaultRules()
+        {
+            [regionsA, regionsB] = Twodoku_setDefaultRules(
+                'SHAPES - “Wide” regions',
+                'DIGITS - “Tall” regions',
+                '“wide”',
+                '“tall”');
+        }
+        function setRules(rnd)
+        {
+            [regionsA, regionsB] = Twodoku_setRules(rnd,
+                'SHAPES - “Type-A” regions',
+                'DIGITS - “Type-B” regions',
+                '“type-A”',
+                '“type-B”');
+        }
+
+        let selected;
+        let selectedShape;
+        let grid = [$(".grid.figure-a"), $(".grid.figure-b")];
+        const SQSIZE = 62;
+        const SIZE = 6;
+        let cols = SIZE, rows = SIZE;
+        let gameGrid = Array(2).fill().map(()=>Array(SIZE).fill().map(()=>Array(SIZE).fill(0)));
+        let currX = 0, currY = 0;
+        let resultList = [];
+        let solList = [];
+        let solutionWord = "";
+        let generating = false;
+        let saveStates = [];
+        let currentState = 0;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+
+        function colorKey(n) {
+            if (n == " " || n == "enter") return 0;
+            if (n == "g") return 1;
+            return 2;
+        }
+
+        const shapeLetter = {
+            0: "_",  1: "A",
+            2: "B",  3: "C",
+            4: "D",  5: "F",
+            6: "H",  7: "N",
+            8: "I",  9: "J",
+            10: "K", 11: "O",
+            12: "E", 13: "S",
+            14: "R", 15: "T"
+        };
+
+        function ERange(start, count) {
+            return new CtRange(start, count).Enumerate();
+        }
+
+        function RandRange(start, end) {
+            return Math.floor(Math.random() * (end - start) + start);
+        }
+
+        // Below are taken from the module source code
+        const _arrangements = "1108378656,1108379664,1108410912,1108412424,1108476432,1108476936,1109410848,1109411856,1109459232,1109460996,1109524752,1109525508,1111507488,1111509000,1111523616,1111525380,1111621896,1111622148,1115701776,1115702280,1115717904,1115718660,1115750664,1115750916,1141408800,1141409808,1141441056,1141442568,1141506576,1141507080,1142957088,1142958096,1143013536,1143015426,1143079056,1143079938,1145053728,1145055240,1145077920,1145079810,1145176200,1145176578,1149248016,1149248520,1149272208,1149273090,1149304968,1149305346,1208501280,1208502288,1208549664,1208551428,1208615184,1208615940,1209017376,1209018384,1209073824,1209075714,1209139344,1209140226,1212162336,1212164100,1212170400,1212172290,1212285060,1212285186,1216356624,1216357380,1216364688,1216365570,1216413828,1216413954,1342718496,1342720008,1342734624,1342736388,1342832904,1342833156,1343234592,1343236104,1343258784,1343260674,1343357064,1343357442,1344282912,1344284676,1344290976,1344292866,1344405636,1344405762,1350574344,1350574596,1350582408,1350582786,1350598788,1350598914,1611153936,1611154440,1611170064,1611170820,1611202824,1611203076,1611670032,1611670536,1611694224,1611695106,1611726984,1611727362,1612718352,1612719108,1612726416,1612727298,1612775556,1612775682,1614815496,1614815748,1614823560,1614823938,1614839940,1614840066,2165343264,2165344272,2165375520,2165377032,2165441040,2165441544,2166375456,2166376464,2166423840,2166425604,2166489360,2166490116,2168472096,2168473608,2168488224,2168489988,2168586504,2168586756,2172666384,2172666888,2172682512,2172683268,2172715272,2172715524,2214888480,2214889488,2214920736,2214922248,2214986256,2214986760,2216694816,2216695824,2216755296,2216757249,2216820816,2216821761,2218791456,2218792968,2218819680,2218821633,2218917960,2218918401,2222985744,2222986248,2223013968,2223014913,2223046728,2223047169,2281980960,2281981968,2282029344,2282031108,2282094864,2282095620,2282755104,2282756112,2282815584,2282817537,2282881104,2282882049,2285900064,2285901828,2285912160,2285914113,2286026820,2286027009,2290094352,2290095108,2290106448,2290107393,2290155588,2290155777,2416198176,2416199688,2416214304,2416216068,2416312584,2416312836,2416972320,2416973832,2417000544,2417002497,2417098824,2417099265,2418020640,2418022404,2418032736,2418034689,2418147396,2418147585,2424312072,2424312324,2424324168,2424324609,2424340548,2424340737,2684633616,2684634120,2684649744,2684650500,2684682504,2684682756,2685407760,2685408264,2685435984,2685436929,2685468744,2685469185,2686456080,2686456836,2686468176,2686469121,2686517316,2686517505,2688553224,2688553476,2688565320,2688565761,2688581700,2688581889,4312302624,4312303632,4312334880,4312336392,4312400400,4312400904,4313850912,4313851920,4313907360,4313909250,4313972880,4313973762,4315947552,4315949064,4315971744,4315973634,4316070024,4316070402,4320141840,4320142344,4320166032,4320166914,4320198792,4320199170,4328817696,4328818704,4328849952,4328851464,4328915472,4328915976,4330624032,4330625040,4330684512,4330686465,4330750032,4330750977,4332720672,4332722184,4332748896,4332750849,4332847176,4332847617,4336914960,4336915464,4336943184,4336944129,4336975944,4336976385,4429456416,4429457424,4429512864,4429514754,4429578384,4429579266,4429714464,4429715472,4429774944,4429776897,4429840464,4429841409,4433383584,4433385474,4433387616,4433389569,4433510466,4433510529,4437577872,4437578754,4437581904,4437582849,4437639234,4437639297,4563673632,4563675144,4563697824,4563699714,4563796104,4563796482,4563931680,4563933192,4563959904,4563961857,4564058184,4564058625,4565504160,4565506050,4565508192,4565510145,4565631042,4565631105,4571795592,4571795970,4571799624,4571800065,4571824194,4571824257,4832109072,4832109576,4832133264,4832134146,4832166024,4832166402,4832367120,4832367624,4832395344,4832396289,4832428104,4832428545,4833939600,4833940482,4833943632,4833944577,4834000962,4834001025,4836036744,4836037122,4836040776,4836041217,4836065346,4836065409,8607253536,8607254544,8607301920,8607303684,8607367440,8607368196,8607769632,8607770640,8607826080,8607827970,8607891600,8607892482,8610914592,8610916356,8610922656,8610924546,8611037316,8611037442,8615108880,8615109636,8615116944,8615117826,8615166084,8615166210,8623768608,8623769616,8623816992,8623818756,8623882512,8623883268,8624542752,8624543760,8624603232,8624605185,8624668752,8624669697,8627687712,8627689476,8627699808,8627701761,8627814468,8627814657,8631882000,8631882756,8631894096,8631895041,8631943236,8631943425,8657314848,8657315856,8657371296,8657373186,8657436816,8657437698,8657572896,8657573904,8657633376,8657635329,8657698896,8657699841,8661242016,8661243906,8661246048,8661248001,8661368898,8661368961,8665436304,8665437186,8665440336,8665441281,8665497666,8665497729,8858640672,8858642436,8858648736,8858650626,8858763396,8858763522,8858898720,8858900484,8858910816,8858912769,8859025476,8859025665,8859422880,8859424770,8859426912,8859428865,8859549762,8859549825,8866762884,8866763010,8866766916,8866767105,8866775106,8866775169,9127076112,9127076868,9127084176,9127085058,9127133316,9127133442,9127334160,9127334916,9127346256,9127347201,9127395396,9127395585,9127858320,9127859202,9127862352,9127863297,9127919682,9127919745,9131004036,9131004162,9131008068,9131008257,9131016258,9131016321,17197187616,17197189128,17197203744,17197205508,17197302024,17197302276,17197703712,17197705224,17197727904,17197729794,17197826184,17197826562,17198752032,17198753796,17198760096,17198761986,17198874756,17198874882,17205043464,17205043716,17205051528,17205051906,17205067908,17205068034,17213702688,17213704200,17213718816,17213720580,17213817096,17213817348,17214476832,17214478344,17214505056,17214507009,17214603336,17214603777,17215525152,17215526916,17215537248,17215539201,17215651908,17215652097,17221816584,17221816836,17221828680,17221829121,17221845060,17221845249,17247248928,17247250440,17247273120,17247275010,17247371400,17247371778,17247506976,17247508488,17247535200,17247537153,17247633480,17247633921,17249079456,17249081346,17249083488,17249085441,17249206338,17249206401,17255370888,17255371266,17255374920,17255375361,17255399490,17255399553,17314357536,17314359300,17314365600,17314367490,17314480260,17314480386,17314615584,17314617348,17314627680,17314629633,17314742340,17314742529,17315139744,17315141634,17315143776,17315145729,17315266626,17315266689,17322479748,17322479874,17322483780,17322483969,17322491970,17322492033,17717010696,17717010948,17717018760,17717019138,17717035140,17717035266,17717268744,17717268996,17717280840,17717281281,17717297220,17717297409,17717792904,17717793282,17717796936,17717797377,17717821506,17717821569,17718841476,17718841602,17718845508,17718845697,17718853698,17718853761,34377056784,34377057288,34377072912,34377073668,34377105672,34377105924,34377572880,34377573384,34377597072,34377597954,34377629832,34377630210,34378621200,34378621956,34378629264,34378630146,34378678404,34378678530,34380718344,34380718596,34380726408,34380726786,34380742788,34380742914,34393571856,34393572360,34393587984,34393588740,34393620744,34393620996,34394346000,34394346504,34394374224,34394375169,34394406984,34394407425,34395394320,34395395076,34395406416,34395407361,34395455556,34395455745,34397491464,34397491716,34397503560,34397504001,34397519940,34397520129,34427118096,34427118600,34427142288,34427143170,34427175048,34427175426,34427376144,34427376648,34427404368,34427405313,34427437128,34427437569,34428948624,34428949506,34428952656,34428953601,34429009986,34429010049,34431045768,34431046146,34431049800,34431050241,34431074370,34431074433,34494226704,34494227460,34494234768,34494235650,34494283908,34494284034,34494484752,34494485508,34494496848,34494497793,34494545988,34494546177,34495008912,34495009794,34495012944,34495013889,34495070274,34495070337,34498154628,34498154754,34498158660,34498158849,34498166850,34498166913,34628444424,34628444676,34628452488,34628452866,34628468868,34628468994,34628702472,34628702724,34628714568,34628715009,34628730948,34628731137,34629226632,34629227010,34629230664,34629231105,34629255234,34629255297,34630275204,34630275330,34630279236,34630279425,34630287426,34630287489"
+            .split(',')
+            .map(s => BigInt(s))
+            .map(u =>
+                Array.from({length: 36}, (_, bit) => (u & (1n << BigInt(bit))) !== 0n)
+            );
+
+        const _symbolNames = [
+            "ARROW","BOWTIE","CIRCLE","DIAMOND","FIVESTAR","HEXAGON","HONEYCOMB",
+            "INFINITY","JULIA","KITE","OVAL","SEMICIRCLE","SQUARE","TRAPEZOID","TRIANGLE"
+        ];
+
+        const _allPoss = ERange(0, SIZE * _symbolNames.length).map(i => ({ sym: Math.floor(i / SIZE), num: i % SIZE }));
+
+        function _getTypeARegion(cell) {
+            return regionsA.findIndex(reg => reg.includes(cell));
+        }
+        function _getTypeBRegion(cell) {
+            return regionsB.findIndex(reg => reg.includes(cell));
+        }
+
+        function* recurseGenerate(sofarSym, sofarNum, possibilities, symsUsed, symIsWide) {
+            let bestCell = -1;
+            let bestIsNum = false;
+            let bestPosses = null;
+            let shortcut = false;
+
+            for (let cell = 0; cell < 36; cell++) {
+                if (sofarSym[cell] === null) {
+                    const possSyms = new Set(possibilities[cell].map(t => t.sym));
+                    if (possSyms.size === 0)
+                        return; // no solution, abort
+                    if (bestPosses === null || possSyms.size < bestPosses.size) {
+                        bestCell = cell;
+                        bestIsNum = false;
+                        bestPosses = possSyms;
+                        if (possSyms.size === 1) { shortcut = true; break; }
+                    }
+                }
+                if (sofarNum[cell] === null) {
+                    const possNums = new Set(possibilities[cell].map(t => t.num));
+                    if (possNums.size === 0)
+                        return; // no solution, abort
+                    if (bestPosses === null || possNums.size < bestPosses.size) {
+                        bestCell = cell;
+                        bestIsNum = true;
+                        bestPosses = possNums;
+                        if (possNums.size === 1) { shortcut = true; break; }
+                    }
+                }
+            }
+
+            if (!shortcut && bestPosses === null) {
+                // All cells filled, yield a solution
+                yield ERange(0, 36).map(i => ({ sym: sofarSym[i], num: sofarNum[i] }));
+                return;
+            }
+
+            const col = bestCell % SIZE;
+            const row = Math.floor(bestCell / SIZE);
+            const regA = _getTypeARegion(bestCell);
+            const regB = _getTypeBRegion(bestCell);
+            const bestArr = Array.from(bestPosses);
+            const ofs = Math.floor(Math.random() * bestArr.length);
+
+            for (let arrIx = 0; arrIx < bestArr.length; arrIx++) {
+                const value = bestArr[(arrIx + ofs) % bestArr.length];
+
+                // Determine what symbol/number combinations are still possible in the other cells
+                const newPoss = possibilities.map((np, ix) => {
+                    if (np == null) return null;
+                    if (ix === bestCell) return np;
+                    // Remove symbols/numbers from the same row, column, or box
+                    if (bestIsNum) {
+                        if (Math.floor(ix / SIZE) === row || ix % SIZE === col || (symIsWide ? _getTypeBRegion(ix) === regB : _getTypeARegion(ix) === regA)) {
+                            return np.filter(tup => tup.num !== value);
+                        }
+                    } else {
+                        if (Math.floor(ix / SIZE) === row || ix % SIZE === col || (symIsWide ? _getTypeARegion(ix) === regA : _getTypeBRegion(ix) === regB)) {
+                            return np.filter(tup => tup.sym !== value);
+                        }
+                    }
+                    return np;
+                });
+
+                // Place the new symbol/number
+                const newSofar = [...(bestIsNum ? sofarNum : sofarSym)];
+                newSofar[bestCell] = value;
+                const newSofarNum = bestIsNum ? newSofar : sofarNum.slice();
+                const newSofarSym = bestIsNum ? sofarSym.slice() : newSofar;
+
+                const isNewSymbol = !bestIsNum && !symsUsed.includes(value);
+                const newSymsUsed = isNewSymbol ? [...symsUsed, value] : symsUsed;
+
+                // Remove symbol possibilities if we’ve reached 6 symbols
+                let adjustedPoss = newPoss;
+                if (isNewSymbol && newSymsUsed.length === SIZE) {
+                    adjustedPoss = adjustedPoss.map(np => np ? np.filter(tup => newSymsUsed.includes(tup.sym)) : null);
+                }
+
+                adjustedPoss[bestCell] =
+                    (bestIsNum ? sofarSym : sofarNum)[bestCell] === null
+                        ? adjustedPoss[bestCell].filter(tup => bestIsNum ? tup.num === value : tup.sym === value)
+                        : null;
+
+                function elemNotAvailable(getter) {
+                    const rowsHave = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+                    const colsHave = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+
+                    for (let i = 0; i < 36; i++) {
+                        if (adjustedPoss[i]) {
+                            for (const tup of adjustedPoss[i]) {
+                                const v = getter(tup);
+                                rowsHave[Math.floor(i / SIZE)][v] = true;
+                                colsHave[i % SIZE][v] = true;
+                            }
+                        } else {
+                            const v = getter({ sym: newSofarSym[i], num: newSofarNum[i] });
+                            rowsHave[Math.floor(i / SIZE)][v] = true;
+                            colsHave[i % SIZE][v] = true;
+                        }
+                    }
+                    return rowsHave.some(r => r.includes(false)) || colsHave.some(c => c.includes(false));
+                }
+
+                // If any row, column, or box can no longer contain a particular number or symbol, bail out
+                if (elemNotAvailable(t => t.num) || (newSymsUsed.length === SIZE && elemNotAvailable(t => newSymsUsed.indexOf(t.sym)))) {
+                    continue;
+                }
+
+                // Recursively yield all solutions
+                yield* recurseGenerate(newSofarSym, newSofarNum, adjustedPoss, newSymsUsed, symIsWide);
+            }
+        }
+
+        function* generatePuzzle() {
+            solutionWord = AllWords[Math.floor(Math.random() * AllWords.length)];
+            const isEditor = true;
+
+            let displayedClues = null;
+            let solution = null;
+            let symIsWide = false;
+            let arrangement = null;
+
+            function log(msg) {
+                if (msg.startsWith("Exception"))
+                    console.error(msg);
+                else if (msg.startsWith("♦"))
+                    console.warn(msg);
+                else
+                    console.log(msg);
+            }
+
+            (() => {
+                try {
+                    const encs = ERange(0, SIZE).map(letterIx =>
+                        ShuffleFisherYates(
+                            ERange(0, SIZE * _symbolNames.length)
+                                .map(i => ({ sym: Math.floor(i / SIZE), num: i % SIZE }))
+                                .filter(tup =>
+                                    _symbolNames[tup.sym][tup.num % _symbolNames[tup.sym].length] === solutionWord[letterIx]
+                                )
+                        )
+                    );
+
+                    const symIsWideStart = Math.floor(Math.random() * 2) !== 0;
+                    const allArrangements = ShuffleFisherYates([..._arrangements]);
+
+                    for (let arrIx = 0; arrIx < allArrangements.length; arrIx++) {
+                        for (const symIsWideF of [symIsWideStart, !symIsWideStart]) {
+                            symIsWide = symIsWideF;
+                            arrangement = allArrangements[arrIx];
+                            const startGrid = ERange(0, 36).map(i =>
+                                arrangement[i] ? encs[Math.floor(i / SIZE)] : _allPoss
+                            );
+
+                            const gen = recurseGenerate(new Array(36).fill(null), new Array(36).fill(null), startGrid, [], symIsWide);
+                            solution = gen.next().value;
+
+                            if (!solution) {
+                                if (isEditor) log(`♦ Bad combo: ${solutionWord}, wide=${symIsWide}, arr(${arrIx})=${arrangement.map(b => b ? "1" : "0").join("")}`);
+                                continue;
+                            }
+
+                            let candidateClueIndexes = ERange(0, 36).filter(i => !arrangement[i]);
+
+                            let iter = 0;
+                            tryAgain: while (true) {
+                                iter++;
+                                if (iter >= 20) {
+                                    if (isEditor) log(`♦ Bad iter: ${solutionWord}, wide=${symIsWide}, arr(${arrIx})=${arrangement.map(b => b ? "1" : "0").join("")}`);
+                                    break;
+                                }
+
+                                ShuffleFisherYates(candidateClueIndexes);
+
+                                const clues = candidateClueIndexes.map((cell, n) => ({
+                                    cell,
+                                    isNumClue: n >= 15,
+                                    clue: n >= 15 ? solution[cell].num : solution[cell].sym
+                                }));
+
+                                function testUniqueness(setToTest) {
+                                    let poss = Array(36).fill().map(() => [..._allPoss]);
+                                    for (const clueIx of setToTest) {
+                                        const { cell, isNumClue, clue } = clues[clueIx];
+                                        poss[cell] = poss[cell].filter(tup => (isNumClue ? tup.num : tup.sym) === clue);
+                                    }
+                                    // Run the solver for symIsWide = false and true, counting solutions across both runs.
+                                    const genA = recurseGenerate(new Array(36).fill(null), new Array(36).fill(null), poss, [], true);
+                                    const genB = recurseGenerate(new Array(36).fill(null), new Array(36).fill(null), poss, [], false);
+
+                                    let count = 0;
+                                    for (const _ of genA) {
+                                        if (++count > 1) return false; // more than one => not unique
+                                    }
+                                    for (const _ of genB) {
+                                        if (++count > 1) return false; // more than one across both => not unique
+                                    }
+                                    return true;
+                                }
+
+                                if (!testUniqueness(ERange(0, clues.length))) {
+                                    continue tryAgain;
+                                }
+
+                                displayedClues = ReduceRequiredSet(
+                                    ERange(0, clues.length),
+                                    (state) => {
+                                        // Must have at least 6 unique symbols
+                                        if (new Set(state.SetToTest.filter(clueIx => !clues[clueIx].isNumClue).map(clueIx => clues[clueIx].clue)).size < 6)
+                                            return false;
+                                        // if (isEditor)
+                                        //     log(ERange(0, clues.length).map(clueIx => state.SetToTest.includes(clueIx) ? "█" : "░").join(""));
+                                        return testUniqueness(state.SetToTest);
+                                    })
+                                    .map(ix => clues[ix])
+                                    .sort((a, b) => a.cell - b.cell);
+
+                                if (isEditor) log(`iter = ${iter}`);
+                                log(`arr(${arrIx})=${arrangement.map(b => b ? "1" : "0").join("")}`);
+                                return;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    if (isEditor) log(`Exception ${e.name}: ${e.message}\n${e.stack}`);
+                }
+            })();
+
+            console.log(`Clues: ${displayedClues.map(tup =>
+                `${String.fromCharCode("A".charCodeAt(0) + (tup.cell % SIZE))}${Math.floor(tup.cell / SIZE) + 1}=${tup.isNumClue ? (tup.clue + 1) : _symbolNames[tup.clue]}`
+            ).join(",")}`);
+
+            console.log(`Cells highlighted: ${ERange(0, 36).filter(cell => arrangement[cell]).map(cell =>
+                `${String.fromCharCode("A".charCodeAt(0) + (cell % SIZE))}${Math.floor(cell / SIZE) + 1}`
+            ).join(", ")}`);
+
+            console.log(`Solution numbers: ${solution.map(c => c.num + 1).join("")}`);
+            console.log(`Solution symbols: ${solution.map(c => _symbolNames[c.sym]).join(" ")}`);
+            let hash = /^#(\d+)$/.exec(window.location.hash);
+            console.log(`${symIsWide ? "Shapes" : "Digits"} are ${!hash || hash[1] == "1" ? "Wide" : "Type-A"}`);
+            console.log(`Solution word: ${solutionWord}`);
+
+            return [arrangement, solution, displayedClues];
+        }
+        // Taken from module source code ^^^
+
+        function generate() {
+            generating = true;
+            try {
+                // console.log("A");
+                // console.log(regionsA);
+                // console.log("B");
+                // console.log(regionsB);
+                const gen = generatePuzzle();
+                let [ arrangement, solution, displayedClues ] = gen.next().value;
+
+                gameGrid = Array(2).fill().map(()=>Array(SIZE).fill().map(()=>Array(SIZE).fill(0)));
+                displayedClues.forEach(clue => {
+                    const x = clue.cell % SIZE, y = Math.floor(clue.cell / SIZE);
+                    if (clue.isNumClue)
+                        gameGrid[1][x][y] = clue.clue + 51;  // numbers (50 offset)
+                    else
+                        gameGrid[0][x][y] = clue.clue + 1;   // shapes
+                });
+
+                updateGrid();
+
+                $(".netsq").removeClass("highlighted");
+                arrangement.forEach((val, cell) => {
+                    if (val) $(`.netsq.x${cell % SIZE}.y${Math.floor(cell / SIZE)}`).addClass("highlighted");
+                });
+
+
+                // Store the solution
+                solList = [
+                    Array.from({length: 6}, (_, i) => solution.slice(i * SIZE, i * SIZE + SIZE).map(c => c.sym + 1)),
+                    Array.from({length: 6}, (_, i) => solution.slice(i * SIZE, i * SIZE + SIZE).map(c => c.num + 1))
+                ];
+                console.log(solList);
+                updateSolText();
+            }
+            catch (ex) {
+                console.log(ex);
+            }
+            generating = false;
+        }
+
+        function updateSolText() {
+            $(".solution.g0 .str").text(solList[0].map(row => row.map(x => shapeText(x)).join("")).join(" "));
+            $(".solution.g1 .str").html(solList[1].map(row => row.map(x => shapeText(x+50)).join("")).join(" ") + `<br>${solutionWord}`);
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        function isSolved() {
+            if (mode() == MODE_PLAY) {
+                let convResultList = [resultList[0], resultList[1].map(r => r.map(n => n-50))];
+                if (JSON.stringify(convResultList) == JSON.stringify(solList)) {
+                    if ($("button.sound").hasClass("play"))
+                        audioSolve[0].play();
+                    $(".solved-text").removeClass("invis");
+                    return true;
+                }
+            }
+            $(".solved-text").addClass("invis");
+            return false;
+        }
+
+        function playShapeSound(n) {
+            if ($("button.sound").hasClass("play") && !isNaN(n)) {
+                let which = n < 0 ? 3 : (n < 1 ? 0 : (n < 50 ? 1 : 2));
+                let aud = audioNumbers[which][0].cloneNode();
+                aud.volume = 0.5;
+                aud.play();
+            }
+        }
+
+        function resetGrid(which = 0) {
+            if (which == 0 && mode() == MODE_READ)
+                $(".netsq.x0.y0").trigger("click");
+            else if (which == 0)
+                $(".shapes-tools div:nth-child(n+2) svg.used").first().trigger("click");
+            for (let g = (which > 0 ? which-1 : 0); g < (which > 0 ? which : 2); g++)
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < cols; x++)
+                        if (!$(`.grid.g${g} .netsq.x${x}.y${y}`).hasClass("locked"))
+                            gameGrid[g][x][y] = 0;
+            updateGrid();
+            $(".solved-text").addClass("invis");
+        }
+
+        $("svg.julia path").attr("d", juliaD);
+
+        for (let g = 0; g < 2; g++) {
+            for (let x = 0; x < SIZE; x++) {
+                $("<div>").addClass("square letters").text(String.fromCharCode(65+x)).css({top: 0, left: `${(x+1) * SQSIZE}px`}).appendTo(grid[g]);
+            }
+            for (let y = 0; y < SIZE; y++) {
+                let number = $("<div>").addClass("square numbers grid-label").text(y+1).css({top: `${(y+1) * SQSIZE + 2}px`, left: 0}).appendTo(grid[g]);
+
+                for (let x = 0; x < SIZE; x++) {
+                    let square = MakeSvgTag(118, 118, -9, -9).addClass(`netsquare square netsq x${x} y${y}`).css({top: `${(y+1) * SQSIZE}px`, left: `${(x+1) * SQSIZE}px`}).appendTo(grid[g]).each(function(_,e) {
+                        let element = $(e);
+
+                        element.click(function(event) {
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            if (mode() == MODE_READ) {
+                                selected = $(`.netsq.x${x}.y${y}`);
+                                updateSelection();
+                                currX = x;
+                                currY = y;
+                            } else {
+                                if ($(this).hasClass("locked") || (selectedShape != 0 && selectedShape < 50 && g != 0) || (selectedShape > 50 && g != 1)) {
+                                    return false;
+                                } else {
+                                    if (gameGrid[g][x][y] == selectedShape)
+                                        gameGrid[g][x][y] = 0;
+                                    else
+                                        gameGrid[g][x][y] = selectedShape;
+                                    updateGrid();
+
+                                    if (!isSolved()) {
+                                        playShapeSound(gameGrid[g][x][y]);
+                                    }
+                                }
+                            }
+                            return false;
+                        });
+                    });
+                }
+            }
+        }
+
+        let audioNumbers = [
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Colored Squares 4.wav")
+                .appendTo(grid[0]),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Samples - Kick.wav")
+                .appendTo(grid[0]),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Colored Squares 3.wav")
+                .appendTo(grid[0]),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Unfair Cipher - Press 3.wav")
+                .appendTo(grid[0])
+        ];
+        let audioSolve = $("<audio>")
+            .attr("src","audio/Module Listening/Valves.wav")
+            .prop("volume", 0.4)
+            .appendTo(grid[0]);
+
+        function advance() {
+            if (currX == cols - 1)
+                currY = (currY + 1) % rows;
+            currX = (currX + 1) % cols;
+            selected = $(`.netsq.x${currX}.y${currY}`);
+            updateSelection();
+        }
+
+        function pressNumber(n) {
+            if (mode() == MODE_READ) {
+                if (selected && selected.hasClass("netsq")) {
+                    if (n == 0) {
+                        gameGrid[1][currX][currY] = 0;
+                        gameGrid[0][currX][currY] = 0;
+                        playShapeSound(0);
+                    }
+                    else {
+                        gameGrid[1][currX][currY] = n + 50;
+                        playShapeSound(n + 50);
+                    }
+                    gameGrid[0][currX][currY] = 0;
+                    updateGrid();
+                    advance();
+                    $(".solved-text").addClass("invis");
+                }
+            }
+            else if (n == 0) {
+                $(".shapes-tools div:first-child svg").click();
+            }
+            else {
+                selectedShape = n + 50;
+                selected = $(`.number-tools.hstack div:nth-child(${n}), .number-tools.vstack div:nth-child(${n+2})`);
+                updateSelection();
+            }
+        }
+
+        $(document).keydown(function(event) {
+            let k = event.key.toLowerCase();
+
+            if (selected && selected.hasClass("netsq") && ["g", " ", "enter"].includes(k)) {
+                if (k == "g")
+                    $(".highlight-btn").click();
+                else if ([" ", "enter"].includes(k))
+                    advance();
+                event.preventDefault();
+                return false;
+            }
+            else if (NoSpecialKeys(event)) {
+                let n = parseInt(event.key);
+                if (n >= 0 && n <= SIZE) {
+                    pressNumber(n);
+                    event.preventDefault();
+                    return false;
+                }
+            }
+        });
+
+        $(".shapes-tools svg").each(function(i, e) {
+            let element = $(e);
+            element.click(function() {
+                if (mode() == MODE_READ) {
+                    if (selected && selected.hasClass("netsq")) {
+                        gameGrid[0][currX][currY] = i;
+                        gameGrid[1][currX][currY] = 0;
+                        updateGrid();
+                        advance();
+                        playShapeSound(i);
+                        $(".solved-text").addClass("invis");
+                    }
+                }
+                else {
+                    selected = element;
+                    updateSelection();
+                    selectedShape = i;
+                }
+                return false;
+            });
+        });
+
+        let sideNumberTools = $(".number-tools.vstack");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(sideNumberTools);
+        $("<div>").addClass("netsquare reset-grid square").text("↻").appendTo(sideNumberTools).click(function() {
+            resetGrid(2);
+            playShapeSound(0);
+        });
+        let numberTools = $(".number-tools");
+        for (let i = 1; i <= SIZE; i++) {
+            $("<div>").addClass("number-tool").text(i).appendTo(numberTools).click(function() {
+                pressNumber(i);
+                return false;
+            });
+        }
+
+        let tools = $(".tools.t1");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
+        $(".highlight-btn").click(function() {
+            if (selected && selected.hasClass("netsq")) {
+                $(`.netsq.x${currX}.y${currY}`).toggleClass("highlighted");
+                advance();
+                playShapeSound(-1);
+            }
+            return false;
+        });
+        $("<div>").addClass("netsquare reset-grid square").text("↻").appendTo(tools).click(function() {
+            resetGrid(1);
+            playShapeSound(0);
+        });
+
+        function updateUsed() {
+            let used = new Set(gameGrid[0].flat());
+            used.add(0);
+            $(".shapes-tools svg").each(function(i, e) {
+                $(e).toggleClass("used", used.has(i));
+            });
+            for (let g = 0; g < 2; g++) {
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        $(`.grid.g${g} .netsq.x${x}.y${y}`).toggleClass("locked", gameGrid[g][x][y] != 0);
+                    }
+                }
+            }
+        }
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            let solve = $(this).hasClass("solve");
+            $("body").toggleClass("solve", solve);
+            if (solve) {
+                updateUsed();
+            }
+            resetGrid();
+        });
+
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if (mode() == MODE_PLAY) {
+                generate();
+                updateUsed();
+                resetGrid();
+            }
+            else if (mode() == MODE_READ)
+                $(".netsq.x0.y0").trigger("click");
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+        $("<button>").text("Swap\xa0Grids").appendTo(tools).click(function() {
+            let cap = $("#caption-a").text().split(" - ");
+            $("#caption-a").text(`SHAPES - ${$("#caption-b").text().split(" - ")[1]}`);
+            $("#caption-b").text(`DIGITS - ${cap[1]}`);
+            let path = $("#frame-a").attr("d");
+            $("#frame-a").attr("d", $("#frame-b").attr("d"));
+            $("#frame-b").attr("d", path);
+            return false;
+        });
+
+        function shapeText(shape) {
+            if (shape < 50) return shapeLetter[shape];
+            return shape - 50;
+        }
+
+        function updateResult() {
+            resultList = [
+                gameGrid[0][0].map((_, i) => gameGrid[0].map(row => row[i])),
+                gameGrid[1][0].map((_, i) => gameGrid[1].map(row => row[i]))
+            ];
+            $(".path.g0 .str").text(resultList[0].map(row => row.map(x => shapeText(x)).join("")).join(" "));
+            $(".path.g1 .str").text(resultList[1].map(row => row.map(x => shapeText(x)).join("")).join(" "));
+        }
+
+        function updateGrid() {
+            for (let g = 0; g < 2; g++) {
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        let n = gameGrid[g][x][y];
+                        let elem = $(`.grid.g${g} .netsq.x${x}.y${y}`);
+                        if (n < 50) {
+                            elem.html($(`.shapes-tools div:nth-child(${n + 1}) svg`).html());
+                        }
+                        else {
+                            elem.html("");
+                            elem.append(MakeSvgElem("text", {x:28, y:75}, n - 50));
+                        }
+                    }
+                }
+            }
+            updateResult();
+        }
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $("button.read-solve").removeClass("solve");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $(".solved-text").addClass("invis");
+            $("body").removeClass("play solve solution-shown");
+
+            gameGrid = Array(2).fill().map(()=>Array(SIZE).fill().map(()=>Array(SIZE).fill(0)));
+            updateGrid();
+            $(".netsq").removeClass("highighted locked");
+            resetGrid();
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        resetGrid();
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".netsquare, .solved-text, .tools button, .shapes-tools svg")).map(x => $(x)).map(x => x.attr("class") || "");
+            let bodyClass = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let regionMaps = Array.from($("#frame-a, #frame-b")).map(x => $(x)).map(x => x.attr("d") || "");
+            let regionCaps = Array.from($("#caption-a, #caption-b")).map(x => $(x)).map(x => x.text() || "");
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_regionsA = JSON.stringify(regionsA);
+            let s_regionsB = JSON.stringify(regionsB);
+            let s_solList = JSON.stringify(solList);
+            let s_gameGrid = JSON.stringify(gameGrid);
+            let s_selected = selected;
+            let s_selectedShape = selectedShape;
+            let s_currX = currX;
+            let s_currY = currY;
+            let s_solutionWord = solutionWord;
+
+            let button = $("<button>").text(stateNumber+1).click(function() {
+                $(".netsquare, .solved-text, .tools button, .shapes-tools svg").each((i,x) => $(x).attr("class", saveStateClass[i]));
+                $("body").each((i,x) => $(x).attr("class", bodyClass[i]));
+                $("#frame-a, #frame-b").each((i,x) => $(x).attr("d", regionMaps[i]));
+                $("#caption-a, #caption-b").each((i,x) => $(x).text(regionCaps[i]));
+                currentState = stateNumber;
+                selected = s_selected;
+                selectedShape = s_selectedShape;
+                currX = s_currX;
+                currY = s_currY;
+                solutionWord = s_solutionWord;
+                regionsA = JSON.parse(s_regionsA);
+                regionsB = JSON.parse(s_regionsB);
+                solList = JSON.parse(s_solList);
+                gameGrid = JSON.parse(s_gameGrid);
+                updateSolText();
+                updateGrid();
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    </script>
+</body>
+</html>
