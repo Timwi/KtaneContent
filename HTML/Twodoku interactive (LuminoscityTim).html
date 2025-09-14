@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='initial-scale=1'>
+    <title>Twodoku — Keep Talking and Nobody Explodes Module</title>
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel='stylesheet' type='text/css' href='css/normalize.css'>
+    <link rel='stylesheet' type='text/css' href='css/main.css'>
+    <script src='js/ktane-utils.js'></script>
+    <script src='js/ruleseed.js'></script>
+    <script src='js/Modules/Twodoku.js'></script>
+    <script src='js/jquery.3.7.0.min.js'></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/set-utils.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/coord-utils.js"></script>
+    <script src='data/Twodoku/Data.js'></script>
+    <style>
+        html {
+            --sqsize: 62px;
+            --tool: 1.54cm;
+            --imgsize: 1.5cm;
+        }
+        .tw-diagrams {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .3cm;
+        }
+        figure {
+            position: absolute;
+            top: calc(var(--sqsize) - 4px);
+            left: calc(var(--sqsize) - 4px);
+        }
+        figure svg { width: 384px; }
+        figure svg .gridlines { stroke: #666; }
+        figcaption {
+            font-weight: bold;
+            text-align: center;
+        }
+        .shapes {
+            display: flex;
+            gap: .5cm;
+            justify-content: center;
+            justify-content: safe center;
+        }
+        .shapes :is(svg, img) {
+            width: var(--imgsize);
+            display: block;
+        }
+        .shapes.shapes-tools {
+            margin: 0 auto;
+            max-width: 530px;
+            gap: 2px;
+        }
+        .shapes th {
+            padding: .1cm .25cm;
+        }
+
+        figcaption, button {
+            user-select: none;
+        }
+        .shapes-tools {
+            display: flex;
+            flex-direction: column;
+        }
+        .shapes-tools .row-1 {
+            display: grid;
+            grid-template-columns: repeat(8, var(--tool));
+        }
+        .shapes-tools .row-2 {
+            display: grid;
+            grid-template-columns: repeat(9, var(--tool));
+        }
+        .shapes.shapes-tools svg {
+            border: 1px solid;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .dark svg path.lines { stroke: #DDD; }
+        .dark figure svg .gridlines { stroke: #888; }
+        .dark :is(.shapes svg, svg.netsquare) { fill: #DDD; }
+        .dark .shapes img { filter: invert(87%); }
+
+        .zero { font-family: 'Inconsolata'; }
+
+        .grid {
+            position: relative;
+            width: calc(var(--sqsize) * 7.2);
+            height: calc(var(--sqsize) * 8);
+        }
+
+        .grid svg text {
+            font-size: 80px;
+            font-family: 'Special Elite';
+        }
+
+        .tools {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 140px;
+        }
+        .number-tools.tools { margin-top: 10px; }
+        @media screen and (max-width: 724px) {
+            .tools {
+                flex-direction: row;
+                flex-wrap: wrap;
+                width: unset;
+            }
+            .number-tools.tools {
+                margin-top: unset;
+                width: 100%;
+            }
+        }
+
+        .tools button { margin: 8px; }
+        .solved-text {
+            color: #0C0;
+            transition: color 0.5s;
+            user-select: none;
+        }
+        .invis { opacity: 0; }
+
+        .number-tool {
+            width: 35px;
+            height: 35px;
+            border: 1px solid;
+            box-sizing: border-box;
+            cursor: pointer;
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 9px;
+            user-select: none;
+        }
+
+        .square {
+            position: absolute;
+            margin: 2px;
+            width: var(--sqsize);
+            height: var(--sqsize);
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        .dark .square { border-color: #888; }
+
+        .square.numbers, .square.letters {
+            width: var(--sqsize);
+            height: var(--sqsize);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-family: 'Special Elite';
+            opacity: 50%;
+            user-select: none;
+            padding-top: 6px;
+        }
+
+        .netsquare {
+            height: var(--sqsize);
+            width: var(--sqsize);
+            font-size: 40px;
+            line-height: 60px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .reset-grid, .highlight-btn {
+            padding-top: 2px;
+            position: relative;
+            border: 1px solid;
+        }
+        .highlight-btn, .highlighted {
+            background-color: #00FF0066;
+            user-select: none;
+            cursor: pointer;
+        }
+        .highlight-btn {
+            height: var(--imgsize);
+            width: var(--imgsize);
+            box-sizing: border-box;
+        }
+
+        .netsq .bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        .netsq .symbol {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: 70%;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 1;
+        }
+
+        .netsquare.selected, .shapes-tools svg.selected {
+            border: 5px solid #33F;
+        }
+        .number-tool.selected {
+            border: 3px solid #33F;
+        }
+
+        .dark .netsquare { color: #DDD; }
+
+        .path, .solution {
+            font-family: 'Roboto Mono';
+            font-size: 20px;
+            transition: 0.5s;
+        }
+        :is(.path, .solution) span:not(.str) {
+            display: inline-block;
+            min-width: 120px;
+        }
+        body:not(.solution-shown) :is(.solution, .path),
+        body:not(.solution-shown, .legend-shown) .shapes-tools div span,
+        body:not(.play) .solution {
+            color: transparent;
+            font-size: 0;
+        }
+        body:not(.solution-shown) .shapes-tools div {
+            line-height: 0;
+        }
+        .shapes-tools div, .shapes-tools div span {
+            transition: 0.5s;
+            line-height: 1;
+        }
+        .shapes-tools div span {
+            display: block;
+            margin: 0 12px 0 10px;
+            text-align: center;
+            user-select: none;
+        }
+        .shapes-tools div:first-child div:first-child span {
+            font-family: 'Inconsolata';
+            font-weight: bold;
+            margin: 0;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 8px 10px 5px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        body:not(.play, .solve) :is(button.show-sol, .reset-grid),
+        body:is(.solution-shown) button.show-legend,
+        body.play button.read-solve {
+            user-select: none;
+            pointer-events: none;
+            background-color: #666;
+        }
+
+        body:is(.play, .solve) :is(.shapes-tools div.shp:not(.used), .highlight-btn) {
+            user-select: none;
+            pointer-events: none;
+            opacity: 25%;
+        }
+
+        body:is(.play, .solve) input.transparent-input.qty {
+            user-select: none;
+            pointer-events: none;
+            color: #FF0000CC;
+        }
+        body:is(.play, .solve) .netsq.tree {
+            pointer-events: none;
+        }
+
+        body.play button.read-solve::before,
+        button.read-solve.solve::before {
+            content: 'Solve';
+        }
+        button.read-solve:not(.solve)::before {
+            content: 'Read';
+        }
+        button.sound.play::before {
+            content: 'Sound';
+        }
+        button.sound:not(.play)::before {
+            content: 'Muted';
+        }
+        button.expert-play.play::before {
+            content: 'Generated';
+        }
+        button.expert-play:not(.play)::before {
+            content: 'Manual';
+        }
+        button.show-sol.show::before {
+            content: 'Solution Shown';
+        }
+        button.show-sol:not(.show)::before {
+            content: 'Solution Hidden';
+        }
+        body.solution-shown button.show-legend::before,
+        button.show-legend.show::before {
+            content: 'Legend Shown';
+        }
+        button.show-legend:not(.show)::before {
+            content: 'Legend Hidden';
+        }
+        button.show-sol, button.show-legend {
+            padding: 4px 3px 0;
+            width: 100px;
+            line-height: 1;
+        }
+
+        .page {
+            background-position: top;
+            background-repeat: repeat-y;
+        }
+    </style>
+    <script>
+
+    </script>
+</head>
+<body class="legend-shown">
+    <div class='section'>
+        <div class='page page-bg-01'>
+            <div class='page-header'>
+                <span class='page-header-doc-title'>Keep Talking and Nobody Explodes Mod</span>
+                <span class='page-header-section-title'>Twodoku</span>
+            </div>
+            <div class='page-content'>
+                <img src='img/Component/Twodoku.svg' class='diagram'>
+                <h2>On the Subject of Twodokus</h2>
+                <p class='flavour-text'>Literally two sudokus.</p>
+
+                <p>The 6×6 grid on the module contains some digits and some geometric shapes. These form two separate 6×6 sudokus, one using the digits 1–6 and one using 6 distinct geometric shapes.</p>
+                <p>One of the two sudokus will have <span id='type-a'>“wide”</span> regions, the other <span id='type-b'>“tall”</span> regions as shown in the diagrams.</p>
+                <p>Once solved, focus on the cells that are highlighted in green. For each of those cells, in reading order, look up the name of the geometric shape in the below table and use the digit to index into that name (e.g. the digit 1 resolves to the first letter). If the word is too short, pretend that it is repeated (e.g. KITEKITE).</p>
+                <p>Enter the resulting solution word using the buttons on the right of the module by selecting the appropriate sections of the alphabet and individual letters.</p>
+                <div class='shapes'>
+                    <table>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 0,25 H 50 V 0 L 100,50 50,100 V 75 H 0 Z' /></svg></th><td>ARROW</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 0,0 50,50 100,0 V 100 L 50,50 0,100 Z' /></svg></th><td>BOWTIE</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 100,50 A 50,50 0 0 1 0,50 50,50 0 0 1 100,50 Z' /></svg></th><td>CIRCLE</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 50,0 90,50 50,100 10,50 Z' /></svg></th><td>DIAMOND</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='m50 2.4 12 36 38 0-31 22 12 36-31-22-31 22 12-36-31-22 38 0z' /></svg></th><td>FIVESTAR</td></tr>
+                    </table>
+                    <table>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='m0 50 25-43.3 50 0 25 43.3-25 43.3-50 0z' /></svg></th><td>HEXAGON</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='m14 .8h26l13 23-13 23h-26l-13-23zm46 26h26l13 23-13 23h-26l-13-23zm-46 26h26l13 23-13 23h-26l-13-23z' /></svg></th><td>HONEYCOMB</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='m72 80q-6.8 0-12-4.5-5.5-4.6-10-14-4.4 8.4-10 13-5.6 5-13 5-6.1 0-11-3.9-4.8-4-7.4-11-2.6-6.7-2.6-15 0-7.9 2.6-15 2.6-6.8 7.4-11 4.9-4.1 11-4.1 7.3 0 13 5.2 5.5 5.2 9.9 14 5-9.9 10-14 5.4-4.4 12-4.4 6.8 0 12 3.9 4.9 3.9 7.4 11 2.6 6.6 2.6 15 0 8.2-2.6 15-2.6 6.7-7.7 11-4.9 4-12 4zm-43-13q4.3 0 7.9-3.8 3.7-3.9 7.3-13-3.3-8.6-7-12-3.7-3.9-8-3.9-5.3 0-8 4.9-2.7 4.9-2.7 12 0 7 2.8 12 2.8 4.6 7.8 4.6zm42 0q3.3 0 6-2.1 2.7-2.1 4.3-5.8 1.5-3.8 1.5-8.2 0-4.4-1.5-8.2-1.5-3.8-4.2-6.1-2.6-2.4-6.2-2.4-4.4 0-8.2 4-3.7 3.9-6.9 12 3.6 8.7 7.3 13 3.7 3.8 7.9 3.8z' /></svg></th><td>INFINITY</td></tr>
+                        <tr><th><img src='img/Twodoku/Julia.png' /></th><td>JULIA</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 50,0 90,20 50,100 10,20 Z' /></svg></th><td>KITE</td></tr>
+                    </table>
+                    <table>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='m74 74a34 62 45 01-68 20 34 62 45 0120-68 34 62 45 0168-20 34 62 45 01-20 68z' /></svg></th><td>OVAL</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 0,25 A 50,50 0 0 0 50,75 50,50 0 0 0 100,25 Z' /></svg></th><td>SEMICIRCLE</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 10 10 90 10 90 90 10 90z' /></svg></th><td>SQUARE</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 0,80 30,20 h 40 L 100,80 z' /></svg></th><td>TRAPEZOID</td></tr>
+                        <tr><th><svg viewBox='-1 -1 102 102'><path d='M 0 100 50 0 100 100z' /></svg></th><td>TRIANGLE</td></tr>
+                    </table>
+                </div>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>
+                        In <strong>Read</strong> mode:
+                        <ul>
+                            <li>Select a <strong>cell</strong> and use the <strong>shape, digit, and green highlight</strong> tools to fill in the puzzle grid. Type <strong>G</strong> to toggle highights on a cell.</li>
+                            <li>Type <strong>1 - 6</strong> to place a digit. Type <strong>A - T</strong> to place a shape.</li>
+                            <li>Type <strong>Space/Enter</strong> to skip a cell. Type <strong class="zero">0</strong> to blank out a cell.</li>
+                            <li><strong>Shapes can only be placed in the top grid and digits in the bottom grid.</strong></li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Solve</strong> mode:
+                        <ul>
+                            <li>The cells from the inital read are locked.</li>
+                            <li>Select a <strong>shape or digit</strong> tool and click a cell to place that glyph.</li>
+                            <li>The <strong>Reset</strong> buttons (↻) will clear the grids back to the intial read.</li>
+                            <li>Type <strong>1 - 6</strong> or <strong>A - T</strong> to select a tool. Type <strong class="zero">0</strong> to select the blank tool.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        In <strong>Generated</strong> mode:
+                        <ul>
+                            <li>Press the <strong>Manual</strong> button to switch to <strong>Generated</strong> mode.</li>
+                            <li>Have fun solving the generated puzzle!</li>
+                        </ul>
+                    </li>
+                    <li>Click <strong>Swap Grids</strong> to swap the region maps between the grids.</li>
+                    <li>The <strong>Solution</strong> button will show your entered results or the solution to the generated puzzle.</li>
+                    <li>The <strong>Save</strong> button creates a new save state.</li>
+                    <li>The sound effects can be muted.</li>
+                    <li>The <strong>Reset Saves</strong> button clears all the saved states.</li>
+                    <li>The <strong>Reset All</strong> button resets the entire interactive.</li>
+                </ul>
+            </div>
+            <div class='page-footer relative-footer'>Page 1 of 2</div>
+        </div>
+        <div class='page page-bg-02'>
+            <div class='page-header'>
+                <span class='page-header-doc-title'>Keep Talking and Nobody Explodes Mod</span>
+                <span class='page-header-section-title'>Twodoku</span>
+            </div>
+            <div class='page-content'>
+                <div class='shapes shapes-tools'>
+                    <div class="row-1">
+                        <div><span>0</span><svg viewBox='-1 -1 102 102'></svg></div>
+                        <div><span>A</span><svg viewBox='-1 -1 102 102'><path d='M 0,25 H 50 V 0 L 100,50 50,100 V 75 H 0 Z' /></svg></div>
+                        <div><span>B</span><svg viewBox='-1 -1 102 102'><path d='M 0,0 50,50 100,0 V 100 L 50,50 0,100 Z' /></svg></div>
+                        <div><span>C</span><svg viewBox='-1 -1 102 102'><path d='M 100,50 A 50,50 0 0 1 0,50 50,50 0 0 1 100,50 Z' /></svg></div>
+                        <div><span>D</span><svg viewBox='-1 -1 102 102'><path d='M 50,0 90,50 50,100 10,50 Z' /></svg></div>
+                        <div><span>F</span><svg viewBox='-1 -1 102 102'><path d='m50 2.4 12 36 38 0-31 22 12 36-31-22-31 22 12-36-31-22 38 0z' /></svg></div>
+                        <div><span>H</span><svg viewBox='-1 -1 102 102'><path d='m0 50 25-43.3 50 0 25 43.3-25 43.3-50 0z' /></svg></div>
+                        <div><span>N</span><svg viewBox='-1 -1 102 102'><path d='m14 .8h26l13 23-13 23h-26l-13-23zm46 26h26l13 23-13 23h-26l-13-23zm-46 26h26l13 23-13 23h-26l-13-23z' /></svg></div>
+                    </div>
+                    <div class="row-2">
+                        <div><span>I</span><svg viewBox='-1 -1 102 102'><path d='m72 80q-6.8 0-12-4.5-5.5-4.6-10-14-4.4 8.4-10 13-5.6 5-13 5-6.1 0-11-3.9-4.8-4-7.4-11-2.6-6.7-2.6-15 0-7.9 2.6-15 2.6-6.8 7.4-11 4.9-4.1 11-4.1 7.3 0 13 5.2 5.5 5.2 9.9 14 5-9.9 10-14 5.4-4.4 12-4.4 6.8 0 12 3.9 4.9 3.9 7.4 11 2.6 6.6 2.6 15 0 8.2-2.6 15-2.6 6.7-7.7 11-4.9 4-12 4zm-43-13q4.3 0 7.9-3.8 3.7-3.9 7.3-13-3.3-8.6-7-12-3.7-3.9-8-3.9-5.3 0-8 4.9-2.7 4.9-2.7 12 0 7 2.8 12 2.8 4.6 7.8 4.6zm42 0q3.3 0 6-2.1 2.7-2.1 4.3-5.8 1.5-3.8 1.5-8.2 0-4.4-1.5-8.2-1.5-3.8-4.2-6.1-2.6-2.4-6.2-2.4-4.4 0-8.2 4-3.7 3.9-6.9 12 3.6 8.7 7.3 13 3.7 3.8 7.9 3.8z' /></svg></div>
+                        <div><span>J</span><svg class="julia" viewBox='-1 -1 102 102'><path d="M0 0h1"/></svg></div>
+                        <div><span>K</span><svg viewBox='-1 -1 102 102'><path d='M 50,0 90,20 50,100 10,20 Z' /></svg></div>
+                        <div><span>O</span><svg viewBox='-1 -1 102 102'><path d='m74 74a34 62 45 01-68 20 34 62 45 0120-68 34 62 45 0168-20 34 62 45 01-20 68z' /></svg></div>
+                        <div><span>E</span><svg viewBox='-1 -1 102 102'><path d='M 0,25 A 50,50 0 0 0 50,75 50,50 0 0 0 100,25 Z' /></svg></div>
+                        <div><span>S</span><svg viewBox='-1 -1 102 102'><path d='M 10 10 90 10 90 90 10 90z' /></svg></div>
+                        <div><span>R</span><svg viewBox='-1 -1 102 102'><path d='M 0,80 30,20 h 40 L 100,80 z' /></svg></div>
+                        <div><span>T</span><svg viewBox='-1 -1 102 102'><path d='M 0 100 50 0 100 100z' /></svg></div>
+                        <div><span>G</span><div class="highlight-btn"></div></div>
+                    </div>
+                </div>
+                <div style="height:1mm"></div>
+                <div class="number-tools hstack gap"></div>
+                <div class="hstack wrap top left">
+                    <div class="tools t1"></div>
+                    <div class='tw-diagrams'>
+                        <div class="grid figure-a g0">
+                            <figure class='tw-diagram'>
+                                <svg xmlns='http://www.w3.org/svg/2000' viewBox='-.1 -.1 6.2 6.2' fill='none' stroke='black'>
+                                    <path class="lines gridlines" stroke-width='.02' d='M1 0v6M2 0v6M3 0v6M4 0v6M5 0v6M0 1h6M0 2h6M0 3h6M0 4h6M0 5h6' />
+                                    <path class="lines" id='frame-a' stroke-width='.1' d='M0 0 6 0 6 6 0 6zM3 0v6M0 2h6M0 4h6' />
+                                </svg>
+                                <figcaption id='caption-a'>SHAPES - “Wide” regions</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                </div>
+                <div class="hstack left path g0"><span>Result:</span><span class="str"></span></div>
+                <div style="height:1mm"></div>
+                <div class="hstack left solution g0"><span>Solution:</span><span class="str"></span></div>
+                <div class="hstack wrap top left">
+                    <div class="tools number-tools vstack gap"></div>
+                    <div class='tw-diagrams'>
+                        <div class="grid figure-b g1">
+                            <figure class='tw-diagram figure-b'>
+                                <svg xmlns='http://www.w3.org/svg/2000' viewBox='-.1 -.1 6.2 6.2' fill='none' stroke='black'>
+                                    <path class="lines gridlines" stroke-width='.02' d='M1 0v6M2 0v6M3 0v6M4 0v6M5 0v6M0 1h6M0 2h6M0 3h6M0 4h6M0 5h6' />
+                                    <path class="lines" id='frame-b' stroke-width='.1' d='M0 0 6 0 6 6 0 6zM2 0v6M4 0v6M0 3h6' />
+                                </svg>
+                                <figcaption id='caption-b'>DIGITS - “Tall” regions</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                </div>
+                <div class="hstack left path g1"><span>Result:</span><span class="str"></span></div>
+                <div style="height:1mm"></div>
+                <div class="hstack left solution g1"><span>Solution:</span><span class="str"></span></div>
+
+                <div style="height:5mm"></div>
+                <div class="saves hstack wrap left">
+                    <button class="save">Save</button>
+                </div>
+                <div class="hstack left" style="margin-top:5mm">
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+            </div>
+            <div class='page-footer relative-footer'>Page 2 of 2</div>
+        </div>
+    </div>
+    <script>
+        let regionsA, regionsB;
+        let regionAMap, regionBMap;
+        function makeRegionMaps() {
+            regionAMap = Array(NCELLS).fill().map((_,i) => regionsA.findIndex(reg => reg.includes(i)));
+            regionBMap = Array(NCELLS).fill().map((_,i) => regionsB.findIndex(reg => reg.includes(i)));
+        }
+        function setDefaultRules()
+        {
+            [regionsA, regionsB] = Twodoku_setDefaultRules(
+                'SHAPES - “Wide” regions',
+                'DIGITS - “Tall” regions',
+                '“wide”',
+                '“tall”');
+            makeRegionMaps();
+        }
+        function setRules(rnd)
+        {
+            [regionsA, regionsB] = Twodoku_setRules(rnd,
+                'SHAPES - “Type-A” regions',
+                'DIGITS - “Type-B” regions',
+                '“type-A”',
+                '“type-B”');
+            makeRegionMaps();
+            console.log(regionsA);
+            console.log(regionsB);
+        }
+
+        let selected;
+        let selectedShape;
+        let grid = [$(".grid.figure-a"), $(".grid.figure-b")];
+        const SQSIZE = 62;
+        const SIZE = 6;
+        const NCELLS = 36;
+        let cols = SIZE, rows = SIZE;
+        let gameGrid = Array(2).fill().map(()=>Array(SIZE).fill().map(()=>Array(SIZE).fill(0)));
+        let currX = 0, currY = 0;
+        let resultList = [[],[]];
+        let solList = [[],[]];
+        let solutionWord = "";
+        let generating = false;
+        let saveStates = [];
+        let currentState = 0;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        const MODE_PLAY = 2;
+
+        function colorKey(n) {
+            if (n == " " || n == "enter") return 0;
+            if (n == "g") return 1;
+            return 2;
+        }
+
+        const shapeLetter = {
+            0: "_",  1: "A",
+            2: "B",  3: "C",
+            4: "D",  5: "F",
+            6: "H",  7: "N",
+            8: "I",  9: "J",
+            10: "K", 11: "O",
+            12: "E", 13: "S",
+            14: "R", 15: "T"
+        };
+
+        function ERange(start, count) {
+            return new CtRange(start, count).Enumerate();
+        }
+
+        function RandRange(start, end) {
+            return Math.floor(Math.random() * (end - start) + start);
+        }
+
+        // Below are taken from the module source code
+        const _allPoss = ERange(0, SIZE * _symbolNames.length).map(i => ({ sym: Math.floor(i / SIZE), num: i % SIZE }));
+
+        function* recurseGenerate(sofarSym, sofarNum, possibilities, symsUsed, symIsWide, startTime = null) {
+            // if more than 1 second has passed, give up on this branch
+            if (startTime != null && (Date.now() - startTime) / 1000 > 1) {
+                return;
+            }
+            let bestCell = -1;
+            let bestIsNum = false;
+            let bestPosses = null;
+            let shortcut = false;
+
+            for (let cell = 0; cell < NCELLS; cell++) {
+                if (sofarSym[cell] === null) {
+                    const possSyms = new Set(possibilities[cell].map(t => t.sym));
+                    if (possSyms.size === 0)
+                        return; // no solution, abort
+                    if (bestPosses === null || possSyms.size < bestPosses.size) {
+                        bestCell = cell;
+                        bestIsNum = false;
+                        bestPosses = possSyms;
+                        if (possSyms.size === 1) { shortcut = true; break; }
+                    }
+                }
+                if (sofarNum[cell] === null) {
+                    const possNums = new Set(possibilities[cell].map(t => t.num));
+                    if (possNums.size === 0)
+                        return; // no solution, abort
+                    if (bestPosses === null || possNums.size < bestPosses.size) {
+                        bestCell = cell;
+                        bestIsNum = true;
+                        bestPosses = possNums;
+                        if (possNums.size === 1) { shortcut = true; break; }
+                    }
+                }
+            }
+
+            if (!shortcut && bestPosses === null) {
+                // All cells filled, yield a solution
+                yield ERange(0, NCELLS).map(i => ({ sym: sofarSym[i], num: sofarNum[i] }));
+                return;
+            }
+
+            const col = bestCell % SIZE;
+            const row = Math.floor(bestCell / SIZE);
+            const regA = regionAMap[bestCell];
+            const regB = regionBMap[bestCell];
+            const bestArr = Array.from(bestPosses);
+            const ofs = Math.floor(Math.random() * bestArr.length);
+
+            for (let arrIx = 0; arrIx < bestArr.length; arrIx++) {
+                const value = bestArr[(arrIx + ofs) % bestArr.length];
+
+                // Determine what symbol/number combinations are still possible in the other cells
+                const newPoss = possibilities.map((np, ix) => {
+                    if (np == null) return null;
+                    if (ix === bestCell) return np;
+                    // Remove symbols/numbers from the same row, column, or box
+                    if (bestIsNum) {
+                        if (Math.floor(ix / SIZE) === row || ix % SIZE === col || (symIsWide ? regionBMap[ix] === regB : regionAMap[ix] === regA)) {
+                            return np.filter(tup => tup.num !== value);
+                        }
+                    } else {
+                        if (Math.floor(ix / SIZE) === row || ix % SIZE === col || (symIsWide ? regionAMap[ix] === regA : regionBMap[ix] === regB)) {
+                            return np.filter(tup => tup.sym !== value);
+                        }
+                    }
+                    return np;
+                });
+
+                // Place the new symbol/number
+                const newSofar = [...(bestIsNum ? sofarNum : sofarSym)];
+                newSofar[bestCell] = value;
+                const newSofarNum = bestIsNum ? newSofar : sofarNum.slice();
+                const newSofarSym = bestIsNum ? sofarSym.slice() : newSofar;
+
+                const isNewSymbol = !bestIsNum && !symsUsed.includes(value);
+                const newSymsUsed = isNewSymbol ? [...symsUsed, value] : symsUsed;
+
+                // Remove symbol possibilities if we’ve reached 6 symbols
+                let adjustedPoss = newPoss;
+                if (isNewSymbol && newSymsUsed.length === SIZE) {
+                    adjustedPoss = adjustedPoss.map(np => np ? np.filter(tup => newSymsUsed.includes(tup.sym)) : null);
+                }
+
+                adjustedPoss[bestCell] =
+                    (bestIsNum ? sofarSym : sofarNum)[bestCell] === null
+                        ? adjustedPoss[bestCell].filter(tup => bestIsNum ? tup.num === value : tup.sym === value)
+                        : null;
+
+                function elemNotAvailable(getter, getRegion) {
+                    const rowsHave = Array.from({length: SIZE}, () => Array(SIZE).fill(false));
+                    const colsHave = Array.from({length: SIZE}, () => Array(SIZE).fill(false));
+                    const regionsHave = Array.from({length: SIZE}, () => Array(SIZE).fill(false));
+
+                    for (let i = 0; i < NCELLS; i++) {
+                        if (adjustedPoss[i]) {
+                            for (const tup of adjustedPoss[i]) {
+                                const v = getter(tup);
+                                rowsHave[Math.floor(i / SIZE)][v] = true;
+                                colsHave[i % SIZE][v] = true;
+                                regionsHave[getRegion[i]][v] = true;
+                            }
+                        } else {
+                            const v = getter({ sym: newSofarSym[i], num: newSofarNum[i] });
+                            rowsHave[Math.floor(i / SIZE)][v] = true;
+                            colsHave[i % SIZE][v] = true;
+                            regionsHave[getRegion[i]][v] = true;
+                        }
+                    }
+                    return rowsHave.some(r => r.includes(false)) || colsHave.some(c => c.includes(false)) || regionsHave.some(c => c.includes(false));
+                }
+
+                // If any row, column, or box can no longer contain a particular number or symbol, bail out
+                if (
+                    elemNotAvailable(t => t.num, symIsWide ? regionBMap : regionAMap) ||
+                    (newSymsUsed.length === SIZE && elemNotAvailable(t => newSymsUsed.indexOf(t.sym), symIsWide ? regionAMap : regionBMap))
+                ) continue;
+
+                // Recursively yield all solutions
+                yield* recurseGenerate(newSofarSym, newSofarNum, adjustedPoss, newSymsUsed, symIsWide, startTime);
+            }
+        }
+
+        function* generatePuzzle() {
+            solutionWord = _allWords[Math.floor(Math.random() * _allWords.length)];
+            const isEditor = true;
+
+            let displayedClues = null;
+            let solution = null;
+            let symIsWide = false;
+            let arrangement = null;
+
+            function log(msg) {
+                if (msg.startsWith("Exception"))
+                    console.error(msg);
+                else if (msg.startsWith("♦"))
+                    console.warn(msg);
+                else
+                    console.log(msg);
+            }
+
+            (() => {
+                try {
+                    const encs = ERange(0, SIZE).map(letterIx =>
+                        ShuffleFisherYates(
+                            ERange(0, SIZE * _symbolNames.length)
+                                .map(i => ({ sym: Math.floor(i / SIZE), num: i % SIZE }))
+                                .filter(tup =>
+                                    _symbolNames[tup.sym][tup.num % _symbolNames[tup.sym].length] === solutionWord[letterIx]
+                                )
+                        )
+                    );
+
+                    const symIsWideStart = Math.floor(Math.random() * 2) !== 0;
+                    const allArrangements = ShuffleFisherYates([..._arrangements]);
+
+                    let startGeneration = Date.now();
+                    for (let arrIx = 0; arrIx < allArrangements.length; arrIx++) {
+                        for (const symIsWideF of [symIsWideStart, !symIsWideStart]) {
+                            symIsWide = symIsWideF;
+                            arrangement = allArrangements[arrIx];
+                            const startGrid = ERange(0, NCELLS).map(i =>
+                                arrangement[i] ? encs[Math.floor(i / SIZE)] : _allPoss
+                            );
+
+                            let startTime = Date.now();
+                            const gen = recurseGenerate(new Array(NCELLS).fill(null), new Array(NCELLS).fill(null), startGrid, [], symIsWide, startTime);
+                            solution = gen.next().value;
+
+                            if (!solution) {
+                                if (isEditor) log(`♦ Bad combo: ${solutionWord}, time=${(Date.now() - startTime) / 1000}s, symWide=${symIsWide}, arr(${arrIx})=${arrangement.map(b => b ? "1" : "0").join("")}`);
+                                if ((Date.now() - startGeneration) / 1000 > 12) {
+                                    alert("Generation failed, gave up after 12 seconds. This is a known issue. Try using a different rule seed.");
+                                    $(".expert-play, body").removeClass("play");
+                                    cellClick(0, 0, 0);
+                                    return;
+                                }
+                                continue;
+                            }
+
+                            let candidateClueIndexes = ERange(0, NCELLS).filter(i => !arrangement[i]);
+
+                            let iter = 0;
+                            tryAgain: while (true) {
+                                iter++;
+                                if (iter >= 20) {
+                                    if (isEditor) log(`♦ Bad iter: ${solutionWord}, symWide=${symIsWide}, arr(${arrIx})=${arrangement.map(b => b ? "1" : "0").join("")}`);
+                                    break;
+                                }
+
+                                ShuffleFisherYates(candidateClueIndexes);
+
+                                const clues = candidateClueIndexes.map((cell, n) => ({
+                                    cell,
+                                    isNumClue: n >= 15,
+                                    clue: n >= 15 ? solution[cell].num : solution[cell].sym
+                                }));
+
+                                function testUniqueness(setToTest) {
+                                    let poss = Array(NCELLS).fill().map(() => [..._allPoss]);
+                                    for (const clueIx of setToTest) {
+                                        const { cell, isNumClue, clue } = clues[clueIx];
+                                        poss[cell] = poss[cell].filter(tup => (isNumClue ? tup.num : tup.sym) === clue);
+                                    }
+                                    // Count solutions across both type A/B variations
+                                    const genA = recurseGenerate(new Array(NCELLS).fill(null), new Array(NCELLS).fill(null), poss, [], true);
+                                    const genB = recurseGenerate(new Array(NCELLS).fill(null), new Array(NCELLS).fill(null), poss, [], false);
+
+                                    let count = 0;
+                                    for (const _ of genA) {
+                                        if (++count > 1) return false; // more than one -> not unique
+                                    }
+                                    for (const _ of genB) {
+                                        if (++count > 1) return false; // more than one across both -> not unique
+                                    }
+                                    return true;
+                                }
+
+                                if (!testUniqueness(ERange(0, clues.length))) {
+                                    continue tryAgain;
+                                }
+
+                                displayedClues = ReduceRequiredSet(
+                                    ERange(0, clues.length),
+                                    (state) => {
+                                        // Must have at least 6 unique symbols
+                                        if (new Set(state.SetToTest.filter(clueIx => !clues[clueIx].isNumClue).map(clueIx => clues[clueIx].clue)).size < 6)
+                                            return false;
+                                        // if (isEditor)
+                                        //     log(ERange(0, clues.length).map(clueIx => state.SetToTest.includes(clueIx) ? "█" : "░").join(""));
+                                        return testUniqueness(state.SetToTest);
+                                    })
+                                    .map(ix => clues[ix])
+                                    .sort((a, b) => a.cell - b.cell);
+
+                                if (isEditor) log(`iter = ${iter}, time=${(Date.now() - startTime) / 1000}s`);
+                                log(`arr(${arrIx})=${arrangement.map(b => b ? "1" : "0").join("")}`);
+                                return;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    if (isEditor) log(`Exception ${e.name}: ${e.message}\n${e.stack}`);
+                }
+            })();
+
+            console.log(`Clues: ${displayedClues.map(tup =>
+                `${String.fromCharCode("A".charCodeAt(0) + (tup.cell % SIZE))}${Math.floor(tup.cell / SIZE) + 1}=${tup.isNumClue ? (tup.clue + 1) : _symbolNames[tup.clue]}`
+            ).join(",")}`);
+
+            console.log(`Cells highlighted: ${ERange(0, NCELLS).filter(cell => arrangement[cell]).map(cell =>
+                `${String.fromCharCode("A".charCodeAt(0) + (cell % SIZE))}${Math.floor(cell / SIZE) + 1}`
+            ).join(", ")}`);
+
+            console.log(`Solution numbers: ${solution.map(c => c.num + 1).join("")}`);
+            console.log(`Solution symbols: ${solution.map(c => _symbolNames[c.sym]).join(" ")}`);
+            let hash = /^#(\d+)$/.exec(window.location.hash);
+            console.log(`${symIsWide ? "Shapes" : "Digits"} are ${!hash || hash[1] == "1" ? "Wide" : "Type-A"}`);
+            console.log(`Solution word: ${solutionWord}`);
+
+            return [arrangement, solution, displayedClues];
+        }
+        // Taken from module source code ^^^
+
+        function generate() {
+            generating = true;
+            try {
+                // console.log("A");
+                // console.log(regionsA);
+                // console.log("B");
+                // console.log(regionsB);
+                const gen = generatePuzzle();
+                let [ arrangement, solution, displayedClues ] = gen.next().value;
+
+                gameGrid = Array(2).fill().map(()=>Array(SIZE).fill().map(()=>Array(SIZE).fill(0)));
+                displayedClues.forEach(clue => {
+                    const x = clue.cell % SIZE, y = Math.floor(clue.cell / SIZE);
+                    if (clue.isNumClue)
+                        gameGrid[1][x][y] = clue.clue + 51;  // numbers (50 offset)
+                    else
+                        gameGrid[0][x][y] = clue.clue + 1;   // shapes
+                });
+                // for (let y = 0; y < rows - 1; y++)
+                //     for (let x = 0; x < cols; x++) {
+                //         gameGrid[0][x][y] = solution[y*SIZE + x].sym + 1;
+                //         gameGrid[1][x][y] = solution[y*SIZE + x].num + 51;
+                //     }
+                updateGrid();
+
+                $(".netsq").removeClass("highlighted");
+                arrangement.forEach((val, cell) => {
+                    if (val) $(`.netsq.x${cell % SIZE}.y${Math.floor(cell / SIZE)}`).addClass("highlighted");
+                });
+
+                // Store the solution
+                solList = [
+                    Array.from({length: 6}, (_, i) => solution.slice(i * SIZE, i * SIZE + SIZE).map(c => c.sym + 1)),
+                    Array.from({length: 6}, (_, i) => solution.slice(i * SIZE, i * SIZE + SIZE).map(c => c.num + 1))
+                ];
+                console.log(solList);
+                updateSolText();
+            }
+            catch (ex) {
+                console.log(ex);
+            }
+            generating = false;
+        }
+
+        function updateSolText() {
+            $(".solution.g0 .str").text(solList[0].map(row => row.map(x => shapeText(x)).join("")).join(" "));
+            $(".solution.g1 .str").html(solList[1].map(row => row.map(x => shapeText(x+50)).join("")).join(" ") + `<br>${solutionWord}`);
+        }
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+
+        function mode() {
+            if ($("button.expert-play").hasClass("play"))
+                return MODE_PLAY;
+            else if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        function isSolved() {
+            if (mode() == MODE_PLAY) {
+                let convResultList = [resultList[0], resultList[1].map(r => r.map(n => n-50))];
+                if (JSON.stringify(convResultList) == JSON.stringify(solList)) {
+                    if ($("button.sound").hasClass("play"))
+                        audioSolve[0].play();
+                    $(".solved-text").removeClass("invis");
+                    return true;
+                }
+            }
+            $(".solved-text").addClass("invis");
+            return false;
+        }
+
+        function playShapeSound(n) {
+            if ($("button.sound").hasClass("play") && !isNaN(n)) {
+                let which = n < 0 ? 3 : (n < 1 ? 0 : (n < 50 ? 1 : 2));
+                let aud = audioNumbers[which][0].cloneNode();
+                aud.volume = 0.5;
+                aud.play();
+            }
+        }
+
+        function resetGrid(which = 0) {
+            if (which == 0 && mode() == MODE_READ)
+                cellClick(0, 0, 0);
+            else if (which == 0) {
+                let shapetools = $(".shapes-tools div.shp");
+                for (let i = 1; i < shapetools.length; i++) {
+                    if (shapetools.eq(i).hasClass("used")) {
+                        shapeToolClick(i);
+                        break;
+                    }
+                }
+                if ($(".shapes-tools div.used").length < 2) shapeToolClick(0);
+            }
+            for (let g = (which > 0 ? which-1 : 0); g < (which > 0 ? which : 2); g++)
+                for (let y = 0; y < rows; y++)
+                    for (let x = 0; x < cols; x++)
+                        if (!$(`.grid.g${g} .netsq.x${x}.y${y}`).hasClass("locked"))
+                            gameGrid[g][x][y] = 0;
+            updateGrid();
+            $(".solved-text").addClass("invis");
+        }
+
+        $("svg.julia path").attr("d", _juliaD);
+        $(".shapes-tools div div").addClass("shp");
+        $(".shapes-tools div svg").addClass("tool");
+
+        function cellClick(g, x, y) {
+            let elem = $(`.grid.g${g} .netsq.x${x}.y${y}`);
+            if (mode() == MODE_READ) {
+                selected = $(`.netsq.x${x}.y${y}`);
+                updateSelection();
+                currX = x;
+                currY = y;
+            } else {
+                if (elem.hasClass("locked") || (selectedShape != 0 && selectedShape < 50 && g != 0) || (selectedShape > 50 && g != 1)) {
+                    return false;
+                } else if (selected && selected.hasClass("tool")) {
+                    if (gameGrid[g][x][y] == selectedShape)
+                        gameGrid[g][x][y] = 0;
+                    else
+                        gameGrid[g][x][y] = selectedShape;
+                    updateGrid();
+
+                    if (!isSolved()) {
+                        playShapeSound(gameGrid[g][x][y]);
+                    }
+                }
+            }
+        }
+        for (let g = 0; g < 2; g++) {
+            for (let x = 0; x < SIZE; x++) {
+                $("<div>").addClass("square letters").text(String.fromCharCode(65+x)).css({top: 0, left: `${(x+1) * SQSIZE}px`}).appendTo(grid[g]);
+            }
+            for (let y = 0; y < SIZE; y++) {
+                let number = $("<div>").addClass("square numbers grid-label").text(y+1).css({top: `${(y+1) * SQSIZE + 2}px`, left: 0}).appendTo(grid[g]);
+
+                for (let x = 0; x < SIZE; x++) {
+                    let square = MakeSvgTag(118, 118, -9, -9).addClass(`netsquare square netsq x${x} y${y}`).css({top: `${(y+1) * SQSIZE}px`, left: `${(x+1) * SQSIZE}px`}).appendTo(grid[g]).each(function(_,e) {
+                        let element = $(e);
+
+                        element.click(function(event) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            cellClick(g, x, y);
+                            return false;
+                        });
+                    });
+                }
+            }
+        }
+
+        let audioNumbers = [
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Colored Squares 4.wav")
+                .appendTo(grid[0]),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Sim Samples - Kick.wav")
+                .appendTo(grid[0]),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Colored Squares 3.wav")
+                .appendTo(grid[0]),
+            $("<audio>")
+                .attr("src", "audio/Module Listening/Unfair Cipher - Press 3.wav")
+                .appendTo(grid[0])
+        ];
+        let audioSolve = $("<audio>")
+            .attr("src","audio/Module Listening/Street Fighter - Select.wav")
+            .prop("volume", 0.6)
+            .appendTo(grid[0]);
+
+        function advance() {
+            if (currX == cols - 1)
+                currY = (currY + 1) % rows;
+            currX = (currX + 1) % cols;
+            selected = $(`.netsq.x${currX}.y${currY}`);
+            updateSelection();
+        }
+
+        function pressNumber(n) {
+            if (mode() == MODE_READ) {
+                if (selected && selected.hasClass("netsq")) {
+                    if (n == 0) {
+                        gameGrid[1][currX][currY] = 0;
+                        gameGrid[0][currX][currY] = 0;
+                        playShapeSound(0);
+                    }
+                    else {
+                        gameGrid[1][currX][currY] = n + 50;
+                        playShapeSound(n + 50);
+                    }
+                    gameGrid[0][currX][currY] = 0;
+                    updateGrid();
+                    advance();
+                    $(".solved-text").addClass("invis");
+                }
+            }
+            else if (n == 0) {
+                shapeToolClick(0);
+            }
+            else {
+                selectedShape = n + 50;
+                selected = $(`.number-tools.hstack div:nth-child(${n}), .number-tools.vstack div:nth-child(${n+2})`);
+                updateSelection();
+            }
+        }
+
+        $(document).keydown(function(event) {
+            let k = event.key.toUpperCase();
+
+            if (selected && selected.hasClass("netsq") && ["G", " ", "ENTER"].includes(k)) {
+                if (k === "G")
+                    highlightBtnClick();
+                else if ([" ", "ENTER"].includes(k))
+                    advance();
+                event.preventDefault();
+                return false;
+            }
+            else if (NoSpecialKeys(event)) {
+                let n = parseInt(event.key);
+                if (n >= 0 && n <= SIZE) {
+                    pressNumber(n);
+                    event.preventDefault();
+                    return false;
+                }
+                else {
+                    let entry = Object.entries(shapeLetter).find(([_,letter]) => letter === k && letter !== "_");
+                    if (entry) {
+                        let idx = parseInt(entry[0]);
+                        shapeToolClick(idx);
+                        event.preventDefault();
+                        return false;
+                    }
+                }
+            }
+        });
+
+        function shapeToolClick(n) {
+            if (mode() == MODE_READ) {
+                if (selected && selected.hasClass("netsq")) {
+                    gameGrid[0][currX][currY] = n;
+                    gameGrid[1][currX][currY] = 0;
+                    updateGrid();
+                    advance();
+                    playShapeSound(n);
+                    $(".solved-text").addClass("invis");
+                }
+            }
+            else {
+                let elem = $(".shapes-tools div.shp").eq(n);
+                if (!elem.hasClass("used")) return;
+                selected = elem.find("svg");
+                updateSelection();
+                selectedShape = n;
+            }
+        }
+        $(".shapes-tools svg").each(function(i, e) {
+            let element = $(e);
+            element.click(function() {
+                shapeToolClick(i);
+                return false;
+            });
+        });
+
+        let sideNumberTools = $(".number-tools.vstack");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(sideNumberTools);
+        $("<div>").addClass("netsquare reset-grid square").text("↻").appendTo(sideNumberTools).click(function() {
+            resetGrid(2);
+            playShapeSound(0);
+        });
+        let numberTools = $(".number-tools");
+        for (let i = 1; i <= SIZE; i++) {
+            $("<div>").addClass("number-tool tool").text(i).appendTo(numberTools).click(function() {
+                pressNumber(i);
+                return false;
+            });
+        }
+
+        let tools = $(".tools.t1");
+        $("<h3>").addClass("solved-text invis centered").text("Solved!").appendTo(tools);
+
+        function highlightBtnClick() {
+            if (selected && selected.hasClass("netsq")) {
+                $(`.netsq.x${currX}.y${currY}`).toggleClass("highlighted");
+                advance();
+                playShapeSound(-1);
+            }
+        }
+        $(".highlight-btn").click(function() {
+            highlightBtnClick();
+            return false;
+        });
+        $("<div>").addClass("netsquare reset-grid square").text("↻").appendTo(tools).click(function() {
+            resetGrid(1);
+            playShapeSound(0);
+        });
+
+        function updateUsed() {
+            let used = new Set(gameGrid[0].flat());
+            used.add(0);
+            $(".shapes-tools div.shp").each(function(i, e) {
+                $(e).toggleClass("used", used.has(i));
+            });
+            for (let g = 0; g < 2; g++) {
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        $(`.grid.g${g} .netsq.x${x}.y${y}`).toggleClass("locked", gameGrid[g][x][y] != 0);
+                    }
+                }
+            }
+        }
+        $("<button>").addClass("read-solve").appendTo(tools).click(function() {
+            $(this).toggleClass("solve");
+            let solve = $(this).hasClass("solve");
+            $("body").toggleClass("solve", solve);
+            if (solve) {
+                updateUsed();
+            }
+            resetGrid();
+        });
+
+        $("<button>").addClass("show-legend show").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("legend-shown", $(this).hasClass("show"));
+        });
+        $("<button>").addClass("sound play").appendTo(tools).click(function() {
+            $(this).toggleClass("play");
+        });
+        $("<button>").addClass("expert-play").appendTo(tools).click(function() {
+            if (generating)
+                return false;
+            $(this).toggleClass("play");
+            $("body").toggleClass("play", $(this).hasClass("play"));
+            if (mode() == MODE_PLAY) {
+                generate();
+                updateUsed();
+                resetGrid();
+            }
+            else if (mode() == MODE_READ)
+                cellClick(0, 0, 0);
+        });
+        $("<button>").addClass("show-sol").appendTo(tools).click(function() {
+            $(this).toggleClass("show");
+            $("body").toggleClass("solution-shown", $(this).hasClass("show"));
+        });
+        function swapGrids() {
+            let cap = $("#caption-a").text().split(" - ");
+            $("#caption-a").text(`SHAPES - ${$("#caption-b").text().split(" - ")[1]}`);
+            $("#caption-b").text(`DIGITS - ${cap[1]}`);
+            let path = $("#frame-a").attr("d");
+            $("#frame-a").attr("d", $("#frame-b").attr("d"));
+            $("#frame-b").attr("d", path);
+        }
+        $("<button>").text("Swap\xa0Grids").appendTo(tools).click(function() {
+            swapGrids();
+            return false;
+        });
+
+        function shapeText(shape) {
+            if (shape < 50) return shapeLetter[shape];
+            return shape - 50;
+        }
+
+        function updateResult() {
+            resultList = [
+                gameGrid[0][0].map((_, i) => gameGrid[0].map(row => row[i])),
+                gameGrid[1][0].map((_, i) => gameGrid[1].map(row => row[i]))
+            ];
+            $(".path.g0 .str").text(resultList[0].map(row => row.map(x => shapeText(x)).join("")).join(" "));
+            $(".path.g1 .str").text(resultList[1].map(row => row.map(x => shapeText(x)).join("")).join(" "));
+        }
+
+        function updateGrid() {
+            for (let g = 0; g < 2; g++) {
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        let n = gameGrid[g][x][y];
+                        let elem = $(`.grid.g${g} .netsq.x${x}.y${y}`);
+                        if (n < 50) {
+                            elem.html($(".shapes-tools div.shp svg").eq(n).html());
+                        }
+                        else {
+                            elem.html("");
+                            elem.append(MakeSvgElem("text", {x:25, y:75}, n - 50));
+                        }
+                    }
+                }
+            }
+            updateResult();
+        }
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        $(".reset-all").click(function() {
+            $("button.read-solve").removeClass("solve");
+            $("button.sound").addClass("play");
+            $("button.expert-play").removeClass("play");
+            $("button.show-sol").removeClass("show");
+            $("button.show-legend").addClass("show");
+            $(".solved-text").addClass("invis");
+            $("body").removeClass("play solve solution-shown");
+            $("body").addClass("legend-shown");
+
+            gameGrid = Array(2).fill().map(()=>Array(SIZE).fill().map(()=>Array(SIZE).fill(0)));
+            updateGrid();
+            $(".netsq").removeClass("highlighted locked");
+            $(".shapes-tools div").removeClass("used");
+            resetGrid();
+            let cap = $("#caption-a").text();
+            if (cap.includes("Tall") || cap.includes("Type-B"))
+                swapGrids();
+
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+        resetGrid();
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveStateClass = Array.from($(".netsquare, .solved-text, .tools button, div.shp, .shapes-tools svg")).map(x => $(x)).map(x => x.attr("class") || "");
+            let bodyClass = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let regionMaps = Array.from($("#frame-a, #frame-b")).map(x => $(x)).map(x => x.attr("d") || "");
+            let regionCaps = Array.from($("#caption-a, #caption-b")).map(x => $(x)).map(x => x.text() || "");
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_regionsA = JSON.stringify(regionsA);
+            let s_regionsB = JSON.stringify(regionsB);
+            let s_solList = JSON.stringify(solList);
+            let s_gameGrid = JSON.stringify(gameGrid);
+            let s_selected = selected;
+            let s_selectedShape = selectedShape;
+            let s_currX = currX;
+            let s_currY = currY;
+            let s_solutionWord = solutionWord;
+
+            let button = $("<button>").text(stateNumber+1).click(function() {
+                $(".netsquare, .solved-text, .tools button, div.shp, .shapes-tools svg").each((i,x) => $(x).attr("class", saveStateClass[i]));
+                $("body").each((i,x) => $(x).attr("class", bodyClass[i]));
+                $("#frame-a, #frame-b").each((i,x) => $(x).attr("d", regionMaps[i]));
+                $("#caption-a, #caption-b").each((i,x) => $(x).text(regionCaps[i]));
+                currentState = stateNumber;
+                selected = s_selected;
+                selectedShape = s_selectedShape;
+                updateSelection();
+                currX = s_currX;
+                currY = s_currY;
+                solutionWord = s_solutionWord;
+                regionsA = JSON.parse(s_regionsA);
+                regionsB = JSON.parse(s_regionsB);
+                makeRegionMaps();
+                solList = JSON.parse(s_solList);
+                gameGrid = JSON.parse(s_gameGrid);
+                updateSolText();
+                updateGrid();
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+    </script>
+</body>
+</html>
