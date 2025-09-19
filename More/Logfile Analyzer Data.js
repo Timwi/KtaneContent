@@ -3170,7 +3170,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{ 
+			{
 				regex: /.+/,
 				handler: function (matches, module) {
 					module.dropdown[1].push(matches[0])
@@ -5025,15 +5025,15 @@ let parseData = [
 		loggingTag: "DetoNATO",
 		matches: [
 			{
-				regex: /Stage (\d)\. The word is ".+"\. The letters are: [A-Z], [A-Z], [A-Z] and [A-Z]\./,
+				regex: /Stage (\d)\. (The word is ".+"\. The letters are: [A-Z], [A-Z], [A-Z] and [A-Z]\.)/,
 				handler: function (matches, module) {
 					const newStage = matches[1];
 					if(!module.currentStage || module.currentStage != newStage)
 					{
 						module.attemptNum = 1;
 						module.currentStage = newStage;
-						module.stageDropdown = [`Stage ${newStage}'s Expected Letter: N/A`, []]
-						module.push(module.stageDropdown)
+						module.stageDropdown = [`Stage ${newStage}'s Expected Letter: N/A`, [matches[2]]];
+						module.push(module.stageDropdown);
 					}
 
 					else if(module.currentStage == newStage)
@@ -5056,7 +5056,7 @@ let parseData = [
 				regex: /Expected letter: ([A-Z])\./,
 				handler: function (matches, module) {
 					module.attemptDropdown[1].push(matches[0]);
-					module.stageDropdown[0] = `Stage ${module.currentStage}'s Expected Letter: ${matches[1]}`
+					module.stageDropdown[0] = `Stage ${module.currentStage}'s Expected Letter: ${matches[1]}`;
 					return true;
 				}
 			},
@@ -20270,7 +20270,7 @@ let parseData = [
 									.attr("width", smallBoardDimension)
 									.attr("height", smallBoardDimension)
 									.addClass("ultimate-tic-tac-toe")
-									.appendTo(mainSvg);		
+									.appendTo(mainSvg);
 								svgs[row].push(svg)
 							}
 						}
@@ -20294,8 +20294,8 @@ let parseData = [
 									.attr("height", cellDimension)
 									.attr("x", x)
 									.attr("y", y)
-									.appendTo(svg);		
-									
+									.appendTo(svg);
+
 								//add color blind text
 								const text = $SVG("<text>")
 									.attr("x", x + cellDimension - 6)
@@ -20304,7 +20304,7 @@ let parseData = [
 									.addClass("colorblind")
 									.addClass(dictColor)
 								text.appendTo(svg);
-								
+
 							}
 						}
 
@@ -20434,9 +20434,9 @@ let parseData = [
 
 					const line = readTaggedLine();
 					const bombMatches = line.match(/^Bomb placed a X in ([ABC][123])\/([ABC][123])\.$/);
-					
+
 					if(bombMatches === null) {
-						linen--; 
+						linen--;
 					}
 					else {
 						module.coords.push(getTargetedCell(bombMatches[1], bombMatches[2], "X"))
@@ -20454,7 +20454,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{ 
+			{
 				regex: /(.+)/,
 				handler: function (matches, module) {
 					module.dropDown[1].push(matches[0]);
