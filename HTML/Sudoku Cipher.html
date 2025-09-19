@@ -1,0 +1,3867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Sudoku Cipher — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        .example-table {
+            width: 100%;
+            border: none;
+            text-align: left;
+            border-collapse: collapse;
+            margin: 0 0;
+            font-size: 0.95rem;
+            table-layout: fixed;
+        }
+
+        .example-table td {
+            text-align: left;
+            border: none;
+            word-wrap: break-word;
+            white-space: normal;
+            line-height: 18px;
+        }
+
+        .cipher-table {
+            width: 100%;
+            border: none;
+            text-align: center;
+            border-collapse: collapse;
+            margin: 0.5em 0;
+            font-size: 0.95rem;
+        }
+
+        .cipher-table td {
+            padding-left: 1em;
+            padding-right: 1em;
+            width: calc(100% / 8);
+        }
+
+        .piece-table {
+            width: 100%;
+            border: none;
+            text-align: center;
+            border-collapse: collapse;
+            margin: 1em 0;
+            font-size: 0.95rem;
+        }
+
+        .piece-table td {
+            border: 1px solid !important;
+            padding-left: 1em;
+            padding-right: 1em;
+            width: calc(100% / 8);
+        }
+
+        .grid-wrapper {
+            position: relative;
+            display: inline-block;
+            aspect-ratio: 1 / 1;
+            width: auto;
+        }
+
+        .grid {
+            border: none;
+            font-size: 11pt;
+            border-collapse: collapse;
+        }
+
+        .grid th {
+            border: none;
+            font-size: 11pt;
+            border-collapse: collapse;
+        }
+
+        .grid td {
+            padding: 4px 0 0;
+            text-align: center;
+            width: 23px;
+            height: 18px;
+            position: relative;
+            line-height: 18px;
+        }
+
+        .vert-highlight::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 40%;
+            right: 40%;
+            background: rgba(255, 200, 0, 0.4);
+            z-index: 0;
+        }
+
+        .horiz-highlight::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 40%;
+            bottom: 40%;
+            background: rgba(0, 200, 255, 0.4);
+            z-index: 0;
+        }
+
+        .both-highlight::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 40%;
+            right: 40%;
+            background: rgba(255, 200, 0, 0.4);
+            z-index: 0;
+        }
+
+        .both-highlight::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 40%;
+            bottom: 40%;
+            background: rgba(0, 200, 255, 0.4);
+            z-index: 0;
+        }
+
+        .card-table {
+            width: 100%;
+            border: none;
+            border-collapse: collapse;
+            margin: 0 0;
+        }
+
+        .card-table th, .card-table td {
+            border: none;
+            padding: 0 0;
+            text-align: center;
+        }
+
+        .card {
+            display: inline-block;
+            width: 30px;
+            height: 40px;
+            margin: 2px 0;
+            border-radius: 5px;
+            font-weight: bold;
+            line-height: 44px;
+            text-align: center;
+        }
+
+        .red {
+            background: #802020;
+            color: white;
+        }
+
+        .green {
+            background: #208020;
+            color: white;
+        }
+
+        .blue {
+            background: #202080;
+            color: white;
+        }
+
+        .black {
+            background: #000000;
+            color: white;
+        }
+
+        .maze-example-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 1em;
+        }
+
+        .maze-panel {
+            flex: 1;
+            text-align: center;
+        }
+
+        .maze-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 20px);
+            grid-template-rows: repeat(6, 20px);
+            gap: 1px;
+            justify-content: center;
+            margin: auto;
+        }
+
+        .maze-cell {
+            width: 20px;
+            height: 20px;
+            font-size: 0.65em;
+            border: 2px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eee;
+        }
+
+        .maze-cell.A {
+            background: #ffdede;
+            border: 2px solid #ffdede;
+        }
+
+        .dark .maze-cell.A {
+            background: #802020;
+            border: 2px solid #802020;
+        }
+
+        .maze-cell.B {
+            background: #fff0cc;
+            border: 2px solid #fff0cc;
+        }
+
+        .dark .maze-cell.B {
+            background: #208020;
+            border: 2px solid #208020;
+        }
+
+        .maze-cell.C {
+            background: #e6ffe6;
+            border: 2px solid #e6ffe6;
+        }
+
+        .dark .maze-cell.C {
+            background: #202080;
+            border: 2px solid #202080;
+        }
+
+        .maze-cell.D {
+            background: #e6f0ff;
+            border: 2px solid #e6f0ff;
+        }
+
+        .dark .maze-cell.D {
+            background: #808020;
+            border: 2px solid #808020;
+        }
+
+        .maze-cell.E {
+            background: #f3e6ff;
+            border: 2px solid #f3e6ff;
+        }
+
+        .dark .maze-cell.E {
+            background: #802080;
+            border: 2px solid #802080;
+        }
+
+        .maze-cell.F {
+            background: #fff1f0;
+            border: 2px solid #fff1f0;
+        }
+
+        .dark .maze-cell.F {
+            background: #208080;
+            border: 2px solid #208080;
+        }
+
+        .maze-cell.G {
+            background: #e5e5e5;
+            border: 2px solid #e5e5e5;
+        }
+
+        .dark .maze-cell.G {
+            background: #808080;
+            border: 2px solid #808080;
+        }
+
+        .wall-top {
+            border-top: 2px solid black !important;
+        }
+
+        .dark .wall-top {
+            border-top: 2px solid white !important;
+        }
+
+        .wall-right {
+            border-right: 2px solid black !important;
+        }
+
+        .dark .wall-right {
+            border-right: 2px solid white !important;
+        }
+
+        .wall-bottom {
+            border-bottom: 2px solid black !important;
+        }
+
+        .dark .wall-bottom {
+            border-bottom: 2px solid white !important;
+        }
+
+        .wall-left {
+            border-left: 2px solid black !important;
+        }
+
+        .dark .wall-left {
+            border-left: 2px solid white !important;
+        }
+
+        #thermoLayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<div class="section">
+    <div class="page page-bg-01">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <img class="diagram" src="img/Component/Ultimate%20Cipher.svg">
+            <h2>On the Subject of the Sudoku Cipher</h2>
+            <p class="flavour-text">The gift that keeps on giving.</p>
+            <p>On the module, you will see three screens, a keyboard, two arrows, and a <b>submit</b> button that
+                displays the current page you’re on.</p>
+            <p>Pressing the right arrow takes you to the next page. Pressing the left arrow takes you to the previous
+                page. The number of pages may vary.</p>
+
+            <p>This module comes preloaded with a single <b><u>Regular Sudoku Cipher</u></b> but subsequent stages may
+                be added.</p>
+
+            <p>If there is no coloured sudoku module on the bomb, refer to the page for <b><u>Regular Sudoku Cipher</u></b>
+                and disregard the remainder of this manual.</p>
+
+            <p>When a coloured sudoku module is present on the bomb, solving the initial cipher will not solve the
+                module. Instead, with each coloured sudoku solved, a new cipher will be queued onto the module.</p>
+
+            <p>Ciphers will always be queued in the same order that the sudokus are solved. For the first cipher, the
+                module's background will change colour. When a new cipher is generated, the module will change colour to
+                match the solved sudoku.</p>
+
+            <p>All ciphers require a word to be input using the keyboard. Some ciphers will have an alternative mode
+                that can be entered using the <b><u>S</u></b> key. To submit your word from this state, first press the
+                <b><u>submit</u></b> button.</p>
+
+            <h3>Creating Alphabet Keys</h3>
+            <p>Unless otherwise specified, when asked to create an alphabet key, take the given keyword, remove any
+                duplicate letters, and append the entire alphabet A-Z with any letters from the keyword removed.</p>
+            <p>
+                When asked to form a letter grid, three keywords will be provided as well as a three-letter string where
+                each letter corresponds to one of the keywords. Form three alphabet keys using the keywords.
+                Then, for each key, take the corresponding letter three-letter string, replace that letter in the
+                alphabet key with # and move the letter to the end of the alphabet key. Finally, concatenate the three
+                keys and split into rows of 9 to form a 9x9 grid of letters.
+            </p>
+        </div>
+        <div class="page-footer relative-footer">Page 1 of 12</div>
+    </div>
+
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of Regular Sudoku Cipher</h2>
+            <small>Did anyone order a regular?</small>
+            <table class="cipher-table">
+                <thead>
+                <tr>
+                    <td class="corner"></td>
+                    <th>Page 1</th>
+                    <th>Page 2</th>
+                    <th>Page 3+</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Screen 1</th>
+                    <td rowspan="2">Coordinates</td>
+                    <td>Keyword 1</td>
+                    <td rowspan="3">Clues</td>
+                </tr>
+                <tr>
+                    <th>Screen 2</th>
+                    <td>Keyword 2</td>
+                </tr>
+                <tr>
+                    <th>Screen 3</th>
+                    <td>3 Letter Key String</td>
+                    <td>Keyword 3</td>
+                </tr>
+                </tbody>
+            </table>
+            <p>Using the clues from page 3 onwards, form and solve the 9x9 sudoku grid. The clues give the coordinate
+                followed by the value found at the coordinate.</p>
+            <p>Then, form a letter grid using the keywords from page 2 and the three-letter key string from page 1. The
+                coordinates on page 1 refer to six positions within the letter grid which form an encrypted word.</p>
+            <p>To decrypt the word, apply a forwards caesar shift to the letters equal to the value of the same cell in
+                the sudoku grid.</p>
+
+            <table class="example-table">
+                <tbody>
+                <tr>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>#</td>
+                                    <td><b>7</b></td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>5</td>
+                                    <td>(8)</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>4</td>
+                                    <td>3</td>
+                                    <td>#</td>
+                                    <td>5</td>
+                                </tr>
+                                <tr>
+                                    <td>8</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>9</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>(6)</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>4</td>
+                                    <td>#</td>
+                                    <td>9</td>
+                                    <td>2</td>
+                                    <td>#</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>9</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>8</td>
+                                    <td>#</td>
+                                    <td>7</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>6</td>
+                                    <td>2</td>
+                                    <td>#</td>
+                                    <td>7</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>5</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td>(2)</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>1</td>
+                                    <td>#</td>
+                                    <td>5</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td>
+                        <h4>Example</h4>
+                        <p>For given clues: B17, F15, F24, G23, I25, A38, D49, A51, E54, G59, H52, A63, B69, E68, G67,
+                            C76, D72, F77, B85, C84, D86, I82, E91, G95, Take the first two characters as a coordinate
+                            using column first, then row.</p>
+                        <p>B17 means there is a 7, at B1.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            Keywords: CIPHER, PUZZLE, SUFFER <br>
+                            Three-Letter Key String: FML <br>
+                            Coordinates: G1, B5, B1, A3, G1, A9 <br>
+                            Sudoku Values: 8, 6, 7, 8, 8, 2 <br>
+                            Letter Values: A, G, I, S, A, P <br>
+
+                        </p>
+                        <p class="centered">
+                            A + 8 = <b>I</b> <br>
+                            G + 6 = <b>M</b> <br>
+                            I + 7 = <b>P</b> <br>
+                            S + 8 = <b>A</b> <br>
+                            A + 8 = <b>I</b> <br>
+                            P + 2 = <b>R</b>
+                        </p>
+                    </td>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>C</td>
+                                    <td>I</td>
+                                    <td>P</td>
+                                    <td>H</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>G</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>L</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                    <td>Q</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>U</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>F</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>U</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                    <td>E</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>F</td>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>Q</td>
+                                    <td>R</td>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>M</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>U</td>
+                                    <td>F</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>Q</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer relative-footer">Page 2 of 12</div>
+    </div>
+
+    <div class="page page-bg-03">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of Red Sudoku Cipher</h2>
+            <small>Oh-no, look, it's all broken and on the floor.</small>
+            <table class="cipher-table">
+                <thead>
+                <tr>
+                    <td class="corner"></td>
+                    <th>Page 1</th>
+                    <th>Page 2</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Screen 1</th>
+                    <td>3 Letter Key String</td>
+                    <td>Keyword 3</td>
+                </tr>
+                <tr>
+                    <th>Screen 2</th>
+                    <td>Keyword 1</td>
+                    <td class="corner"></td>
+                </tr>
+                <tr>
+                    <th>Screen 3</th>
+                    <td>Keyword 2</td>
+                    <td class="corner"></td>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                Form a letter grid using the keywords from pages 1 and 2, and the three-letter key string from page 1.
+            </p>
+
+            <p>
+                Then, press the <b><u>S</u></b> key to enter movement mode. In this mode, a grid of words can be
+                navigated using the <b><u>L</u></b> and <b><u>R</u></b> keys.
+                The middle screen will display the word in your current position.
+            </p>
+
+            <p>
+                The grid of words consists of an outer grid which is shown when first entering movement mode, and an
+                inner grid which can be accessed by Pressing the <b><u>D</u></b> key on the only valid word from the
+                outer grid.
+            </p>
+
+            <p>
+                A word is considered valid if the sum of the alphabetic positions (A=1 Z=26) of the letters between the
+                first and last letter of the word modulo 10 is equal to the cell in the same position in the sudoku
+                grid.
+                For the outer grid, use compare validity using the centers of each 3x3 box in the sudoku grid. Upon
+                entering the inner grid, compare to each cell in reading order from the same box you entered.
+            </p>
+
+            <p>
+                Next, find six valid words from the inner grid. The first letter of each word, combined with its
+                position in the grid (first being 1, last being 9), forms a coordinate. Use this coordinate in the
+                letter grid to find a letter.
+                Repeat for all six valid words to obtain a scrambled word.
+            </p>
+
+            <div>
+                <h3 class="centered">Example</h3>
+                <p class="centered">
+                    word: FEATHER <br>
+                    E + A + T + H + E = 5 + 1 + 20 + 8 + 5 = 39 <br>
+                    If the sudoku grid has 39 % 9 = 9 in the same position, the word is valid.
+                </p>
+            </div>
+
+        </div>
+        <div class="page-footer relative-footer">Page 3 of 12</div>
+    </div>
+
+    <div class="page page-bg-04">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of Orange Sudoku Cipher</h2>
+            <small>Like discolored squares but with more squares and less effort.</small>
+            <table class="cipher-table">
+                <thead>
+                <tr>
+                    <td class="corner"></td>
+                    <th>Page 1</th>
+                    <th>Page 2</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Screen 1</th>
+                    <td>Encrypted Word</td>
+                    <td>Keyword 2</td>
+                </tr>
+                <tr>
+                    <th>Screen 2</th>
+                    <td>3 Letter Key String</td>
+                    <td>Keyword 3</td>
+                </tr>
+                <tr>
+                    <th>Screen 3</th>
+                    <td>Keyword 1</td>
+                    <td class="corner"></td>
+                </tr>
+                </tbody>
+
+            </table>
+            <p>
+                Form a letter grid using the keywords from pages 1 and 2, and the three-letter key string from page 1.
+            </p>
+
+            <p>
+                Next, find each letter in the encrypted word in the letter grid (always three occurrences).
+                If the number in the same position in the sudoku grid falls on a palindrome line, use the position on
+                the other side of the palindrome line.
+            </p>
+
+            <p>
+                Look for the letter in the letter grid given by this position's column as the row and row as the column.
+                Each letter in the final word can be any of the three letters found.
+                The word to sumbit is the only valid word that can be formed using some combination of these letters.
+            </p>
+
+            <table class="example-table">
+                <tbody>
+                <tr>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>6</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                    <td>2</td>
+                                    <td>7</td>
+                                    <td>4</td>
+                                    <td>5</td>
+                                    <td>3</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>7</td>
+                                    <td>5</td>
+                                    <td>1</td>
+                                    <td>4</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                    <td>6</td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>4</td>
+                                    <td>9</td>
+                                    <td>5</td>
+                                    <td>3</td>
+                                    <td>6</td>
+                                    <td>7</td>
+                                    <td>8</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>5</td>
+                                    <td>3</td>
+                                    <td>7</td>
+                                    <td>6</td>
+                                    <td>1</td>
+                                    <td>2</td>
+                                    <td>9</td>
+                                    <td>8</td>
+                                </tr>
+                                <tr>
+                                    <td>9</td>
+                                    <td>8</td>
+                                    <td>1</td>
+                                    <td>4</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                    <td>3</td>
+                                    <td>7</td>
+                                    <td>6</td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>2</td>
+                                    <td>7</td>
+                                    <td>3</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                    <td>1</td>
+                                    <td>4</td>
+                                    <td>5</td>
+                                </tr>
+                                <tr>
+                                    <td>8</td>
+                                    <td>9</td>
+                                    <td>6</td>
+                                    <td>2</td>
+                                    <td>7</td>
+                                    <td>3</td>
+                                    <td>5</td>
+                                    <td>1</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>7</td>
+                                    <td>3</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                    <td>1</td>
+                                    <td>5</td>
+                                    <td>8</td>
+                                    <td>2</td>
+                                    <td>9</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>1</td>
+                                    <td>2</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                    <td>3</td>
+                                    <td>7</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td>
+                        <h4>Example</h4>
+                        <p>Lines at: <br> [E5-F6-G7] [B2-C3-D4] [D6-B7-B8] <br> [G3-G2-F1] [F5-F4-G4]</p>
+                        <p>Encrypted word: YHXDFK</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            Keywords: CIPHER, PUZZLE, SUFFER <br>
+                            Three-Letter Key String: FML <br>
+
+                        </p>
+                        <p class="centered">
+                            Y = G3 G9 H6 > F1 G9 H6 > A6 I7 F8 = Q <b><u>D</u></b> # <br>
+                            H = B8 C5 D1 > D6 C5 D1 > F4 E3 A4 = <b><u>A</u></b> W P <br>
+                            X = F3 F9 G6 > F3 F9 G6 > C6 I6 F7 = S <b><u>M</u></b> A <br>
+                            D = I1 I4 I7 > I1 I4 I7 > A9 D9 G9 = <b><u>P</u></b> V Y <br>
+                            F = A5 C7 I3 > A5 C7 I3 > E1 G3 C9 = <b><u>E</u></b> Y T <br>
+                            K = D2 E8 F5 > D2 E8 G4 > B4 H5 E6 = U <b><u>N</u></b> V <br>
+                        </p>
+                    </td>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>C</td>
+                                    <td>I</td>
+                                    <td>P</td>
+                                    <td>H</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>G</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>L</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                    <td>Q</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>U</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>F</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>U</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                    <td>E</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>F</td>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>Q</td>
+                                    <td>R</td>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>M</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>U</td>
+                                    <td>F</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>Q</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer relative-footer">Page 4 of 12</div>
+    </div>
+
+    <div class="page page-bg-05">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of Yellow Sudoku Cipher</h2>
+            <small>Putting the pieces back together.</small>
+            <table class="cipher-table">
+                <thead>
+                <tr>
+                    <td class="corner"></td>
+                    <th>Page 1</th>
+                    <th>Page 2</th>
+                    <th>Page 3</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Screen 1</th>
+                    <td rowspan="2">Coordinates</td>
+                    <td>3 Letter Key String</td>
+                    <td>Keyword 3</td>
+                </tr>
+                <tr>
+                    <th>Screen 2</th>
+                    <td>Keyword 1</td>
+                    <td class="corner"></td>
+                </tr>
+                <tr>
+                    <th>Screen 3</th>
+                    <td>Initial Offset</td>
+                    <td>Keyword 2</td>
+                    <td class="corner"></td>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                Form a letter grid using the keywords from pages 2 and 3, and the three-letter key string from page 2.
+            </p>
+
+            <p>
+                A hidden grid is generated and caesar shifted to form a navigable grid.
+                Each letter is caesar shifted by three factors: the initial offset (bottom screen, page 1),
+                the sudoku value at that spot, and the letter’s position in your letter grid.
+            </p>
+
+            <p>
+                Press <b><u>S</u></b> to enter movement mode.
+                Navigate the 9x9 letter grid from the center with <b><u>U</u></b>, <b><u>R</u></b>, <b><u>D</u></b>, and
+                <b><u>L</u></b> to the six given coordinates.
+                The middle screen shows your current letter.
+                Crossing a jigsaw box wall caesar shifts the whole grid forward by the sudoku value of the square you
+                move into.
+            </p>
+
+            <table class="example-table">
+                <tbody>
+                <tr>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td class="wall-left wall-top">9</td>
+                                    <td class="wall-top">6</td>
+                                    <td class="wall-bottom wall-top">2</td>
+                                    <td class="wall-bottom wall-top">1</td>
+                                    <td class="wall-bottom wall-top">3</td>
+                                    <td class="wall-bottom wall-right wall-top">5</td>
+                                    <td class="wall-top">7</td>
+                                    <td class="wall-right wall-top">4</td>
+                                    <td class="wall-top wall-right">8</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left">4</td>
+                                    <td class="wall-bottom">8</td>
+                                    <td class="wall-left wall-bottom">7</td>
+                                    <td>3</td>
+                                    <td class="wall-right">5</td>
+                                    <td>1</td>
+                                    <td>6</td>
+                                    <td class="wall-right wall-bottom">9</td>
+                                    <td class="wall-right">2</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left">7</td>
+                                    <td class="wall-left">2</td>
+                                    <td class="wall-right">5</td>
+                                    <td class="wall-bottom">6</td>
+                                    <td>9</td>
+                                    <td class="wall-left">8</td>
+                                    <td>3</td>
+                                    <td class="wall-left wall-bottom">1</td>
+                                    <td class="wall-right">4</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left wall-top">1</td>
+                                    <td class="wall-right wall-top">3</td>
+                                    <td>9</td>
+                                    <td class="wall-right">7</td>
+                                    <td>8</td>
+                                    <td class="wall-top">4</td>
+                                    <td class="wall-left">2</td>
+                                    <td class="wall-right wall-bottom">5</td>
+                                    <td class="wall-right">6</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left">6</td>
+                                    <td class="wall-right">7</td>
+                                    <td>8</td>
+                                    <td class="wall-right">4</td>
+                                    <td>1</td>
+                                    <td>2</td>
+                                    <td class="wall-left wall-top">5</td>
+                                    <td class="wall-bottom wall-left">3</td>
+                                    <td class="wall-right">9</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left">8</td>
+                                    <td class="wall-left wall-top">1</td>
+                                    <td class="wall-right">6</td>
+                                    <td class="wall-top">9</td>
+                                    <td class="wall-top">2</td>
+                                    <td class="wall-top">3</td>
+                                    <td class="wall-left">4</td>
+                                    <td class="wall-right">7</td>
+                                    <td class="wall-right">5</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left">2</td>
+                                    <td class="wall-top wall-right">9</td>
+                                    <td class="wall-right">3</td>
+                                    <td>5</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                    <td class="wall-top">1</td>
+                                    <td class="wall-left wall-right">8</td>
+                                    <td class="wall-right">7</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left wall-bottom">5</td>
+                                    <td class="wall-bottom">4</td>
+                                    <td class="wall-top wall-left">1</td>
+                                    <td class="wall-top">2</td>
+                                    <td class="wall-left wall-bottom">7</td>
+                                    <td class="wall-left wall-top">9</td>
+                                    <td class="wall-right wall-bottom wall-left">8</td>
+                                    <td class="wall-left">6</td>
+                                    <td class="wall-right wall-top">3</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left wall-bottom">3</td>
+                                    <td class="wall-bottom">5</td>
+                                    <td class="wall-bottom">4</td>
+                                    <td class="wall-bottom">8</td>
+                                    <td class="wall-bottom">6</td>
+                                    <td class="wall-bottom wall-right">7</td>
+                                    <td class="wall-bottom">9</td>
+                                    <td class="wall-bottom">2</td>
+                                    <td class="wall-right wall-bottom">1</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td>
+                        <h4 class="centered">
+                            Example
+                        </h4>
+                        <p class="centered">
+                            ⇐ Sudoku Grid <br>
+                            Letter Grid ⇒<br>
+                            <small>
+                                Keywords: CIPHER PUZZLE SUFFER <br>
+                                Three-Letter Key String: FML <br>
+                                Coordinates: I3 F7 H7 C8 E2 E1
+                            </small>
+                        </p>
+                        <p class="centered">
+                        </p>
+                    </td>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>C</td>
+                                    <td>I</td>
+                                    <td>P</td>
+                                    <td>H</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>G</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>L</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                    <td>Q</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>U</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>F</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>U</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                    <td>E</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>F</td>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>Q</td>
+                                    <td>R</td>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>M</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>U</td>
+                                    <td>F</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>Q</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td class="wall-left wall-top"></td>
+                                    <td class="wall-top"></td>
+                                    <td class="wall-bottom wall-top"></td>
+                                    <td class="wall-bottom wall-top"></td>
+                                    <td class="wall-bottom wall-top">V</td>
+                                    <td class="wall-bottom wall-right wall-top">→</td>
+                                    <td class="wall-top">→</td>
+                                    <td class="wall-right wall-top">→</td>
+                                    <td class="wall-top wall-right">↓</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left"></td>
+                                    <td class="wall-bottom"></td>
+                                    <td class="wall-left wall-bottom"></td>
+                                    <td></td>
+                                    <td class="wall-right">I</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td class="wall-right wall-bottom"></td>
+                                    <td class="wall-right">↓</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left"></td>
+                                    <td class="wall-left"></td>
+                                    <td class="wall-right"></td>
+                                    <td class="wall-bottom"></td>
+                                    <td>↑</td>
+                                    <td class="wall-left"></td>
+                                    <td></td>
+                                    <td class="wall-left wall-bottom"></td>
+                                    <td class="wall-right">N</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left wall-top"></td>
+                                    <td class="wall-right wall-top"></td>
+                                    <td></td>
+                                    <td class="wall-right"></td>
+                                    <td>↑</td>
+                                    <td class="wall-top"></td>
+                                    <td class="wall-left"></td>
+                                    <td class="wall-right wall-bottom"></td>
+                                    <td class="wall-right">↓</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left"></td>
+                                    <td class="wall-right"></td>
+                                    <td></td>
+                                    <td class="wall-right"></td>
+                                    <td>•</td>
+                                    <td></td>
+                                    <td class="wall-left wall-top"></td>
+                                    <td class="wall-bottom wall-left"></td>
+                                    <td class="wall-right">↓</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left"></td>
+                                    <td class="wall-left wall-top"></td>
+                                    <td class="wall-right"></td>
+                                    <td class="wall-top"></td>
+                                    <td class="wall-top"></td>
+                                    <td class="wall-top"></td>
+                                    <td class="wall-left"></td>
+                                    <td class="wall-right"></td>
+                                    <td class="wall-right">↓</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left"></td>
+                                    <td class="wall-top wall-right"></td>
+                                    <td class="wall-right"></td>
+                                    <td>↓</td>
+                                    <td>←</td>
+                                    <td>O</td>
+                                    <td class="wall-top">←</td>
+                                    <td class="wall-left wall-right">T</td>
+                                    <td class="wall-right">←</td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left wall-bottom"></td>
+                                    <td class="wall-bottom"></td>
+                                    <td class="wall-top wall-left">B</td>
+                                    <td class="wall-top">←</td>
+                                    <td class="wall-left wall-bottom"></td>
+                                    <td class="wall-left wall-top"></td>
+                                    <td class="wall-right wall-bottom wall-left"></td>
+                                    <td class="wall-left"></td>
+                                    <td class="wall-right wall-top"></td>
+                                </tr>
+                                <tr>
+                                    <td class="wall-left wall-bottom"></td>
+                                    <td class="wall-bottom"></td>
+                                    <td class="wall-bottom"></td>
+                                    <td class="wall-bottom"></td>
+                                    <td class="wall-bottom"></td>
+                                    <td class="wall-bottom wall-right"></td>
+                                    <td class="wall-bottom"></td>
+                                    <td class="wall-bottom"></td>
+                                    <td class="wall-right wall-bottom"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td colspan="2">
+                        <p class="centered">
+                            ⇐ Path Taken <br>
+                            Initial Offset: 6 <br>
+                            9 (I) = (? + 6 + 5 + 12) % 26 ⇒ L <br>
+                            22 (V) = (? + 6 + 3 + 5 + 3) % 26 ⇒ E <br>
+                            14 (N) = (? + 6 + 4 + 6 + 18) % 26 ⇒ F <br>
+                            20 (T) = (? + 6 + 8 + 3 + 26) % 26 ⇒ C <br>
+                            15 (O) = (? + 6 + 6 + 1 + 27) % 26 ⇒ A <br>
+                            2 (B) = (? + 6 + 1 + 9 + 29) % 26 ⇒ I <br>
+                            In Order: FACILE
+                        </p>
+                        <p class="centered">
+                        </p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer relative-footer">Page 5 of 12</div>
+    </div>
+
+    <div class="page page-bg-06">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of Green Sudoku Cipher</h2>
+            <small>You don't have the cards.</small>
+            <table class="cipher-table">
+                <thead>
+                <tr>
+                    <td class="corner"></td>
+                    <th>Page 1</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Screen 1</th>
+                    <td>Player 1 Name</td>
+                </tr>
+                <tr>
+                    <th>Screen 3</th>
+                    <td>Player 2 Name</td>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                Two players are engaged in a first to five match of nine card poker.
+                Input the winner's name followed by the letter at the alphabetic position given by the number of games
+                that were played before they won.
+            </p>
+            <p>
+                The match consists of nine games, each given by a row of the sudoku grid.
+                The deck has nine cards with three ranks and three suits.
+            </p>
+            <table class="card-table">
+                <tbody>
+                <tr>
+                    <td>1 = <span class="card red">Ar</span></td>
+                    <td>2 = <span class="card red">2r</span></td>
+                    <td>3 = <span class="card red">3r</span></td>
+                    <td>4 = <span class="card green">Ag</span></td>
+                    <td>5 = <span class="card green">2g</span></td>
+                    <td>6 = <span class="card green">3g</span></td>
+                    <td>7 = <span class="card blue">Ab</span></td>
+                    <td>8 = <span class="card blue">2b</span></td>
+                    <td>9 = <span class="card blue">3b</span></td>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                The first two numbers in the row represent the first player's cards, the next two represent the second
+                player's cards, the next three represent the flop, and the final two represent the turn and the river
+                cards respectively.
+                Hands are formed using five cards with at least one card from the player's cards. The hands below, are
+                in order from lowest to highest value.
+            </p>
+            <table class="card-table">
+                <tbody>
+                <tr>
+                    <td>Set</td>
+                    <td>Two-Pair</td>
+                    <td>Three of a Kind</td>
+                    <td>Straight Flush</td>
+                    <td>Full House</td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="card red">Xr</span>
+                        <span class="card green">Yg</span>
+                        <span class="card blue">Zb</span>
+                    </td>
+                    <td>
+                        <span class="card black">X</span>x2
+                        <span class="card black">Y</span>x2
+                    </td>
+                    <td>
+                        <span class="card red">Xx</span>
+                        <span class="card green">Xy</span>
+                        <span class="card blue">Xz</span>
+                    </td>
+                    <td>
+                        <span class="card black">X</span>x3
+                    </td>
+                    <td>
+                        <span class="card black">X</span>x2
+                        <span class="card black">Y</span>x3
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                Each game has three stages. After the flop and turn, if a player has a hand two or more ranks lower than
+                the other player, they fold.
+            </p>
+            <p>
+                If neither player's highest ranked hands are the same higher after the river, the player with the
+                highest valued card (1–9) wins.
+            </p>
+            <h4 class="centered">Example Game — 982541673</h4>
+            <table class="card-table">
+                <tbody>
+                <tr>
+                    <td>Player 1 Cards</td>
+                    <td>Player 2 Cards</td>
+                    <td>Flop</td>
+                    <td>Turn</td>
+                    <td>River</td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="card blue">3b</span>
+                        <span class="card blue">2b</span>
+                    </td>
+                    <td>
+                        <span class="card red">2r</span>
+                        <span class="card green">2g</span>
+                    </td>
+                    <td>
+                        <span class="card green">Ag</span>
+                        <span class="card red">Ar</span>
+                        <span class="card green">3g</span>
+                    </td>
+                    <td>
+                        <span class="card blue">Ab</span>
+                    </td>
+                    <td>
+                        <span class="card red">3r</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                Player 1 ⇒ Flop: <span class="card blue">3b</span> <span class="card green">Ag</span> <span
+                    class="card red">Ar</span> <span class="card green">3g</span> ⇒ Fold <br>
+                Player 2 ⇒ Flop: <span class="card green">Ag</span> <span class="card green">2g</span> <span
+                    class="card green">3g</span> ⇒ Turn: <span class="card green">Ag</span> <span
+                    class="card red">Ar</span> <span class="card blue">Ab</span> <span class="card green">2g</span>
+                <span class="card red">2r</span>
+            </p>
+            <p class="centered">
+                Player 2 wins.
+            </p>
+        </div>
+        <div class="page-footer relative-footer">Page 6 of 12</div>
+    </div>
+
+    <div class="page page-bg-07">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of Cyan Sudoku Cipher</h2>
+            <small>I'm feeling very attacked right now.</small>
+            <table class="cipher-table">
+                <thead>
+                <tr>
+                    <td class="corner"></td>
+                    <th>Page 1</th>
+                    <th>Page 2</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Screen 1</th>
+                    <td>Coordinates [1+ Screens]</td>
+                    <td>Keyword 1</td>
+                </tr>
+                <tr>
+                    <th>Screen 2</th>
+                    <td>Letter Order</td>
+                    <td>Keyword 2</td>
+                </tr>
+                <tr>
+                    <th>Screen 3</th>
+                    <td>3 Letter Key String</td>
+                    <td>Keyword 3</td>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                Form a letter grid using the keywords from page 3, and the three-letter key string from page 2.
+            </p>
+            <p>
+                The coordinates on the top screen(s) of page 1 are the coordinates of chess pieces to be placed onto the
+                letter grid.
+                To find which piece should be placed, refer to the chess piece table and use the value of the same
+                position in the sudoku grid.
+            </p>
+            <p>
+                Once all pieces are placed, six squares will be attacked by more than one piece.
+                The letters in the same position in the letter grid are a scrambled word.
+                Taking the positions that the letters were found in reading order, the final order of the letters is
+                given by the string of numbers on the middle screen of page 1.
+            </p>
+
+            <table class="example-table">
+                <tbody>
+                <tr>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>8</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                    <td>6</td>
+                                    <td>7</td>
+                                    <td>9</td>
+                                    <td class="green">3</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>3</td>
+                                    <td>1</td>
+                                    <td>9</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                    <td>8</td>
+                                    <td>6</td>
+                                    <td>7</td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>7</td>
+                                    <td>9</td>
+                                    <td>4</td>
+                                    <td>3</td>
+                                    <td>8</td>
+                                    <td>1</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>6</td>
+                                    <td>7</td>
+                                    <td>3</td>
+                                    <td>8</td>
+                                    <td class="green">1</td>
+                                    <td>4</td>
+                                    <td>9</td>
+                                    <td>5</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>8</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                    <td>9</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                    <td>7</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>9</td>
+                                    <td>4</td>
+                                    <td>5</td>
+                                    <td>7</td>
+                                    <td>6</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>8</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td class="green">4</td>
+                                    <td>6</td>
+                                    <td class="green">7</td>
+                                    <td>1</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                </tr>
+                                <tr>
+                                    <td>7</td>
+                                    <td>2</td>
+                                    <td>8</td>
+                                    <td>6</td>
+                                    <td>4</td>
+                                    <td>9</td>
+                                    <td>5</td>
+                                    <td>1</td>
+                                    <td>3</td>
+                                </tr>
+                                <tr>
+                                    <td>9</td>
+                                    <td>1</td>
+                                    <td>3</td>
+                                    <td>8</td>
+                                    <td>2</td>
+                                    <td>5</td>
+                                    <td>7</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td>
+                        <h4 class="centered">
+                            Example
+                        </h4>
+                        <p class="centered">
+                            Coordinates: B7, D7, F4, H1<br>
+                            B7 ⇒ 4 ⇒ ♗<br>
+                            D7 ⇒ 7 ⇒ ♘<br>
+                            F4 ⇒ 1 ⇒ ♔<br>
+                            H1 ⇒ 3 ⇒ ♗<br>
+                        </p>
+                    </td>
+                    <td>
+                        <table class="piece-table">
+                            <thead>
+                            <tr>
+                                <th>Value</th>
+                                <th>Piece</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>King ♔</td>
+                            </tr>
+                            <tr>
+                                <td>2-4</td>
+                                <td>Bishop ♗</td>
+                            </tr>
+                            <tr>
+                                <td>5-6</td>
+                                <td>Rook ♖</td>
+                            </tr>
+                            <tr>
+                                <td>7-9</td>
+                                <td>Knight ♘</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>8</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                    <td>6</td>
+                                    <td>7</td>
+                                    <td>9</td>
+                                    <td class="green">♗</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>3</td>
+                                    <td>1</td>
+                                    <td>9</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                    <td class="red">L1</td>
+                                    <td>6</td>
+                                    <td class="blue">♗</td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>7</td>
+                                    <td>9</td>
+                                    <td>4</td>
+                                    <td class="blue">♔</td>
+                                    <td class="red">L2</td>
+                                    <td class="blue">♔</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>6</td>
+                                    <td>7</td>
+                                    <td>3</td>
+                                    <td class="red">L3</td>
+                                    <td class="green">♔</td>
+                                    <td class="blue">♔</td>
+                                    <td>9</td>
+                                    <td>5</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>8</td>
+                                    <td class="blue">♘</td>
+                                    <td class="red">L4</td>
+                                    <td class="red">L5</td>
+                                    <td class="blue">♔</td>
+                                    <td class="blue">♔</td>
+                                    <td>7</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td class="blue">♗</td>
+                                    <td class="blue">♘</td>
+                                    <td class="red">L6</td>
+                                    <td>5</td>
+                                    <td>7</td>
+                                    <td class="blue">♘</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>8</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td class="green">♗</td>
+                                    <td>6</td>
+                                    <td class="green">♘</td>
+                                    <td>1</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                </tr>
+                                <tr>
+                                    <td class="blue">♗</td>
+                                    <td class="blue">♘</td>
+                                    <td class="blue">♗</td>
+                                    <td>6</td>
+                                    <td>4</td>
+                                    <td class="blue">♘</td>
+                                    <td>5</td>
+                                    <td>1</td>
+                                    <td>3</td>
+                                </tr>
+                                <tr>
+                                    <td>9</td>
+                                    <td>1</td>
+                                    <td class="blue">♘</td>
+                                    <td class="blue">♗</td>
+                                    <td class="blue">♘</td>
+                                    <td>5</td>
+                                    <td>7</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td>
+                        <p class="centered">
+                            Multi-Attacked Squares:
+                            G2, F3, E4, D5, E5, C6
+                        </p>
+                        <p class="centered">
+                            Letter Grid ⇒<br>
+                            <small>CIPHER PUZZLE SUFFER FML</small>
+                            Letter Order: 5 4 1 2 3 6
+                        </p>
+
+                        <p class="centered">
+                            Final Letters: NXEIJS <br>
+                            Unscrambled: JINXES
+                        </p>
+                    </td>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>C</td>
+                                    <td>I</td>
+                                    <td>P</td>
+                                    <td>H</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>G</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>L</td>
+                                    <td>M</td>
+                                    <td class="red">N</td>
+                                    <td>O</td>
+                                    <td>Q</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>U</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td class="red">X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>F</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>U</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                    <td class="red">E</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>F</td>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td class="red">I</td>
+                                    <td class="red">J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>Q</td>
+                                    <td>R</td>
+                                    <td class="red">S</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>M</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>U</td>
+                                    <td>F</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>Q</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer relative-footer">Page 7 of 12</div>
+    </div>
+
+    <div class="page page-bg-01">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of Blue Sudoku Cipher</h2>
+            <small>Woah! Where did that come from?</small>
+            <table class="cipher-table">
+                <thead>
+                <tr>
+                    <td class="corner"></td>
+                    <th>Page 1</th>
+                    <th>Page 2</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Screen 1</th>
+                    <td>Row Shifts</td>
+                    <td>Keyword 1</td>
+                </tr>
+                <tr>
+                    <th>Screen 2</th>
+                    <td>Column Shifts</td>
+                    <td>Keyword 2</td>
+                </tr>
+                <tr>
+                    <th>Screen 3</th>
+                    <td>3 Letter Key String</td>
+                    <td>Keyword 3</td>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                Form a letter grid using the keywords from page 3, and the three-letter key string from page 2.
+            </p>
+            <p>
+                Using the string of digits from the top screen of page 1, for each row of the letter grid, take the
+                corresponding digit from the string. Look at that position in the row of the Sudoku grid and use its
+                value to shift the row of the letter grid to the right.
+            </p>
+            <p>
+                Using the string of digits from the middle screen of page 2, for each column of the letter grid, take
+                the corresponding digit from the string. Look at that position in the column of the Sudoku grid and use
+                its value to shift the column of the letter grid down.
+                The final word will appear somewhere in the grid.
+            </p>
+            <table class="example-table">
+                <tbody>
+                <tr>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>6</td>
+                                    <td>1</td>
+                                    <td>8</td>
+                                    <td>4</td>
+                                    <td>2</td>
+                                    <td>3</td>
+                                    <td>5</td>
+                                    <td class="vert-highlight">7</td>
+                                    <td class="horiz-highlight">9</td>
+                                </tr>
+                                <tr>
+                                    <td>7</td>
+                                    <td>5</td>
+                                    <td>4</td>
+                                    <td>1</td>
+                                    <td class="horiz-highlight">9</td>
+                                    <td>6</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>8</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>3</td>
+                                    <td>9</td>
+                                    <td class="vert-highlight">5</td>
+                                    <td class="horiz-highlight">8</td>
+                                    <td>7</td>
+                                    <td>1</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>8</td>
+                                    <td>7</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                    <td class="horiz-highlight">5</td>
+                                    <td>9</td>
+                                    <td>6</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td class="horiz-highlight">9</td>
+                                    <td class="vert-highlight">6</td>
+                                    <td>3</td>
+                                    <td>7</td>
+                                    <td>4</td>
+                                    <td>8</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td class="horiz-highlight">2</td>
+                                    <td>5</td>
+                                    <td>8</td>
+                                    <td>6</td>
+                                    <td>9</td>
+                                    <td>7</td>
+                                    <td>3</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>8</td>
+                                    <td>6</td>
+                                    <td>1</td>
+                                    <td>7</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                    <td class="vert-highlight">4</td>
+                                    <td class="horiz-highlight">9</td>
+                                    <td>3</td>
+                                </tr>
+                                <tr>
+                                    <td class="both-highlight">9</td>
+                                    <td class="vert-highlight">7</td>
+                                    <td>3</td>
+                                    <td>6</td>
+                                    <td class="vert-highlight">4</td>
+                                    <td>8</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                    <td class="vert-highlight">5</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>4</td>
+                                    <td>2</td>
+                                    <td>9</td>
+                                    <td class="horiz-highlight">3</td>
+                                    <td class="vert-highlight">1</td>
+                                    <td>6</td>
+                                    <td>8</td>
+                                    <td>7</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td>
+                        <h4 class="centered">
+                            Example
+                        </h4>
+                        <p class="centered">
+                            ⇐ Sudoku Grid <br>
+                            Letter Grid ⇒ > <br>
+                            <small>CIPHER PUZZLE SUFFER FML</small>
+                        </p>
+                        <p class="centered">
+                            Row Clues: 955622815 <br>
+                            Col Clues: 885389718
+                        </p>
+                        <p class="centered">
+                            Row Shifts: 008502003 <br>
+                            Col Shifts: 076541475
+                        </p>
+                    </td>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>C</td>
+                                    <td>I</td>
+                                    <td>P</td>
+                                    <td>H</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>G</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>L</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                    <td>Q</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>U</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>F</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>U</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                    <td>E</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>F</td>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>Q</td>
+                                    <td>R</td>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>M</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>U</td>
+                                    <td>F</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>Q</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>C</td>
+                                    <td>I</td>
+                                    <td>P</td>
+                                    <td>H</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>G</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>L</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                    <td>Q</td>
+                                </tr>
+                                <tr>
+                                    <td>T</td>
+                                    <td>U</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>F</td>
+                                    <td>S</td>
+                                </tr>
+                                <tr>
+                                    <td>E</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                    <td>P</td>
+                                    <td>U</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                </tr>
+                                <tr>
+                                    <td>F</td>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>Y</td>
+                                    <td>M</td>
+                                    <td>Q</td>
+                                    <td>R</td>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>U</td>
+                                    <td>F</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                    <td>P</td>
+                                    <td>Q</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td>
+                        <p class="centered">
+                            ⇐ After Row Shifts <br>
+                            After Col Shifts ⇒
+                        </p>
+                        <p class="centered">
+                            Final Word: CUBIST
+                        </p>
+                    </td>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td><b><u>C</u></b></td>
+                                    <td><b><u>U</u></b></td>
+                                    <td><b><u>B</u></b></td>
+                                    <td><b><u>I</u></b></td>
+                                    <td><b><u>S</u></b></td>
+                                    <td><b><u>T</u></b></td>
+                                    <td>V</td>
+                                    <td>F</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>A</td>
+                                    <td>H</td>
+                                    <td>R</td>
+                                    <td>R</td>
+                                    <td>R</td>
+                                    <td>B</td>
+                                    <td>Z</td>
+                                    <td>X</td>
+                                </tr>
+                                <tr>
+                                    <td>T</td>
+                                    <td>G</td>
+                                    <td>Q</td>
+                                    <td>E</td>
+                                    <td>K</td>
+                                    <td>M</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>E</td>
+                                    <td>M</td>
+                                    <td>F</td>
+                                    <td>J</td>
+                                    <td>Q</td>
+                                    <td>Y</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>F</td>
+                                    <td>U</td>
+                                    <td>I</td>
+                                    <td>P</td>
+                                    <td>E</td>
+                                    <td>P</td>
+                                    <td>A</td>
+                                    <td>C</td>
+                                    <td>X</td>
+                                </tr>
+                                <tr>
+                                    <td>Y</td>
+                                    <td>H</td>
+                                    <td>L</td>
+                                    <td>H</td>
+                                    <td>L</td>
+                                    <td>K</td>
+                                    <td>N</td>
+                                    <td>N</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>Z</td>
+                                    <td>P</td>
+                                    <td>K</td>
+                                    <td>X</td>
+                                    <td>T</td>
+                                    <td>Z</td>
+                                    <td>W</td>
+                                    <td>Q</td>
+                                </tr>
+                                <tr>
+                                    <td>G</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>W</td>
+                                    <td>D</td>
+                                    <td>A</td>
+                                    <td>U</td>
+                                    <td>B</td>
+                                    <td>S</td>
+                                </tr>
+                                <tr>
+                                    <td>Y</td>
+                                    <td>G</td>
+                                    <td>V</td>
+                                    <td>C</td>
+                                    <td>J</td>
+                                    <td>#</td>
+                                    <td>#</td>
+                                    <td>O</td>
+                                    <td>L</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer relative-footer">Page 8 of 12</div>
+    </div>
+
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of Purple Sudoku Cipher</h2>
+            <small>I can see the world from up here!</small>
+            <table class="cipher-table">
+                <thead>
+                <tr>
+                    <td class="corner"></td>
+                    <th>Page 1</th>
+                    <th>Page 2</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Screen 1</th>
+                    <td rowspan="2">Coordinate Clues</td>
+                    <td>Keyword 1</td>
+                </tr>
+                <tr>
+                    <th>Screen 2</th>
+                    <td>Keyword 2</td>
+                </tr>
+                <tr>
+                    <th>Screen 3</th>
+                    <td>3 Letter Key String</td>
+                    <td>Keyword 3</td>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                Form a letter grid using the keywords from page 3, and the three-letter key string from page 2.
+            </p>
+            <p>
+                Each coordinate clue is made up of a grid coordinate followed by a letter indicating a direction (U, R,
+                D, L).
+                Go to each coordinate in the sudoku grid and move in the direction given until a building which is
+                higher than the building at the given coordinate is reached (the value of the cell is higher).
+                Take the position of this new building and look at the letter in the same position in the letter grid to
+                obtain a decrypted letter.
+            </p>
+            <p>
+                Repeat for all clues to decrypt the word.
+            </p>
+
+            <table class="example-table">
+                <tbody>
+                <tr>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>6</td>
+                                    <td>7</td>
+                                    <td>2</td>
+                                    <td>5</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                    <td class="blue">4</td>
+                                    <td>1</td>
+                                    <td>←3</td>
+                                </tr>
+                                <tr>
+                                    <td>8</td>
+                                    <td>9</td>
+                                    <td>3</td>
+                                    <td>1</td>
+                                    <td>2</td>
+                                    <td>4→</td>
+                                    <td class="blue">7</td>
+                                    <td>5</td>
+                                    <td>6</td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>4</td>
+                                    <td>5</td>
+                                    <td>6</td>
+                                    <td>3</td>
+                                    <td>7↓</td>
+                                    <td>2</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                </tr>
+                                <tr>
+                                    <td>7</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                    <td>5</td>
+                                    <td>3</td>
+                                    <td class="blue">9</td>
+                                    <td>←8</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>8</td>
+                                    <td>6</td>
+                                    <td>9</td>
+                                    <td>7</td>
+                                    <td>3</td>
+                                    <td>1</td>
+                                    <td>4</td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>3</td>
+                                    <td>9</td>
+                                    <td>8</td>
+                                    <td>1</td>
+                                    <td>2</td>
+                                    <td>6</td>
+                                    <td>7</td>
+                                    <td>5</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>1</td>
+                                    <td>7→</td>
+                                    <td>2→</td>
+                                    <td class="blue">5</td>
+                                    <td class="blue">8</td>
+                                    <td>9</td>
+                                    <td>6</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>5</td>
+                                    <td>4</td>
+                                    <td>7</td>
+                                    <td>9</td>
+                                    <td>6</td>
+                                    <td>8</td>
+                                    <td>3</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>9</td>
+                                    <td>6</td>
+                                    <td>8</td>
+                                    <td>3</td>
+                                    <td>4</td>
+                                    <td>1</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                    <td>7</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td>
+                        <h4 class="centered">
+                            Example
+                        </h4>
+                        <p class="centered">
+                            ⇐ Sudoku Grid <br>
+                            Letter Grid ⇒ > <br>
+                            <small>CIPHER PUZZLE SUFFER FML</small>
+                            <small>
+                                Clues: F3D D7R I4L C7R F2R I1L <br>
+                                F3 = 7 next tallest D = 8 F7 ⇒ A <br>
+                                D7 = 2 next tallest R = 5 E7 ⇒ R <br>
+                                I4 = 8 next tallest L = 9 H4 ⇒ C <br>
+                                C7 = 7 next tallest R = 8 F7 ⇒ A <br>
+                                F2 = 4 next tallest R = 7 G2 ⇒ N <br>
+                                I1 = 3 next tallest L = 4 G1 ⇒ A
+                            </small>
+                        </p>
+                        <p class="centered">
+                        </p>
+                    </td>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>C</td>
+                                    <td>I</td>
+                                    <td>P</td>
+                                    <td>H</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td class="blue">A</td>
+                                    <td>B</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>G</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>L</td>
+                                    <td>M</td>
+                                    <td class="blue">N</td>
+                                    <td>O</td>
+                                    <td>Q</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>U</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>F</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>U</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                    <td>E</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td class="blue">C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>F</td>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>Q</td>
+                                    <td>R</td>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>M</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>U</td>
+                                    <td>F</td>
+                                    <td>E</td>
+                                    <td class="blue">R</td>
+                                    <td class="blue">A</td>
+                                    <td>B</td>
+                                    <td>C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>#</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>Q</td>
+                                    <td>T</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>L</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer relative-footer">Page 9 of 12</div>
+    </div>
+
+    <div class="page page-bg-03">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of Pink Sudoku Cipher</h2>
+            <small>- .... . / .-- --- .-. .-.. -.. / -. . . -.. . -.. / .- -. --- - .... . .-. / -- --- .-. ... . / --
+                --- -.. ..- .-.. .</small>
+            <table class="cipher-table">
+                <thead>
+                <tr>
+                    <td class="corner"></td>
+                    <th>Page 1</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Screen 1</th>
+                    <td>Encrypted Word</td>
+                </tr>
+                <tr>
+                    <th>Screen 2</th>
+                    <td>Start Coordinate</td>
+                </tr>
+                <tr>
+                    <th>Screen 3</th>
+                    <td>Clue</td>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                Treating odd numbers (circles) as dots and even numbers (squares) as dashes, go to the start coordinate
+                on the middle screen of page 1 in the sudoku grid.
+                Convert the numbers to as many dots and dashes as given in the number part of the bottom screen clue on
+                page 1.
+            </p>
+            <p>
+                Find a way of splitting the dots and dashes to form a word in morse code. To help, the word will always
+                begin with the letter given in the bottom screen clue on page 1.
+            </p>
+            <p>
+                The final word to submit is the word obtained from the morse code caesar shifted to the left by the
+                alphabetic positions of the letters in the encrypted words on the top screen of page 1.
+            </p>
+
+            <h4 class="centered">Example</h4>
+            <table class="example-table">
+                <tr>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tHead>
+                                <tr>
+                                    <th class="corner"></th>
+                                    <th>A</th>
+                                    <th>B</th>
+                                    <th>C</th>
+                                    <th>D</th>
+                                    <th>E</th>
+                                    <th>F</th>
+                                    <th>G</th>
+                                    <th>H</th>
+                                    <th>I</th>
+                                </tr>
+                                </tHead>
+                                <tbody>
+                                <tr>
+                                    <th>1</th>
+                                    <td>4</td>
+                                    <td>2</td>
+                                    <td>7</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                    <td>3</td>
+                                    <td>6</td>
+                                    <td>1</td>
+                                    <td>5</td>
+                                </tr>
+                                <tr>
+                                    <th>2</th>
+                                    <td>8</td>
+                                    <td>6</td>
+                                    <td>1</td>
+                                    <td>7</td>
+                                    <td>5</td>
+                                    <td>4</td>
+                                    <td>2</td>
+                                    <td>3</td>
+                                    <td>9</td>
+                                </tr>
+                                <tr>
+                                    <th>3</th>
+                                    <td>5</td>
+                                    <td>9</td>
+                                    <td>3</td>
+                                    <td>6</td>
+                                    <td>1</td>
+                                    <td>2</td>
+                                    <td>7</td>
+                                    <td>8</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <th>4</th>
+                                    <td>2</td>
+                                    <td>5</td>
+                                    <td>8</td>
+                                    <td>1</td>
+                                    <td>7</td>
+                                    <td>9</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                    <td>3</td>
+                                </tr>
+                                <tr>
+                                    <th>5</th>
+                                    <td>9</td>
+                                    <td>3</td>
+                                    <td>4</td>
+                                    <td>2</td>
+                                    <td>6</td>
+                                    <td>5</td>
+                                    <td>1</td>
+                                    <td>7</td>
+                                    <td>8</td>
+                                </tr>
+                                <tr>
+                                    <th>6</th>
+                                    <td>1</td>
+                                    <td>7</td>
+                                    <td>6</td>
+                                    <td>4</td>
+                                    <td>3</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                    <td>5</td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <th>7</th>
+                                    <td>6</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>7</td>
+                                    <td class="horiz-highlight"><b><u>5</u></b></td>
+                                    <td class="horiz-highlight">4</td>
+                                    <td class="horiz-highlight">1</td>
+                                </tr>
+                                <tr>
+                                    <th>8</th>
+                                    <td class="horiz-highlight">7</td>
+                                    <td class="horiz-highlight">4</td>
+                                    <td class="horiz-highlight">2</td>
+                                    <td class="horiz-highlight">5</td>
+                                    <td class="horiz-highlight">8</td>
+                                    <td class="horiz-highlight">1</td>
+                                    <td class="horiz-highlight">3</td>
+                                    <td class="horiz-highlight">9</td>
+                                    <td class="horiz-highlight">6</td>
+                                </tr>
+                                <tr>
+                                    <th>9</th>
+                                    <td class="horiz-highlight">3</td>
+                                    <td>1</td>
+                                    <td>5</td>
+                                    <td>9</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                    <td>8</td>
+                                    <td>2</td>
+                                    <td>7</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td>
+                        ⇐ Sudoku Grid <br>
+                        Encrypted Word: KGOUYY <br>
+                        Starting Coordinate: G7 <br>
+                        Clue: 13E <br>
+                        Morse: .-..--.-...-. <br>
+                        Split: . / -..- / -.-. / .. / - / . <br>
+                        Final: <b><u>EXCITE</u></b>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="page-footer relative-footer">Page 10 of 12</div>
+    </div>
+
+    <div class="page page-bg-04">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of White Sudoku Cipher</h2>
+            <small>In memory of Joseph Kruskal</small>
+            <table class="cipher-table">
+                <thead>
+                <tr>
+                    <td class="corner"></td>
+                    <th>Page 1</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Screen 1</th>
+                    <td rowspan="2">Coordinates</td>
+                </tr>
+                <tr>
+                    <th>Screen 2</th>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                The coordinates on the module are positions in a hidden letter grid maze that can be navigated in
+                movement mode.
+                Hitting any wall in the maze will cost a life, and you have a limited number of lives.
+                Losing all lives will cause a strike and generate a new grid.
+            </p>
+            <p>
+                The maze can be determined prior to entering movement mode using the cages in the sudoku grid.
+                Start from the top left cell moving right. For each cell, consider the next cell you would move to. If
+                there is a wall between the cells, and they are not part of the same region, remove the wall, otherwise
+                ignore the cell and continue moving.
+                Once you hit the end of the row, move down once and continue moving to the left.
+                Continue snaking back and forth until all cells are part of one connected region.
+            </p>
+            <p>
+                Press the <b><u>S</u></b> key to enter movement mode. In this mode, the maze can be navigated using the
+                <b><u>U</u></b>, <b><u>R</u></b>, <b><u>D</u></b>, and <b><u>L</u></b> keys.
+                The middle screen will display the letter in your current position.
+                Your starting location in the grid is random. Your current life count will be displayed on the top
+                screen. Hitting a wall will reduce your lives by 1.
+            </p>
+
+            <h3 class="centered">Maze Generation Example</h3>
+
+            <div class="maze-example-row">
+                <div class="maze-panel">
+                    <div class="maze-grid">
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+                        <div class="maze-cell B wall-top wall-left">B</div>
+                        <div class="maze-cell B wall-top wall-bottom wall-right">B</div>
+                        <div class="maze-cell C wall-top wall-left">C</div>
+                        <div class="maze-cell C wall-top wall-right">C</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell D wall-top wall-left wall-right">D</div>
+                        <div class="maze-cell B wall-bottom wall-left wall-right">B</div>
+                        <div class="maze-cell E wall-top wall-right wall-left">E</div>
+                        <div class="maze-cell C wall-bottom wall-left">C</div>
+                        <div class="maze-cell C wall-right wall-bottom">C</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell D wall-bottom wall-left">D</div>
+                        <div class="maze-cell D wall-top wall-right">D</div>
+                        <div class="maze-cell E wall-left">E</div>
+                        <div class="maze-cell E wall-top wall-right wall-bottom">E</div>
+                        <div class="maze-cell F wall-top wall-right wall-left">F</div>
+
+                        <div class="maze-cell A wall-left wall-bottom">A</div>
+                        <div class="maze-cell A wall-bottom wall-top wall-right">A</div>
+                        <div class="maze-cell D wall-left wall-right">D</div>
+                        <div class="maze-cell E wall-left wall-bottom wall-right">E</div>
+                        <div class="maze-cell F wall-left wall-top">F</div>
+                        <div class="maze-cell F wall-right">F</div>
+
+                        <div class="maze-cell B wall-top wall-left">B</div>
+                        <div class="maze-cell B wall-top wall-right">B</div>
+                        <div class="maze-cell D wall-left wall-right">D</div>
+                        <div class="maze-cell F wall-left wall-bottom wall-top">F</div>
+                        <div class="maze-cell F wall-bottom">F</div>
+                        <div class="maze-cell F wall-right wall-bottom">F</div>
+
+                        <div class="maze-cell B wall-bottom wall-left">B</div>
+                        <div class="maze-cell B wall-bottom wall-right">B</div>
+                        <div class="maze-cell D wall-bottom wall-left">D</div>
+                        <div class="maze-cell D wall-bottom wall-top">D</div>
+                        <div class="maze-cell G wall-bottom wall-top wall-left">G</div>
+                        <div class="maze-cell G wall-bottom wall-right wall-top">G</div>
+                    </div>
+                </div>
+                <div class="maze-panel">
+                    <div class="maze-grid">
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-bottom wall-right">A</div>
+                        <div class="maze-cell C wall-top wall-left">C</div>
+                        <div class="maze-cell C wall-top wall-right">C</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell D wall-top wall-left wall-right">D</div>
+                        <div class="maze-cell A wall-bottom wall-left wall-right">A</div>
+                        <div class="maze-cell E wall-top wall-right wall-left">E</div>
+                        <div class="maze-cell C wall-bottom wall-left">C</div>
+                        <div class="maze-cell C wall-right wall-bottom">C</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell D wall-bottom wall-left">D</div>
+                        <div class="maze-cell D wall-top wall-right">D</div>
+                        <div class="maze-cell E wall-left">E</div>
+                        <div class="maze-cell E wall-top wall-right wall-bottom">E</div>
+                        <div class="maze-cell F wall-top wall-right wall-left">F</div>
+
+                        <div class="maze-cell A wall-left wall-bottom">A</div>
+                        <div class="maze-cell A wall-bottom wall-top wall-right">A</div>
+                        <div class="maze-cell D wall-left wall-right">D</div>
+                        <div class="maze-cell E wall-left wall-bottom wall-right">E</div>
+                        <div class="maze-cell F wall-left wall-top">F</div>
+                        <div class="maze-cell F wall-right">F</div>
+
+                        <div class="maze-cell B wall-top wall-left">B</div>
+                        <div class="maze-cell B wall-top wall-right">B</div>
+                        <div class="maze-cell D wall-left wall-right">D</div>
+                        <div class="maze-cell F wall-left wall-bottom wall-top">F</div>
+                        <div class="maze-cell F wall-bottom">F</div>
+                        <div class="maze-cell F wall-right wall-bottom">F</div>
+
+                        <div class="maze-cell B wall-bottom wall-left">B</div>
+                        <div class="maze-cell B wall-bottom wall-right">B</div>
+                        <div class="maze-cell D wall-bottom wall-left">D</div>
+                        <div class="maze-cell D wall-bottom wall-top">D</div>
+                        <div class="maze-cell G wall-bottom wall-top wall-left">G</div>
+                        <div class="maze-cell G wall-bottom wall-right wall-top">G</div>
+                    </div>
+                </div>
+                <div class="maze-panel">
+                    <div class="maze-grid">
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-bottom">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell D wall-top wall-left wall-right">D</div>
+                        <div class="maze-cell A wall-bottom wall-left wall-right">A</div>
+                        <div class="maze-cell E wall-top wall-right wall-left">E</div>
+                        <div class="maze-cell A wall-bottom wall-left">A</div>
+                        <div class="maze-cell A wall-right wall-bottom">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell D wall-bottom wall-left">D</div>
+                        <div class="maze-cell D wall-top wall-right">D</div>
+                        <div class="maze-cell E wall-left">E</div>
+                        <div class="maze-cell E wall-top wall-right wall-bottom">E</div>
+                        <div class="maze-cell F wall-top wall-right wall-left">F</div>
+
+                        <div class="maze-cell A wall-left wall-bottom">A</div>
+                        <div class="maze-cell A wall-bottom wall-top wall-right">A</div>
+                        <div class="maze-cell D wall-left wall-right">D</div>
+                        <div class="maze-cell E wall-left wall-bottom wall-right">E</div>
+                        <div class="maze-cell F wall-left wall-top">F</div>
+                        <div class="maze-cell F wall-right">F</div>
+
+                        <div class="maze-cell B wall-top wall-left">B</div>
+                        <div class="maze-cell B wall-top wall-right">B</div>
+                        <div class="maze-cell D wall-left wall-right">D</div>
+                        <div class="maze-cell F wall-left wall-bottom wall-top">F</div>
+                        <div class="maze-cell F wall-bottom">F</div>
+                        <div class="maze-cell F wall-right wall-bottom">F</div>
+
+                        <div class="maze-cell B wall-bottom wall-left">B</div>
+                        <div class="maze-cell B wall-bottom wall-right">B</div>
+                        <div class="maze-cell D wall-bottom wall-left">D</div>
+                        <div class="maze-cell D wall-bottom wall-top">D</div>
+                        <div class="maze-cell G wall-bottom wall-top wall-left">G</div>
+                        <div class="maze-cell G wall-bottom wall-right wall-top">G</div>
+                    </div>
+                </div>
+                <div class="maze-panel">
+                    <div class="maze-grid">
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-bottom">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell D wall-top wall-left wall-right">D</div>
+                        <div class="maze-cell A wall-bottom wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-bottom">A</div>
+                        <div class="maze-cell A wall-right wall-bottom">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell D wall-bottom wall-left">D</div>
+                        <div class="maze-cell D wall-top wall-right">D</div>
+                        <div class="maze-cell A wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-right wall-bottom">A</div>
+                        <div class="maze-cell F wall-top wall-right wall-left">F</div>
+
+                        <div class="maze-cell A wall-left wall-bottom">A</div>
+                        <div class="maze-cell A wall-bottom wall-top wall-right">A</div>
+                        <div class="maze-cell D wall-left wall-right">D</div>
+                        <div class="maze-cell A wall-left wall-bottom wall-right">A</div>
+                        <div class="maze-cell F wall-left wall-top">F</div>
+                        <div class="maze-cell F wall-right">F</div>
+
+                        <div class="maze-cell B wall-top wall-left">B</div>
+                        <div class="maze-cell B wall-top wall-right">B</div>
+                        <div class="maze-cell D wall-left wall-right">D</div>
+                        <div class="maze-cell F wall-left wall-bottom wall-top">F</div>
+                        <div class="maze-cell F wall-bottom">F</div>
+                        <div class="maze-cell F wall-right wall-bottom">F</div>
+
+                        <div class="maze-cell B wall-bottom wall-left">B</div>
+                        <div class="maze-cell B wall-bottom wall-right">B</div>
+                        <div class="maze-cell D wall-bottom wall-left">D</div>
+                        <div class="maze-cell D wall-bottom wall-top">D</div>
+                        <div class="maze-cell G wall-bottom wall-top wall-left">G</div>
+                        <div class="maze-cell G wall-bottom wall-right wall-top">G</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="maze-example-row">
+                <div class="maze-panel">
+                    <div class="maze-grid">
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-bottom">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-right">A</div>
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-bottom">A</div>
+                        <div class="maze-cell A wall-right wall-bottom">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-bottom wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+                        <div class="maze-cell A wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-right wall-bottom">A</div>
+                        <div class="maze-cell F wall-top wall-right wall-left">F</div>
+
+                        <div class="maze-cell A wall-left wall-bottom">A</div>
+                        <div class="maze-cell A wall-bottom wall-top wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-bottom wall-right">A</div>
+                        <div class="maze-cell F wall-left wall-top">F</div>
+                        <div class="maze-cell F wall-right">F</div>
+
+                        <div class="maze-cell B wall-top wall-left">B</div>
+                        <div class="maze-cell B wall-top wall-right">B</div>
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell F wall-left wall-bottom wall-top">F</div>
+                        <div class="maze-cell F wall-bottom">F</div>
+                        <div class="maze-cell F wall-right wall-bottom">F</div>
+
+                        <div class="maze-cell B wall-bottom wall-left">B</div>
+                        <div class="maze-cell B wall-bottom wall-right">B</div>
+                        <div class="maze-cell A wall-bottom wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-top">A</div>
+                        <div class="maze-cell G wall-bottom wall-top wall-left">G</div>
+                        <div class="maze-cell G wall-bottom wall-right wall-top">G</div>
+                    </div>
+                </div>
+                <div class="maze-panel">
+                    <div class="maze-grid">
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-bottom">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-right">A</div>
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-bottom">A</div>
+                        <div class="maze-cell A wall-right wall-bottom">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-bottom wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+                        <div class="maze-cell A wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-bottom">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+
+                        <div class="maze-cell A wall-left wall-bottom">A</div>
+                        <div class="maze-cell A wall-bottom wall-top wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-bottom wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-top">A</div>
+                        <div class="maze-cell A wall-right">A</div>
+
+                        <div class="maze-cell B wall-top wall-left">B</div>
+                        <div class="maze-cell B wall-top wall-right">B</div>
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-bottom wall-top">A</div>
+                        <div class="maze-cell A wall-bottom">A</div>
+                        <div class="maze-cell A wall-right wall-bottom">A</div>
+
+                        <div class="maze-cell B wall-bottom wall-left">B</div>
+                        <div class="maze-cell B wall-bottom wall-right">B</div>
+                        <div class="maze-cell A wall-bottom wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-top">A</div>
+                        <div class="maze-cell G wall-bottom wall-top wall-left">G</div>
+                        <div class="maze-cell G wall-bottom wall-right wall-top">G</div>
+                    </div>
+                </div>
+                <div class="maze-panel">
+                    <div class="maze-grid">
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-bottom">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-right">A</div>
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-bottom">A</div>
+                        <div class="maze-cell A wall-right wall-bottom">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-bottom wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+                        <div class="maze-cell A wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-bottom">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+
+                        <div class="maze-cell A wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-top wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-bottom wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-top">A</div>
+                        <div class="maze-cell A wall-right">A</div>
+
+                        <div class="maze-cell A wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-bottom wall-top">A</div>
+                        <div class="maze-cell A wall-bottom">A</div>
+                        <div class="maze-cell A wall-right wall-bottom">A</div>
+
+                        <div class="maze-cell A wall-bottom wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-right">A</div>
+                        <div class="maze-cell A wall-bottom wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-top">A</div>
+                        <div class="maze-cell G wall-bottom wall-top wall-left">G</div>
+                        <div class="maze-cell G wall-bottom wall-right wall-top">G</div>
+                    </div>
+                </div>
+                <div class="maze-panel">
+                    <div class="maze-grid">
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-bottom">A</div>
+                        <div class="maze-cell A wall-top">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-right">A</div>
+                        <div class="maze-cell A wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-bottom">A</div>
+                        <div class="maze-cell A wall-right wall-bottom">A</div>
+
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-bottom wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+                        <div class="maze-cell A wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-bottom">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+
+                        <div class="maze-cell A wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-top wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-bottom wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-top">A</div>
+                        <div class="maze-cell A wall-right">A</div>
+
+                        <div class="maze-cell A wall-left">A</div>
+                        <div class="maze-cell A wall-top wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-right">A</div>
+                        <div class="maze-cell A wall-left wall-bottom wall-top">A</div>
+                        <div class="maze-cell A wall-bottom">A</div>
+                        <div class="maze-cell A wall-right">A</div>
+
+                        <div class="maze-cell A wall-bottom wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-right">A</div>
+                        <div class="maze-cell A wall-bottom wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-top">A</div>
+                        <div class="maze-cell A wall-bottom wall-top wall-left">A</div>
+                        <div class="maze-cell A wall-bottom wall-right">A</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="page-footer relative-footer">Page 11 of 12</div>
+    </div>
+
+    <div class="page page-bg-05">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Sudoku Cipher</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of Black Sudoku Cipher</h2>
+            <small>Snake! What happened? Snake!? SNAAAAAKE!?</small>
+            <table class="cipher-table">
+                <thead>
+                <tr>
+                    <td class="corner"></td>
+                    <th>Page 1</th>
+                    <th>Page 2</th>
+                    <th>Page 3</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th>Screen 1</th>
+                    <td rowspan="2">Moves</td>
+                    <td>3 Letter Key String</td>
+                    <td>Keyword 3</td>
+                </tr>
+                <tr>
+                    <th>Screen 2</th>
+                    <td>Keyword 1</td>
+                    <td class="corner"></td>
+                </tr>
+                <tr>
+                    <th>Screen 3</th>
+                    <td>Ignored Values</td>
+                    <td>Keyword 2</td>
+                    <td class="corner"></td>
+                </tr>
+                </tbody>
+            </table>
+            <p>
+                Form a letter grid using the keywords from pages 2 and 3, and the three-letter key string from page 2.
+            </p>
+            <p>
+                Treat the sudoku grid as a Snakes and Ladders board with your initial starting position being in the
+                bottom left (not yet on the board).
+                Moves progress to the right until the end of a row is reached, then moves progress upwards once before
+                moving back to the left.
+                This snaking continues up to the square in the top right of the board.
+            </p>
+            <p>
+                Each number in the top two screens on page 1 refers to a movement, one through nine, along the board.
+                When landing on a square, if that square is the tip of a red thermometer or the bulb of a blue
+                thermometer, move to the other end of the thermometer and continue movements from that point. <br>
+                Otherwise, if the square you land on has a value in the sudoku grid equal to one of the ignored values
+                on the bottom screen of page 1, do nothing. <br>
+                Otherwise, if the square you land on has a # in the letter grid, do nothing. <br>
+                Otherwise, note down the letter in the same position in the letter grid. <br>
+            </p>
+            <p>
+                Once all movements have concluded, submit the word formed by the found letters.
+            </p>
+
+            <table class="example-table">
+                <tbody>
+                <tr>
+                    <td>
+                        <div id="thermo-wrapper" class="grid-wrapper">
+                            <svg id="thermoLayer"></svg>
+                            <table id="thermo-sudoku" class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td></td>
+                                    <td>6</td>
+                                    <td>2</td>
+                                    <td>5</td>
+                                    <td>3</td>
+                                    <td>7</td>
+                                    <td>9</td>
+                                    <td>8</td>
+                                    <td>4</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>4</td>
+                                    <td>9</td>
+                                    <td>3</td>
+                                    <td>8</td>
+                                    <td>5</td>
+                                    <td>1</td>
+                                    <td>7</td>
+                                    <td>6</td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>7</td>
+                                    <td>8</td>
+                                    <td>1</td>
+                                    <td>6</td>
+                                    <td>4</td>
+                                    <td>2</td>
+                                    <td>3</td>
+                                    <td>5</td>
+                                    <td>9</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>8</td>
+                                    <td>3</td>
+                                    <td>6</td>
+                                    <td>4</td>
+                                    <td>1</td>
+                                    <td>7</td>
+                                    <td>2</td>
+                                    <td>9</td>
+                                    <td>5</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>5</td>
+                                    <td>7</td>
+                                    <td>4</td>
+                                    <td>9</td>
+                                    <td>2</td>
+                                    <td>6</td>
+                                    <td>1</td>
+                                    <td>8</td>
+                                    <td>3</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>9</td>
+                                    <td>1</td>
+                                    <td>2</td>
+                                    <td>5</td>
+                                    <td>3</td>
+                                    <td>8</td>
+                                    <td>4</td>
+                                    <td>7</td>
+                                    <td>6</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>3</td>
+                                    <td>5</td>
+                                    <td>7</td>
+                                    <td>1</td>
+                                    <td>9</td>
+                                    <td>4</td>
+                                    <td>6</td>
+                                    <td>2</td>
+                                    <td>8</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>2</td>
+                                    <td>6</td>
+                                    <td>9</td>
+                                    <td>7</td>
+                                    <td>8</td>
+                                    <td>3</td>
+                                    <td>5</td>
+                                    <td>1</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>⇒</td>
+                                    <td>1</td>
+                                    <td>4</td>
+                                    <td>8</td>
+                                    <td>2</td>
+                                    <td>6</td>
+                                    <td>5</td>
+                                    <td>9</td>
+                                    <td>3</td>
+                                    <td>7</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                    <td>
+                        <h4 class="centered">
+                            Example
+                        </h4>
+                        <p class="centered">
+                            ⇐ Sudoku Grid <br>
+                            Letter Grid ⇒ > <br>
+                            <small>CIPHER PUZZLE SUFFER FML</small>
+                            <small>
+                                Moves: 455755427649257<br>
+                                Ignored Values: 3 <br>
+                                4 ⇒ D9 ⇒ Snake ⇒ C9 <br>
+                                5 ⇒ H9 ⇒ Ignore (3)<br>
+                                5 ⇒ F8 ⇒ Snake ⇒ E8 <br>
+                                7 ⇒ C7 ⇒ F (first letter)<br>
+                                ...<br> Final Word: FICKLE
+                            </small>
+                        </p>
+                        <p class="centered">
+                        </p>
+                    </td>
+                    <td>
+                        <div class="grid-wrapper">
+                            <table class="grid centered">
+                                <tbody>
+                                <tr>
+                                    <td>C</td>
+                                    <td>I</td>
+                                    <td>P</td>
+                                    <td>H</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>#</td>
+                                    <td>G</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td>L</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                    <td>Q</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td>U</td>
+                                    <td>V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>Z</td>
+                                    <td>F</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td class="blue">U</td>
+                                    <td>Z</td>
+                                    <td class="green">5L</td>
+                                    <td class="green">6E</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td class="green">3C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>F</td>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td class="green">2I</td>
+                                    <td>J</td>
+                                    <td class="green">4K</td>
+                                    <td class="red">#</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>Q</td>
+                                    <td>R</td>
+                                    <td>S</td>
+                                    <td>T</td>
+                                    <td class="blue">V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td>M</td>
+                                </tr>
+                                <tr>
+                                    <td>S</td>
+                                    <td>U</td>
+                                    <td class="green">1F</td>
+                                    <td>E</td>
+                                    <td>R</td>
+                                    <td>A</td>
+                                    <td>B</td>
+                                    <td class="blue">C</td>
+                                    <td>D</td>
+                                </tr>
+                                <tr>
+                                    <td>G</td>
+                                    <td>H</td>
+                                    <td>I</td>
+                                    <td>J</td>
+                                    <td>K</td>
+                                    <td class="blue">#</td>
+                                    <td>M</td>
+                                    <td>N</td>
+                                    <td>O</td>
+                                </tr>
+                                <tr>
+                                    <td>P</td>
+                                    <td>Q</td>
+                                    <td>T</td>
+                                    <td class="blue">V</td>
+                                    <td>W</td>
+                                    <td>X</td>
+                                    <td>Y</td>
+                                    <td class="red">Z</td>
+                                    <td>L</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer relative-footer">Page 12 of 12</div>
+    </div>
+</div>
+<script>
+    const size = 9;
+    const wrapper = document.getElementById("thermo-wrapper");
+    const table = document.getElementById("thermo-sudoku");
+    const svg = document.getElementById("thermoLayer");
+
+    // Add data-row and data-col attributes to existing cells
+    const rows = table.querySelectorAll("tr");
+    rows.forEach((row, r) => {
+        const cells = row.querySelectorAll("td");
+        cells.forEach((cell, c) => {
+            cell.dataset.row = (r + 1).toString();
+            cell.dataset.col = (c + 1).toString();
+        });
+    });
+
+    const thermometers = [
+        {color: "#ff6060", path: ["B2", "B3", "C2"]},
+        {color: "#ff6060", path: ["D2", "E1", "E2"]},
+        {color: "#ff6060", path: ["F1", "G2", "H3", "I2", "I1"]},
+        {color: "#8080ff", path: ["B4", "C4", "B5"]},
+        {color: "#ff6060", path: ["F4", "F5", "E6"]},
+        {color: "#8080ff", path: ["I5", "I6", "H6", "H5"]},
+        {color: "#8080ff", path: ["I5", "I6", "H6", "H5"]},
+        {color: "#ff6060", path: ["C7", "D6", "C6", "B6"]},
+        {color: "#8080ff", path: ["F7", "G7", "F6"]},
+        {color: "#ff6060", path: ["I7", "I8", "H7"]},
+        {color: "#ff6060", path: ["C8", "B9", "A8"]},
+        {color: "#ff6060", path: ["C9", "D8", "D9"]},
+        {color: "#ff6060", path: ["E8", "E9", "F9", "F8"]}
+    ];
+
+    function getCellCenter(coord) {
+        const col = coord.charCodeAt(0) - 65 + 2; // A=1
+        const row = parseInt(coord.slice(1), 10);
+        const cell = table.querySelector(`td[data-row="${row}"][data-col="${col}"]`);
+        if (!cell) return null;
+
+        const rect = cell.getBoundingClientRect();
+        const wrapperRect = wrapper.getBoundingClientRect();
+        return {
+            x: rect.left - wrapperRect.left + rect.width / 2,
+            y: rect.top - wrapperRect.top + rect.height / 2
+        };
+    }
+
+    function resizeSVG() {
+        const rect = wrapper.getBoundingClientRect();
+        svg.setAttribute("width", rect.width.toString());
+        svg.setAttribute("height", rect.height.toString());
+        svg.setAttribute("viewBox", `0 0 ${rect.width} ${rect.height}`);
+    }
+
+    function drawThermos() {
+        svg.innerHTML = "";
+        resizeSVG();
+
+        thermometers.forEach(t => {
+            const coords = t.path.map(getCellCenter).filter(Boolean);
+            if (coords.length < 1) return;
+
+            // Lines
+            for (let i = 0; i < coords.length - 1; i++) {
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", coords[i].x.toString());
+                line.setAttribute("y1", coords[i].y.toString());
+                line.setAttribute("x2", coords[i + 1].x.toString());
+                line.setAttribute("y2", coords[i + 1].y.toString());
+                line.setAttribute("stroke", t.color);
+                line.setAttribute("stroke-width", "3");
+                line.setAttribute("stroke-linecap", "round");
+                svg.appendChild(line);
+            }
+
+            // Bulb
+            const bulb = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            bulb.setAttribute("cx", coords[0].x.toString());
+            bulb.setAttribute("cy", coords[0].y.toString());
+            bulb.setAttribute("r", "6");
+            bulb.setAttribute("fill", t.color);
+            svg.appendChild(bulb);
+        });
+    }
+
+    drawThermos();
+    window.addEventListener("resize", drawThermos);
+</script>
+</body>
+</html>
