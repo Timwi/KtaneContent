@@ -1,0 +1,294 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Finite Automata — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 6'; }
+        .dark img:not(.diagram) { filter: invert(80%); }
+        ol {
+            margin-top: 5px;
+            margin-bottom: 3px;
+        }
+        ul {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Finite Automata</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Finite Automata.svg" class="diagram">
+                <h2>On the Subject of Finite Automata</h2>
+                <p class="flavour-text">Hope you've studied state machines, or this bomb's state may transition to "exploded"</p>
+                <p>For this module, you will select one or more regexes based on the serial number, convert the regexes to finite automata, and apply operations to them. The first five screens display five regexes, and the last is the submission panel.</p>
+                <h3 style="margin-top:0px;margin-bottom:0px;">Terminology</h3>
+                <ul style="margin-top:0px;margin-bottom:5px;">
+                    <li>Regular expression (AKA regex): A string of text, consisting of the symbols a, b, ε (epsilon, representing a lack of text), and the operators listed below.</li>
+                    <li>Finite Automaton (plural: Finite Automata): A set of states and transitions between them, which can be converted to and from regexes. Each transition has an associated letter, which here must be either "a" or "b", used to control what input that transition is followed for.</li>
+                    <li>Transition Graph: A similar structure to a finite automaton, but the transitions can have any regex associated with them, not just "a" and "b". Used here as a step in the process of producing the finite automaton.</li>
+                </ul>
+                <h3 style="margin-top:0px;margin-bottom:0px;">Order of operations for regular expressions, and syntax:</h3>
+                <code>R</code> and <code>S</code> represent any regexes
+                <ol>
+                    <li>Parentheses: <code>(R)</code>. Example: <code>(a)</code>, <code>(b)</code></li>
+                    <li>Kleene star: <code>R*</code>. Example: <code>a*</code>, <code>(ab)*</code></li>
+                    <li>Concatenation: <code>RS</code>. Example: <code>ab</code>, <code>ab*</code>, <code>b*a</code></li>
+                    <li>Alternation: <code>R|S</code>. Example: <code>a|b</code>, <code>a*|ab</code></li>
+                </ol>
+                <p style="margin-top: 0px;">Note that, in the last example for alternation, the operands are <code>a*</code> and <code>ab</code>, due to the order of operations. Similarly, in the last example for concatenation, the right operand is <code>b*</code>, and in the second Kleene star example, the operand is <code>(ab)</code>. Also, note that, being a unary operator, <code>*</code> does not have a right operand, so <code>b*a</code> is a concatenation between <code>b*</code> and <code>a</code></p>
+                <p>In the following algorithms, "outermost operation" means the last operation in the order of operations within the regex that is not inside parentheses. For instance, in the regex <code>ab|a(ab*|a)b</code>, the outermost operator is the alternation outside the parentheses, and the second-outermost operators are the concatenations outside the parethenses. In the case of a tie for lowest, either operation in the tie can be selected for the algorithm described on the next page.</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Finite Automata</span>
+            </div>
+            <div class="page-content">
+                <h3>Determining which regexes and operations to use</h3>
+                <p>To determine which regex or regexes to use, look at the digits of the serial number.</p>
+                If there is an odd number of digits in the serial number:
+                <ol>
+                    <li>Divide the middle digit by 5.</li>
+                    <li>The remainder is the regex to convert to a finite automaton.
+                    <li>If the middle digit of the serial number is 5 or higher, then take the complement of the resulting finite automata. If not, then the automata in the previous step is the final answer.
+                </ol>
+                If there is an even number of digits in the serial number:
+                <ol>
+                    <li>Divide the first digit and the last digit of the serial number by 5.</li>
+                    <li>The remainders will be the two regexes to convert to finite automata.</li>
+                    <li>If the first digit of the serial number is 5 or more, take the complement of the first automaton.</li>
+                    <li>If the last digit of the serial number is 5 or more, take the complement of the second automaton.</li>
+                    <li>If the last digit is smaller than the first, take the intersection of the two automata. Otherwise, take the union of the two. Either way, the result is the final answer.</li>
+                </ol>
+                <p>The results will be entered into the module's table submission space, in a form as shown on the next page.</p>
+                <h3>Converting regular expressions to finite automata</h3>
+                The process of converting a regular expression to a finite automaton is as follows:
+                <ul style="margin-top:10px;">
+                    <li>Create a new transition graph with two states and one transition, transitioning from a start state to a goal state on the full regex.</li>
+                    <li>(Optional) If, at any time, any two transitions have the same regex, origin, and destination, the duplicate can be removed.</li>
+                    <li>(Optional) If, at any time, any two states have all the same outgoing transitions with the same regexes and destinations, and either both of them or neither of them are goals, then you can take all transitions leading into one of the two, and make them instead lead into the other. Then the state you moved the transitions from can be removed.</li>
+                </ul>
+                Continued on next page...
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Finite Automata</span>
+            </div>
+            <div class="page-content">
+                <ul style="margin:0;">
+                    <li>(Optional) If, at any time, any state has no possible paths along any number of transitions leading from it to a goal state, it can be removed.</li>
+                    <li>
+                        <p style="margin:0">(Optional) Any unreachable state can be removed at any time.</p>
+                        <p style="margin-top:4px;margin-bottom:4px;">A state is "reachable" if there is a path along the transitions from a start state to that state. If not, it is "unreachable".</p>
+                    </li>
+                </ul>
+                <ul style="margin:0;">
+                    <li>While there are transitions for which the regex is not <code>a</code>, <code>b</code>, or <code>ε</code>:
+                        <ul>
+                            <li>Pick one of those transitions. Let's call it <var>e</var>.</li>
+                            <li>Identify the outermost operation in the regex of <var>e</var>:
+                                <ul>
+                                    <li>If the outermost operation in the regex is parentheses surrounding the whole expression, remove the parentheses and continue down this list.</li>
+                                    <li>If the outermost operation is a Kleene star <code>R*</code> of some regex <var>R</var>, do the following:
+                                        <ol>
+                                            <li>Add a new state</li>
+                                            <li>Connect from the source of <var>e</var> to the new state with an ε transition</li>
+                                            <li>Connect from the new state to the destination of <var>e</var> with an ε transition</li>
+                                            <li>Connect the new state to itself, with <var>R</var> as the transition</li>
+                                            <li>Remove <var>e</var></li>
+                                        </ol>
+                                    </li>
+                                    <li>If the outermost operation in the regex is an alternation <code>R|S</code> of two regexes <var>R</var> and <var>S</var>, do the following:
+                                        <ol>
+                                            <li>Replace <var>e</var>'s regex with <var>R</var></li>
+                                            <li>Add a new transition from <var>e</var>'s source to <var>e</var>'s destination with regex <var>S</var></li>
+                                        </ol>
+                                    </li>
+                                    <li>If the outermost operation in the regex is a concatenation <code>RS</code> of two regexes <var>R</var> and <var>S</var>, do the following:
+                                        <ol>
+                                            <li>Add a new state.</li>
+                                            <li>Connect from <var>e</var>'s origin to the new state with a new transition with regex <var>R</var>.</li>
+                                            <li>Connect from the new state to <var>e</var>'s destination with a new transition with regex <var>S</var>.</li>
+                                            <li>Remove <var>e</var>.</li>
+                                        </ol>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>For each transition <var>e</var> with regex ε, do the following:
+                        <ol>
+                            <li>Let <var>A</var> be the source of <var>e</var>, and let <var>B</var> be the destination.</li>
+                            <li>For each transition <var>s</var> which starts at <var>B</var>, add a copy of <var>s</var> which starts at <var>A</var> instead.</li>
+                        </ol>
+                    </li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Finite Automata</span>
+            </div>
+            <div class="page-content">
+                <ul style="margin-top:0px">
+                    <li style="list-style-type:none;">
+                        <ol start="3">
+                            <li>For each transition <var>t</var> which leads to <var>A</var>, add a copy of <var>t</var> which leads to <var>B</var> instead.</li>
+                            <li>If <var>B</var> is a goal state, then make <var>A</var> a goal state.</li>
+                            <li>Remove <var>e</var>.</li>
+                        </ol>
+                    </li>
+                    <li>For each state <var>S</var> which still has multiple outgoing transitions with the same regex:
+                        <ol>
+                            <li>Create a new state</li>
+                            <li>For each transition <var>t</var> starting at state <var>S</var> with that regex:
+                                <ul>
+                                    <li>If <var>t</var> leads to a goal state, make the new state a goal</li>
+                                    <li>For each outgoing transition from <var>t</var>'s destination, create a copy of it with the new state as its origin</li>
+                                </ul>
+                            </li>
+                            <li>Remove all transitions starting at state <var>S</var> with that regex.</li>
+                            <li>Add a new transition with that same regex, going from <var>S</var> to the new state.</li>
+                        </ol>
+                    </li>
+                    <li style="margin-top:0px">If at least one state does not have both an outgoing <code>a</code> transition and an outgoing <code>b</code> transition:</li>
+                </ul>
+                <ol>
+                    <li>Add a new state, which we will call <var>B</var></li>
+                    <li>Add an <code>a</code> transition and a <code>b</code> transition from <var>B</var> to itself.</li>
+                    <li>For each state missing an <code>a</code> or <code>b</code> outgoing transition, add a new transition with that missing regex from that state to <var>B</var></li>
+                </ol>
+                <h3>Operations on Finite Automata</h3>
+                There are three set operations that may be applied to finite automata. Below is a list of these, and how to evaluate them:
+                <ul style="margin-bottom:0px;">
+                    <li><b>Complement</b>: For each state in the finite automaton this operation is applied to, toggle whether or not it is a goal state. Thus, all states, except the original goal states, are now goal states.</li>
+                    <li><b>Union</b>:
+                        <ul>
+                            <li>Shortcut: If all states in one of the input automata are goal states <b><u>or</u></b> one input automata is the complement of the other, any finite automata with <b><u>only</u></b> goal states reachable will be accepted.</li>
+                            <li>Shortcut: If one of the input automata has <b><u>no</u></b> accessible goal states, or both are equal, then the other input automata will be accepted.</li>
+                        </ul>
+                        <ol style="margin-bottom:0px;">
+                            <li>Create a new finite automaton. This automaton will have states correlating to pairs of states on the two finite automata this operation is applied to, which we will call "group states".</li>
+                            <li>Add a start group state to the new automaton. This correlates to the</li>
+                        </ol>
+                    </li>
+                </ul>        
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Finite Automata</span>
+            </div>
+            <div class="page-content">
+                <ul style="margin:0;">
+                    <li style="list-style-type:none;">
+                        <ol start="2">
+                            <li style="list-style-type:none;">pair of the two start states in the input finite automata.</li>
+                            <li>If either start state in the input automata is a goal state, the start group state is also a goal state.</li>
+                            <li>Follow the transitions from the corresponding states on each input automaton for both <code>a</code> and <code>b</code>, to find the states each input leads to.
+                                <ul>
+                                    <li>We can label the group state by the number of the state in the two input DFAs which correlate to it. For instance, if <var>a</var> leaving state 1 in A and B goes to 2 and 3, respectively, then the output automaton has an <var>a</var> transition from 1,1 to 2,3.</li>
+                                </ul>
+                            </li>
+                            <li>If there is no group state which correlates to this pair, add a new group state which correlates to that pair.</li>
+                            <li>If either state in the pair is a goal on its finite automaton, the group state is also a goal.
+                                <ul>
+                                    <li>So, if state 3 in automaton <var>B</var> was a goal state, then group state 2,3 is also a goal state.</li>
+                                </ul>
+                            </li>
+                            <li>If there is no transition connecting from the previous group state to this one with the corresponding regex, add such a transition.
+                                <ul>
+                                    <li>In the above example, we would now add an <code>a</code> transition from group state 1,1 to group state 2,3</li>
+                                </ul>
+                            </li>
+                            <li>Repeat this process from step 4 on for each new group state added, until there are no new group states left to process. Then, continue.</li>
+                        </ol>
+                    </li>
+                    <li style="list-style-type: none;">
+                        <ol start="9">
+                            <li>Rename the nodes to have numbers as their indices instead of pairs, replacing each instance of a particular pair with the corresponding number. This is the result DFA.</li>
+                        </ol>
+                    </li>
+                </ul>
+                <ul>
+                    <li><b>Intersection</b>:
+                        <ul>
+                            <li>Shortcut: If one of the input automata has <b>no</b> goal states, then any finite automata with <b><u>no</u></b> reachable goal states will be accepted.</li>
+                            <li>Shortcut: If every state in one of the input automata is a goal state, then the result is equal to the other input automata.</li>
+                            <li>Shortcut: If the input automata are equal, then the result is equal to them.</li>
+                            <li>Shortcut: If the two input automata are complements of each other, then any finite automata with <b><u>no</u></b> reachable goal states will be accepted.</li>
+                        </ul>
+                        <ol>
+                            <li>Follow the same process as the Union process above, but only make a group state a goal state if <b>both</b> states in the pair are goal states.</li>
+                        </ol>
+                    </li>
+                </ul>
+                
+            </div>
+            <div class="page-footer relative-footer">5</div>
+        </div>
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Finite Automata</span>
+            </div>
+            <div class="page-content">
+                <h3>Input format example</h3>
+                <p>Consider a finite automaton with transitions between three states as shown below. Suppose state 1 is the start state, and state 3 is the goal state.</p>
+                <img src="img/Finite Automata/state diagram.png" width=367 height=398 class="centered-img">
+                <p>The following table shows the input format. The columns on the right indicate where the column's transition leads to from the row's origin state, which is listed in the column on the left.<br>The > before the number in the left column indicates the start state, and the + before the number in the left column indicates a goal state. If a state is both a start and a goal, it is indicated with >+ before the state number.</p>
+                <table>
+                    <tr>
+                        <th>Origin State</th>
+                        <th>a</th>
+                        <th>b</th>
+                    </tr>
+                    <tr>
+                        <td>>1</td>
+                        <td>3</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>1</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>+3</td>
+                        <td>2</td>
+                        <td>1</td>
+                    </tr>
+                </table>
+                <p>Note that additional rows can always be added, but they cannot be removed. Rows with blank entries are ignored. To enter a number, click the cell to cycle current row numbers. To set a state as start or goal, click the state number in the first column. Use the up and down arrow to change which rows are visible.</p>
+            </div>
+            <div class="page-footer relative-footer" style="vertical-align: middle;">6</div>
+        </div>
+    </div>
+</body>
+</html>
