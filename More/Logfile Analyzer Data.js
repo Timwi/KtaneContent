@@ -6199,6 +6199,7 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Faulty Buttons",
 		moduleID: "GSFaultyButtons",
 		loggingTag: "Faulty Buttons",
 		matches: [
