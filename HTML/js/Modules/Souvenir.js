@@ -574,6 +574,7 @@ let SouvenirModuleData = [
 	{ name: "Starstruck",	id: "starstruck",	questions: ["Which stars were shown?"] },
 	{ name: "State of Aggregation",	id: "stateOfAggregation",	questions: ["What element was shown?"] },
 	{ name: "Stellar",	id: "stellar",	questions: ["What were the letters?"] },
+	{ name: "Stroop’s Test",	id: "stroopsTest",	questions: ["What was each submitted word/color?"] },
 	{ name: "Stupid Slots",	id: "stupidSlots",	questions: ["What were the values of each arrow?"] },
 	{ name: "Subbly Jubbly",	id: "subblyJubbly",	questions: ["What were the replacement phrases?"] },
 	{ name: "Subscribe to Pewdiepie",	id: "subscribeToPewdiepie",	questions: ["How many subscribers do Pewdiepie and T-Series have?"] },
