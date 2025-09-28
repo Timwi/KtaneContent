@@ -63,23 +63,27 @@
     <script>
         let face = document.getElementById("face");
         let sl = document.getElementById("status-light");
-        let blinksCount = window.localStorage.getItem("neutralLowScore") ?? 0;
-        let hitCount = window.localStorage.getItem("neutralHighScore") ?? 0;
+        let blinksCount = 0;
+        let hitCount = 0;
+        let strikeCount = 0;
         let correct = false;
+        let solved = false;
         updateVisuals();
 
         face.onclick = () => {
+            if (solved)
+                return;
             if (!correct) {
                 sl.style.fill = "#f00";
-                blinksCount++;
+                strikeCount++;
+                window.setTimeout(() => { sl.style.fill = "#fff" }, 1000);
             }
             else {
                 sl.style.fill = "#0f0";
                 blinksCount--;
-                hitCount++;
+                solved = true;
             }
             updateVisuals();
-            window.setTimeout(() => { sl.style.fill = "#fff" }, 1000);
         };
 
         function blink() {
@@ -91,15 +95,19 @@
         function unblink() {
             face.classList.remove("closed");
             window.setTimeout(blink, Math.random() * 10000 + 5000);
-            blinksCount++;
+            if (!solved)
+                blinksCount++;
             updateVisuals();
         }
 
         function updateVisuals() {
-            if (blinksCount == 0 && hitCount == 0)
+            if (blinksCount == 0 && strikeCount == 0)
                 return;
 
-            document.getElementById("flavour-text").innerHTML = `You’ve missed it ${blinksCount} time${blinksCount == 1 ? "" : "s"}.${hitCount == 0 ? "" : ` You’ve gotten it ${hitCount} time${hitCount == 1 ? "" : "s"}.`}`;
+            document.getElementById("flavour-text").innerHTML = `
+            ${blinksCount == 0 ? "" : `You’ve missed it ${blinksCount} time${blinksCount == 1 ? "" : "s"}.`}
+            ${strikeCount == 0 ? "" : ` You’ve struck ${strikeCount} time${strikeCount == 1 ? "" : "s"}.`}
+            ${!solved ? "" : ` You solved it!`}`;
             window.localStorage.setItem("neutralHighScore", hitCount)
             window.localStorage.setItem("neutralLowScore", blinksCount);
         }
