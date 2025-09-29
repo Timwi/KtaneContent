@@ -676,6 +676,7 @@ let SouvenirModuleData = [
 	{ name: "Working Title",	id: "workingTitle",	questions: ["What was the label shown?"] },
 	{ name: "Wumbo",	id: "wumbo",	questions: ["What was the number?"] },
 	{ name: "X-Ring",	id: "xring",	questions: ["What symbols were scanned?"] },
+	{ name: "X-Rotor",	id: "xrotor",	questions: ["Which symbols were scanned?"] },
 	{ name: "The Xenocryst",	id: "GSXenocryst",	questions: ["What was the color of each flash?"] },
 	{ name: "XmORse Code",	id: "xmorse",	questions: ["What were the displayed letters?","What word did you decrypt?"] },
 	{ name: "xobekuJ ehT",	id: "xobekuj",	questions: ["What song was played?"] },
