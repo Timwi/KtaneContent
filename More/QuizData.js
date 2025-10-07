@@ -1189,6 +1189,45 @@ const allQuizzes = {
 				]
 			]
 		},
+		'Security Council': {
+			'CSS': 'flags',
+			'RandomizeRight': true,
+			'Groups': ['names', 'flags'],
+			'Items': [
+				[
+					['Australia', '<img src="../HTML/img/Security%20Council/Australia.png">'],
+					['Barbados', '<img src="../HTML/img/Security%20Council/Barbados.png">'],
+					['Côte d’Ivoire', '<img src="../HTML/img/Security%20Council/Cote d%27Ivoire.png">'],
+					['Canada', '<img src="../HTML/img/Security%20Council/Canada.png">'],
+					['China', '<img src="../HTML/img/Security%20Council/China.png">'],
+					['Colombia', '<img src="../HTML/img/Security%20Council/Colombia.png">'],
+					['Ecuador', '<img src="../HTML/img/Security%20Council/Ecuador.png">'],
+					['Fiji', '<img src="../HTML/img/Security%20Council/Fiji.png">'],
+					['France', '<img src="../HTML/img/Security%20Council/France.png">'],
+					['Guinea', '<img src="../HTML/img/Security%20Council/Guinea.png">'],
+					['Ireland', '<img src="../HTML/img/Security%20Council/Ireland.png">'],
+					['Jamaica', '<img src="../HTML/img/Security%20Council/Jamaica.png">'],
+					['Kazakhstan', '<img src="../HTML/img/Security%20Council/Kazakhstan.png">'],
+					['Liberia', '<img src="../HTML/img/Security%20Council/Liberia.png">'],
+					['Malaysia', '<img src="../HTML/img/Security%20Council/Malaysia.png">'],
+					['Mali', '<img src="../HTML/img/Security%20Council/Mali.png">'],
+					['New Zealand', '<img src="../HTML/img/Security%20Council/New Zealand.png">'],
+					['Russia', '<img src="../HTML/img/Security%20Council/Russia.png">'],
+					['Slovakia', '<img src="../HTML/img/Security%20Council/Slovakia.png">'],
+					['Slovenia', '<img src="../HTML/img/Security%20Council/Slovenia.png">'],
+					['Senegal', '<img src="../HTML/img/Security%20Council/Senegal.png">'],
+					['Seychelles', '<img src="../HTML/img/Security%20Council/Seychelles.png">'],
+					['Tunisia', '<img src="../HTML/img/Security%20Council/Tunisia.png">'],
+					['Turkey', '<img src="../HTML/img/Security%20Council/Turkey.png">'],
+					['Ukraine', '<img src="../HTML/img/Security%20Council/Ukraine.png">'],
+					['United Kingdom', '<img src="../HTML/img/Security%20Council/United Kingdom.png">'],
+					['United States of America', '<img src="../HTML/img/Security%20Council/United States of America.png">'],
+					['Uruguay', '<img src="../HTML/img/Security%20Council/Uruguay.png">'],
+					['Venezuela', '<img src="../HTML/img/Security%20Council/Venezuela.png">'],
+					['Zimbabwe', '<img src="../HTML/img/Security%20Council/Zimbabwe.png">']
+				]
+			]
+		},
 		'Ultracube': {
 			'CSS': 'textonly hypercube',
 			'DelayShowWrongRight': 6,
