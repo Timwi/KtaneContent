@@ -594,6 +594,25 @@ const allQuizzes = {
 				]
 			]
 		},
+		'Font Select': {
+			'CSS': 'font-select',
+			'Groups': ['names', 'fonts'],
+			'Items': [
+				[
+					['Anonymous Pro', `<span style="font-family: 'Anonymous Pro'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Chewy', `<span style="font-family: 'Chewy'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Coming Soon', `<span style="font-family: 'Coming Soon'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Day Poster Black', `<span style="font-family: 'Day Poster Black'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Gochi Hand', `<span style="font-family: 'Gochi Hand'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Indie Flower', `<span style="font-family: 'Indie Flower'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Karma', `<span style="font-family: 'Karma'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Lobster', `<span style="font-family: 'Lobster'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Merriweather', `<span style="font-family: 'Merriweather'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Ostrich Sans', `<span style="font-family: 'Ostrich Sans'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Rock Salt', `<span style="font-family: 'Rock Salt'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+				]
+			]
+		},
 		'Friendship': {
 			'CSS': 'flags',
 			'RandomizeRight': true,
