@@ -29,15 +29,24 @@
                 <span class="page-header-section-title">真顔ボタン</span>
                 </div>
                 <div class="page-content">
-                    <svg class="diagram" id="face" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 348 348"><path stroke="#000" stroke-width="2" d="M5.08 5.78h336.91v337.67H5.08z"/><path stroke="#000" stroke-width="2" d="M282.73 40.55c0-8.37 6.97-15.16 15.56-15.16 4.13 0 8.09 1.6 11 4.44a14.97 14.97 0 0 1 4.56 10.72c0 8.38-6.96 15.17-15.56 15.17-8.59 0-15.56-6.8-15.56-15.17z"/><circle cx="173.535" cy="174.615" r="120" fill="#ffcc4d" stroke="#000" stroke-width="4"/>
-                    <path d="M129.662 220.78h89.076" fill="#664500" stroke="#664500" stroke-width="17.231" stroke-linecap="round"/>
+                    <svg class="diagram" id="face" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 348 348">
+                    <path stroke="#000" stroke-width="2" d="M5.08 5.78h336.91v337.67H5.08z" />
+                    <path id="status-light" stroke="#000" stroke-width="2"
+                        d="M282.73 40.55c0-8.37 6.97-15.16 15.56-15.16 4.13 0 8.09 1.6 11 4.44a14.97 14.97 0 0 1 4.56 10.72c0 8.38-6.96 15.17-15.56 15.17-8.59 0-15.56-6.8-15.56-15.17z" />
+                    <circle cx="173.535" cy="174.615" r="120" fill="#ffcc4d" stroke="#000" stroke-width="4" />
+                    <path d="M129.662 220.78h89.076" fill="#664500" stroke="#664500" stroke-width="17.231"
+                        stroke-linecap="round" />
                     <g id="open">
-                    <ellipse cx="217.143" cy="164.027" rx="15.608" ry="23.412" fill="#664500"/>
-                    <ellipse cx="130.143" cy="164.027" rx="15.608" ry="23.412" fill="#664500"/>
+                        <ellipse cx="217.143" cy="164.027" rx="15.608" ry="23.412" fill="#664500" />
+                        <ellipse cx="130.143" cy="164.027" rx="15.608" ry="23.412" fill="#664500" />
                     </g>
-                    <g id="closed"><path d="M110.349 164.027h39.589" fill="#664500" stroke="#664500" stroke-width="11.487" stroke-linecap="round"/><path d="M197.349 164.027h39.589" fill="#664500" stroke="#664500" stroke-width="11.487" stroke-linecap="round"/>
+                    <g id="closed">
+                        <path d="M110.349 164.027h39.589" fill="#664500" stroke="#664500" stroke-width="11.487"
+                            stroke-linecap="round" />
+                        <path d="M197.349 164.027h39.589" fill="#664500" stroke="#664500" stroke-width="11.487"
+                            stroke-linecap="round" />
                     </g>
-                    </svg>
+                </svg>
                 <h2>モジュール詳細：真顔ボタン</h2>
                     <p class="flavour-text" id="flavour-text">まばたきをあなたは見逃す。</p>
                     <p>ボタンの真顔がまばたきする。モジュールを解除するには、ボタンがまばたきしてから0.5秒以内にボタンを押す。それ以外の時にボタンを押すとミスが記録される。</p>
@@ -48,22 +57,58 @@
             </div>
         </div>
         <script>
-            let face = document.getElementById("face");
-            let blinksCount = 0;
-            function blink() {
-                face.classList.add("closed");
-                window.setTimeout(unblink, 150);
+        let face = document.getElementById("face");
+        let sl = document.getElementById("status-light");
+        let blinksCount = 0;
+        let hitCount = 0;
+        let strikeCount = 0;
+        let correct = false;
+        let solved = false;
+        updateVisuals();
+
+        face.onclick = () => {
+            if (solved)
+                return;
+            if (!correct) {
+                sl.style.fill = "#f00";
+                strikeCount++;
+                window.setTimeout(() => { sl.style.fill = "#fff" }, 1000);
             }
-            function unblink() {
-                face.classList.remove("closed");
-                window.setTimeout(blink, Math.random()*10000 + 5000);
+            else {
+                sl.style.fill = "#0f0";
+                blinksCount--;
+                solved = true;
+            }
+            updateVisuals();
+        };
+
+        function blink() {
+            correct = true;
+            face.classList.add("closed");
+            window.setTimeout(unblink, 150);
+            window.setTimeout(() => { correct = false; }, 500);
+        }
+        function unblink() {
+            face.classList.remove("closed");
+            window.setTimeout(blink, Math.random() * 10000 + 5000);
+            if (!solved)
                 blinksCount++;
-                document.getElementById("flavour-text").innerHTML = `あなたは${blinksCount}回${blinksCount === 1 ? "" : ""}見逃した。`;
-                if (blinksCount === 100) {
-                    document.getElementById("count").innerHTML = `I think you left your browser open...`;
-                }
-            }
-            window.setTimeout(blink, 20000);
+            updateVisuals();
+        }
+
+        function updateVisuals() {
+            if (blinksCount == 0 && strikeCount == 0)
+                return;
+
+            document.getElementById("flavour-text").innerHTML = `
+            ${blinksCount == 0 ? "" : `あなたは${blinksCount}回見逃した。`}
+            ${strikeCount == 0 ? "" : `あなたは${strikeCount}回ミスを記録した。`}
+            ${!solved ? "" : `解除成功！`}`;
+            window.localStorage.setItem("neutralHighScore", hitCount)
+            window.localStorage.setItem("neutralLowScore", blinksCount);
+        }
+
+        window.setTimeout(blink, 20000);
         </script>
     </body>
 </html>
