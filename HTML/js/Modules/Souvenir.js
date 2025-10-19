@@ -221,6 +221,7 @@ let SouvenirModuleData = [
 	{ name: "Forget Us Not",	id: "forgetUsNot",	questions: ["Which module was solved for each stage?"] },
 	{ name: "Forget’s Ultimate Showdown",	id: "ForgetsUltimateShowdownModule",	questions: ["What was the initial number?","What was the bottom number?","What was the answer?","What were the encryption methods used?"] },
 	{ name: "Free Parking",	id: "freeParking",	questions: ["What was the player token?"] },
+	{ name: "The French Republican Calendar",	id: "FrenchRepublicanCalendar",	questions: ["What was the color of the LED?"] },
 	{ name: "Functions",	id: "qFunctions",	questions: ["What was the last digit of the first query result?","What were the numbers and letter shown at the bottom?"] },
 	{ name: "The Fuse Box",	id: "FuseBox",	questions: ["What colors flashed?","What arrows were correct?"] },
 	{ name: "Gadgetron Vendor",	id: "lgndGadgetronVendor",	questions: ["What were the displayed weapons?"] },
