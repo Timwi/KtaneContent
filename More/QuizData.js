@@ -594,6 +594,25 @@ const allQuizzes = {
 				]
 			]
 		},
+		'Font Select': {
+			'CSS': 'font-select',
+			'Groups': ['names', 'fonts'],
+			'Items': [
+				[
+					['Anonymous Pro', `<span style="font-family: 'Anonymous Pro'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Chewy', `<span style="font-family: 'Chewy'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Coming Soon', `<span style="font-family: 'Coming Soon'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Day Poster Black', `<span style="font-family: 'Day Poster Black'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Gochi Hand', `<span style="font-family: 'Gochi Hand'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Indie Flower', `<span style="font-family: 'Indie Flower'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Karma', `<span style="font-family: 'Karma'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Lobster', `<span style="font-family: 'Lobster'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Merriweather', `<span style="font-family: 'Merriweather'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Ostrich Sans', `<span style="font-family: 'Ostrich Sans'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+					['Rock Salt', `<span style="font-family: 'Rock Salt'">U.R. You are Testing Jokes 1238 Eight female</span>`],
+				]
+			]
+		},
 		'Friendship': {
 			'CSS': 'flags',
 			'RandomizeRight': true,
@@ -1186,6 +1205,45 @@ const allQuizzes = {
 					['sting', '3.592 MHz' ],
 					['vector', '3.595 MHz' ],
 					['beats', '3.600 MHz' ]
+				]
+			]
+		},
+		'Security Council': {
+			'CSS': 'flags',
+			'RandomizeRight': true,
+			'Groups': ['names', 'flags'],
+			'Items': [
+				[
+					['Australia', '<img src="../HTML/img/Security%20Council/Australia.png">'],
+					['Barbados', '<img src="../HTML/img/Security%20Council/Barbados.png">'],
+					['Côte d’Ivoire', '<img src="../HTML/img/Security%20Council/Cote d%27Ivoire.png">'],
+					['Canada', '<img src="../HTML/img/Security%20Council/Canada.png">'],
+					['China', '<img src="../HTML/img/Security%20Council/China.png">'],
+					['Colombia', '<img src="../HTML/img/Security%20Council/Colombia.png">'],
+					['Ecuador', '<img src="../HTML/img/Security%20Council/Ecuador.png">'],
+					['Fiji', '<img src="../HTML/img/Security%20Council/Fiji.png">'],
+					['France', '<img src="../HTML/img/Security%20Council/France.png">'],
+					['Guinea', '<img src="../HTML/img/Security%20Council/Guinea.png">'],
+					['Ireland', '<img src="../HTML/img/Security%20Council/Ireland.png">'],
+					['Jamaica', '<img src="../HTML/img/Security%20Council/Jamaica.png">'],
+					['Kazakhstan', '<img src="../HTML/img/Security%20Council/Kazakhstan.png">'],
+					['Liberia', '<img src="../HTML/img/Security%20Council/Liberia.png">'],
+					['Malaysia', '<img src="../HTML/img/Security%20Council/Malaysia.png">'],
+					['Mali', '<img src="../HTML/img/Security%20Council/Mali.png">'],
+					['New Zealand', '<img src="../HTML/img/Security%20Council/New Zealand.png">'],
+					['Russia', '<img src="../HTML/img/Security%20Council/Russia.png">'],
+					['Slovakia', '<img src="../HTML/img/Security%20Council/Slovakia.png">'],
+					['Slovenia', '<img src="../HTML/img/Security%20Council/Slovenia.png">'],
+					['Senegal', '<img src="../HTML/img/Security%20Council/Senegal.png">'],
+					['Seychelles', '<img src="../HTML/img/Security%20Council/Seychelles.png">'],
+					['Tunisia', '<img src="../HTML/img/Security%20Council/Tunisia.png">'],
+					['Turkey', '<img src="../HTML/img/Security%20Council/Turkey.png">'],
+					['Ukraine', '<img src="../HTML/img/Security%20Council/Ukraine.png">'],
+					['United Kingdom', '<img src="../HTML/img/Security%20Council/United Kingdom.png">'],
+					['United States of America', '<img src="../HTML/img/Security%20Council/United States of America.png">'],
+					['Uruguay', '<img src="../HTML/img/Security%20Council/Uruguay.png">'],
+					['Venezuela', '<img src="../HTML/img/Security%20Council/Venezuela.png">'],
+					['Zimbabwe', '<img src="../HTML/img/Security%20Council/Zimbabwe.png">']
 				]
 			]
 		},
