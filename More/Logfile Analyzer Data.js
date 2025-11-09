@@ -17551,12 +17551,12 @@ let parseData = [
 							const colors = ['Red', 'White', 'Blue', 'Brown', 'Green', 'Yellow', 'Orange', 'Pink'];
 							const food = [
 								['Cruelo Juice', 'Defuse Juice', 'Simon’s Special Mix', 'Boom Lager Beer', 'Forget Cocktail', 'Wire Shake', 'Deto Bull', 'Tasha’s Drink'],
-								['Caesar Salad', 'Edgework Toast', 'Ticking Timecakes', 'Big Boom Tortellini', 'Status Light Rolls', 'Blast Shrimps', 'Blast Shrimps', 'Boolean Waffles'],
+								['Caesar Salad', 'Edgework Toast', 'Ticking Timecakes', 'Big Boom Tortellini', 'Status Light Rolls', 'Blast Shrimps', 'Morse Soup', 'Boolean Waffles'],
 								['Forghetti Bombognese', 'NATO Shrimps', 'Wire Spaghetti', 'Indicator Tar Tar', 'Centurion Wings', 'Colored Spare Ribs', 'Omelette au Bombage', 'Veggie Blast Plate'],
 								['Strike Pie', 'Blastwave Compote', 'Not Ice Cream', 'Defuse au Chocolat', 'Solve Cake', 'Baked Batterys', 'Bamboozling Waffles', 'Bomb Brûlée'],
 							];
 							for (let i = 0; i < colors.length; i++)
-								str = str.replace(colors[i], food[courseNum][i]);
+								str = str.replace(colors[i], `${food[courseNum][i] } (${colors[i]})`);
 							return str;
 						}
 
