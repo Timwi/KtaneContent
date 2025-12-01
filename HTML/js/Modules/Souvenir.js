@@ -310,6 +310,7 @@ let SouvenirModuleData = [
 	{ name: "LEGOs",	id: "LEGOModule",	questions: ["What were the dimensions of each color piece?"] },
 	{ name: "Letter Math",	id: "letterMath",	questions: ["What were the letters on the display?"] },
 	{ name: "Light Bulbs",	id: "LightBulbs",	questions: ["What were the colors of the bulbs?"] },
+	{ name: "Lime Arrows",	id: "limeArrowsModule",	questions: ["What was the starting coordinate?"] },
 	{ name: "Linq",	id: "Linq",	questions: ["What were the functions?"] },
 	{ name: "Lion’s Share",	id: "LionsShareModule",	questions: ["Which year was displayed?","Which lions were present but removed?"] },
 	{ name: "Listening",	id: "Listening",	questions: ["What sound played?"] },
