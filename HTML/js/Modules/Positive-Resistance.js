@@ -14,7 +14,15 @@ const getFlavourText = () => {
 
 diagram.addEventListener("click", () => {
     presses++;
+
+    // only set the text if we've hit the exact value of
+    // `presses` required to trigger it
+    // otherwise, we would be setting innerHTML on every
+    // click regardless of whether the text is actually
+    // changing, which is just a lot of unnecessary DOM
+    // updates
     const text = getFlavourText();
     if (text) flavourText.innerHTML = text;
+
     if (presses === 30) content.classList.add("reveal");
 });
