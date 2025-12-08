@@ -959,7 +959,7 @@ KtaneTheWeakestLinkData = {
       "Category": "Geography"
     },
     {
-      "Question": "Mount Everet is located in which country?",
+      "Question": "Mount Everest is located in which country?",
       "Answers": ["Nepal"],
       "WrongAnswers": ["Sylvania"],
       "Category": "Geography"
