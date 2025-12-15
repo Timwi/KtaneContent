@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Mazery — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+        
+        .right{border-right-width: .2em;}
+        .left{border-left-width: .2em;}
+        .up{border-top-width: .2em;}
+        .down{border-bottom-width: .2em;}
+        .empty{border: none;}
+        
+        .gray  {background-color:gray  ;color:#FFF;}
+        .brown {background-color:brown ;color:#FFF;}
+        .blue  {background-color:blue  ;color:#FFF;}
+        .orange{background-color:orange;color:#000;}
+        .cyan  {background-color:cyan  ;color:#000;}
+        .purple{background-color:purple;color:#FFF;}
+        .green {background-color:green ;color:#FFF;}
+        .red   {background-color:red   ;color:#FFF;}
+        .pink  {background-color:pink  ;color:#000;}
+        .tan   {background-color:tan   ;color:#000;}
+        .black {background-color:black ;color:#FFF; border-color: red;}
+        .white {background-color:white ;color:#000;}
+        .lime  {background-color:lime  ;color:#000;}
+        .yellow{background-color:yellow;color:#000;}
+        .maroon{background-color:maroon;color:#FFF;}
+        
+        #table-container {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 200mm;
+            width: 180mm;
+        }
+        .dark .appendix-table, .appendix-table {
+            margin: auto;
+            border: 0;
+        }
+        .dark .appendix-cell, .appendix-cell {
+            border: 0;
+        }
+        .appendix-cell {
+            user-select: none;
+            padding: 0;
+            min-width: 2.5em;
+            height: 2.5em;
+            font-weight: bold;
+            color: #999;
+        }
+        .dark .appendix-cell {
+            color: #FFF;
+        }
+        .painted {
+            color: #000;
+        }
+        td {
+            text-align: center;
+        }
+        .border {
+           padding: 0;
+        }
+        .vb {
+           min-width: 3px;
+           width: 3px;
+        }
+
+        .hb {
+           min-height: 3px;
+           height: 3px;
+        }
+
+        .inactive_color { background-color: #00000000; }
+        .primary_color { background-color: #CABAFF99; }
+        .painted_color { background-color: #27F55099; }
+        .seen_color { background-color: #BEDDF799; }
+        .inactive_border_color { background-color: #BBBBBB; }
+        .active_border_color { background-color: #000; }
+
+        .dark .seen_color { background-color: #2B74B18F; }
+        .dark .inactive_border_color { background-color: #555; }
+        .dark .active_border_color { background-color: #FFF; }
+
+        @media screen and (width >= 900px) {
+            .short-page {
+                margin: 1em auto;
+                padding: 0;
+                border: 1px solid #222; /* Safely using px because exists outside layout of page content */
+                box-shadow: #222 0.0em 0em 0.6em;
+                clear: both;
+                background-color: #FFF;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 100%;
+                width: 8.5in; /* = 8.5in at 12pt (1em) */
+                max-height: 5.7in; /* = 11in at 12pt (1em) */
+            }
+            .dark .short-page {
+                background-color: #232323;
+            }
+        }
+
+        @media print {
+            .short-page {
+                margin: 0;
+                padding: 0;
+                border: none;
+                box-shadow: none;
+                max-width: none;
+                min-height: initial;
+                background-color: #FFF;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 100%;
+                width: 8.5in; /* = 8.5in at 12pt (1em) */
+                height: 5.7in; /* = 11in at 12pt (1em) */
+                page-break-before: always;
+            }
+        }
+    </style>
+    <script>
+        // Setup Code (Based on DarkSly’s FMazeNot interactive)
+        //#region - Parameters
+        const DEFAULT_TABLE_SIZE = 5;
+        const GRID_SIZE_LIMIT = 100;
+
+        const INACTIVE_COLOR = "inactive_color";
+        const PRIMARY_COLOR = "primary_color";
+        const PAINTED_COLOR = "painted_color";
+        const SEEN_COLOR = "seen_color";
+
+        const INACTIVE_BORDER_COLOR = "inactive_border_color";
+        const ACTIVE_BORDER_COLOR = "active_border_color";
+
+        var TABLE_ROWS = DEFAULT_TABLE_SIZE;
+        var TABLE_COLS = DEFAULT_TABLE_SIZE;
+
+        var seenState = true;
+        var selectedCell;
+        var arrowsBehavior = "arrowBorder";
+
+        var solvedCells = [];
+        var seenCells = [];
+        var activeBorders = [];
+
+        var undos = [];
+        var redos = [];
+        //#endregion
+
+        //#region - Table/Grid Management
+        function createTable() {
+          var container = document.getElementById('table-container');
+          var tbl = document.createElement('table');
+          tbl.className = "appendix-table";
+
+          var isBorderRow = true;
+          for (var i = 0; i < TABLE_ROWS*2 + 1; i++) {
+            //Rows
+            let tr = document.createElement('tr');
+
+            if(isBorderRow){
+                //First Border Corner
+                let borderFirstCornerRow = Math.ceil(i/2 - 1) + 0.5;
+                let borderFirstCornerCol = -0.5;
+                tr.appendChild(createBorder(borderFirstCornerRow, borderFirstCornerCol, "vb hb"));
+
+            } else {
+                //First Vertical border
+                let borderFirstVRow = Math.ceil(i/2 - 1);
+                let borderFirstVCol = -0.5;
+                tr.appendChild(createBorder(borderFirstVRow, borderFirstVCol, "vb"));
+            }
+
+            for (var j = 0; j < TABLE_COLS; j++) {
+                if(isBorderRow) {
+                    //Horizontal Corners
+                    let borderHRow = Math.ceil(i/2 - 1) + 0.5;
+                    let borderHCol = j;
+                    tr.appendChild(createBorder(borderHRow, borderHCol, "hb"));
+
+                    //Border Corners
+                    let borderCornerRow = Math.ceil(i/2 - 1) + 0.5;
+                    let borderCornerCol = j + 0.5;
+                    tr.appendChild(createBorder(borderCornerRow, borderCornerCol, "vb hb"));
+                } else {
+                    //Actual Cells
+                    let borderRow = Math.ceil(i/2 - 1);
+                    let borderCol = j;
+                    tr.appendChild(createCell(borderRow, borderCol));
+
+                    //Vertical Borders
+                    let borderVRow = Math.ceil(i/2 - 1);
+                    let borderVCol = j + 0.5;
+                    tr.appendChild(createBorder(borderVRow, borderVCol, "vb"));
+                }
+            }
+            isBorderRow = !isBorderRow;
+            tbl.appendChild(tr);
+          }
+          container.appendChild(tbl)
+        }
+
+        function resetTable() {
+            if(!confirm("Are you sure you want to clean the grid?")) return;
+
+            var container = document.getElementById('table-container');
+            container.innerHTML = "";
+            selectedCell = null;
+
+            undos = [];
+            redos = [];
+
+            solvedCells = [];
+            seenCells = [];
+            activeBorders = [];
+
+            createTable();
+        }
+
+        function createBorder(row, col, classAdds) {
+            let border = document.createElement('td');
+            border.row = row;
+            border.col = col;
+            border.id = "border_" + border.row + "_" + border.col;
+            border.className = "appendix-cell border inactive_border_color " + classAdds;
+            return border;
+        }
+
+        function createCell(row, col) {
+                let cell = document.createElement('td');
+                cell.row = row;
+                cell.col = col;
+                cell.id = "cell_" + cell.row + "_" + cell.col;
+                cell.className = "appendix-cell";
+                cell.onclick = () => onCellClick(cell);
+                cell.ondblclick = () => toggleCellSeen(cell);
+                cell.addEventListener('contextmenu', function(ev) {
+                    ev.preventDefault();
+                    toggleCellSolved(cell);
+                    return false;
+                }, false);
+                let secondLetter = cell.col >= 26 ? String.fromCharCode(65 + Math.floor(cell.col / 26) - 1) : "";
+                cell.pos = secondLetter + String.fromCharCode(65 + (cell.col % 26)) + "" + (cell.row + 1);
+                cell.innerHTML = cell.pos;
+                return cell;
+        }
+
+        function applyGridState() {
+            let seenCellsState = seenCells;
+            let solvedCellsState = solvedCells;
+            let activeBordersState = activeBorders;
+
+            seenCells = [];
+            solvedCells = [];
+            activeBorders = [];
+
+            seenCellsState.forEach(cell => toggleCellSeen(getCell(cell.row, cell.col), true));
+            solvedCellsState.forEach(cell => toggleCellSolved(getCell(cell.row, cell.col), true));
+            activeBordersState.forEach(border => toggleBorder(getBorder(border.row, border.col)));
+        }
+
+        //#endregion
+
+        //#region - Border Management
+        function toggleBorder(border) {
+          setBorder(border, !($(border).hasClass(ACTIVE_BORDER_COLOR)));
+
+          if($(border).hasClass(ACTIVE_BORDER_COLOR)) activeBorders.push(border);
+          else activeBorders.splice(activeBorders.findIndex(c => c.id == border.id), 1);
+
+          if(!selectedCell.seen && !selectedCell.painted) toggleCellSeen(selectedCell);
+        }
+
+        function getBorder(row, col) {
+            return document.getElementById("border_" + row + "_" + col);
+        }
+
+        function setBorder(border, active) {
+            let isHorizontal = border.row % 1 != 0;
+
+            removeColorClass(border);
+            $(border).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
+            if(isHorizontal) {
+              let lastCorner = getBorder(border.row, border.col - 0.5);
+              let nextCorner = getBorder(border.row, border.col + 0.5);
+
+              if(lastCorner) {
+                  removeColorClass(lastCorner);
+                  $(lastCorner).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
+              }
+              if(nextCorner) {
+                  removeColorClass(nextCorner);
+                  $(nextCorner).addClass(active ? ACTIVE_BORDER_COLOR : INACTIVE_BORDER_COLOR);
+              }
+            }
+        }
+        //#endregion
+
+        //#region - Cell Management
+        function toggleCell(cell) {
+            if(!cell) return;
+            setInactiveColor();
+            selectedCell = cell;
+            removeColorClass(selectedCell);
+            $(selectedCell).addClass(PRIMARY_COLOR);
+        }
+
+        function getCell(row, col) {
+            return document.getElementById("cell_" + row + "_" + col);
+        }
+
+        function applyOnCells(condition, predicate) {
+            for (var i = 0; i < TABLE_ROWS; i++) {
+                for (var j = 0; j < TABLE_COLS; j++) {
+                        let cell = getCell(i, j);
+                        if(condition(cell))
+                            predicate(cell);
+                }
+            }
+        }
+        //#endregion
+
+        //#region - Color Management
+        function isCellColor(cell, color) {
+            return $(cell).hasClass(color);
+        }
+
+        function removeColorClass(cell) {
+            $(cell).removeClass("inactive_color primary_color painted_color seen_color inactive_border_color active_border_color")
+        }
+
+        function paintCell(cell, color) {
+            if($(cell).hasClass(color)) {
+                removeColorClass(cell);
+                $(cell).addClass(PRIMARY_COLOR);
+            }
+            else {
+                removeColorClass(cell);
+                $(cell).addClass(color);
+            }
+        }
+
+        function setInactiveColor() {
+            if(selectedCell) {
+                removeColorClass(selectedCell);
+                if(selectedCell.painted) $(selectedCell).addClass(PAINTED_COLOR);
+                else if(selectedCell.seen) $(selectedCell).addClass(SEEN_COLOR);
+                else $(selectedCell).addClass(INACTIVE_COLOR);
+            }
+        }
+        //#endregion
+
+        //#region - Cell States Management
+        function toggleCellSolved(cell, undoForced) {
+            if(!cell) return;
+
+            if(cell.painted) {
+                solvedCells.splice(solvedCells.findIndex(c => c.id == cell.id), 1);
+                paintCell(cell,cell == selectedCell ? PRIMARY_COLOR : INACTIVE_COLOR);
+                $(cell).removeClass("painted");
+                cell.innerHTML = cell.pos;
+                cell.painted = false;
+                updateSolvedCells();
+            } else {
+                if(cell.seen) toggleCellSeen(cell);
+                solvedCells.push(cell);
+                paintCell(cell, PAINTED_COLOR);
+                $(cell).addClass("painted");
+                cell.innerHTML = solvedCells.length;
+                cell.painted = true;
+            }
+            if(!undoForced) saveAction({ event: { cell, action: "solved" }, action: "keycolor" });
+        }
+
+        function updateSolvedCells() {
+            solvedCells.forEach((cell, i) => {
+                cell.innerHTML = (i + 1);
+            })
+        }
+
+        function toggleCellSeen(cell, undoForced) {
+            if(!cell) return;
+
+            if(cell.seen) {
+                seenCells.splice(seenCells.findIndex(c => c.id == cell.id), 1);
+                paintCell(cell, PRIMARY_COLOR);
+                $(cell).removeClass("painted");
+                cell.innerHTML = cell.pos;
+                cell.seen = false;
+                updateSolvedCells();
+            } else {
+                seenCells.push(cell);
+                if(cell.painted) toggleCellSolved(cell);
+                paintCell(cell, SEEN_COLOR);
+                $(cell).removeClass("painted");
+                cell.innerHTML = seenState ? cell.pos : "";
+                cell.seen = true;
+            }
+
+            if(!undoForced) saveAction({ event: { cell, action: "seen" }, action: "keycolor" });
+        }
+        //#endregion
+
+        //#region - Undo & Redo Management
+        function performUndoRedo(e) {
+            let isUndo = e.keyCode == 90 && !e.altKey;
+                let isRedo = e.keyCode == 89 || (e.keyCode == 90 && e.altKey);
+
+                e.preventDefault();
+
+                if((isUndo && undos.length == 0) || (isRedo && redos.length == 0)) return;
+
+                var undoEvent;
+
+                if(isUndo) {
+                    undoEvent = undos.pop();
+                    redos.push(undoEvent);
+                }
+
+                if(isRedo) {
+                    undoEvent = redos.pop();
+                    undos.push(undoEvent);
+                }
+
+                if(undoEvent.action == "keymove") {
+                    onKeyDown(new KeyboardEvent("onkeydown", { keyCode: 13 }), true);
+                    toggleCell(isUndo ? getCell(undoEvent.event.row, undoEvent.event.col) : getCell(undoEvent.eventRedo.row, undoEvent.eventRedo.col));
+
+                } else if(undoEvent.action == "keydown") {
+                    arrowsBehavior = undoEvent.arrowsBehavior;
+                    onKeyDown(undoEvent.event, true);
+                    setArrowsBehavior();
+
+                } else if(undoEvent.action == "keycolor") {
+                    if(undoEvent.event.action == "solved")
+                        toggleCellSolved(getCell(undoEvent.event.cell.row, undoEvent.event.cell.col), true);
+                    if(undoEvent.event.action == "seen")
+                        toggleCellSeen(getCell(undoEvent.event.cell.row, undoEvent.event.cell.col), true);
+
+                }  else if(undoEvent.action == "cellclick") {
+                    if(undoEvent.event || !isUndo)
+                    onCellClick(isUndo ? undoEvent.event : undoEvent.eventRedo, true);
+                    else onKeyDown(new KeyboardEvent('keydown', { keyCode: 13 }), true);
+
+                }
+        }
+
+        function saveAction(event) {
+            if(redos.length != 0) redos = [];
+            undos.push(event);
+        }
+
+        function setArrowsBehavior() {
+            arrowsBehavior = document.getElementById("arrowBehavior").value;
+        }
+        //#endregion
+
+        //#region - Listener Management
+        function setupEventListeners() {
+            if (document.addEventListener) {
+                document.addEventListener('keydown', onKeyDown, false);
+            }
+            else if (document.attachEvent) {
+                document.attachEvent('onkeydown', onKeyDown);
+            }
+
+            var seenMark = document.getElementById("seenMark");
+            seenMark.onchange = () => onSeenSelectChanged(seenMark);
+        }
+
+        function onCellClick(cell, undoForced) {
+            if(selectedCell == cell) return;
+
+            let tempCurCell = selectedCell;
+            if(!undoForced) saveAction({ event:tempCurCell, eventRedo: cell, action: "cellclick" });
+
+            toggleCell(cell);
+        }
+
+        function onSeenSelectChanged (seenMark) {
+            seenState = seenMark.value == "keep";
+
+            applyOnCells((cell) => cell.seen, (cell) => {
+                cell.innerHTML = seenState ? cell.pos : "";
+            });
+        }
+
+        function onKeyDown(e, undoForced) {
+            switch (e.keyCode) {
+                case 13: //Enter
+                    e.preventDefault();
+                    setInactiveColor();
+                    selectedCell = null;
+                    if(!undoForced && selectedCell) saveAction({ event: e, action: "keydown" });
+                    return;
+
+                case 9: //Tab
+                    e.preventDefault();
+                    if(selectedCell)
+                        toggleCell(getCell(
+                            e.shiftKey ? selectedCell.row >= (TABLE_ROWS - 1) ? 0 : selectedCell.row + 1 : selectedCell.row,
+                            e.shiftKey ? selectedCell.col : selectedCell.col >= (TABLE_COLS - 1) ? 0 : selectedCell.col + 1));
+                    else toggleCell(getCell(0, 0));
+                    if(!undoForced) saveAction({ event: e, action: "keydown" });
+                    return;
+
+                case 38: //Arrow Up
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row - 0.5, selectedCell.col));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row <= 0 ? (TABLE_ROWS - 1) : selectedCell.row - 1, selectedCell.col));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 40: //Arrow Down
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { //Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row + 0.5, selectedCell.col));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row >= (TABLE_ROWS - 1) ? 0 : selectedCell.row + 1, selectedCell.col));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 39: //Arrow Right
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row, selectedCell.col + 0.5));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row, selectedCell.col >= (TABLE_COLS - 1) ? 0 : selectedCell.col + 1));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 37: //Arrow Left
+                    e.preventDefault();
+                    if(e.altKey || e.ctrlKey || e.shiftKey || arrowsBehavior == "arrowBorder") { // Border
+                        if(selectedCell) {
+                            toggleBorder(getBorder(selectedCell.row, selectedCell.col - 0.5));
+                            if(!undoForced) saveAction({ event: e, arrowsBehavior, action: "keydown" });
+                        }
+                    } else { // Cell
+                        let undoCell = selectedCell;
+                        if(selectedCell) {
+                            toggleCell(getCell(selectedCell.row, selectedCell.col <= 0 ? (TABLE_COLS - 1) : selectedCell.col - 1));
+                        } else toggleCell(getCell(0, 0));
+                        if(!undoForced) saveAction({ event: undoCell, eventRedo: selectedCell, action: "keymove"  });
+                    }
+                    return;
+
+                case 90: // Undo (Redo with Shift)
+                case 89: // Redo
+                    if(e.ctrlKey) performUndoRedo(e);
+                    return;
+
+                case 65: // Seen cell
+                    toggleCellSeen(selectedCell);
+                    return;
+
+                case 83: // Solving cell
+                    toggleCellSolved(selectedCell);
+                    return;
+            }
+        }
+        //#endregion
+
+        window.onbeforeunload = function() {
+            return true;
+        };
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Mazery</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Mazery.svg" class="diagram">
+                <h2>On the Subject of Mazery</h2>
+                <p class="flavour-text">Just... figure it out. It's even easier with this manual.</p>
+
+                <ul>
+                    <li>Each tile on the module will be colored based on the walls that surround said tile.</li>
+                    <li>The colors can be found in the diagram below.</li>
+                    <li>Once you have constructed your maze, press any arrow to start.</li>
+                    <li>There will be three nodes colored cyan that you must visit an odd amount of times. Your current position in the maze is colored orange. When you are over a cyan node, it will be colored purple.</li>
+                    <li>Running into the walls will result in the module resetting.</li>
+                </ul>
+                
+                <h2>Appendix: Interactive Table</h2>
+
+                <br>
+                <label for="seenMark">Keep Coordinates on Seen Mark:</label>
+                <select name="seenMark" id="seenMark">
+                    <option value="keep">Yes</option>
+                    <option value="delete">No</option>
+                </select>
+
+                <br>
+                <label for="arrowBehavior">Arrows behavior:</label>
+                <select name="arrow" id="arrowBehavior" onchange="setArrowsBehavior()">
+                    <option value="arrowBorder">Toggle Borders</option>
+                    <option value="arrowMove">Move</option>
+                </select>
+                <br>
+
+                <button onclick="resetTable()">Reset</button>
+                <br>
+
+                <div style="display:flex;">
+                <div id="table-container" ></div>
+                <table class="empty" style="margin-top:3em; margin-bottom:3em">
+                        <tr>
+                            <td class="gray left right down">A</td>
+                            <td class="empty"></td>
+                            <td class="brown down">N</td>
+                            <td class="empty"></td>
+                            <td class="blue right down">B</td>
+                            <td class="empty"></td>
+                            <td class="orange up down">O</td>
+                            <td class="empty"></td>
+                            <td class="cyan right">C</td>
+                        </tr>
+                        <tr><td class="empty"></td></tr>
+                        <tr>
+                            <td class="purple left down">P</td>
+                            <td class="empty"></td>
+                            <td class="green up left right">G</td>
+                            <td class="empty"></td>
+                            <td class="red up left down">R</td>
+                            <td class="empty"></td>
+                            <td class="pink up">I</td>
+                            <td class="empty"></td>
+                            <td class="tan up right">T</td>
+                        </tr>
+                        <tr><td class="empty"></td></tr>
+                        <tr>
+                            <td class="black left">K</td>
+                            <td class="empty"></td>
+                            <td class="white up left">W</td>
+                            <td class="empty"></td>
+                            <td class="lime right left">L</td>
+                            <td class="empty"></td>
+                            <td class="yellow right down up">Y</td>
+                            <td class="empty"></td>
+                            <td class="maroon">M</td>
+                        </tr>
+                    </table>
+                
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+    </div>
+    <script>
+        // Trigger code
+        createTable();
+        setupEventListeners();
+    </script>
+</body>
+</html>
