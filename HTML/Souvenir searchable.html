@@ -19,7 +19,7 @@
                 <span class="page-header-section-title">Souvenir</span>
             </div>
             <div class="page-content">
-                <img class="diagram" src="img/Component/Souvenir.svg" alt="Module diagram. A display covering the whole module may show a question and 4–6 answers.">
+                <img class="diagram" src="img/Component/Souvenir.svg" alt="Module diagram. A display covering the whole module may show a question and 2–6 answers.">
                 <h2>On the Subject of Souvenir</h2>
                 <p class="flavour-text">Something to remember your explosion by.</p>
                 <p>Souvenir asks questions about the state of other modules that you solved prior. Answer all the questions correctly.</p>
@@ -45,11 +45,10 @@
             let qtmcu = document.getElementById('qtmcu');
             let warningSvg = document.getElementById('warning');
 
-            let showAllModules = { name: "(Show all modules)", moduleList: [], partOfPool: [] };
+            let showAllModules = { name: "(Show all modules)", moduleList: [], poolPresent: false };
             for (let m = 0; m < SouvenirModuleData.length; m++)
             {
                 showAllModules.moduleList.push(SouvenirModuleData[m].id);
-                showAllModules.partOfPool.push(false);
             }
             bombData.push(showAllModules);
 
@@ -61,47 +60,43 @@
             {
                 let mission = reqJson[j];
                 let modList = [];
-                let partOfPool = [];
-                let souvenirCount = 0;
-                let souvenirFlag = false;
+                let souvenirPresent = false;
+                let poolPresent = false;
+                let twoSouvenirs = false;
 
                 mission.bombs.forEach(bomb =>
                 {
-                    souvenirCount = 0;
+                    let souvenirCount = 0;
+                    let bombModules = [];
                     bomb.pools.forEach(pool =>
                     {
-                        let pooled = pool.modules.length > 1;
                         pool.modules.forEach(module =>
                         {
                             if (!modList.includes(module))
                             {
-                                modList.push(module);
-                                partOfPool.push(pooled);
-                            }
-                            if (pooled && !partOfPool[modList.indexOf(module)])
-                            {
-                                partOfPool[modList.indexOf(module)] = true;
+                                bombModules.push(module);
                             }
                             if (module == "SouvenirModule")
                             {
                                 souvenirCount += pool.count;
                             }
                         });
+                        if (!poolPresent) { poolPresent = pool.modules.length > 1; }
                     });
-                    if (souvenirCount == 2)
-                    {
-                        souvenirFlag = true;
+                    if (!souvenirPresent) { souvenirPresent = souvenirCount > 0; }
+                    if (!twoSouvenirs) { twoSouvenirs = souvenirCount == 2; }
+                    if (souvenirCount) {
+                        modList.push(...bombModules);
                     }
                 });
 
-                if (souvenirCount)
+                if (souvenirPresent)
                 {
-                    if (!souvenirFlag)
+                    if (!twoSouvenirs)
                     {
-                        partOfPool.splice(modList.indexOf("SouvenirModule"), 1);
                         modList.splice(modList.indexOf("SouvenirModule"), 1);
                     }
-                    bombData.push({ "name": mission.name, "moduleList": modList, "partOfPool": partOfPool });
+                    bombData.push({ "name": mission.name, "moduleList": modList, "poolPresent": poolPresent });
                 }
             }
 
@@ -122,7 +117,7 @@
                 warningSvg.style.width = "0px";
                 warningSvg.innerHTML = '<path fill="none" stroke="#000" stroke-miterlimit="3" stroke-width="1.26" d="m8.47 2.12 7.33 12.7H1.13zm0 3.44v5.29m0 1.05v1.33"/>';
                 let modList = bombData[bombList.value].moduleList;
-                let poolList = bombData[bombList.value].partOfPool;
+                let poolPresence = bombData[bombList.value].poolPresent;
                 let warningMessages = new Set();
                 let vanillaList = [];
 
@@ -175,7 +170,7 @@
 
                         questionBatch.appendChild(moduleDiv);
 
-                        if (poolList[modList.indexOf(data.id)])
+                        if (poolPresence)
                         {
                             warningMessages.add("Your bomb may not necessarily contain every module given below.");
                         }
