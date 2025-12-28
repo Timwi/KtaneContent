@@ -9,25 +9,18 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <style>
-        .dark table, table {
-            border: none;
-            margin: 1em auto;
+        input {
+            width: 16px;
+            text-align: center;
         }
-
-        .strip-change-one td,
-        .strip-change-one th {
-            padding: .3em .5em .2em;
+        figure { text-align: center;}
+        figcaption { margin-top: 0.5em;}
+        .interactive
+        {
+            border-collapse: separate;
+            font-size: 72%;
         }
-
-        /* Interactive */
-        #interactive {
-            font-size: 12.5px;
-        }
-
-        #interactive td.borderless:first-child {
-            padding: .3em;
-        }
-
+        .dark table, table { border: none; }
         button {
             font-family: Special Elite;
             background-color: white;
@@ -53,6 +46,116 @@
         .dark img:not(.diagram) { filter: invert(87%) hue-rotate(180deg); }
     </style>
     <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        const rotors = ["EKMFLGDQVZNTOWYHXUSPAIBRCJ",
+                        "AJDKSIRUXBLHWTMCQGZNPYFVOE",
+                        "BDFHJLCPRTXVZNYEIWGAKMUSQO",
+                        "ESOVPZJAYQUIRHXLNFTGKDCMWB",
+                        "VZBRGITYUPSDNHLXAWMJQOFECK",
+                        "JPGVOUMFYQBENHZRDKASXLICTW",
+                        "NZJHGRCXMYSWBOUFAIVLPEKQDT",
+                        "FKQHTLXOCBJSPDZRAMEWNIUYGV",]
+        const reflectorsNormal = ["LUSNPQOMJIYAHDGEFXCVBTZRKW","XQUMFEPOWLTJDZHGBVYKCRIASN","ESKOAQMJYHCPGTDLFUBNRXZVIW"];
+        const baseString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        var rotorIDxMarkLists = [
+            [3,16],
+            [4,17],
+            [8,21],
+            [9,22],
+            [12,25],
+            [11,24],
+            [7,20],
+            [2,15]];
+        var rotorTopIdx = 0;
+        var rotorMiddleIdx = 0;
+        var rotorBottomIdx = 0;
+        var reflectorIdx = 0;
+        var rotorShiftsAll = [0, 0];
+
+        function ChangeTopRotor()
+        {
+            var topRotorSet = document.getElementById("tRotorVal");
+            rotorTopIdx = topRotorSet.value;
+            rotorShiftsAll[0] = 0;
+            UpdateInteractive();
+        }
+        function ChangeMiddleRotor()
+        {
+            var midRotorSet = document.getElementById("mRotorVal");
+            rotorMiddleIdx = midRotorSet.value;
+            rotorShiftsAll[1] = 0;
+            UpdateInteractive();
+        }
+        function ChangeReflector()
+        {
+            var reflectorSet = document.getElementById("reflectorVal");
+            reflectorIdx = reflectorSet.value;
+            UpdateInteractive();
+        }
+        function ShiftTopRotor(delta)
+        {
+            if (delta == 1 && (rotorShiftsAll[0] == rotorIDxMarkLists[rotorTopIdx][0] || rotorShiftsAll[0] == rotorIDxMarkLists[rotorTopIdx][1]))
+                {
+                    rotorShiftsAll[0] = (rotorShiftsAll[0] + 1) % 26;
+                    ShiftMiddleRotor(1);
+                }
+            else {rotorShiftsAll[0] = (rotorShiftsAll[0] + delta) % 26;};
+            document.getElementById("toptext").value = baseString[rotorShiftsAll[0]];
+            UpdateInteractive();
+        }
+        function ShiftMiddleRotor(delta)
+        {
+            rotorShiftsAll[1] = (rotorShiftsAll[1] + delta) % 26;
+            document.getElementById("bottomtext").value = baseString[rotorShiftsAll[1]];
+            UpdateInteractive();
+        }
+        function UpdateInteractive()
+        {
+            var topRotorTHalf = document.getElementsByClassName("toprotorT");
+            var topRotorBHalf = document.getElementsByClassName("toprotorB");
+            for (var x = 0; x < topRotorTHalf.length; x++)
+                {
+                    topRotorTHalf[x].textContent = rotors[rotorTopIdx].charAt((x + rotorShiftsAll[0]) % 26);
+                    topRotorBHalf[x].textContent = baseString.charAt((x + rotorShiftsAll[0]) % 26);
+                    var success = false;
+                    var usedIdxList = rotorIDxMarkLists[rotorTopIdx];
+                    //console.log(usedIdxList);
+                    for (var y in usedIdxList)
+                        if (usedIdxList[y] == (x + rotorShiftsAll[0]) % 26)
+                            success = true;
+                    if (success)
+                        {
+                            topRotorBHalf[x].style.backgroundColor = "rgba(170,170,170,0.5)";
+                        }
+                    else
+                        {
+                            topRotorBHalf[x].style.backgroundColor = "";
+                        }
+                }
+
+            var midRotorTHalf = document.getElementsByClassName("midrotorT");
+            var midRotorBHalf = document.getElementsByClassName("midrotorB");
+            for (var x = 0; x < midRotorTHalf.length; x++)
+                {
+                    midRotorTHalf[x].textContent = rotors[rotorMiddleIdx].charAt((x + rotorShiftsAll[1]) % 26);
+                    midRotorBHalf[x].textContent = baseString.charAt((x + rotorShiftsAll[1]) % 26);
+                    var success = false;
+                    var usedIdxList = rotorIDxMarkLists[rotorMiddleIdx];
+                    //console.log(usedIdxList);
+                    for (var y in usedIdxList)
+                        if (usedIdxList[y] == (x + rotorShiftsAll[1]) % 26)
+                            success = true;
+                    if (success)
+                        {
+                            midRotorBHalf[x].style.backgroundColor = "rgba(170,170,170,0.5)";
+                        }
+                    else
+                        {
+                            midRotorBHalf[x].style.backgroundColor = "";
+                        }
+                }
+        }
+    </script>
 </head>
 <body>
     <div class="section">
@@ -67,54 +170,236 @@
                 <p class="flavour-text">“My mind is like an enigma.” - the bomb</p>
                 <p>On the module, you will see a configuration of the rotors/reflector, the rotors set up below that, and a keyboard that lights up a single letter.</p>
                 <p>Every time a <a href="../More/Ignore Table.html#mod=forgetEnigma">non-ignored module</a> is solved, the stage number goes up by 1, the rotors turn, and a new letter will light up.</p>
-                <p>To disarm this module, you have to decrypt the letter using the mechanics down below.</p>
+                <p>To disarm this module, you have to decrypt the letter using the mechanics below.</p>
                 <h3>Step 1: Configuration of the Rotors/Reflector</h3>
                 <p>The screen at top shows what type of rotors are used, the order they are in, and which reflector is used. Use the correct rotor charts and correct reflector chart to use to create an Enigma Decryptor.</p>
-                <p>They are read in this order: Reflector-Bottom Rotor-Top Rotor. Above the top rotor, you will type A–Z to use as the keyboard.</p>
-                <p>Use the schematic at the bottom to help you create the Enigma Decryptor.</p>
+                <p><em>They are read in this order:</em> Reflector-Bottom Rotor-Top Rotor. Above the top rotor, you will type A–Z to use as the keyboard.</p>
+                <p>Use the schematic below to help you create the Enigma Decryptor.</p>
                 <p>The rotors below the screen shows what letter each one is at. Shift the letters until the bottom left letter is equal to the letter on the rotor.</p>
 
-                <table id="interactive" class="borderless"></table>
-            </div>
-            <div class="page-footer relative-footer">Page 1 of 3</div>
-        </div>
-        <div class="page page-bg-03">
-            <div class="page-header">
-                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Forget Enigma</span>
-            </div>
-            <div class="page-content">
-                <h2>Enigma Schematic</h2>
-                <table>
-                    <tr class="reflector">
-                        <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th>
-                        <th>N</th><th>O</th><th>P</th><th>Q</th><th>R</th><th>S</th><th>T</th><th>U</th><th>V</th><th>W</th><th>X</th><th>Y</th><th>Z</th>
+                <table class="interactive" style="border: none">
+                    <caption>Configuration:
+                        <select id="reflectorVal" onchange="ChangeReflector()">
+                            <option value="0">Reflector A</option>
+                            <option value="1">Reflector B</option>
+                            <option value="2">Reflector C</option>
+                        </select> - 
+                        <select id="mRotorVal" onchange="ChangeMiddleRotor()">
+                            <option value="0">Rotor I</option>
+                            <option value="1">Rotor II</option>
+                            <option value="2">Rotor III</option>
+                            <option value="3">Rotor IV</option>
+                            <option value="4">Rotor V</option>
+                            <option value="5">Rotor VI</option>
+                            <option value="6">Rotor VII</option>
+                            <option value="7">Rotor VIII</option>
+                        </select> - 
+                        <select id="tRotorVal" onchange="ChangeTopRotor()">
+                            <option value="0">Rotor I</option>
+                            <option value="1">Rotor II</option>
+                            <option value="2">Rotor III</option>
+                            <option value="3">Rotor IV</option>
+                            <option value="4">Rotor V</option>
+                            <option value="5">Rotor VI</option>
+                            <option value="6">Rotor VII</option>
+                            <option value="7">Rotor VIII</option>
+                        </select>
+                                     
+                        <input style="margin-left: 20px;" maxlength="1" id="bottomtext" value="A" disabled> <input maxlength="1" id="toptext" value="A" disabled>
+                    </caption>
+                    <tr>
+                        <td class="empty" rowspan="2"></td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td><td>G</td><td>H</td><td>I</td><td>J</td><td>K</td><td>L</td><td>M</td>
+                        <td>N</td><td>O</td><td>P</td><td>Q</td><td>R</td><td>S</td><td>T</td><td>U</td><td>V</td><td>W</td><td>X</td><td>Y</td><td>Z</td><td class="empty" rowspan="2"></td>
                     </tr>
-                    <tr><td class="spacer corner" colspan="26"></td></tr>
-                    <tr><td class="label" colspan="26">TOP ROTOR/RIGHT ROTOR</td></tr>
-                    <tr><td class="spacer corner" colspan="26"></td></tr>
-                    <tr><td class="label" colspan="26">BOTTOM ROTOR/LEFT ROTOR</td></tr>
-                    <tr><td class="spacer corner" colspan="26"></td></tr>
-                    <tr><td class="label" colspan="26">REFLECTOR</td></tr>
+                    <tr>
+                        <td colspan="26" class="corner"></td>
+                    </tr>
+                    <tr>
+                        <td class="empty" rowspan="2"><button onclick="ShiftTopRotor(1)">&larr;</button></td>
+                        <td class="toprotorT">E</td>
+                        <td class="toprotorT">K</td>
+                        <td class="toprotorT">M</td>
+                        <td class="toprotorT">F</td>
+                        <td class="toprotorT">L</td>
+                        <td class="toprotorT">G</td>
+                        <td class="toprotorT">D</td>
+                        <td class="toprotorT">Q</td>
+                        <td class="toprotorT">V</td>
+                        <td class="toprotorT">Z</td>
+                        <td class="toprotorT">N</td>
+                        <td class="toprotorT">T</td>
+                        <td class="toprotorT">O</td>
+                        <td class="toprotorT">W</td>
+                        <td class="toprotorT">Y</td>
+                        <td class="toprotorT">H</td>
+                        <td class="toprotorT">X</td>
+                        <td class="toprotorT">U</td>
+                        <td class="toprotorT">S</td>
+                        <td class="toprotorT">P</td>
+                        <td class="toprotorT">A</td>
+                        <td class="toprotorT">I</td>
+                        <td class="toprotorT">B</td>
+                        <td class="toprotorT">R</td>
+                        <td class="toprotorT">C</td>
+                        <td class="toprotorT">J</td>
+                        <td class="empty" rowspan="2"><button onclick="ShiftTopRotor(25)">&rarr;</button></td>
+                    </tr>
+                    <tr>
+                        <td class="toprotorB">A</td>
+                        <td class="toprotorB">B</td>
+                        <td class="toprotorB">C</td>
+                        <td class="toprotorB" style="background-color: rgba(170,170,170,0.5)">D</td>
+                        <td class="toprotorB">E</td>
+                        <td class="toprotorB">F</td>
+                        <td class="toprotorB">G</td>
+                        <td class="toprotorB">H</td>
+                        <td class="toprotorB">I</td>
+                        <td class="toprotorB">J</td>
+                        <td class="toprotorB">K</td>
+                        <td class="toprotorB">L</td>
+                        <td class="toprotorB">M</td>
+                        <td class="toprotorB">N</td>
+                        <td class="toprotorB">O</td>
+                        <td class="toprotorB">P</td>
+                        <td class="toprotorB" style="background-color: rgba(170,170,170,0.5)">Q</td>
+                        <td class="toprotorB">R</td>
+                        <td class="toprotorB">S</td>
+                        <td class="toprotorB">T</td>
+                        <td class="toprotorB">U</td>
+                        <td class="toprotorB">V</td>
+                        <td class="toprotorB">W</td>
+                        <td class="toprotorB">X</td>
+                        <td class="toprotorB">Y</td>
+                        <td class="toprotorB">Z</td>
+                    </tr>
+                    <tr>
+                        <td class="empty"></td>
+                        <td colspan="26" class="corner"></td>
+                        <td class="empty"></td>
+                    </tr>
+                    <tr>
+                        <td class="empty" rowspan="2"><button onclick="ShiftMiddleRotor(1)">&larr;</button></td>
+                        <td class="midrotorT">E</td>
+                        <td class="midrotorT">K</td>
+                        <td class="midrotorT">M</td>
+                        <td class="midrotorT">F</td>
+                        <td class="midrotorT">L</td>
+                        <td class="midrotorT">G</td>
+                        <td class="midrotorT">D</td>
+                        <td class="midrotorT">Q</td>
+                        <td class="midrotorT">V</td>
+                        <td class="midrotorT">Z</td>
+                        <td class="midrotorT">N</td>
+                        <td class="midrotorT">T</td>
+                        <td class="midrotorT">O</td>
+                        <td class="midrotorT">W</td>
+                        <td class="midrotorT">Y</td>
+                        <td class="midrotorT">H</td>
+                        <td class="midrotorT">X</td>
+                        <td class="midrotorT">U</td>
+                        <td class="midrotorT">S</td>
+                        <td class="midrotorT">P</td>
+                        <td class="midrotorT">A</td>
+                        <td class="midrotorT">I</td>
+                        <td class="midrotorT">B</td>
+                        <td class="midrotorT">R</td>
+                        <td class="midrotorT">C</td>
+                        <td class="midrotorT">J</td>
+                        <td class="empty" rowspan="2"><button onclick="ShiftMiddleRotor(25)">&rarr;</button></td>
+                    </tr>
+                    <tr>
+                        <td class="midrotorB">A</td>
+                        <td class="midrotorB">B</td>
+                        <td class="midrotorB">C</td>
+                        <td class="midrotorB" style="background-color: rgba(170,170,170,0.5)">D</td>
+                        <td class="midrotorB">E</td>
+                        <td class="midrotorB">F</td>
+                        <td class="midrotorB">G</td>
+                        <td class="midrotorB">H</td>
+                        <td class="midrotorB">I</td>
+                        <td class="midrotorB">J</td>
+                        <td class="midrotorB">K</td>
+                        <td class="midrotorB">L</td>
+                        <td class="midrotorB">M</td>
+                        <td class="midrotorB">N</td>
+                        <td class="midrotorB">O</td>
+                        <td class="midrotorB">P</td>
+                        <td class="midrotorB" style="background-color: rgba(170,170,170,0.5)">Q</td>
+                        <td class="midrotorB">R</td>
+                        <td class="midrotorB">S</td>
+                        <td class="midrotorB">T</td>
+                        <td class="midrotorB">U</td>
+                        <td class="midrotorB">V</td>
+                        <td class="midrotorB">W</td>
+                        <td class="midrotorB">X</td>
+                        <td class="midrotorB">Y</td>
+                        <td class="midrotorB">Z</td>
+                    </tr>
+                    <tr>
+                        <td class="empty" rowspan="3"></td>
+                        <td colspan="26" class="corner"></td>
+                        <td class="empty" rowspan="3"></td>
+                    </tr>
+                    <tr>
+                        <td class="reflectorT">A</td>
+                        <td class="reflectorT">B</td>
+                        <td class="reflectorT">C</td>
+                        <td class="reflectorT">D</td>
+                        <td class="reflectorT">E</td>
+                        <td class="reflectorT">F</td>
+                        <td class="reflectorT">G</td>
+                        <td class="reflectorT">H</td>
+                        <td class="reflectorT">I</td>
+                        <td class="reflectorT">J</td>
+                        <td class="reflectorT">K</td>
+                        <td class="reflectorT">L</td>
+                        <td class="reflectorT">M</td>
+                        <td class="reflectorT">N</td>
+                        <td class="reflectorT">O</td>
+                        <td class="reflectorT">P</td>
+                        <td class="reflectorT">Q</td>
+                        <td class="reflectorT">R</td>
+                        <td class="reflectorT">S</td>
+                        <td class="reflectorT">T</td>
+                        <td class="reflectorT">U</td>
+                        <td class="reflectorT">V</td>
+                        <td class="reflectorT">W</td>
+                        <td class="reflectorT">X</td>
+                        <td class="reflectorT">Y</td>
+                        <td class="reflectorT">Z</td>
+                    </tr>
+                    <tr>
+                        <td class="reflectorB">L</td>
+                        <td class="reflectorB">U</td>
+                        <td class="reflectorB">S</td>
+                        <td class="reflectorB">N</td>
+                        <td class="reflectorB">P</td>
+                        <td class="reflectorB">Q</td>
+                        <td class="reflectorB">O</td>
+                        <td class="reflectorB">M</td>
+                        <td class="reflectorB">J</td>
+                        <td class="reflectorB">I</td>
+                        <td class="reflectorB">Y</td>
+                        <td class="reflectorB">A</td>
+                        <td class="reflectorB">H</td>
+                        <td class="reflectorB">D</td>
+                        <td class="reflectorB">G</td>
+                        <td class="reflectorB">E</td>
+                        <td class="reflectorB">F</td>
+                        <td class="reflectorB">X</td>
+                        <td class="reflectorB">C</td>
+                        <td class="reflectorB">V</td>
+                        <td class="reflectorB">B</td>
+                        <td class="reflectorB">T</td>
+                        <td class="reflectorB">Z</td>
+                        <td class="reflectorB">R</td>
+                        <td class="reflectorB">K</td>
+                        <td class="reflectorB">W</td>
+                    </tr>
                 </table>
-                <h3>Step 2: Using the Enigma Decryptor</h3>
-                <ul>
-                    <li>1: Take the lit letter and find it on the keyboard row of the decryptor.</li>
-                    <li>2: Go straight down to the top row of the top rotor to receive a new letter.</li>
-                    <li>3: Find the new letter in the bottom row of the top rotor.</li>
-                    <li>4: Go straight down to the top row of the bottom rotor to receive a new letter.</li>
-                    <li>5: Find the new letter in the bottom row of the bottom rotor.</li>
-                    <li>6: Go straight down to the top row of the reflector to receive a new letter.</li>
-                    <li>7: Find the new letter in the bottom row of the reflector.</li>
-                    <li>8: Go straight up to the bottom row of the bottom rotor to receive a new letter.</li>
-                    <li>9: Find the new letter in the top row of the bottom rotor.</li>
-                    <li>10: Go straight up to the bottom row of the top rotor to receive a new letter.</li>
-                    <li>11: Find the new letter in the top row of the top rotor.</li>
-                    <li>12: Go straight up to the keyboard row to receive your decrypted letter.</li>
-                    <li>The example below uses I as the lit letter which will decrypt it to W.</li>
-                </ul>
+                <p>Note: Unlike the old interactive, the bottom rotor will now automatically rotate upon the top rotor hitting a marking.</p>
             </div>
-            <div class="page-footer relative-footer">Page 2 of 3</div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
         <div class="page page-bg-03">
             <div class="page-header">
@@ -122,144 +407,37 @@
                 <span class="page-header-section-title">Forget Enigma</span>
             </div>
             <div class="page-content">
-                <p style='text-align: center'><img src="img/Forget Enigma/DecryptSteps.png" style="width: 16cm"></p>
+                <h3>Step 2: Using the Enigma Decryptor</h3>
+                <ol>
+                    <li>Take the lit letter and find it on the keyboard row of the decryptor.</li>
+                    <li>Go straight down to the top row of the top rotor to receive a new letter.</li>
+                    <li>Find the new letter in the bottom row of the top rotor.</li>
+                    <li>Go straight down to the top row of the bottom rotor to receive a new letter.</li>
+                    <li>Find the new letter in the bottom row of the bottom rotor.</li>
+                    <li>Go straight down to the top row of the reflector to receive a new letter.</li>
+                    <li>Find the new letter in the bottom row of the reflector.</li>
+                    <li>Go straight up to the bottom row of the bottom rotor to receive a new letter.</li>
+                    <li>Find the new letter in the top row of the bottom rotor.</li>
+                    <li>Go straight up to the bottom row of the top rotor to receive a new letter.</li>
+                    <li>Find the new letter in the top row of the top rotor.</li>
+                    <li>Go straight up to the keyboard row to receive your decrypted letter.</li>
+                </ol>
+                <figure>
+                    <img src="img/Forget Enigma/DecryptSteps.png" style="width: 16cm">
+                    <figcaption>The example above uses I as the lit letter which gets decrypted to W.</figcaption>
+                </figure>
                 <h3>Step 3: Rotor Turning Mechanics</h3>
-                <p>On each solve, the rotors will turn but not randomly. This next section talks bout how rotor turning mechanics work.</p>
-                <p>You will notice a couple letters on the bottom row of the rotors have * next to them. This will affect the turning of the rotors:</p>
+                <p>On each solve, the rotors will turn. This next section talks about how the rotor turning mechanics work.</p>
+                <p>You will notice a couple letters on the bottom row of the rotors have a darker color. This will affect the turning of the rotors:</p>
                 <ul>
-                    <li>If the asterisk is at the leftmost edge of the right/top rotor, on the next solve, both the right/top and bottom/left rotor will turn.</li>
-                    <li>Otherwise, on the next solve, only the right/top rotor will turn</li>
-                    <li>Each turn only goes up 1 step on the rotor (Ex: A -> B, G -> H, Z -> A, etc.)</li>
+                    <li>If the marking is at the leftmost edge of the top rotor, on the next solve, both the top and bottom rotor will turn.</li>
+                    <li>Otherwise, on the next solve, only the top rotor will turn</li>
+                    <li>Each turn only goes up 1 step on the rotor (Ex: A -> B, G -> H, Z -> A, etc.). Simply press the left arrow of the top rotor after every stage.</li>
+                    <li>Markings on the bottom rotor can be ignored.</li>
                 </ul>
             </div>
-            <div class="page-footer relative-footer">Page 3 of 3</div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
         </div>
     </div>
-    <script>
-        const cyclers = {
-            "Rotor I": [
-                ["E", "K", "M", "F", "L", "G", "D", "Q", "V", "Z", "N", "T", "O", "W", "Y", "H", "X", "U", "S", "P", "A", "I", "B", "R", "C", "J"],
-                ["A", "B", "C", "D*", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q*", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
-            ],
-            "Rotor II": [
-                ["A", "J", "D", "K", "S", "I", "R", "U", "X", "B", "L", "H", "W", "T", "M", "C", "Q", "G", "Z", "N", "P", "Y", "F", "V", "O", "E"],
-                ["A", "B", "C", "D", "E*", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R*", "S", "T", "U", "V", "W", "X", "Y", "Z"],
-            ],
-            "Rotor III": [
-                ["B", "D", "F", "H", "J", "L", "C", "P", "R", "T", "X", "V", "Z", "N", "Y", "E", "I", "W", "G", "A", "K", "M", "U", "S", "Q", "O"],
-                ["A", "B", "C", "D", "E", "F", "G", "H", "I*", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V*", "W", "X", "Y", "Z"],
-
-            ],
-            "Rotor IV": [
-                ["E", "S", "O", "V", "P", "Z", "J", "A", "Y", "Q", "U", "I", "R", "H", "X", "L", "N", "F", "T", "G", "K", "D", "C", "M", "W", "B"],
-                ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J*", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W*", "X", "Y", "Z"],
-
-            ],
-            "Rotor V": [
-                ["V", "Z", "B", "R", "G", "I", "T", "Y", "U", "P", "S", "D", "N", "H", "L", "X", "A", "W", "M", "J", "Q", "O", "F", "E", "C", "K"],
-                ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M*", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z*"],
-
-            ],
-            "Rotor VI": [
-                ["J", "P", "G", "V", "O", "U", "M", "F", "Y", "Q", "B", "E", "N", "H", "Z", "R", "D", "K", "A", "S", "X", "L", "I", "C", "T", "W"],
-                ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L*", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y*", "Z"],
-
-            ],
-            "Rotor VII": [
-                ["N", "Z", "J", "H", "G", "R", "C", "X", "M", "Y", "S", "W", "B", "O", "U", "F", "A", "I", "V", "L", "P", "E", "K", "Q", "D", "T"],
-                ["A", "B", "C", "D", "E", "F", "G", "H*", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U*", "V", "W", "X", "Y", "Z"],
-
-            ],
-            "Rotor VIII": [
-                ["F", "K", "Q", "H", "T", "L", "X", "O", "C", "B", "J", "S", "P", "D", "Z", "R", "A", "M", "E", "W", "N", "I", "U", "Y", "G", "V"],
-                ["A", "B", "C*", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P*", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
-
-            ],
-            "Reflector A": [
-                ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
-                ["L", "U", "S", "N", "P", "Q", "O", "M", "J", "I", "Y", "A", "H", "D", "G", "E", "F", "X", "C", "V", "B", "T", "Z", "R", "K", "W"],
-
-            ],
-            "Reflector B": [
-                ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
-                ["X", "Q", "U", "M", "F", "E", "P", "O", "W", "L", "T", "J", "D", "Z", "H", "G", "B", "V", "Y", "K", "C", "R", "I", "A", "S", "N"],
-
-            ],
-            "Reflector C": [
-                ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"],
-                ["E", "S", "K", "O", "A", "Q", "M", "J", "Y", "H", "C", "P", "G", "T", "D", "L", "F", "U", "B", "N", "R", "X", "Z", "V", "I", "W"],
-            ],
-        };
-
-        function mod26(n) {
-            return ((n % 26) + 26) % 26;
-        }
-
-        const interactive = $("#interactive");
-
-        // Make the keyboard
-        const keyboard = $("<tr>").appendTo(interactive);
-
-        $("<td>").addClass("borderless").appendTo(keyboard);
-        // The top row of any reflector is just A–Z.
-        for (let i = 0; i < 26; i++) {
-            $("<td>").text(cyclers["Reflector A"][0][i]).appendTo(keyboard);
-        }
-
-        // Make the cyclers
-        function makeCycler(names, controls = true) {
-            let position = 0;
-            let name = names[0];
-
-            const update = () => {
-                for (let i = 0; i < 26; i++) {
-                    topRow.children().eq(i + 1).text(cyclers[name][0][mod26(i + position)]);
-                    bottomRow.children().eq(i).text(cyclers[name][1][mod26(i + position)]);
-                }
-            };
-
-            const selector = $("<select>");
-            for (const name of names) {
-                $("<option>").attr("value", name).text(name).appendTo(selector);
-            }
-
-            selector.change(() => { name = selector.val(); update(); });
-
-            const selectorRow = $("<tr>").appendTo(interactive);
-            $("<td>").addClass("borderless").appendTo(selectorRow);
-            $("<td colspan='26' class='corner'>").append(selector).appendTo(selectorRow);
-
-            const topRow = $("<tr>").appendTo(interactive);
-            if (controls) {
-                const shiftLeft = $("<button>").text("←").click(() => { position++; update(); });
-                $("<td rowspan=2>").addClass("borderless").append(shiftLeft).appendTo(topRow);
-            } else {
-                $("<td rowspan=2>").addClass("borderless").appendTo(topRow);
-            }
-
-            const bottomRow = $("<tr>").appendTo(interactive);
-
-            for (let i = 0; i < 26; i++) {
-                $("<td>").appendTo(topRow);
-                $("<td>").appendTo(bottomRow);
-            }
-
-            if (controls) {
-                const shiftRight = $("<button>").text("→").click(() => { position--; update(); });
-                $("<td rowspan=2>").addClass("borderless").append(shiftRight).appendTo(topRow);
-            }
-
-            update();
-        }
-
-        // Make the rotors
-        const rotorNames = Object.keys(cyclers).filter(name => name.includes("Rotor"));
-        for (let i = 0; i < 2; i++) {
-            makeCycler(rotorNames);
-        }
-
-        // Make the reflector
-        makeCycler(Object.keys(cyclers).filter(name => name.includes("Reflector")), false);
-    </script>
 </body>
 </html>
