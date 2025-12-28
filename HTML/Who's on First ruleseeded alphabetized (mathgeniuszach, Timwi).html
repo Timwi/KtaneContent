@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Who’s on First — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var defaults = null;
+
+        var DisplayWords = [
+            "YES", "FIRST", "DISPLAY", "OKAY", "SAYS", "NOTHING", "", "BLANK", "NO", "LED",
+            "LEAD", "READ", "RED", "REED", "LEED", "HOLD ON", "YOU", "YOU ARE", "YOUR",
+            "YOU’RE", "UR", "THERE", "THEY’RE", "THEIR", "THEY ARE", "SEE", "C", "CEE"
+        ];
+        var KeypadWords = [
+            ["READY", "FIRST", "NO", "BLANK", "NOTHING", "YES", "WHAT", "UHHH", "LEFT", "RIGHT", "MIDDLE", "OKAY", "WAIT", "PRESS"],
+            ["YOU", "YOU ARE", "YOUR", "YOU’RE", "UR", "U", "UH HUH", "UH UH", "WHAT?", "DONE", "NEXT", "HOLD", "SURE", "LIKE"]
+        ];
+        var AllWords = [
+            "", "BLANK", "C", "CEE", "DISPLAY", "DONE", "FIRST", "HOLD", "HOLD ON", "LEAD",
+            "LED", "LEED", "LEFT", "LIKE", "MIDDLE", "NEXT", "NO", "NOTHING", "OKAY", "PRESS",
+            "READ", "READY", "RED", "REED", "RIGHT", "SAYS", "SEE", "SURE", "THEIR", "THERE",
+            "THEY ARE", "THEY’RE", "U", "UH HUH", "UH UH", "UHHH", "UR", "WAIT", "WHAT",
+            "WHAT?", "YES", "YOU", "YOU ARE", "YOUR", "YOU’RE"
+        ];
+        var Locations = [
+            "T L", "T R",
+            "M L", "M R",
+            "B L", "B R"
+        ];
+
+        function setRules(rnd) {
+
+            if (defaults === null) {
+                defaults = {
+                    eyes: {
+                        "YES":2,"FIRST":1,"DISPLAY":5,"OKAY":1,"SAYS":5,"NOTHING":2,"":4,
+                        "BLANK":3,"NO":5,"LED":2,"LEAD":5,"READ":3,"RED":3,"REED":4,"LEED":4,
+                        "HOLD ON":5,"YOU":3,"YOU ARE":5,"YOUR":3,"YOU’RE":3,"UR":0,"THERE":5,
+                        "THEY’RE":4,"THEIR":3,"THEY ARE":2,"SEE":5,"C":1,"CEE":5
+                    },
+                    lists: {
+                        "READY":"YES, OKAY, WHAT, MIDDLE, LEFT, PRESS, RIGHT, BLANK, READY",
+                        "FIRST":"LEFT, OKAY, YES, MIDDLE, NO, RIGHT, NOTHING, UHHH, WAIT, READY, BLANK, WHAT, PRESS, FIRST",
+                        "NO":"BLANK, UHHH, WAIT, FIRST, WHAT, READY, RIGHT, YES, NOTHING, LEFT, PRESS, OKAY, NO",
+                        "BLANK":"WAIT, RIGHT, OKAY, MIDDLE, BLANK",
+                        "NOTHING":"UHHH, RIGHT, OKAY, MIDDLE, YES, BLANK, NO, PRESS, LEFT, WHAT, WAIT, FIRST, NOTHING",
+                        "YES":"OKAY, RIGHT, UHHH, MIDDLE, FIRST, WHAT, PRESS, READY, NOTHING, YES",
+                        "WHAT":"UHHH, WHAT",
+                        "UHHH":"READY, NOTHING, LEFT, WHAT, OKAY, YES, RIGHT, NO, PRESS, BLANK, UHHH",
+                        "LEFT":"RIGHT, LEFT",
+                        "RIGHT":"YES, NOTHING, READY, PRESS, NO, WAIT, WHAT, RIGHT",
+                        "MIDDLE":"BLANK, READY, OKAY, WHAT, NOTHING, PRESS, NO, WAIT, LEFT, MIDDLE",
+                        "OKAY":"MIDDLE, NO, FIRST, YES, UHHH, NOTHING, WAIT, OKAY",
+                        "WAIT":"UHHH, NO, BLANK, OKAY, YES, LEFT, FIRST, PRESS, WHAT, WAIT",
+                        "PRESS":"RIGHT, MIDDLE, YES, READY, PRESS",
+                        "YOU":"SURE, YOU ARE, YOUR, YOU’RE, NEXT, UH HUH, UR, HOLD, WHAT?, YOU",
+                        "YOU ARE":"YOUR, NEXT, LIKE, UH HUH, WHAT?, DONE, UH UH, HOLD, YOU, U, YOU’RE, SURE, UR, YOU ARE",
+                        "YOUR":"UH UH, YOU ARE, UH HUH, YOUR",
+                        "YOU’RE":"YOU, YOU’RE",
+                        "UR":"DONE, U, UR",
+                        "U":"UH HUH, SURE, NEXT, WHAT?, YOU’RE, UR, UH UH, DONE, U",
+                        "UH HUH":"UH HUH",
+                        "UH UH":"UR, U, YOU ARE, YOU’RE, NEXT, UH UH, DONE, YOU, UH HUH",
+                        "WHAT?":"YOU, HOLD, YOU’RE, YOUR, U, DONE, UH UH, LIKE, YOU ARE, UH HUH, UR, NEXT, WHAT?",
+                        "DONE":"SURE, UH HUH, NEXT, WHAT?, YOUR, UR, YOU’RE, HOLD, LIKE, YOU, U, YOU ARE, UH UH, DONE",
+                        "NEXT":"WHAT?, UH HUH, UH UH, YOUR, HOLD, SURE, NEXT",
+                        "HOLD":"YOU ARE, U, DONE, UH UH, YOU, UR, SURE, WHAT?, YOU’RE, NEXT, HOLD",
+                        "SURE":"YOU ARE, DONE, LIKE, YOU’RE, YOU, HOLD, UH HUH, UR, SURE",
+                        "LIKE":"YOU’RE, NEXT, U, UR, HOLD, DONE, UH UH, WHAT?, UH HUH, YOU, LIKE"
+                    }
+                }
+            }
+
+            var rules;
+            if (rnd.seed === 1) {
+                rules = defaults;
+            } else {
+                rules = { eyes: [], lists: {} };
+                for (var i = 0; i < 28; i++) {
+                    rules.eyes[DisplayWords[i]] = rnd.next(0, 6);
+                }
+                for (var i = 0; i < KeypadWords.length; i++) {
+                    for (var j = 0; j < KeypadWords[i].length; j++) {
+                        // The .slice(0) is necessary to take a copy of the array, because .shuffleFisherYates() is in-place.
+                        var words = rnd.shuffleFisherYates(KeypadWords[i].slice(0));
+                        var wi = words.indexOf(KeypadWords[i][j]);
+                        if (wi >= 0) words = words.slice(0, wi+1);
+                        rules.lists[KeypadWords[i][j]] = words.join(', ');
+                    }
+                }
+            }
+
+            document.getElementById("step1").innerHTML = AllWords.flatMap(
+                word => word in rules.eyes
+                    ? `<tr><th>${word}</th><td>${Locations[rules.eyes[word]]}</td></tr>`
+                    : []
+            ).join("");
+            document.getElementById("step2").innerHTML = AllWords.flatMap(
+                word => word in rules.lists
+                    ? `<tr><th>${word}</th><td>${rules.lists[word]}</td></tr>`
+                    : []
+            ).join("");
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+    </script>
+    <style>
+        .page-content * {
+            box-sizing: border-box;
+        }
+
+        ol {
+            margin: .2em 0;
+        }
+
+        table, .dark table {
+            border: none;
+            white-space: nowrap;
+        }
+
+        th, td {
+            line-height: 1em;
+            padding: .30em .2em .05em;
+            vertical-align: middle;
+            width: auto;
+            font-size: .7em;
+            height: 20px;
+        }
+        th {
+            background: #eef;
+            color: #000;
+        }
+        th.title-cell {
+            background: #ddf;
+        }
+        .dark th {
+            background: #667;
+            color: #eee;
+        }
+        .dark th.title-cell {
+            background: #557;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Who’s on First</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Who's on First.svg" class="diagram">
+                <h2>On the Subject of Who’s on First</h2>
+                <p class="flavour-text">
+                    I DON'T GIVE A DARN!
+                </p>
+                <ol>
+                    <li>Use step 1 to determine which button label to <em>read</em>.</li>
+                    <li>Use step 2 to determine which button to <em>push</em>.</li>
+                    <li>Repeat until the module has been disarmed.</li>
+                </ol>
+                <br>
+                <div class="hstack top gap">
+                    <div class="vstack">
+                        <strong>Step 1</strong>
+                        <table id="step1">
+                            <tr><th></th><td>B L</td></tr>
+                            <tr><th>BLANK</th><td>M R</td></tr>
+                            <tr><th>C</th><td>T R</td></tr>
+                            <tr><th>CEE</th><td>B R</td></tr>
+                            <tr><th>DISPLAY</th><td>B R</td></tr>
+                            <tr><th>FIRST</th><td>T R</td></tr>
+                            <tr><th>HOLD ON</th><td>B R</td></tr>
+                            <tr><th>LEAD</th><td>B R</td></tr>
+                            <tr><th>LED</th><td>M L</td></tr>
+                            <tr><th>LEED</th><td>B L</td></tr>
+                            <tr><th>NO</th><td>B R</td></tr>
+                            <tr><th>NOTHING</th><td>M L</td></tr>
+                            <tr><th>OKAY</th><td>T R</td></tr>
+                            <tr><th>READ</th><td>M R</td></tr>
+                            <tr><th>RED</th><td>M R</td></tr>
+                            <tr><th>REED</th><td>B L</td></tr>
+                            <tr><th>SAYS</th><td>B R</td></tr>
+                            <tr><th>SEE</th><td>B R</td></tr>
+                            <tr><th>THEIR</th><td>M R</td></tr>
+                            <tr><th>THERE</th><td>B R</td></tr>
+                            <tr><th>THEY ARE</th><td>M L</td></tr>
+                            <tr><th>THEY’RE</th><td>B L</td></tr>
+                            <tr><th>UR</th><td>T L</td></tr>
+                            <tr><th>YES</th><td>M L</td></tr>
+                            <tr><th>YOU</th><td>M R</td></tr>
+                            <tr><th>YOU ARE</th><td>B R</td></tr>
+                            <tr><th>YOUR</th><td>M R</td></tr>
+                            <tr><th>YOU’RE</th><td>M R</td></tr>
+                        </table>
+                    </div>
+                    <div class="vstack">
+                        <strong>Step 2</strong>
+                        <table id="step2">
+                            <tr><th>BLANK</th><td>WAIT, RIGHT, OKAY, MIDDLE, BLANK</td></tr>
+                            <tr><th>DONE</th><td>SURE, UH HUH, NEXT, WHAT?, YOUR, UR, YOU’RE, HOLD, LIKE, YOU, U, YOU ARE, UH UH, DONE</td></tr>
+                            <tr><th>FIRST</th><td>LEFT, OKAY, YES, MIDDLE, NO, RIGHT, NOTHING, UHHH, WAIT, READY, BLANK, WHAT, PRESS, FIRST</td></tr>
+                            <tr><th>HOLD</th><td>YOU ARE, U, DONE, UH UH, YOU, UR, SURE, WHAT?, YOU’RE, NEXT, HOLD</td></tr>
+                            <tr><th>LEFT</th><td>RIGHT, LEFT</td></tr>
+                            <tr><th>LIKE</th><td>YOU’RE, NEXT, U, UR, HOLD, DONE, UH UH, WHAT?, UH HUH, YOU, LIKE</td></tr>
+                            <tr><th>MIDDLE</th><td>BLANK, READY, OKAY, WHAT, NOTHING, PRESS, NO, WAIT, LEFT, MIDDLE</td></tr>
+                            <tr><th>NEXT</th><td>WHAT?, UH HUH, UH UH, YOUR, HOLD, SURE, NEXT</td></tr>
+                            <tr><th>NO</th><td>BLANK, UHHH, WAIT, FIRST, WHAT, READY, RIGHT, YES, NOTHING, LEFT, PRESS, OKAY, NO</td></tr>
+                            <tr><th>NOTHING</th><td>UHHH, RIGHT, OKAY, MIDDLE, YES, BLANK, NO, PRESS, LEFT, WHAT, WAIT, FIRST, NOTHING</td></tr>
+                            <tr><th>OKAY</th><td>MIDDLE, NO, FIRST, YES, UHHH, NOTHING, WAIT, OKAY</td></tr>
+                            <tr><th>PRESS</th><td>RIGHT, MIDDLE, YES, READY, PRESS</td></tr>
+                            <tr><th>READY</th><td>YES, OKAY, WHAT, MIDDLE, LEFT, PRESS, RIGHT, BLANK, READY</td></tr>
+                            <tr><th>RIGHT</th><td>YES, NOTHING, READY, PRESS, NO, WAIT, WHAT, RIGHT</td></tr>
+                            <tr><th>SURE</th><td>YOU ARE, DONE, LIKE, YOU’RE, YOU, HOLD, UH HUH, UR, SURE</td></tr>
+                            <tr><th>U</th><td>UH HUH, SURE, NEXT, WHAT?, YOU’RE, UR, UH UH, DONE, U</td></tr>
+                            <tr><th>UH HUH</th><td>UH HUH</td></tr>
+                            <tr><th>UH UH</th><td>UR, U, YOU ARE, YOU’RE, NEXT, UH UH, DONE, YOU, UH HUH</td></tr>
+                            <tr><th>UHHH</th><td>READY, NOTHING, LEFT, WHAT, OKAY, YES, RIGHT, NO, PRESS, BLANK, UHHH</td></tr>
+                            <tr><th>UR</th><td>DONE, U, UR</td></tr>
+                            <tr><th>WAIT</th><td>UHHH, NO, BLANK, OKAY, YES, LEFT, FIRST, PRESS, WHAT, WAIT</td></tr>
+                            <tr><th>WHAT</th><td>UHHH, WHAT</td></tr>
+                            <tr><th>WHAT?</th><td>YOU, HOLD, YOU’RE, YOUR, U, DONE, UH UH, LIKE, YOU ARE, UH HUH, UR, NEXT, WHAT?</td></tr>
+                            <tr><th>YES</th><td>OKAY, RIGHT, UHHH, MIDDLE, FIRST, WHAT, PRESS, READY, NOTHING, YES</td></tr>
+                            <tr><th>YOU</th><td>SURE, YOU ARE, YOUR, YOU’RE, NEXT, UH HUH, UR, HOLD, WHAT?, YOU</td></tr>
+                            <tr><th>YOU ARE</th><td>YOUR, NEXT, LIKE, UH HUH, WHAT?, DONE, UH UH, HOLD, YOU, U, YOU’RE, SURE, UR, YOU ARE</td></tr>
+                            <tr><th>YOUR</th><td>UH UH, YOU ARE, UH HUH, YOUR</td></tr>
+                            <tr><th>YOU’RE</th><td>YOU, YOU’RE</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
