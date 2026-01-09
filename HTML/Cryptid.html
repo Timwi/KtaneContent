@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
     <style>
         .dark table, table {
             margin: 1em auto;
@@ -34,24 +35,59 @@
     <script>
         document.addEventListener('DOMContentLoaded', function()
         {
+            function notValid()
+            {
+                for (let col = 0; col < 12; col++)
+                    for (let row = 0; row < 9; row++)
+                    {
+                        document.getElementById(`cell-${String.fromCharCode(65 + col)}${row+1}`)
+                            .setAttribute('fill', 'none');
+                        document.getElementById(`terr-${String.fromCharCode(65 + col)}${row+1}`)
+                            .setAttribute('stroke', 'none');
+                    }
+
+                for (let ix = 0; ix < 8; ix++)
+                    document.getElementById('parking').appendChild(document.getElementById(`sym${ix}`));
+                return;
+            }
+
             document.getElementById('map-code').onkeyup = function()
             {
-                let code = document.getElementById('map-code').value.toUpperCase();
-                if (!/^[23456789ABCD]{6}([A-L][1-9]){8}$/.test(code))
-                {
-                    for (let col = 0; col < 12; col++)
-                        for (let row = 0; row < 9; row++)
-                        {
-                            document.getElementById(`cell-${String.fromCharCode(65 + col)}${row+1}`)
-                                .setAttribute('fill', 'none');
-                            document.getElementById(`terr-${String.fromCharCode(65 + col)}${row+1}`)
-                                .setAttribute('stroke', 'none');
-                        }
+                let code = document.getElementById('map-code').value;
+                let alphabet = '!#$%&*+-/123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\\abcdefghijklmnopqrstuvwxyz|~';
+                if (code.length < 1 || !Array.from(code).every(ch => alphabet.includes(ch)))
+                    return notValid();
 
-                    for (let ix = 0; ix < 8; ix++)
-                        document.getElementById('parking').appendChild(document.getElementById(`sym${ix}`));
-                    return;
+                let value = 0n, mult = 1n;
+                for (let i = 0; i < code.length; i++)
+                {
+                    let v = alphabet.indexOf(code[i]);
+                    value += mult * BigInt(v);
+                    mult *= BigInt(alphabet.length);
                 }
+                let coordNumbers = [];
+                for (let i = 0; i < 8; i++)
+                {
+                    coordNumbers.push(Number(value % 108n));
+                    value /= 108n;
+                }
+                let tilesAvailable = [0, 1, 2, 3, 4, 5], tileNumbers = [], tileFlips = [], tileIxs = [];
+                for (let i = 1; i <= 6; i++)
+                {
+                    tileFlips.push(Number(value % 2n));
+                    value /= 2n;
+                    let ix = Number(value % BigInt(i));
+                    tileIxs.push(ix);
+                    value /= BigInt(i);
+                }
+                for (let i = 5; i >= 0; i--)
+                {
+                    tileNumbers.push(tilesAvailable[tileIxs[i]]);
+                    tilesAvailable.splice(tileIxs[i], 1);
+                }
+
+                if (value > 0n)
+                    return notValid();
 
                 let info =
                 [
@@ -195,9 +231,8 @@
                     {
                         let x = (col / 6) | 0;
                         let y = (row / 3) | 0;
-                        let tileNumber = parseInt(code[x + 2*y], 16) - 2;
-                        let tileArr = info[tileNumber >> 1];
-                        if (tileNumber & 1) {
+                        let tileArr = info[tileNumbers[x + 2*y]];
+                        if (tileFlips[5 - x - 2*y]) {
                             tileArr = [...tileArr];
                             tileArr.reverse();
                         }
@@ -214,7 +249,8 @@
 
                 for (let ix = 0; ix < 8; ix++)
                 {
-                    let coords = code.substring(6 + 2*ix, 8 + 2*ix);
+                    let coordNum = coordNumbers[7 - ix];
+                    let coords = `${String.fromCharCode(65 + coordNum%12)}${((coordNum/12)|0) + 1}`;
                     let sym = document.getElementById(`sym${ix}`);
                     let g = document.getElementById(`cell-${coords}`).parentNode;
                     g.appendChild(sym);
@@ -240,7 +276,7 @@
                 <p class="flavour-text">A creature whose existence is disputed or unsubstantiated.</p>
 
                 <p>To disarm the module, submit the space that contains the creature’s habitat. The location of the habitat is determined by the rules generated by the module.</p>
-                <p>The 22 character string at the top of the module is the map seed. Enter the 22 character string on the next page to generate the layout of the terrain.</p>
+                <p>The character string at the top of the module is the map seed. Enter the character string on the next page to generate the layout of the terrain. Note: the map seed is case sensitive and there are no zeros.</p>
                 <h3>Topography</h3>
                 <table>
                 <tr><th>Water</th><th>Mountain</th><th>Forest</th><th>Swamp</th><th>Desert</th></tr>
@@ -249,7 +285,7 @@
                 <tr><td><img style='width: 100%' src="img/Cryptid/Cougar.png"></td><td><img style='width: 100%' src="img/Cryptid/Bear.png"></td><td><img style='width: 100%' src="img/Cryptid/Standing Stone.png"></td><td><img style='width: 100%' src="img/Cryptid/Abandoned Shack.png"></td></tr>
                 </table>
                 <p>At the bottom of the module is a coordinate selector. You can change the current coordinate via the arrows above/below each letter/number. The columns of the map is labeled A - L, left to right and each space in that column is labeled 1 - 9, top to bottom.</p>
-                <p>The squares below the map seed represent the rules that determine the location of the creature’s habitat. Changing the current coordinate can cause the squares to switch between colored and black. While the squares are colored, you can query the current coordinate to see which rules are satisfied. O means the rule is satisfied and X means the opposite. While the squares are black, you can submit that coordinate if you think the habitat is at that coordinate. You can’t query while the squares are black and you can’t submit the coordinate while the squares are colored.</p>
+                <p>The squares below the map seed represent the rules that determine the location of the creature’s habitat. Changing the current coordinate can cause the squares to switch between colored and black. While the squares are colored, you can see which rules are satisfied. O means the rule is satisfied and X means the opposite. While the squares are black, you can submit that coordinate if you think the habitat is at that coordinate.</p>
             </div>
             <div class="page-footer relative-footer">1</div>
         </div>
