@@ -48,18 +48,20 @@
            background: rgba(255,0,0,0.6);
        }
 
+       table.interactive td.blue>.box {
+           background: rgba(0,0,255,0.5);
+       }
+
+       table.interactive td.red.blue>.box {
+           background: rgba(128,0,128,0.7);
+       }
+
        table.interactive td>.box::after {
            position: absolute;
            content: '';
            width: 0px;
            height: 0px;
            transition: background 0.2s;
-       }
-
-       table.interactive td.blue>.box::after{
-        background: rgba(0,0,255,0.5);
-           width: 50px;
-           height: 50px;
        }
 
        button {
@@ -112,6 +114,8 @@
         const symbol=["◼","◆","▲","▼","◉","◍","◈","Ж","Ӝ","Җ"];
         let saveStates = [];
         let currentState = 0;
+        let isDragging = false;
+        let dragColor = null; // 'red' or 'blue'
 
         function removeFutureSaves() {
             if (currentState < saveStates.length - 1) {
@@ -133,17 +137,43 @@
                 } else if (y > 0 && x == 0) {
                     $("<th>").text(y-1).appendTo(row);
                 } else {
-                    $("<td>").click(function() {
-                        $(this).toggleClass("red");
+                    $("<td>").mousedown(function(e) {
+                        isDragging = true;
+                        if (e.shiftKey) {
+                            dragColor = 'erase';
+                            $(this).removeClass("red blue");
+                        } else if (e.button === 0) { // 左クリック
+                            dragColor = 'red';
+                            $(this).toggleClass("red");
+                        } else if (e.button === 2) { // 右クリック
+                            dragColor = 'blue';
+                            $(this).toggleClass("blue");
+                        }
                         removeFutureSaves();
-                    }).contextmenu(function() {
-                        $(this).toggleClass("blue");
-                        removeFutureSaves();
+                        return false;
+                    }).mouseover(function() {
+                        if (isDragging && dragColor) {
+                            if (dragColor === 'red') {
+                                $(this).addClass("red");
+                            } else if (dragColor === 'blue') {
+                                $(this).addClass("blue");
+                            } else if (dragColor === 'erase') {
+                                $(this).removeClass("red blue");
+                            }
+                        }
+                    }).click(function(e) {
+                        e.preventDefault();
+                    }).contextmenu(function(e) {
                         return false;
                     }).append('<div class="box"></div>').appendTo(row);
                 }
             }
         }
+
+        $(document).mouseup(function() {
+            isDragging = false;
+            dragColor = null;
+        });
 
         $("button.reset").click(function() {
             $("table.interactive td").removeClass("red blue");
@@ -189,7 +219,7 @@
 
                 <p>モジュールには3つの数字と図形が含まれるが、そのままでは確認する事ができない。それらは、その上にカーソルをあわせる事によって徐々に浮かび上がってくる。</p>
                 <p>図形と3つの数字の中央値を利用して、以下の表のセルを特定する。中央値以外の2つの数字を小さい方から順に<strong>数字 - パターン変換</strong>に当てはめて、すべてのセルの色を決定する。グリッドを同じ大きさの2×2に分割したときに黒のセルが最も少ない区分の白のセルの数がタイマーの秒数と一致するときに、ステータスライトにカーソルを合わせ始める。黒のセルが最も多い区分の白のセルの数がタイマーの秒数と一致するときにカーソルを合わせることをやめると、モジュールは解除される。</p>
-                <p>右クリックで、セルを青色にできる。左クリックで、セルを赤色にできる。2つの色は重ね合わせて紫色にすることができる。</p>
+                <p>左クリック/ドラッグでセルを赤色に、右クリック/ドラッグでセルを青色にできる。Shift+クリック/ドラッグでセルの色を削除できる。赤と青を重ね合わせて紫色にすることもできる。</p>
                 <div class="interactive-container">
                  <table class="interactive"></table>
                  <div class="buttons">
