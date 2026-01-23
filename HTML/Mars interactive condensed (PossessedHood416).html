@@ -1,0 +1,203 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Mars — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+        td {
+            width: 16px;
+            text-align: center;
+        }
+        th { background-color: #777; }
+        tr { height: 30px; }
+        .page-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            clear: right;
+        }
+        .tl { grid-area: tl; }
+        .tr { grid-area: tr; }
+        .bl { grid-area: bl; }
+        .br { grid-area: br; }
+        .table-note { text-align: center; }
+        input { width: 30px; }
+        .center { text-align: center; }
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 2'; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Mars</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Mars.svg" class="diagram">
+                <h2>On the Subject of Mars</h2>
+                <p class="flavour-text">Fun fact: Mars has 2 moons, named Phobos and Deimos, that were named after a pair of twins in Greek mythology (also named Phobos and Deimos).</p>
+                <p>For those familiar with the <a href="https://ktane.timwi.de/HTML/Mars.html">original manual</a>.</p>
+                <div class="page-grid">
+                    <div>
+                        <p class="table-note">1st or 3rd → swap rows.<br>2nd → swap columns.</p>
+                        <p class="table-note">Caesar shift forwards by sum of digits in serial number mod 25 (skip C).</p>
+                    </div>
+                    <div><table>
+                        <tr><td class='corner'></td><th>&lt; 1 sec</th><th>1 sec</th><th>&gt; 1 sec</th></tr>
+                        <tr><th>U</th><td>23</td><td>12</td><td>35</td></tr>
+                        <tr><th>L</th><td>45</td><td>24</td><td>15</td></tr>
+                        <tr><th>D</th><td>14</td><td>25</td><td>↺</td></tr>
+                        <tr><th>R</th><td>↻</td><td>34</td><td>13</td></tr>
+                    </table></div>
+                    <div>
+                        <p class="table-note">Split message into pairs,<br>row then column.</p>
+                        <ul id="martian-translation">
+                            <li>- → Steady</li>
+                            <li>U → Rising</li>
+                            <li>D → Falling</li>
+                            <li>UD → Rising then falling</li>
+                            <li>DU → Falling then rising</li>
+                        </ul>
+                    </div>
+                    <div><table id="letterGrid"></table></div>
+                </div>
+                <div class="center">
+                    <button onclick="resetGrid()">Reset</button>
+                    <button onclick="rotateGrid(`cw`)">↻</button>
+                    <button onclick="rotateGrid(`ccw`)">↺</button>
+                    <input id="rowcol-1" type="number" min="1" max="5">
+                    <input id="rowcol-2" type="number" min="1" max="5">
+                    <button onclick="swapRows(parseInt(document.querySelector('#rowcol-1').value) - 1, parseInt(document.querySelector('#rowcol-2').value) - 1)">Swap rows</button>
+                    <button onclick="swapColumns(parseInt(document.querySelector('#rowcol-1').value) - 1, parseInt(document.querySelector('#rowcol-2').value) - 1)">Swap columns</button>
+                    <button onclick="caesar(true)">+1</button>
+                    <button onclick="caesar(false)">-1</button><br>
+                    <p id="offset"></p>
+                </div>
+                <script>
+                    const martianHeader = ["-", "U", "D", "UD", "DU"];
+                    var currentGrid = ["HDOMX", "PSJYW", "REUNB", "QGVZK", "ILTAF"];
+                    var currentOff = "0";
+                    function updateGrid(){
+                        var b = document.getElementById("letterGrid")
+                        let docWrite = "<tr><td class='corner'></td><th>-</th><th>U</th><th>D</th><th>UD</th><th>DU</th></tr>"
+                        for(var y = 0; y < 5; y++){
+                            docWrite += `<tr><th>${martianHeader[y]}</th>`;
+                            for(var x = 0; x < 5; x++) docWrite += `<td>${currentGrid[y][x]}</td>`;
+                            docWrite += "</tr>";
+                        }
+                        b.innerHTML = docWrite;
+                        var o = document.getElementById("offset")
+                        o.innerText = "Current offset: " + currentOff;
+                    }
+                    function resetGrid(){
+                        currentGrid = ["HDOMX", "PSJYW", "REUNB", "QGVZK", "ILTAF"];
+                        updateGrid();
+                    }
+                    function rotateGrid(direction) {
+                        const newGrid = Array(5).fill().map(() => Array(5));
+                        for (let i = 0; i < 5; i++) {
+                            for (let j = 0; j < 5; j++) {
+                                if (direction === 'cw') newGrid[j][4 - i] = currentGrid[i][j];
+                                else newGrid[4 - j][i] = currentGrid[i][j];
+                            }
+                        }
+                        currentGrid = newGrid.map(x => x.join(''));
+                        updateGrid();
+                    }
+                    function swapRows(row1, row2) {
+                        if (row1 < 0 || row1 > 4 || row2 < 0 || row2 > 4 || row1 === row2) return;
+                        [currentGrid[row1], currentGrid[row2]] = [currentGrid[row2], currentGrid[row1]];
+                        updateGrid();
+                    }
+                    function swapColumns(col1, col2) {
+                        if (col1 < 0 || col1 > 4 || col2 < 0 || col2 > 4 || col1 === col2) return;
+                        for (let i = 0; i < 5; i++){
+                            let currentArr = currentGrid[i].split('');
+                            [currentArr[col1], currentArr[col2]] = [currentArr[col2], currentArr[col1]];
+                            currentGrid[i] = currentArr.join('');
+                        }
+                        updateGrid();
+                    }
+                    function caesar(plus){
+                        const alphabet = "ABDEFGHIJKLMNOPQRSTUVWXYZ";
+                        let off = plus ? 1 : 24;
+                        for (let i = 0; i < 5; i++){
+                            let currentArr = currentGrid[i].split('');
+                            currentArr = currentArr.map((x) => alphabet[(alphabet.indexOf(x)+off)%25]);
+                            currentGrid[i] = currentArr.join('');
+                        }
+                        currentOff = (currentOff+off)%25;
+                        updateGrid();
+                    }
+                    resetGrid();
+                </script>
+            </div>
+        <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Mars</span>
+            </div>
+            <div class="page-content">
+                <div class="page-grid">
+                    <div><table>
+                        <tr><th>Martian:</th><th>English:</th></tr>
+                        <tr><td>AAJLR</td><td>Cycle</td></tr>
+                        <tr><td>ABIQS</td><td>Binary</td></tr>
+                        <tr><td>ABLUZ</td><td>Cruel or Complicated</td></tr>
+                        <tr><td>AEHTY</td><td>Arrow</td></tr>
+                        <tr><td>AEKNX</td><td>Dial</td></tr>
+                        <tr><td>AHRTU</td><td>Button</td></tr>
+                        <tr><td>ALOOS</td><td>Key</td></tr>
+                        <tr><td>BDINU</td><td>Identification</td></tr>
+                        <tr><td>BEMOP</td><td>LED</td></tr>
+                        <tr><td>BILOR</td><td>Maze</td></tr>
+                        <tr><td>BKORS</td><td>Symbol or Symbolic</td></tr>
+                        <tr><td>ELMVY</td><td>Talk</td></tr>
+                        <tr><td>FNORU</td><td>Forget</td></tr>
+                        <tr><td>GILMP</td><td>Bean</td></tr>
+                        <tr><td>HIJRT</td><td>Double</td></tr>
+                        <tr><td>HIOXZ</td><td>Memory</td></tr>
+                        <tr><td>ILTUV</td><td>Code</td></tr>
+                        <tr><td>IMOPR</td><td>Number</td></tr>
+                        <tr><td>INRTU</td><td>Wire</td></tr>
+                        <tr><td>INRTW</td><td>Color or Colour</td></tr>
+                        <tr><td>KOQRT</td><td>Faulty or Broken</td></tr>
+                        <tr><td>MNOPU</td><td>Simon</td></tr>
+                        <tr><td>NNTUU</td><td>Grid</td></tr>
+                        <tr><td>NTUUZ</td><td>Cipher</td></tr>
+                    </table></div>
+                    <div>
+                        <p>Remember, the words are scrambled. The words/letters are ordered alphabetically for convinecne.</p>
+                        <ul>
+                            <li>Every word also translates to any other word containing it.</li>
+                            <li>“Colour” and “Colo(u)r” are also acceptable spellings of “color”.</li>
+                            <li>“LED” is the only case sensitive word.</li>
+                        </ul>
+                        <br>
+                        <h3>Submission</h3>
+                        <ul>
+                            <li>Single-tap: No module has the word in their name.</li>
+                            <li>Double-tap: A module has the word in their name.</li>
+                            <li>Triple+-tap: Cancel submission.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+    </div>
+</body>
+</html>
