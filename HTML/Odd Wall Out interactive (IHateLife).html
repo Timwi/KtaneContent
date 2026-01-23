@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Odd Wall Out — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .odd-wall-out-svg {
+            width: 570px;
+            margin: 0em auto;
+        }
+        .odd-wall-out path {
+            stroke: #666666;
+            stroke-width: .01px;
+            stroke-linejoin: round;
+        }
+        .color-0 { fill: #00deff; }
+        .color-1 { fill: #ff00f6; }
+        .color-2 { fill: #ff7e00; }
+        .color-3 { fill: #bfbfbf; }
+        .page.strip { --strip-color: #047; }
+
+        :root {
+            --grid-size: 4;
+            --cell-size: 150px;
+            --cell-bg: transparent;
+
+            --highlight-width: 5px;
+            --highlight-color: red;
+
+            --wall-thickness: 40px;
+            --wall-half: calc(var(--wall-thickness) / 2);
+            --wall-bleed: 1px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(calc(var(--grid-size) + 2), var(--cell-size));
+            grid-template-rows: repeat(calc(var(--grid-size) + 2), var(--cell-size));
+            gap: 0;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .cell {
+            position: relative;
+            width: var(--cell-size);
+            height: var(--cell-size);
+            background: var(--cell-bg);
+            cursor: pointer;
+        }
+
+        .cell.ghost {
+            pointer-events: none;
+            background: transparent;
+        }
+
+        .cell.ghost::after {
+            display: none;
+        }
+
+        .cell::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .cell:not(.ghost):hover:not(.selected)::after,
+        .cell.selected::after {
+            outline: var(--highlight-width) solid var(--highlight-color);
+            outline-offset: calc(-1 * var(--highlight-width));
+        }
+
+        .wall {
+            position: absolute;
+            background: currentColor;
+            pointer-events: none;
+        }
+
+        .wall.cyan { color: #00deff; }
+        .wall.magenta { color: magenta; }
+        .wall.grey { color: #bfbfbf; }
+        .wall.orange { color: orange; }
+
+        .wall.top {
+            top: calc(-1 * (var(--wall-half) + var(--wall-bleed)));
+            left: calc(-1 * var(--wall-bleed));
+            width: calc(100% + var(--wall-bleed) * 2);
+            height: var(--wall-thickness);
+            clip-path: polygon(
+                0% 50%,
+                100% 50%,
+                calc(100% - var(--wall-half)) 100%,
+                var(--wall-half) 100%
+            );
+        }
+
+        .wall.bottom {
+            bottom: calc(-1 * (var(--wall-half) + var(--wall-bleed)));
+            left: calc(-1 * var(--wall-bleed));
+            width: calc(100% + var(--wall-bleed) * 2);
+            height: var(--wall-thickness);
+            clip-path: polygon(
+                var(--wall-half) 0%,
+                calc(100% - var(--wall-half)) 0%,
+                100% 50%,
+                0% 50%
+            );
+        }
+
+        .wall.left {
+            left: calc(-1 * (var(--wall-half) + var(--wall-bleed)));
+            top: calc(-1 * var(--wall-bleed));
+            width: var(--wall-thickness);
+            height: calc(100% + var(--wall-bleed) * 2);
+            clip-path: polygon(
+                50% 0%,
+                100% var(--wall-half),
+                100% calc(100% - var(--wall-half)),
+                50% 100%
+            );
+        }
+
+        .wall.right {
+            right: calc(-1 * (var(--wall-half) + var(--wall-bleed)));
+            top: calc(-1 * var(--wall-bleed));
+            width: var(--wall-thickness);
+            height: calc(100% + var(--wall-bleed) * 2);
+            clip-path: polygon(
+                0% var(--wall-half),
+                50% 0%,
+                50% 100%,
+                0% calc(100% - var(--wall-half))
+            );
+        }
+
+        .controls {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+            width: 100%;
+        }
+        .controls > button {
+            flex: 0 0 auto;
+        }
+
+        .arrows {
+            display: flex;
+            flex: 1 1 auto;
+            gap: 8px;
+        }
+        .arrows button {
+            flex: 1 1 0;
+        }
+        
+        button {
+            background: #777;
+            color: #eee;
+            padding: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Odd Wall Out</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Odd Wall Out.svg" class="diagram">
+                <h2>On the Subject of Odd Wall Out</h2>
+                <p class="flavour-text">Did you hear the one about the guitarist that couldn’t take it anymore? They were asked to play Wonderwall.</p>
+                <p>The module will show a configuration of colored walls of one tile within a 4×4 maze. Pressing any of the buttons (without pressing the same button twice in a row) will cycle once through the list of sixteen tiles.</p>
+                <p>Reconstruct the maze given these tiles such that among every tile, its colored walls match their colors with the walls of its adjacent tiles, including those on the opposite sides of the maze, <u>except for one wall.</u> An example is shown below.</p>
+                <p>Press the button in the position of the multicolored wall twice in a row to disarm the module.</p>
+                <div class="odd-wall-out-svg">
+                    <svg class='odd-wall-out' xmlns='http://www.w3.org/2000/svg' viewBox='-.1 -.1 4.2 4.2'><path class='grid' d='M1 0 v 4M2 0 v 4M3 0 v 4M0 1 h 4M0 2 h 4M0 3 h 4' /><path class='color-1' d='M0 0 h 1 l -0.1 0.1 h -0.8 z' /><path class='color-2' d='M0 1 v -1 l 0.1 0.1 v 0.8 z' /><path class='color-0' d='M1 0 h 1 l -0.1 0.1 h -0.8 z' /><path class='color-3' d='M1 1 l 0.1 -0.1 h 0.8 l 0.1 0.1 -0.1 0.1 h -0.8 z' /><path class='color-3' d='M2 0 h 1 l -0.1 0.1 h -0.8 z' /><path class='color-2' d='M3 1 h -1 l 0.1 -0.1 h 0.8 z' /><path class='color-1' d='M3 0 h 1 l -0.1 0.1 h -0.8 z' /><path class='color-2' d='M4 1 v -1 l -0.1 0.1 v 0.8 z' /><path class='color-3' d='M0 2 v -1 l 0.1 0.1 v 0.8 z' /><path class='color-3' d='M1 1 l 0.1 0.1 v 0.8 l -0.1 0.1 -0.1 -0.1 v -0.8 z' /><path class='color-2' d='M2 1 l 0.1 0.1 v 0.8 l -0.1 0.1 -0.1 -0.1 v -0.8 z' /><path class='color-3' d='M2 1 h 1 l -0.1 0.1 h -0.8 z' /><path class='color-3' d='M4 2 v -1 l -0.1 0.1 v 0.8 z' /><path class='color-0' d='M3 2 l 0.1 -0.1 h 0.8 l 0.1 0.1 -0.1 0.1 h -0.8 z' /><path class='color-2' d='M0 3 v -1 l 0.1 0.1 v 0.8 z' /><path class='color-1' d='M0 3 l 0.1 -0.1 h 0.8 l 0.1 0.1 -0.1 0.1 h -0.8 z' /><path class='color-3' d='M2 2 l 0.1 0.1 v 0.8 l -0.1 0.1 -0.1 -0.1 v -0.8 z' /><path class='color-0' d='M2 3 l 0.1 -0.1 h 0.8 l 0.1 0.1 -0.1 0.1 h -0.8 z' /><path class='color-2' d='M4 3 v -1 l -0.1 0.1 v 0.8 z' /><path class='color-2' d='M0 4 v -1 l 0.1 0.1 v 0.8 z' /><path class='color-1' d='M1 4 h -1 l 0.1 -0.1 h 0.8 z' /><path class='color-0' d='M2 4 h -1 l 0.1 -0.1 h 0.8 z' /><path class='color-1' d='M3 3 l 0.1 0.1 v 0.8 l -0.1 0.1 -0.1 -0.1 v -0.8 z' /><path class='color-3' d='M3 4 h -1 l 0.1 -0.1 h 0.8 z' /><path class='color-2' d='M4 4 v -1 l -0.1 0.1 v 0.8 z' /><path class='color-1' d='M4 4 h -1 l 0.1 -0.1 h 0.8 z' /></svg>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-01 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Odd Wall Out</span>
+            </div>
+            <div class="page-content">
+                <p>Edit: Use arrow keys or WASD to cycle wall colors. Interact: interact.<br>
+                    Ghost Mode visualizes wraparound walls.</p>
+                <div class="controls">
+                    <button id="toggleMode">Mode: Edit</button>
+                    <button id="toggleGhost">Ghost Walls: on</button>
+                    <div class="arrows">
+                        <button data-dir="top">↑</button>
+                        <button data-dir="left">←</button>
+                        <button data-dir="right">→</button>
+                        <button data-dir="bottom">↓</button>
+                    </div>
+                </div>
+                <div class="grid" id="grid"></div>
+                <script>
+                    const gridSize = 4;
+                    const fullSize = gridSize + 2;
+                    const grid = document.getElementById("grid");
+                    const toggleMode = document.getElementById("toggleMode");
+
+                    let mode = "edit";
+                    let ghostMode = true;
+                    let selectedCell = null;
+                    let pickedCell = null;
+
+                    const wallCycle = [ null, "cyan", "magenta", "orange", "grey" ];
+                    const cells = [];
+
+                    function nextColor(c) {
+                        return wallCycle[(wallCycle.indexOf(c) + 1) % wallCycle.length];
+                    }
+
+                    function clearGhost() {
+                        for (let r = 0; r < fullSize; r++) {
+                            for (let c = 0; c < fullSize; c++) {
+                                if (r === 0 || c === 0 || r === fullSize - 1 || c === fullSize - 1) {
+                                    cells[r][c].wallState = {
+                                        top: null,
+                                        right: null,
+                                        bottom: null,
+                                        left: null
+                                    };
+                                }
+                            }
+                        }
+                    }
+                    function syncGhosts() {
+                        clearGhost();
+                        for (let c = 1; c <= gridSize; c++) {
+                            cells[0][c].wallState.bottom =
+                                cells[gridSize][c].wallState.bottom;
+
+                            cells[gridSize + 1][c].wallState.top =
+                                cells[1][c].wallState.top;
+                        }
+                        for (let r = 1; r <= gridSize; r++) {
+                            cells[r][0].wallState.right =
+                                cells[r][gridSize].wallState.right;
+
+                            cells[r][gridSize + 1].wallState.left =
+                                cells[r][1].wallState.left;
+                        }
+                    }
+
+                    function renderCell(cell) {
+                        cell.el.querySelectorAll(".wall").forEach(w => w.remove());
+
+                        const isGhost =
+                            cell.pos.r === 0 ||
+                            cell.pos.c === 0 ||
+                            cell.pos.r === fullSize - 1 ||
+                            cell.pos.c === fullSize - 1;
+
+                        if (isGhost && !ghostMode) {
+                            return;
+                        }
+
+                        for (const side of ["top", "right", "bottom", "left"]) {
+                            const color = cell.wallState[side];
+                            if (!color) continue;
+
+                            const w = document.createElement("div");
+                            w.className = `wall ${side} ${color}`;
+                            cell.el.appendChild(w);
+                        }
+                    }
+
+                    function renderAll() {
+                        syncGhosts();
+                        cells.flat().forEach(renderCell);
+                    }
+
+                    function swapCells(a, b) {
+                        const tmp = a.wallState;
+                        a.wallState = b.wallState;
+                        b.wallState = tmp;
+                        renderAll();
+                    }
+
+                    for (let r = 0; r < fullSize; r++) {
+                        cells[r] = [];
+                        for (let c = 0; c < fullSize; c++) {
+                            const el = document.createElement("div");
+                            el.className = "cell";
+
+                            const isGhost =
+                                r === 0 || c === 0 ||
+                                r === fullSize - 1 || c === fullSize - 1;
+
+                            if (isGhost) el.classList.add("ghost");
+
+                            const cell = {
+                                el,
+                                pos: { r, c },
+                                wallState: { top: null, right: null, bottom: null, left: null }
+                            };
+
+                            if (!isGhost) {
+                                el.addEventListener("click", () => {
+                                    if (mode === "edit") {
+                                        document.querySelectorAll(".selected")
+                                            .forEach(x => x.classList.remove("selected"));
+                                        el.classList.add("selected");
+                                        selectedCell = cell;
+                                    } else {
+                                        if (!pickedCell) {
+                                            pickedCell = cell;
+                                            el.classList.add("selected");
+                                        } else if (pickedCell !== cell) {
+                                            swapCells(pickedCell, cell);
+                                            document.querySelectorAll(".selected")
+                                                .forEach(x => x.classList.remove("selected"));
+                                            pickedCell = null;
+                                        } else {
+                                            pickedCell = null;
+                                            document.querySelectorAll(".selected")
+                                                .forEach(x => x.classList.remove("selected"));
+                                        }
+                                    }
+                                });
+                            }
+
+                            grid.appendChild(el);
+                            cells[r][c] = cell;
+                        }
+                    }
+
+                    document.addEventListener("keydown", e => {
+                        if (mode !== "edit" || !selectedCell) return;
+
+                    const map = {
+                        ArrowUp: "top",
+                        ArrowRight: "right",
+                        ArrowDown: "bottom",
+                        ArrowLeft: "left",
+                        w: "top",
+                        W: "top",
+                        d: "right",
+                        D: "right",
+                        s: "bottom",
+                        S: "bottom",
+                        a: "left",
+                        A: "left"
+                    };
+
+                        const side = map[e.key];
+                        if (!side) return;
+
+                        e.preventDefault();
+                        selectedCell.wallState[side] =
+                            nextColor(selectedCell.wallState[side]);
+                        renderAll();
+                    });
+
+                    document.querySelectorAll("[data-dir]").forEach(btn => {
+                        btn.addEventListener("click", () => {
+                            if (mode !== "edit" || !selectedCell) return;
+                            const side = btn.dataset.dir;
+                            selectedCell.wallState[side] =
+                                nextColor(selectedCell.wallState[side]);
+                            renderAll();
+                        });
+                    });
+
+                    toggleGhost.addEventListener("click", () => {
+                        ghostMode = !ghostMode;
+                        toggleGhost.textContent = 
+                            ghostMode === true ? "Ghost Mode: on" : "Ghost Mode: off";
+                        renderAll();
+                    });
+                    
+                    toggleMode.addEventListener("click", () => {
+                        mode = mode === "edit" ? "interactive" : "edit";
+                        toggleMode.textContent =
+                            mode === "edit" ? "Mode: Edit" : "Mode: Interact";
+                        document.querySelectorAll(".selected")
+                            .forEach(x => x.classList.remove("selected"));
+                        selectedCell = pickedCell = null;
+                    });
+
+                    renderAll();
+                </script>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
