@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1">
+        <title>Hexiom — Keep Talking and Nobody Explodes Module</title>
+        <link rel="stylesheet" type="text/css" href="css/font.css">
+        <link rel="stylesheet" type="text/css" href="css/normalize.css">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <script src="js/ktane-utils.js"></script>
+        <style>
+            #hexGridContainer {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            #hexGridContainer svg {
+                width: 100%;
+                max-width: 600px;
+                height: auto;
+                margin: 10px 0;
+            }
+
+            #hexGridContainer polygon {
+                stroke: #333;
+                stroke-width: 2;
+                cursor: pointer;
+            }
+
+            #hexGridContainer polygon:hover:not(.disabled) {
+                stroke: red;
+                stroke-width: 4;
+            }
+
+            #hexGridContainer polygon.disabled {
+                cursor: default;
+            }
+
+            #hexGridContainer polygon.disabled:hover {
+                stroke: #333;
+                stroke-width: 2;
+            }
+
+            #hexGridContainer polygon.selected {
+                stroke: red;
+                stroke-width: 4;
+            }
+
+            #hexGridContainer text {
+                font-size: 30px;
+                font-weight: bold;
+                text-anchor: middle;
+                dominant-baseline: middle;
+                pointer-events: none;
+            }
+
+            #hexGridContainer button {
+                margin: 5px;
+                padding: 6px 12px;
+            }
+            button.active {
+                background-color: #87cefa; /* light blue highlight */
+                color: #000;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="section">
+            <div class="page page-bg-01">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Hexiom</span>
+                </div>
+                <div class="page-content">
+                    <img src="img/Component/Hexiom.svg" class="diagram">
+                    <h2>On the Subject of Hexiom</h2>
+                    <p class="flavour-text">That one flash game in the past? He brought it here. Without that one track.</p>
+                    <p>This module consists of a cut backing and a hexagonal grid with a three tile radius. Each tile is either a tile with a number on the hexagon, an empty tile with an inset for placing tiles, a locked tile with a number on the hexagon, or an empty flat tile. To distinguish between an inset tile and an empty flat tile, the inset tile will have a darker color versus the empty flat tile. To distinguish between a locked numbered tile and a swappable numbered tile, the locked numbered tile will have arms connecting to the corners of the numbered tile.</p>
+                    <p>To disarm the module, make ALL the numbered tiles glow yellow. A numbered tile will glow red if there are more adjacent tiles surrounding than the number required, green if there are fewer adjacent tiles, or yellow otherwise.</p>
+                    <p>Click and drag an unlocked numbered tile to a position where the numbered tile has exactly the number of adjacent tiles shown. Numbered tiles cannot be placed on empty flat tiles or swapped with locked numbered tiles. They can only be swapped with another numbered tile or placed in an inset tile.</p>
+                    <p>There may be more than one solution where all of the numbered tiles are glowing yellow.</p>
+                    <p>If colorblind mode is enabled on this module, an extra symbol will be appended to all numbered tiles that are present. The symbol appended will be “&gt;” if there are more adjacent tiles surrounding than the number required, “&lt;” if there are fewer adjacent tiles, or “=” otherwise.</p>
+                    <p>To reset the puzzle, the bottom-right button can be pressed to reset the puzzle. This will NOT generate a new puzzle.</p>
+                </div>
+                <div class="page-footer relative-footer">Page 1 of 2</div>
+            </div>
+            <div class="page page-bg-02">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Hexiom</span>
+                </div>
+                <div class="page-content">
+                    <p>
+                        Edit mode: Press a number and a cell to add the number, press again to remove. 🔒 an empty cell to turn it black, 🔒 a numbered cell to lock it. 🔒 is toggleable.<br>
+                    </p>
+                    <div id="hexGridContainer">
+                        <div id="buttonContainer" style="display: flex; justify-content: center;">
+                            <button id="editBtn">Edit mode</button>
+                            <button id="interactBtn">Interactive mode</button>
+                        </div>
+
+                        <div id="menuWrapper" style="display: flex; justify-content: center; width: 100%;">
+                            <svg id="menuBar" viewBox="0 0 600 120" preserveAspectRatio="xMidYMid meet">
+                                <g id="menuGroup"></g>
+                            </svg>
+                        </div>
+
+                        <svg id="gridSvg" viewBox="0 0 600 500" preserveAspectRatio="xMidYMid meet">
+                            <g id="borderGroup"></g>
+                            <g id="gridGroup"></g>
+                        </svg>
+                    </div>
+
+                    <script>
+                    (function(){
+                    const hexSize = 40;
+                    let mode = "edit";
+                    editBtn.classList.add("active");
+
+                    let selectedButton = null;
+                    let selectedSwapCell = null;
+                    const cells = [];
+
+                    //hex making is when daddy hex and mommy hex love each other very much
+                    function drawHexFlatTop(x, y, size, parent, interactive = true) {
+                        const pts = [];
+                        for (let i = 0; i < 6; i++) {
+                            const a = (60 * i + 30) * Math.PI / 180;
+                            pts.push(`${x + size * Math.cos(a)},${y + size * Math.sin(a)}`);
+                        }
+                        return makePolygon(pts, parent, interactive);
+                    }
+
+                    function drawHexPointyTop(x, y, size, parent, interactive = true) {
+                        const pts = [];
+                        for (let i = 0; i < 6; i++) {
+                            const a = (60 * i) * Math.PI / 180;
+                            pts.push(`${x + size * Math.cos(a)},${y + size * Math.sin(a)}`);
+                        }
+                        return makePolygon(pts, parent, interactive);
+                    }
+
+                    function makePolygon(points, parent, interactive) {
+                        const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                        poly.setAttribute("points", points.join(" "));
+                        poly.setAttribute("fill", "#fff");
+
+                        if (!interactive) {
+                            poly.classList.add("disabled");
+                            poly.style.pointerEvents = "none";
+                        }
+
+                        parent.appendChild(poly);
+                        return poly;
+                    }
+
+                    function drawText(x, y, content, parent) {
+                        const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        t.setAttribute("x", x);
+                        t.setAttribute("y", y);
+                        t.setAttribute("dy", "0.25em");
+                        t.textContent = content;
+                        parent.appendChild(t);
+                        return t;
+                    }
+
+                    //menu please? the men i please are none of your business
+                    const menuGroup = document.getElementById("menuGroup");
+                    const menuBar = document.getElementById("menuBar");
+                    const hStep = hexSize * 1.5;
+                    const vStep = Math.sqrt(3) * hexSize / 2;
+                    const menuButtons = [];
+
+                    function clearMenuHighlight() {
+                        menuButtons.forEach(b => b.setAttribute("fill", "#fff"));
+                        lockBtn.setAttribute("fill", "#fff");
+                    }
+
+                    for (let i = 0; i <= 6; i++) {
+                        const x = i * hStep;
+                        const y = (i % 2) * vStep;
+
+                        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                        menuGroup.appendChild(g);
+
+                        const poly = drawHexPointyTop(x, y, hexSize, g);
+                        drawText(x, y, i, g);
+
+                        menuButtons.push(poly);
+
+                        poly.addEventListener("click", () => {
+                            if (mode !== "edit") return;
+                            selectedButton = i;
+                            clearMenuHighlight();
+                            poly.setAttribute("fill", "#87cefa");
+                        });
+                    }
+
+                    const lockGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    menuGroup.appendChild(lockGroup);
+
+                    const lockX = 7 * hStep;
+                    const lockY = (7 % 2) * vStep;
+
+                    const lockBtn = drawHexPointyTop(lockX, lockY, hexSize, lockGroup);
+                    drawText(lockX, lockY, "🔒", lockGroup);
+
+                    lockBtn.addEventListener("click", () => {
+                        if (mode !== "edit") return;
+                        selectedButton = "lock";
+                        clearMenuHighlight();
+                        lockBtn.setAttribute("fill", "#87cefa");
+                    });
+
+                    // center menuGroup based on its bounding box
+                    function centerMenu() {
+                        const bbox = menuGroup.getBBox();
+                        const svgWidth = menuBar.viewBox.baseVal.width;
+                        const svgHeight = menuBar.viewBox.baseVal.height;
+                        const offsetX = svgWidth / 2 - (bbox.x + bbox.width / 2);
+                        const offsetY = svgHeight / 2 - (bbox.y + bbox.height / 2);
+                        menuGroup.setAttribute("transform", `translate(${offsetX},${offsetY})`);
+                    }
+
+                    // gird
+                    const gridGroup = document.getElementById("gridGroup");
+                    const borderGroup = document.getElementById("borderGroup");
+                    const gridSvg = document.getElementById("gridSvg");
+
+                    function axialToPixel(q, r) {
+                        return {
+                            x: hexSize * 1.5 * q,
+                            y: hexSize * Math.sqrt(3) * (r + q / 2)
+                        };
+                    }
+
+                    // bordir
+                    const GRID_RADIUS = 3;
+                    const borderR = hexSize * GRID_RADIUS * 2;
+                    const borderHex = drawHexFlatTop(0, 0, borderR, borderGroup, false);
+                    borderHex.setAttribute("fill", "#000");
+
+                    // build gird
+                    for (let q = -2; q <= 2; q++) {
+                        for (let r = -2; r <= 2; r++) {
+                            if (Math.abs(q + r) > 2) continue;
+
+                            const { x, y } = axialToPixel(q, r);
+                            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                            gridGroup.appendChild(g);
+
+                            const hex = drawHexPointyTop(x, y, hexSize, g);
+
+                            const cell = {
+                                q, r, x, y,
+                                group: g,
+                                hex,
+                                numberText: null,
+                                ring: null,
+                                state: "normal"
+                            };
+
+                            cells.push(cell);
+                            hex.addEventListener("click", () => handleCellClick(cell));
+                        }
+                    }
+
+                    // center gridGroup and borderGroup
+                    function centerGrid() {
+                        const bbox = gridGroup.getBBox();
+                        const svgWidth = gridSvg.viewBox.baseVal.width;
+                        const svgHeight = gridSvg.viewBox.baseVal.height;
+                        const offsetX = svgWidth / 2 - (bbox.x + bbox.width / 2);
+                        const offsetY = svgHeight / 2 - (bbox.y + bbox.height / 2);
+                        gridGroup.setAttribute("transform", `translate(${offsetX},${offsetY})`);
+                        borderGroup.setAttribute("transform", `translate(${offsetX},${offsetY})`);
+                    }
+
+                    // lojic
+                    function handleCellClick(cell) {
+                        if (mode === "interact") {
+                            if (cell.state !== "normal") return;
+
+                            if (!selectedSwapCell) {
+                                if (!cell.numberText) return;
+                                selectedSwapCell = cell;
+                                cell.hex.classList.add("selected");
+                                return;
+                            }
+
+                            if (selectedSwapCell === cell) {
+                                selectedSwapCell.hex.classList.remove("selected");
+                                selectedSwapCell = null;
+                                updateColors();
+                                return;
+                            }
+
+                            selectedSwapCell.hex.classList.remove("selected");
+                            swapCells(selectedSwapCell, cell);
+                            selectedSwapCell = null;
+                            updateColors();
+                            return;
+                        }
+
+                        if (mode !== "edit" || selectedButton === null) return;
+
+                        if (selectedButton === "lock") {
+                            if (cell.state === "black") {
+                                cell.state = "normal";
+                                updateColors();
+                                return;
+                            }
+
+                            if (cell.state === "locked") {
+                                cell.group.removeChild(cell.ring);
+                                cell.ring = null;
+                                cell.state = "normal";
+                                updateColors();
+                                return;
+                            }
+
+                            if (cell.numberText) {
+                                cell.state = "locked";
+                                const ring = drawHexFlatTop(
+                                    cell.x,
+                                    cell.y,
+                                    hexSize / 1.5,
+                                    cell.group,
+                                    false
+                                );
+                                ring.setAttribute("fill", "none");
+                                ring.setAttribute("stroke", "#888");
+                                ring.setAttribute("stroke-width", "3");
+                                cell.ring = ring;
+                                updateColors();
+                                return;
+                            }
+
+                            cell.state = "black";
+                            updateColors();
+                            return;
+                        }
+
+                        if (typeof selectedButton === "number" && cell.state === "normal") {
+                            if (
+                                cell.numberText &&
+                                Number(cell.numberText.textContent) === selectedButton
+                            ) {
+                                cell.group.removeChild(cell.numberText);
+                                cell.numberText = null;
+                                updateColors();
+                                return;
+                            }
+
+                            if (cell.numberText) {
+                                cell.group.removeChild(cell.numberText);
+                            }
+
+                            cell.numberText = drawText(cell.x, cell.y, selectedButton, cell.group);
+                            updateColors();
+                        }
+                    }
+
+                    function swapCells(a, b) {
+                        const tmp = a.numberText;
+                        a.numberText = b.numberText;
+                        b.numberText = tmp;
+
+                        [a, b].forEach(c => {
+                            if (c.numberText) {
+                                c.numberText.setAttribute("x", c.x);
+                                c.numberText.setAttribute("y", c.y);
+                                c.group.appendChild(c.numberText);
+                            }
+                        });
+                    }
+
+                    function countNeighbors(cell) {
+                        const dirs = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+                        return dirs.filter(([dq, dr]) =>
+                            cells.some(c =>
+                                c.q === cell.q + dq &&
+                                c.r === cell.r + dr &&
+                                c.numberText
+                            )
+                        ).length;
+                    }
+
+                    function updateColors() {
+                        cells.forEach(c => {
+                            if (c.numberText) {
+                                const n = Number(c.numberText.textContent);
+                                const k = countNeighbors(c);
+                                c.hex.setAttribute(
+                                    "fill",
+                                    k === n ? "yellow" : k < n ? "green" : "red"
+                                );
+                            } else if (c.state === "black") {
+                                c.hex.setAttribute("fill", "#000");
+                            } else {
+                                c.hex.setAttribute("fill", "#fff");
+                            }
+                        });
+                    }
+
+                    document.getElementById("editBtn").onclick = () => {
+                        mode = "edit";
+                        editBtn.classList.add("active");
+                        interactBtn.classList.remove("active");
+                        selectedButton = null;
+                        if (selectedSwapCell) selectedSwapCell.hex.classList.remove("selected");
+                        selectedSwapCell = null;
+                        updateColors();
+                    };
+
+                    document.getElementById("interactBtn").onclick = () => {
+                        mode = "interact";
+                        interactBtn.classList.add("active");
+                        editBtn.classList.remove("active");
+                        clearMenuHighlight();
+                        selectedButton = null;
+                        if (selectedSwapCell) selectedSwapCell.hex.classList.remove("selected");
+                        selectedSwapCell = null;
+                    };
+
+                    // center everything after initial drawing
+                    window.addEventListener("load", () => {
+                        centerMenu();
+                        centerGrid();
+                    });
+                    })();
+                    </script>
+                </div>
+                <div class="page-footer relative-footer">Page 2 of 2</div>
+            </div>
+        </div>
+    </body>
+</html>
