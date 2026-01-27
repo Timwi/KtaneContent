@@ -207,6 +207,8 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     return;
                 }
 
+                let did_action = true;
+
                 // Only accept shortcuts with Alt or Ctrl+Shift
                 if (!event.altKey && !(event.shiftKey && (event.ctrlKey || event.metaKey)))
                     return;
@@ -236,6 +238,11 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 else if (!ctrlSelectsColors && n !== null)
                 {
                     colorSelect.val(n).change();
+                } else {
+                    did_action = false;
+                }
+                if (did_action) {
+                    event.preventDefault()
                 }
             });
 
