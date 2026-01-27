@@ -139,7 +139,7 @@ for(let x=0;x<RULENUMBER;x++){
             RuleText.push("Take each value's prime factors. Sum them up. Then replace each value with the sum.");
             break;
         case 2:
-            RuleText.push("Replace the highest value with the avarage of all other values. Round down if necessary.");
+            RuleText.push("Replace the highest value with the average of all other values. Round down if necessary.");
             break;
         case 3:
             RuleText.push("Swap the values between the lowest number and the highest.");
