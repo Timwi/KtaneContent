@@ -204,6 +204,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     && event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey
                 ) {
                     colorSelect.val(n).change();
+                    event.preventDefault();
                     return;
                 }
 
@@ -236,7 +237,11 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 else if (!ctrlSelectsColors && n !== null)
                 {
                     colorSelect.val(n).change();
+                } else {
+                    // No valid keybind detected.
+                    return;
                 }
+                event.preventDefault();
             });
 
             // Highlighter mobile controls
