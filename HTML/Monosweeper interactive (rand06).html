@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Monosweeper — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        ul { font-size: 17.5px; }
+        .cell {
+            font-family: "Special Elite";
+            width: 3rem;
+            height: 3rem;
+            background-color: #909090;
+            color: black;
+            font-weight: bold;
+            font-size: 1.5rem;
+            margin: 0.1rem;
+        }
+        .cell.highlighted {
+            background-color: blue;
+            color: white;
+        }
+        .cell.black {
+            background-color: black;
+            color: white;
+        }
+        .cell.white {
+            background-color: white;
+            color: black;
+        }
+        #blackAmount {
+            background-color: black;
+            color:white;
+            font-size: 3rem;
+            width:2em;
+            /* align-self: center; */
+            /* font-family: "Special Elite"; */
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .centered{
+            display: flex;
+            justify-content: center;
+        }
+        
+    </style>
+    <script>
+        
+        var solving = false;
+        var cells = new Array(7);
+        var numbers = new Array(7);
+        var colors = new Array(7);
+        var highlighted = null;
+        var blackAmountNumber = NaN;
+        var blackAmountWindow;
+        function init(){
+        
+        document.addEventListener('keydown', (event) =>{
+            if (![
+                "ArrowRight","ArrowLeft","ArrowUp","ArrowDown",
+                "0","1","2","3","4","5","6","7","8","9"
+            ].includes(event.key)) return;
+            if ([
+                "ArrowRight","ArrowLeft","ArrowUp","ArrowDown"
+            ].includes(event.key)) event.preventDefault();
+            if (!highlighted) return;
+            cells[highlighted[0]][highlighted[1]].className="cell";
+            switch(event.key){
+                case "ArrowRight":
+                    highlighted[1]=(highlighted[1]+1)%7;
+                    break;
+                case "ArrowLeft":
+                    highlighted[1]=(highlighted[1]+6)%7;
+                    break;
+                case "ArrowUp":
+                    highlighted[0]=(highlighted[0]+6)%7;
+                    break;
+                case "ArrowDown":
+                    highlighted[0]=(highlighted[0]+1)%7;
+                    break;
+                
+                default: 
+                    numbers[highlighted[0]][highlighted[1]]=parseInt(event.key,10);
+                    pos = (7*highlighted[0] + highlighted[1]+1)%49;
+                    highlighted = [Math.trunc(pos/7),pos%7];
+            }
+            cells[highlighted[0]][highlighted[1]].className="cell highlighted";
+            refresh();
+        });
+            blackAmountWindow = document.getElementById("blackAmount");
+            var grid = document.getElementsByClassName("grid")[0];
+            var row = new Array(7);
+            for (let i=0; i<7; i++){
+                row[i]=document.createElement("div");
+                row[i].className="row";
+                grid.appendChild(row[i]);
+                cells[i] = new Array(7);
+                numbers[i] = new Array(7);
+                colors[i] = new Array(7);
+                for (let j=0; j<7; j++){
+                    numbers[i][j] = 0;
+                    colors[i][j] = 0;
+                    cells[i][j] = document.createElement("button");
+                    cells[i][j].className="cell";
+                    cells[i][j].setAttribute("onclick","press("+i+","+j+")");
+                    cells[i][j].oncontextmenu = function(event){
+                        event.preventDefault();
+                        pressRight(i,j);
+                    }
+                    row[i].appendChild(cells[i][j]);
+                }
+            }
+            refresh();
+        };
+        
+        function refresh(){
+            for (var i=0; i<7; i++) for (var j=0; j<7; j++) {
+                cells[i][j].textContent=numbers[i][j];
+                if (solving){
+                    switch(colors[i][j]){
+                    case 0: cells[i][j].className="cell"; break;
+                    case 1: cells[i][j].className="cell black"; break;
+                    case -1: cells[i][j].className="cell white"; break;
+                    }
+                }
+                else cells[i][j].className = highlighted && highlighted.toString()==[i,j]?"cell highlighted":"cell";
+            }
+        }
+        
+        function press(x,y){
+            if (!solving){
+                if (highlighted)
+                    cells[highlighted[0]][highlighted[1]].className="cell";
+                highlighted=[x,y];
+                cells[x][y].className="cell highlighted";
+                numbers[x][y]=(numbers[x][y]+1)%10
+            }
+            else {
+                colors[x][y]=colors[x][y]==1?0:1;
+                blackAmountWindow.value = blackAmountWindow.value==''?'':blackAmountNumber - colors.flat().filter(a => a==1).length + 1;
+            }
+            refresh();
+        }
+
+        function pressRight(x,y){
+            if (!solving) return;
+            colors[x][y]=colors[x][y]==-1?0:-1;
+            blackAmountWindow.value = blackAmountWindow.value==''?'':blackAmountNumber - colors.flat().filter(a => a==1).length + 1;
+            refresh();
+        }
+
+        function readsolvepress(){
+            solving=!solving;
+            blackAmountWindow.readonly = solving;
+            if (!Boolean(parseInt(blackAmountWindow.value))) blackAmountWindow.value = '';
+            else {
+                if (solving) blackAmountNumber=parseInt(blackAmountWindow.value)
+                blackAmountWindow.value = blackAmountNumber - (solving?colors.flat().filter(a => a==1).length-1:0);
+            }
+            document.getElementById("read-solve").textContent = solving?"Solve":"Read";
+            refresh();
+        }
+
+        function pressCounter(){
+            highlighted = null;
+            refresh();
+        }
+
+        function resetColors(){
+            if (solving) readsolvepress();
+            colors.forEach(row => row.fill(0));
+            refresh();
+        }
+
+        function resetNumbers(){
+            numbers.forEach(row => row.fill(0));
+            refresh();
+        }
+        
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Monosweeper</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Monosweeper.svg" class="diagram">
+                <h2>On the Subject of Monosweeper</h2>
+                <p class="flavour-text">Not all problems are black and white.<br>However...</p>
+                <ul>
+                    <li>On the module is a 7×7 grid of numbered pieces.<br>
+                        There is one white piece, one black piece, and forty-seven grey pieces, which have their black or white status hidden, in the grid.</li>
+                    <li>Each piece is labelled with the number of adjacent pieces that have the same status.</li>
+                    <li>The number on the display above the grid is the number of grey pieces that have a hidden black status.</li>
+                    <li>Selecting a grey piece reveals its status:
+                        <ul>
+                            <li>If the piece is white, a strike is received.</li>
+                            <li>If the piece is black, the number on the display decreases by 1.</li>
+                        </ul>
+                    </li>
+                    <li>The module is solved once all black pieces have been selected.</li>
+                </ul>
+                
+                <div class="centered"><input id="blackAmount" type="text" placeholder="??" onclick="pressCounter()"></div>
+                <div class="centered">
+                <div class="grid"></div>
+                </div>
+                <div class="centered">
+                    <div>
+                    <button id="read-solve" onclick="readsolvepress()">Read</button>
+                    <button onclick="resetColors()">Reset colors</button>
+                    <button onclick="resetNumbers()">Reset numbers</button>
+                    </div>
+                </div>
+                <script>init();</script>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
