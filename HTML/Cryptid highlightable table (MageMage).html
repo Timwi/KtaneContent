@@ -13,7 +13,6 @@
     <meta property="og:image" content="https://ktane.timwi.de/Icons/Cryptid.png">
     <meta property="og:url" content="https://ktane.timwi.de/HTML/Cryptid.html">
     <meta property="og:description" content="Determine the rules that the puzzle generates to determine the location of the Cryptid.">
-
     <style>
         .dark table, table {
             margin: 1em auto;
@@ -64,24 +63,59 @@
     <script>
         document.addEventListener('DOMContentLoaded', function()
         {
+            function notValid()
+            {
+                for (let col = 0; col < 12; col++)
+                    for (let row = 0; row < 9; row++)
+                    {
+                        document.getElementById(`cell-${String.fromCharCode(65 + col)}${row+1}`)
+                            .setAttribute('fill', 'none');
+                        document.getElementById(`terr-${String.fromCharCode(65 + col)}${row+1}`)
+                            .setAttribute('stroke', 'none');
+                    }
+
+                for (let ix = 0; ix < 8; ix++)
+                    document.getElementById('parking').appendChild(document.getElementById(`sym${ix}`));
+                return;
+            }
+
             document.getElementById('map-code').onkeyup = function()
             {
-                let code = document.getElementById('map-code').value.toUpperCase();
-                if (!/^[23456789ABCD]{6}([A-L][1-9]){8}$/.test(code))
-                {
-                    for (let col = 0; col < 12; col++)
-                        for (let row = 0; row < 9; row++)
-                        {
-                            document.getElementById(`cell-${String.fromCharCode(65 + col)}${row+1}`)
-                                .setAttribute('fill', 'none');
-                            document.getElementById(`terr-${String.fromCharCode(65 + col)}${row+1}`)
-                                .setAttribute('stroke', 'none');
-                        }
+                let code = document.getElementById('map-code').value;
+                let alphabet = '!#$%&*+-/123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\\abcdefghijklmnopqrstuvwxyz|~';
+                if (code.length < 1 || !Array.from(code).every(ch => alphabet.includes(ch)))
+                    return notValid();
 
-                    for (let ix = 0; ix < 8; ix++)
-                        document.getElementById('parking').appendChild(document.getElementById(`sym${ix}`));
-                    return;
+                let value = 0n, mult = 1n;
+                for (let i = 0; i < code.length; i++)
+                {
+                    let v = alphabet.indexOf(code[i]);
+                    value += mult * BigInt(v);
+                    mult *= BigInt(alphabet.length);
                 }
+                let coordNumbers = [];
+                for (let i = 0; i < 8; i++)
+                {
+                    coordNumbers.push(Number(value % 108n));
+                    value /= 108n;
+                }
+                let tilesAvailable = [0, 1, 2, 3, 4, 5], tileNumbers = [], tileFlips = [], tileIxs = [];
+                for (let i = 1; i <= 6; i++)
+                {
+                    tileFlips.push(Number(value % 2n));
+                    value /= 2n;
+                    let ix = Number(value % BigInt(i));
+                    tileIxs.push(ix);
+                    value /= BigInt(i);
+                }
+                for (let i = 5; i >= 0; i--)
+                {
+                    tileNumbers.push(tilesAvailable[tileIxs[i]]);
+                    tilesAvailable.splice(tileIxs[i], 1);
+                }
+
+                if (value > 0n)
+                    return notValid();
 
                 let info =
                 [
@@ -225,9 +259,8 @@
                     {
                         let x = (col / 6) | 0;
                         let y = (row / 3) | 0;
-                        let tileNumber = parseInt(code[x + 2*y], 16) - 2;
-                        let tileArr = info[tileNumber >> 1];
-                        if (tileNumber & 1) {
+                        let tileArr = info[tileNumbers[x + 2*y]];
+                        if (tileFlips[5 - x - 2*y]) {
                             tileArr = [...tileArr];
                             tileArr.reverse();
                         }
@@ -244,7 +277,8 @@
 
                 for (let ix = 0; ix < 8; ix++)
                 {
-                    let coords = code.substring(6 + 2*ix, 8 + 2*ix);
+                    let coordNum = coordNumbers[7 - ix];
+                    let coords = `${String.fromCharCode(65 + coordNum%12)}${((coordNum/12)|0) + 1}`;
                     let sym = document.getElementById(`sym${ix}`);
                     let g = document.getElementById(`cell-${coords}`).parentNode;
                     g.appendChild(sym);
