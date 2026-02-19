@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Fractal Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .centered{
+            display: flex;
+            justify-content: center;
+            margin: 1em 0;
+        }
+
+        .colorButton {
+            width: 2em;
+            height: 2em;
+            margin: 0 .2em;
+            font-family: "Special Elite";
+
+        }
+        .gray{
+            background-color: gray;
+            color: black;
+            background: repeating-linear-gradient(-45deg, rgb(196, 196, 196) 0%, rgb(196, 196, 196) 5%, rgb(128, 128, 128) 5%, rgb(128, 128, 128) 10%)
+        }
+        .black{ background-color: black; color: white; }
+        .red{ background-color: red; color: white; }
+        .green{ background-color: #00ff00; color: black; }
+        .blue{ background-color: blue; color: white; }
+        .cyan{ background-color: cyan; color: black; }
+        .yellow{ background-color: yellow; color: black; }
+        .magenta{ background-color: magenta; color: black; }
+        .white{ background-color: white; color: black; }
+
+        #grid td{
+            width: 2rem;
+            height: 2rem;
+            padding: 0.3rem;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.5em
+        }
+
+        .colorButton.selected{
+            border: 0.2em solid #0080ff;
+        }
+
+        .btn svg {
+            width: 1rem;
+            height: 1rem;
+            display: block;
+        }
+
+        .btn{
+            font-family: "Special Elite";
+            text-align: center;
+            background-color: white;
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .btn.active{
+            background-color: yellow;
+        }
+    </style>
+
+    <script>
+        var grid;
+        var gridElements;
+        var gridsValues = new Array(4);
+        var currentColor = -1;
+        var controlButtons = new Array(2);
+
+        var selectedQuadrant = -1;
+
+        const SVGs = [
+            "M5 7l7-5 7 5M5 17l7 5 7-5M12 2v20",
+            "M7 5l-5 7 5 7M17 5l5 7-5 7M2 12h20",
+            "M20 12a8 8 0 1 1-2.3-5.7M20 4v6h-6",
+            "M5 5l14 14M19 5l-14 14",
+            "M6 5h12a2 2 0 0 1 2 2v13a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-13a2 2 0 0 1 2 -2M9 4h6v4h-6z"
+        ]
+
+        function vertFlip(matrix) {
+            return [...matrix].reverse().map(row => [...row]);
+        }
+
+        function horizFlip(matrix) {
+            return matrix.map(row => [...row].reverse());
+        }
+
+        function transpose(matrix) {
+            const n = matrix.length;
+            return Array.from({ length: n }, (_, i) =>
+                Array.from({ length: n }, (_, j) => matrix[j][i])
+            );
+        }
+
+        function rotate(matrix) {
+            return horizFlip(transpose(matrix));
+        }
+
+        function emptyOut(matrix) {
+            const n = matrix.length;
+            return Array.from({ length: n }, (_, i) =>
+                Array.from({ length: n }, (_, j) => -1)
+            );
+        }
+
+        function paint(matrix, layer){
+            if (selectedQuadrant==-1) return;
+            for (let i=0; i<1<<layer; i++){
+                for (let j=0; j<1<<layer; j++){
+                    gridsValues[layer][i+(1<<layer)*(selectedQuadrant>1)][j+(1<<layer)*(selectedQuadrant%2)] = matrix[i][j];
+                }
+            }
+            setGrid(layer);
+        }
+
+        function extract(layer){
+            if (selectedQuadrant==-1) return;
+            let answerMatrix = new Array(1<<layer);
+            for (let i=0; i<1<<layer; i++){
+                answerMatrix[i]=new Array(1<<layer);
+                for (let j=0; j<1<<layer; j++){
+                    answerMatrix[i][j] = gridsValues[layer][i+(1<<layer)*(selectedQuadrant>1)][j+(1<<layer)*(selectedQuadrant%2)];
+                }
+            }
+            return answerMatrix;
+        }
+
+        function setGrid(configNumber){
+            let config = gridsValues[configNumber];
+            const n = 2 << configNumber;
+            grid.replaceChildren();
+            let gridTable;
+            gridElements = new Array(n);
+            grid.appendChild(gridTable = document.createElement("table"));
+            for (let i=0; i<n; i++) {
+                let row = document.createElement("tr");
+                gridTable.appendChild(row);
+                gridElements[i] = new Array(n);
+                for (var j=0; j<n; j++) {
+                    gridElements[i][j] = document.createElement("td");
+                    row.appendChild(gridElements[i][j]);
+                    gridElements[i][j].className = [
+                        "gray",
+                        "black",
+                        "red",
+                        "green",
+                        "blue",
+                        "cyan",
+                        "magenta",
+                        "yellow",
+                        "white"
+                    ][config[i][j]+1];
+                    gridElements[i][j].setAttribute("onclick","pressCell("+configNumber+","+i+","+j+")");
+                }
+            }
+        }
+
+        function init(){
+            grid = document.getElementById('grid');
+            zeroOutGrids();
+            setGrid(0);
+            initControlPanel();
+            document.getElementById("layers").addEventListener("change", (event) => {setGrid(event.target.value);});
+            controlButtons[1][4].classList.toggle("active");
+        }
+
+        function zeroOutGrids(){
+            for (let i=0; i<4; i++){
+                gridsValues[i]= new Array(2<<i);
+                for (let j=0; j<2<<i; j++){
+                    gridsValues[i][j] = new Array(2<<j);
+                    for (let k=0; k<2<<i; k++){
+                        gridsValues[i][j][k] = -1;
+                    }
+                }
+            }
+        }
+
+        function createRegularButton(j){
+            let quadrants = ["TL","TR","BL","BR","Ø"];
+            let btn = document.createElement("button");
+            btn.className = "btn";
+            btn.textContent = quadrants[j];
+            return btn;
+        }
+        
+        function initControlPanel(){
+            let controlPanel = document.getElementById("controlPanel");
+            for (let i=0; i<2; i++){
+                let row = document.createElement("tr");
+                controlPanel.appendChild(row);
+                controlButtons[i] = new Array(5);
+                for (let j=0; j<SVGs.length; j++) {
+                    controlButtons[i][j] =
+                        i==0?
+                            createButton(SVGs[j]):
+                            createRegularButton(j)
+                    ;
+                    controlButtons[i][j].setAttribute("onclick","pressControl("+i+","+j+")");
+                }
+                for (let j=0; j<SVGs.length; j++) {
+                    let cell = document.createElement("td");
+                    row.appendChild(cell);
+                    cell.appendChild(controlButtons[i][j]);
+                }
+            }
+        }
+
+        function pressControl(i,j){
+            if (i==0){
+                if (selectedQuadrant==-1) return;
+                let layer = document.getElementById("layers").value;
+                if (layer==0) return;
+                switch (j){
+                    case 0: paint(vertFlip(extract(layer)),layer); break;
+                    case 1: paint(horizFlip(extract(layer)),layer); break;
+                    case 2: paint(rotate(extract(layer)),layer); break;
+                    case 3: paint(emptyOut(extract(layer)),layer); break;
+                    case 4: paint(gridsValues[layer-1],layer); break;
+                }
+            }
+            else{
+                controlButtons[i][(selectedQuadrant+5)%5].classList.toggle("active");
+                selectedQuadrant = (j+1)%5-1;
+                controlButtons[i][(selectedQuadrant+5)%5].classList.toggle("active");
+            }
+        }
+
+        function pressCell(l,i,j){
+            if (l!=0) {
+                switch(gridElements[i][j].textContent){
+                    case "": gridElements[i][j].textContent = "S"; break;
+                    case "S": gridElements[i][j].textContent = "F"; break;
+                    case "F": gridElements[i][j].textContent = ""; break;
+                }
+            }
+            else {
+                gridsValues[l][i][j] = currentColor;
+                gridElements[i][j].className = [
+                    "gray",
+                    "black",
+                    "red",
+                    "green",
+                    "blue",
+                    "cyan",
+                    "magenta",
+                    "yellow",
+                    "white"
+                ][currentColor + 1];
+            }
+        }
+
+        function press(label){
+            document.getElementsByClassName([
+                "colorButton gray",
+                "colorButton black",
+                "colorButton red",
+                "colorButton green",
+                "colorButton blue",
+                "colorButton cyan",
+                "colorButton magenta",
+                "colorButton yellow",
+                "colorButton white"
+            ][currentColor+1])[0].classList.toggle('selected');currentColor = ['A','K','R','G','B','C','M','Y','W'].indexOf(label) - 1;document.getElementsByClassName([
+                "colorButton gray",
+                "colorButton black",
+                "colorButton red",
+                "colorButton green",
+                "colorButton blue",
+                "colorButton cyan",
+                "colorButton magenta",
+                "colorButton yellow",
+                "colorButton white"
+            ][currentColor+1])[0].classList.toggle('selected');
+        }
+
+        function createButton(pathData) {
+            const btn = document.createElement("button");
+            btn.className = "btn";
+
+            const svgNS = "http://www.w3.org/2000/svg";
+
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute("viewBox", "0 0 24 24");
+
+            const path = document.createElementNS(svgNS, "path");
+            path.setAttribute("d", pathData);
+            path.setAttribute("fill", "none");
+            path.setAttribute("stroke", "currentColor");
+            path.setAttribute("stroke-width", "2");
+
+            svg.appendChild(path);
+            btn.appendChild(svg);
+
+            return btn;
+        }
+
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Fractal Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Fractal Maze.svg" class="diagram">
+                <h2>On the Subject of Fractal Maze</h2>
+                <p class="flavour-text">How is one supposed to solve an infinite maze?</p>
+                <p>The module displays 3 squares and a diamond segmented into 4 smaller directional diamonds. In order to solve the module, travel through the different iterations of the fractal, and reduce it to the 0th iteration.</p>
+                <p>The 3 shown squares and the empty corner are part of a 2×2 grid. This 2×2 grid is your seed and your starting grid (or iteration 1). To iterate the grid, create a copy of the current grid and place it within each non-empty quadrant of the seed. Then apply the transformation corresponding to the colour of that quadrant.</p>
+                <p>The first maze to use is the third iteration, having a length and width of 16 squares. Each time you solve a maze, the next maze to solve will be the maze of the previous iteration. Repeat this until i0 is completed.</p>
+                <p>To navigate, use the diamond. This diamond also shows your location and the location of the goal through its flashes. There will be a number of flashes corresponding to your current iteration plus one. The red flashes refer to your starting position, while the green flashes refer to your goal position. If these flashes overlap, the intersection will be yellow.</p>
+                <p>To determine what cells the flashes refer to, take both colours. Each colour in each flash will show an edge of the diamond. These correspond to the four quadrants of the grid. For each colour, take the quadrant of the first flash, and then take the sub-quadrant that’s in the position of the second flash. Repeat this with the other flashes until a single cell is targeted.</p>
+                <p>Each colour has as mentioned a transformation connected to it. To obtain this transformation, divide each colour into its RGB components. Colours with the Red component are Red, Magenta, Yellow, and White. Colours with the Green component are Green, Cyan, Yellow, and White. Colours with the Blue component are Blue, Cyan, Magenta, and White.</p>
+                <p>If a colour contains Red, the grid will be flipped vertically. If a colour contains Green, the grid will be flipped horizontally. If a colour contains Blue, the grid will be rotated 90 degrees clockwise. All applying conditions must be executed in this order.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Fractal Maze</span>
+            </div>
+            <div class="page-content">
+                <p>At higher layers (1-3), you can press the cells to assign labels "S", "F", or remove the label.</p>
+                <div class="centered">
+                <label for="layers">Layer:</label>
+                <select name="layers" id="layers">
+                  <option value="0">Layer 0</option>
+                  <option value="1">Layer 1</option>
+                  <option value="2">Layer 2</option>
+                  <option value="3">Layer 3</option>
+                </select>
+                </div>
+                <div class="centered" id="grid"></div>
+                <div class="centered">
+                    <button onclick="press('A')" class="colorButton gray selected">A</button>
+                    <button onclick="press('K')" class="colorButton black">K</button>
+                    <button onclick="press('R')" class="colorButton red">R</button>
+                    <button onclick="press('G')" class="colorButton green">G</button>
+                    <button onclick="press('B')" class="colorButton blue">B</button>
+                    <button onclick="press('C')" class="colorButton cyan">C</button>
+                    <button onclick="press('M')" class="colorButton magenta">M</button>
+                    <button onclick="press('Y')" class="colorButton yellow">Y</button>
+                    <button onclick="press('W')" class="colorButton white">W</button>
+                </div>
+                <div class="centered">
+                    <table id="controlPanel"></table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+    <script>init();</script>
+</body>
+</html>

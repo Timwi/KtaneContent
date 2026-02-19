@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>LEGO — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            text-align: center;
+        }
+
+        .cell{
+            width: 2rem;
+            height: 2rem;
+            padding: 0.3rem;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.5em
+        }
+
+        #layer-control{
+            display: flex;
+            justify-content: center;
+        }
+
+        #layer-text{
+            margin: 0 1.5rem;
+            font-size: 2rem;
+        }
+
+        #layer-control button{
+            margin: 0.5rem 0;
+        }
+
+        #colored-buttons, #move-buttons, #squash-buttons{
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        #colored-buttons button{
+            width: 2em;
+            height: 2em;
+            margin: 0 .2em;
+            font-family: "Special Elite";
+        }
+
+        #move-buttons button{
+            width: 2em;
+            height: 2em;
+            margin: 0 .2em;
+            font-family: "Special Elite";
+        }
+
+        #squash-buttons button{
+            height: 2em;
+            margin: 0 .2em;
+            font-family: "Special Elite";
+        }
+
+        #colored-buttons .selected{
+            border: 0.2em solid #0080ff;
+        }
+
+        .black{ background-color: black; color: white; }
+        .red{ background-color: red; color: white; }
+        .green{ background-color: #00ff00; color: black; }
+        .blue{ background-color: blue; color: white; }
+        .cyan{ background-color: cyan; color: black; }
+        .yellow{ background-color: yellow; color: black; }
+        .magenta{ background-color: magenta; color: black; }
+        .white{ background-color: white; color: black; }
+    </style>
+    <script>
+
+        var DOMCells;
+        var gridValues;
+        var resultGridValues;
+        var currentLayer = 0;
+        var currentColor = 0;
+        var offset = 0;
+
+        function squash(s){
+            currentLayer = undefined;
+            document.getElementById("layer-text").textContent = "Layer: ?";
+            resultGridValues = createBlankLayer();
+            gridValues = getNonEmptyLayers(gridValues);
+            switch(s){
+                case 'top':{
+                    for (let index = 0; index < gridValues.length; index++) {
+                        for (let i = 0; i<8; i++) for (let j = 0; j<8; j++) {
+                            if (gridValues[index][i][j]!=0) resultGridValues[i][j] = gridValues[index][i][j];
+                        }
+                    }
+                    break;
+                }
+                case 'bottom':{
+                    for (let index = gridValues.length-1; index>=0; index--){
+                        for (let i = 0; i<8; i++) for (let j = 0; j<8; j++) {
+                            if (gridValues[index][i][j]!=0) resultGridValues[i][j] = gridValues[index][i][j];
+                        }
+                    }
+                    resultGridValues = horizFlip(resultGridValues);
+                    break;
+                }
+            }
+            refreshView();
+        }
+
+        function rotateGrid(){
+            if (currentLayer != undefined) return;
+            resultGridValues = rotate(resultGridValues);
+            refreshView();
+        }
+
+        function horizFlip(matrix) {
+            return matrix.map(row => [...row].reverse());
+        }
+        function transpose(matrix) {
+            const n = matrix.length;
+            return Array.from({ length: n }, (_, i) =>
+                Array.from({ length: n }, (_, j) => matrix[j][i])
+            );
+        }
+        function rotate(matrix) {
+            return horizFlip(transpose(matrix));
+        }
+
+        function createTable(){
+            DOMCells = new Array(8);
+            let grid = document.createElement("table");
+            grid.className = "centered";
+            document.getElementById("lego-grid").appendChild(grid);
+            for (let i = 0; i < 8; i++) {
+                DOMCells[i] = new Array(8);
+                let row = document.createElement("tr");
+                grid.appendChild(row);
+                for (let j = 0; j < 8; j++) {
+                    DOMCells[i][j] = document.createElement("td");
+                    row.appendChild(DOMCells[i][j]);
+                    DOMCells[i][j].className="cell";
+                    DOMCells[i][j].setAttribute("onclick", "pressCell("+i+","+j+");");
+                }
+            }
+        }
+
+        function createBlankLayer(){
+            return Array.from({ length: 8 }, () => Array(8).fill(0));
+        }
+
+        function moveLayer(x){
+            if (currentLayer == undefined){currentLayer = 0;}
+            if (currentLayer == 0 && x==-1){
+                for (var i = gridValues.length - 1; i >= 0; i--){
+                    gridValues[i+1] = gridValues[i];
+                }
+                gridValues[0]=createBlankLayer();
+                offset++;
+            }
+            else currentLayer += x;
+            document.getElementById("layer-text").textContent = "Layer: " + (currentLayer - offset);
+            refreshView();
+        }
+
+        function pressCell(i,j){
+            gridValues[currentLayer][i][j] = currentColor;
+            refreshView();
+        }
+
+        function getNonEmptyLayers(array){
+            return array.filter( element => element.flat().reduce( (acc, el) => acc+el,0) > 0);
+        }
+
+        function goDirection(dir){
+            gridValues = getNonEmptyLayers(gridValues);
+
+            // Проверка возможности сдвига
+            for (let grid of gridValues){
+                for (let i = 0; i < 8; i++){
+                    switch (dir){
+                        case "left":  if (grid[i][0] != 0) return; break;
+                        case "right": if (grid[i][7] != 0) return; break;
+                        case "up":    if (grid[0][i] != 0) return; break;
+                        case "down":  if (grid[7][i] != 0) return; break;
+                    }
+                }
+            }
+            // Сам сдвиг
+            for (let g = 0; g < gridValues.length; g++){
+                let grid = gridValues[g];
+                let temp = createBlankLayer();
+
+                for (let i = 0; i < 8; i++){
+                    for (let j = 0; j < 8; j++){
+                        switch(dir){
+                            case "left":  temp[i][j] = (j == 7) ? 0 : grid[i][j+1]; break;
+                            case "right": temp[i][j] = (j == 0) ? 0 : grid[i][j-1]; break;
+                            case "up":    temp[i][j] = (i == 7) ? 0 : grid[i+1][j]; break;
+                            case "down":  temp[i][j] = (i == 0) ? 0 : grid[i-1][j]; break;
+                        }
+                    }
+                }
+
+                gridValues[g] = temp;
+            }
+
+            refreshView();
+        }
+
+        function refreshView(){
+            if (currentLayer == undefined){
+                for (let i = 0; i < 8; i++) {
+                    for (let j = 0; j < 8; j++) {
+                        DOMCells[i][j].className = [
+                            "cell",
+                            "cell red",
+                            "cell green",
+                            "cell blue",
+                            "cell cyan",
+                            "cell magenta",
+                            "cell yellow"
+                        ][resultGridValues[i][j]];
+                    }
+                }
+                return;
+            }
+            if (gridValues[currentLayer] == undefined) {gridValues[currentLayer] = createBlankLayer();}
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    DOMCells[i][j].className = [
+                        "cell",
+                        "cell red",
+                        "cell green",
+                        "cell blue",
+                        "cell cyan",
+                        "cell magenta",
+                        "cell yellow"
+                    ][gridValues[currentLayer][i][j]];
+                }
+            }
+        }
+
+        function chooseColor(i){
+            document.getElementById("colorButton-"+currentColor).classList.toggle("selected");
+            currentColor=i;
+            document.getElementById("colorButton-"+currentColor).classList.toggle("selected");
+        }
+
+        function init() {
+            createTable();
+            gridValues = new Array();
+            gridValues[0] = createBlankLayer();
+            refreshView();
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">LEGOs</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/LEGOs.svg" class="diagram">
+                <h2>On the Subject of LEGOs</h2>
+                <p class="flavour-text">Make sure to not step on this module! Not only will the bomb explode, but your foot will really hurt.</p>
+                <ul>
+                    <li>
+                        With this module you now have access to the latest in LEGO instruction manual technology! The display has several pages, which can be accessed by using the left and right arrow buttons:
+                        <ul>
+                            <li>PARTS: Use the colored buttons on the right of the display to look at all of the required pieces for the build.</li>
+                            <li>MANUAL PAGES: These pages display how two pieces are connected together in the final structure. The flashing piece is the top-most piece.</li>
+                            <li>BUILD: This page allows you to “draw” with LEGOs. Use the color buttons to choose the active color. Click on a brick the same color as the active color to make it white again.</li>
+                        </ul>
+                    </li>
+                    <li>Your goal is to use the instruction manual to build a LEGO structure. Once complete, go to the BUILD page of the display to enter what it ends up looking like. Press the submit button when you are finished.
+                        <ul>
+                            <li>Be careful, however, since you must keep in mind the orientation of the structure as you build it. Use Table 1 below to determine whether you should enter a top-down or bottom-up view of the final structure, and which cardinal direction of the structure should be at the top of the result.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h3>Table 1: Submission Attributes</h3>
+                Choose the first condition that applies:
+                <table>
+                    <tr><th>Attribute</th><th colspan="3">Conditions</th><th>Otherwise</th></tr>
+                    <tr><td rowspan="2">Face</td><td>At least 3 pieces are 3×2.</td><td>The yellow piece is 3×1.</td><td>At least 7 instruction pages are present.</td><td rowspan="2">BOTTOM</td></tr>
+                    <tr><td>TOP</td><td>BOTTOM</td><td>TOP</td></tr>
+                    <tr><td rowspan="2">Orientation</td><td>The green and magenta pieces are the same size.</td><td>The structure is at least 4 bricks tall.</td><td>The blue piece is above the red piece.</td><td rowspan="2">SOUTH</td></tr>
+                    <tr><td>WEST</td><td>NORTH</td><td>EAST</td></tr>
+                </table>
+            </div>
+           <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">LEGOs</span>
+            </div>
+            <div class="page-content">
+                <div class="centered" id="layer-control">
+                    <button onclick="moveLayer(1);">▲</button>
+                    <p id="layer-text">Layer: 0</p>
+                    <button onclick="moveLayer(-1);">▼</button>
+                </div>
+                <div id="lego-grid"></div>
+                <div class="centered" id="colored-buttons">
+                    <button onclick="chooseColor(0)" id="colorButton-0" class="selected">Ø</button>
+                    <button onclick="chooseColor(1)" id="colorButton-1" class="red">R</button>
+                    <button onclick="chooseColor(2)" id="colorButton-2" class="green">G</button>
+                    <button onclick="chooseColor(3)" id="colorButton-3" class="blue">B</button>
+                    <button onclick="chooseColor(4)" id="colorButton-4" class="cyan">C</button>
+                    <button onclick="chooseColor(5)" id="colorButton-5" class="magenta">M</button>
+                    <button onclick="chooseColor(6)" id="colorButton-6" class="yellow">Y</button>
+                </div>
+                <div id="move-buttons">
+                    <button onclick="goDirection('left')">←</button>
+                    <button onclick="goDirection('right')">→</button>
+                    <button onclick="goDirection('up')">↑</button>
+                    <button onclick="goDirection('down')">↓</button>
+                </div>
+                <div id="squash-buttons">
+                    <button onclick="squash('top')">TOP</button>
+                    <button onclick="squash('bottom')">BOTTOM</button>
+                    <button onclick="rotateGrid()">ROTATE</button>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+    <script>init();</script>
+</body>
+</html>
