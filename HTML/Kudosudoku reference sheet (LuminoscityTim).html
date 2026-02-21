@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
     <style>
         .braille {
             font-family:"Braille";
@@ -104,7 +105,70 @@
         @media screen and (width < 900px) {
             .boxborder { margin-top: 16mm; }
         }
+
+        .dark a, a {
+            display: inline-block;
+            margin-right: .5em;
+            text-decoration: none;
+            color: white;
+            font-size: 80%;
+            transition: color .1s;
+
+            background: #008;
+            border-radius: 50%;
+            width: 1.5em;
+            height: 1.5em;
+            text-align: center;
+            padding-left: .1em;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+
+        a:hover:not(.failed):not(.playing) {
+            color: #ff8;
+        }
+
+        a.playing {
+            color: #8f8;
+        }
+
+        a.failed {
+            cursor: not-allowed;
+            color: red;
+        }
     </style>
+    <script>
+        $(function() {
+            // Based on code from Samfundev’s Listening interactive
+            $(".smalltable tr:nth-child(2) td").each(function() {
+                var elem = $(this);
+                var audio = $("<audio>")
+                    .on("error", function() {
+                        button.addClass("failed");
+                    })
+                    .attr("src", "../HTML/audio/Module Listening/Sim Samples - " + elem.text().replace(/[^\w]/g, "") + ".wav")
+                    .on("ended", function() {
+                        button.removeClass("playing");
+                    })
+                    .appendTo(elem);
+                elem.append($("<br>"));
+                var button = $("<a href='#' class='play-button'>▶</a>")
+                    .click(function() {
+                        if (button.hasClass("playing")) {
+                            button.removeClass("playing");
+                            audio[0].pause();
+                            audio[0].currentTime = 0;
+                        } else {
+                            button.addClass("playing");
+                            audio[0].play();
+                        }
+                        return false;
+                    })
+                    .appendTo(elem);
+                
+            });
+        });
+    </script>
 </head>
 <body>
     <div class="section">
