@@ -348,7 +348,7 @@ let SouvenirModuleData = [
 	{ name: "Mega Man 2",	id: "megaMan2",	questions: ["What were the robot master and weapon shown?"] },
 	{ name: "Melody Sequencer",	id: "melodySequencer",	questions: ["Which part was in which slot at the start?"] },
 	{ name: "Memorable Buttons",	id: "memorableButtons",	questions: ["What were the symbols on the correct buttons?"] },
-	{ name: "Memory",	id: "Memory",	questions: ["What was the display in each stage?","What were the positions and labels of the buttons you pressed?"] },
+	{ name: "Memory",	id: "Memory",	questions: ["What was the display in each stage?"] },
 	{ name: "Memory Wires",	id: "memoryWires",	questions: ["What were the wire colours?","What were the displayed digits?"] },
 	{ name: "Metamorse",	id: "metamorse",	questions: ["What was the extracted letter?"] },
 	{ name: "Metapuzzle",	id: "metapuzzle",	questions: ["What was the final answer?"] },
