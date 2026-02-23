@@ -1,0 +1,200 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Thirty One — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+        div .collumn {
+            column-count: 2;
+        }
+        table.extra td {
+            padding: 5px 20px;
+        }
+        table.grid {
+            table-layout: fixed;
+            width: 1cm;
+            font-size: 12pt;
+        }
+        table.grid tr {
+            height:0.75cm
+        }
+        table.grid td {
+            text-align: center;
+            width: 0.375cm;
+            overflow: hidden;
+        }
+
+        .small {
+            font-size: 70%;
+            text-align: center;
+        }
+        .suit0, .suit1, .suit2, .suit3 { cursor: pointer; }
+        .selected { fill: red; }
+        .dark svg, .dark .selected, button:hover { filter: invert(100%); }
+        button {
+            margin: 1px 16px;
+            border: black 2px solid;
+            border-radius: 3px;
+            transition: .6s;
+            font-family: "Special Elite";
+            height: 64px;
+            width: 64px;
+            line-height: 64px;
+            font-weight: bold;
+            background-size: 64px 64px;
+            display: flex;
+            justify-content: center;
+            font-size: 230%;
+        }
+        .shift-cw {
+            background-image: url('img/Langton Ant/Clockwise Arrow.svg');
+            background-position: -3.6px -1.6px;
+        }
+        .shift-ccw {
+            background-image: url('img/Langton Ant/Anticlockwise Arrow.svg');
+            background-position: -0.4px -1.6px;
+        }
+    </style>
+    <script>
+    $(function() {
+        const paths = {
+            "Spades": "M22.6 14.6c0 3.3-2.8 4.9-4.8 4.9a8 8 0 0 1-4.9-1.8c.2 2.7.8 4.6 3.7 6H7.2c2.9-1.4 3.5-3.3 3.7-6A8 8 0 0 1 6 19.5c-2 0-4.8-1.6-4.8-4.9 0-6 4.2-4.4 10.7-14.6 6.5 10.2 10.7 8.6 10.7 14.6z",
+            "Hearts": "M23.8 6.6c0 8.6-11.9 17.2-11.9 17.2S0 15.2 0 6.6C0 1.8 3.8 0 5.7 0c4.1 0 6.2 3.5 6.2 3.5s2-3.5 6.2-3.5c2 0 5.7 1.8 5.7 6.6z",
+            "Clubs": "M23.5 13.9a5.5 5.5 0 0 1-10.7 2c0 3.6.2 6 3.7 7.9H7.2c3.5-1.8 3.7-4.3 3.7-8a5.5 5.5 0 1 1-3.5-7.1 5.5 5.5 0 1 1 9 0 5.5 5.5 0 0 1 7.2 5.3z",
+            "Diamonds": "M21.1 11.9a25.1 25.1 0 0 0-9.2 11.9c-2-5.2-5.6-9.7-9.3-11.9C6.3 9.7 9.9 5.2 11.9 0a25 25 0 0 0 9.3 11.9z"
+        };
+        const initOrder = ["Spades","Hearts","Clubs","Diamonds"];
+        let order = initOrder.slice();
+        let selected = -1;
+
+        for (let s = 0; s < 4; s++)
+        {
+            $(".suit" + s).click(function() {
+                if (selected == -1)
+                    selected = s;
+                else
+                {
+                    if (selected != s)
+                    {
+                        let temp = order[s];
+                        order[s] = order[selected];
+                        order[selected] = temp;
+                    }
+                    selected = -1;
+                }
+                draw(); 
+            });
+        }
+
+        $(".shift-cw").click(shiftClockwise);
+        $(".shift-ccw").click(shiftCounter);
+        $(".reset").click(resetInteractive);
+
+        function shiftClockwise()
+        {
+            let last = order.pop();
+            order.unshift(last);
+            draw();
+        }
+
+        function shiftCounter()
+        {
+            let first = order.shift();
+            order.push(first);
+            draw();
+        }
+
+        function resetInteractive()
+        {
+            order = initOrder.slice();
+            selected = -1;
+            draw();
+        }
+
+        function draw()
+        {
+            for (let s = 0; s < 4; s++)
+            {
+                $(".suit" + s + " path")[0].setAttribute("d", paths[order[s]]);
+                if (selected == s) $(".suit" + s)[0].classList.add("selected");
+                else $(".suit" + s)[0].classList.remove("selected");
+            }
+        }
+        draw();
+    })
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Thirty One</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Thirty One.svg" class="diagram">
+                <h2>On the Subject of Thirty One</h2>
+                <p class="flavour-text">Unlike other modules, you want to hit this one.</p>
+                <ol>
+                    <li>Using the compass rose, convert the suit of the first card into a direction.</li>
+                    <li>Then starting from the rank of the first card, find and execute a valid move in the obtained direction where the destination is the second card's rank, looping around the edges.</li>
+                    <li>From there, determine the next card drawn by traveling one tile in the direction of the second card's suit.</li>
+                    <li>The defuser must press Hit unless the next card would lead the total of all seen cards to go over 31. (J is 11, Q is 12, K is 13, A is 1)</li>
+                    <li>If the defuser presses Hit, go back to step 3. Otherwise, modify the compass rose of suits using the suit of the last card dealt that stage and press stand.</li>
+                    <li>The module completely resets on a strike.</li>
+                </ol>
+                <table class="grid">
+                    <tr><td>10</td><td>K</td><td>5</td><td>7</td><td>J</td><td>7</td><td>A</td><td>Q</td><td>2</td><td>2</td></tr>
+                    <tr><td>K</td><td>K</td><td>2</td><td>Q</td><td>6</td><td>6</td><td>7</td><td>K</td><td>9</td><td>8</td></tr>
+                    <tr><td>2</td><td>7</td><td>5</td><td>Q</td><td>9</td><td>A</td><td>K</td><td>3</td><td>A</td><td>5</td></tr>
+                    <tr><td>7</td><td>7</td><td>6</td><td>J</td><td>Q</td><td>A</td><td>6</td><td>3</td><td>J</td><td>3</td></tr>
+                    <tr><td>4</td><td>10</td><td>3</td><td>2</td><td>6</td><td>4</td><td>4</td><td>A</td><td>J</td><td>8</td></tr>
+                    <tr><td>J</td><td>J</td><td>K</td><td>A</td><td>8</td><td>Q</td><td>8</td><td>6</td><td>K</td><td>10</td></tr>
+                    <tr><td>3</td><td>4</td><td>J</td><td>9</td><td>2</td><td>4</td><td>Q</td><td>J</td><td>A</td><td>2</td></tr>
+                    <tr><td>7</td><td>4</td><td>9</td><td>K</td><td>J</td><td>10</td><td>10</td><td>8</td><td>5</td><td>10</td></tr>
+                    <tr><td>2</td><td>A</td><td>3</td><td>8</td><td>7</td><td>9</td><td>4</td><td>7</td><td>8</td><td>8</td></tr>
+                    <tr><td>6</td><td>2</td><td>J</td><td>6</td><td>5</td><td>4</td><td>5</td><td>A</td><td>9</td><td>3</td></tr>
+                </table>
+                <table class="extra">
+                    <tr><td class="corner small">Press two suits to swap them.</td><th class="corner">Direction</th><th colspan="2">On Stand</th></tr>
+                    <tr>
+                        <td rowspan="4" class="corner">
+                            <button class="shift-cw"></button>
+                            <button class="shift-ccw"></button>
+                            <button class="reset">R</button>
+                        </td>
+                        <td rowspan="4" class="corner">
+                            <svg viewBox="0 0 146 146" width="175px">
+                                <g transform="translate(0 -1)">
+                                    <path d="M72.6 30.8 83.8 62 72.6 73.2 61.4 62Zm0 85.4L61.4 85l11.2-11.2L83.8 85Z"/>
+                                    <path d="m30 73.6 31.3-11.2 11.2 11.2L61.3 85zm85 0L83.6 62.4 72.5 73.6 83.7 85Z" fill="none" stroke="#000"/><circle cx="72.5" cy="73.5" r="72" fill="none" stroke="#000"/>
+                                </g>
+                                <g class="suit0"><path d="" transform="translate(60.8 3)"/></g>
+                                <g class="suit1"><path d="" transform="translate(116.6 59.6)"/></g>
+                                <g class="suit2"><path d="" transform="translate(60.8 116.6)"/></g>
+                                <g class="suit3"><path d="" transform="translate(4.6 59.6)"/></g>
+                            </svg>
+                        </td>
+                        <th>Spades</th>
+                        <td>Shift the suits 90° clockwise.</td>
+                    </tr>
+                    <tr><th>Clubs</th><td>Shift the suits 90° counterclockwise.</td></tr>
+                    <tr><th>Diamonds</th><td>Swap the suits going up and right.</td></tr>
+                    <tr><th>Hearts</th><td>Swap the suits going down and left.</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
