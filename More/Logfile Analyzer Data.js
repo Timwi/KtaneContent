@@ -8373,6 +8373,141 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "insomniousAutomaton",
+		loggingTag: "Insomnious Automaton",
+		matches: [
+			{
+				regex: /Usages:\s*((?:\d+:\s*\d+;\s*)+)/,
+				handler: function (_, module) {
+					module.objs = [4];
+					let variables = ["q", "x", "y"]
+					for(let i = 0; i < 3; i++) {
+						if(i == 0) {
+							linen--;
+						}
+						let m = readTaggedLine().match(/Usages:\s*((?:\d+:\s*\d+;\s*)+)/)
+						let nums = m[1].replaceAll(" ", "")
+							.split(";")
+							.map(s => s.split(":"))
+							.flat()
+							.filter(s => s.length > 0);
+						let arr = []
+						for(let j = 0; j < nums.length - 1; j += 2) {
+							arr.push(`${variables[i]}${nums[j]}: ${nums[j+1]};`)
+						}
+						if(!module.objs[1]) {
+							module.objs[1] = [`Usage of ${variables[i]}i: ${arr.join(" ")}`]
+						}
+						else {
+							module.objs[1].push(`Usage of ${variables[i]}i: ${arr.join(" ")}`)
+						}
+						m = readTaggedLine().match(/After sorting:\s*((?:\[\d+\]:\s*\d+;\s*)+)/)
+						nums = m[1]
+						.replaceAll("[", "")
+						.replaceAll("]", "")
+						.replaceAll(" ", "")
+						.split(";")
+						.map(s => s.split(":"))
+						.flat()
+						.filter(s => s.length > 0);
+						let line = `After sorting ${variables[i]}i: `;
+						for(let j = 0; j < nums.length - 1; j+=2) {
+							line += `${variables[i]}${nums[j]}: ${nums[j+1]}; `
+						}
+						module.objs[1].push(line)
+					}
+					return true;
+				},
+
+			},
+			{
+				regex: /x\\q((?:\|-\d-)+)/,
+				handler: function (matches, module) {
+					const fiveCount = matches[1].includes("5");
+					let xqGrid =
+					"  |  q0 |  q1 |  q2 |  q3 |  q4 |" +
+					(fiveCount ? "  q5 |" : "") +
+					(fiveCount
+						? "\n--+-----+-----+-----+-----+-----+-----+\n"
+						: "\n--+-----+-----+-----+-----+-----+\n");
+					for(let i = 0; i < 3; i++) {
+						let regex = /\d ((?:\|(?:\d+|\*):(?:\d+|\*))+)/
+						let m = readTaggedLine().match(regex);						
+						function formatGrid(m1, m2) {
+							if(m1 == "*") 
+								return "**:**"
+							return `q${m1}:y${m2}`
+						}
+						let nums = m[1].split("|")
+						.map(s => s.split(":"))
+						.flat()
+						.filter(s => s.length > 0)
+						let line = `x${i}|`
+
+						for(let j = 0; j < nums.length - 1; j+=2) {
+							line += formatGrid(nums[j], nums[j+1]) + "|"
+						}
+						xqGrid += line + "\n";
+					}
+					module.objs[0] = {label: "State transition table", obj: pre(xqGrid)};
+					return true;
+				},
+			},
+			{ regex: /([wvRSJK]\d).+is equal to (.+)/,
+			  handler: function (matches, module) {
+				let line = `A possible answer for ${matches[1]} is ${matches[2]}`.replaceAll("_", "-").replaceAll("|", "!");
+				if(!module.objs[3]) {
+					module.objs[3] = [line]
+				}				
+				else {
+					module.objs[3].push(line)
+				}
+				return true;
+			  }
+			 },
+
+			{ regex: /u\\w((?:\|-\d+-+)+)/,
+			  handler: function (matches, module) {
+				let lines = readTaggedLines(3);
+				const oneChar = lines[0].split("|")[1].split(":")[1].length == 1;
+				let nums = matches[1]
+				.split("|")
+				.map(s => s.replaceAll("-", ""))
+				.filter(s => s.length > 0)
+				.map(s => s.padStart(3).padEnd(oneChar ? 4 : 5))
+				
+				grid = `   | ${nums.join("| ")}|`;
+				grid += `\n---${nums.map(_ => `+-----${oneChar ? "" : "-"}`).join("")}+\n`
+				
+				for(let i = 0; i < 3; i++) {
+					lines[i] = lines[i] + "|"
+				}
+				grid += lines.join("\n")
+				module.objs[2] = {label: "State transition table (binary representations)", obj: pre(grid)};
+				for(let i = 0; i < module.objs.length; i++) {
+					if(i == 1 || i == 3) {
+						 for(let obj of module.objs[i]) {
+							module.push(obj)
+						 }
+					}
+					else {
+						module.push(module.objs[i])
+					}
+				}
+				return true;
+			  }
+			 },
+			 {
+				regex: /u \+ w\(t\) = w\(t\+1\) : v ->.+|\d+\+\d+.+|\s/,
+				handler(_, module) {
+					return true;
+				}
+			 },
+			{ regex: /.+/ }
+		]
+		
+	},
+	{
 		moduleID: "inupiaqNumerals",
 		loggingTag: "Iñupiaq Numerals",
 		matches: [
