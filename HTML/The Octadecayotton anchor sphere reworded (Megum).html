@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>The Octadecayotton — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table {
+            margin: 1em auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">The Octadecayotton</span>
+            </div>
+            <div class="page-content">
+
+                <h2>On the Subject of Calculating the Anchor Sphere</h2>
+                <p>This manual contains reworded instructions on how to calculate the anchor sphere 
+                    starting from the point when the transformation matrix is acquired. 
+                    The example will contain 6 dimensions and 3 global transformations.
+                    Use this alongside the original manual.</p>
+                <p>If there are no transformations at all (the cube doesn't move), 
+                    the anchor sphere is at the point where all axes are negative.</p>
+                <h3>Subtransformations</h3>
+                <p>Let the example matrix be the following:</p>
+                <table>
+                    <tr><td></td> <td>X</td> <td>Y</td> <td>Z</td> <td>W</td> <td>V</td> <td>U</td></tr>
+                    <tr><td>1</td> <td>-Z</td> <td>-Y</td> <td>V</td> <td>W</td> <td>-X</td> <td>U</td></tr>
+                    <tr><td>2</td> <td>X</td> <td>-Y</td> <td>-U</td> <td>W</td> <td>-V</td> <td>Z</td></tr>
+                    <tr><td>3</td> <td>-X</td> <td>-V</td> <td>-Z</td> <td>U</td> <td>-W</td> <td>-Y</td></tr>
+                </table>
+                <p>For each of the 3 global transformations create loops of axis transformations (you can start at any):</p>
+                <ol>
+                    <li>(X -&gt; -Z, Z -&gt; V, V -&gt; -X); (Y -&gt; -Y); (W -&gt; W); (U -&gt; U)</li>
+                    <li>(Z -&gt; -U, U -&gt; Z); (X -&gt; X); (Y -&gt; -Y); (W -&gt; W); (V -&gt; -V)</li>
+                    <li>(Y -&gt; -V, V -&gt; -W, W -&gt; U, U -&gt; -Y); (X -&gt; -X); (Z -&gt; -Z)</li>
+                </ol>
+                <p>Get rid of positive self-to-self axis transformations, in each loop disregard the first axis of each transformation, 
+                    reverse and concatenate the resulting sequences (which will be called subtransformations):</p>
+                <ol>
+                    <li>-X+V-Z; -Y</li>
+                    <li>+Z-U; -Y; -V</li>
+                    <li>-Y+U-W-V; -X; -Z</li>
+                </ol>
+                <p>Note: one-axis subtransformations (-Y; -Y; -V; -X; -Z from the example) are called reflections.</p>
+
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">The Octadecayotton</span>
+            </div>
+            <div class="page-content">
+
+                <h3>Primary values</h3>
+                <p>Within each subtransformation take all possible pairs of adjacent (including last then first) axes,
+                    look up each pair in the primary values table (row first, column second) and multiply by -1
+                    if exactly one axis in the pair is negative. DO NOT multiply by -1 the values of reflections.
+                    Each subtransformation should end up with quantity of values equal to number of axes involved.
+                </p>
+                <ol>
+                    <li><ul>
+                        <li>-X+V-Z <b><b>&gt;</b></b> -X+V; +V-Z; -Z-X <b>&gt;</b> -8, -6, 9</li>
+                        <li>-Y <b>&gt;</b> -Y-Y <b>&gt;</b> 3</li>
+                    </ul></li>
+                    <li><ul>
+                        <li>+Z-U <b>&gt;</b> +Z-U; -U+Z <b>&gt;</b> -7, -4</li>
+                        <li>-Y <b>&gt;</b> -Y-Y <b>&gt;</b> 3</li>
+                        <li>-V <b>&gt;</b> -V-V <b>&gt;</b> 9</li>
+                    </ul></li>
+                    <li><ul>
+                        <li>-Y+U-W-V <b>&gt;</b> -Y+U; +U-W; -W-V; -V-Y <b>&gt;</b> -9, -9, 8, 3</li>
+                        <li>-X <b>&gt;</b> -X-X <b>&gt;</b> 1</li>
+                        <li>-Z <b>&gt;</b> -Z-Z <b>&gt;</b> 4</li>
+                    </ul></li>
+                </ol>
+                <p>Within each global transformation take the absolute value of the sum of all values 
+                    and then modulo 2^<i>n</i>, where <i>n</i> is the number of axes   
+                    (if there are no values, this sum is 0):</p>
+                <ol>
+                    <li>|(-8) + (-6) + 9 + 3| % 64 = 2</li>
+                    <li>|(-7) + (-4) + 3 + 9| % 64 = 1</li>
+                    <li>|(-9) + (-9) + 8 + 3 + 1 + 4| % 64 = 2</li>
+                </ol>
+                <p>Convert results into binary with number of bits equal to <i>n</i>:</p>
+                <ol>
+                    <li>2 = 000010</li>
+                    <li>1 = 000001</li>
+                    <li>2 = 000010</li>
+                </ol>
+                <p>These binary strings are associated with global rotations respectively.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">The Octadecayotton</span>
+            </div>
+            <div class="page-content">
+
+                <h3>Anchor sphere</h3>
+                <p>For each global transformation lookup which axes have which signs in the subrotations list
+                    and invert bits of this global transformation's binary string according to the "Axis &lt;-&gt; Position" 
+                    table from the original manual:</p>
+                <ol>
+                    <li>-X+V-Z, -Y -&gt; 6th, 5th, 4th, 5th; 000010 -&gt; 000111</li>
+                    <li>+Z-U; -Y; -V -&gt; 3rd, 1st, 5th, 2nd; 000001 -&gt; 111011</li>
+                    <li>-Y+U-W-V, -X, -Z -&gt; 5th, 6th, 3rd, 2nd, 6th, 4th; 000010 -&gt; 011100</li>
+                </ol>
+                <p>Call resulting values a<sub>1</sub>, a<sub>2</sub>, ... a<sub>n</sub>.</p>
+                <p>Create a<sub>0</sub> (use the original manuals's algorithm on page 7):</p>
+                <ul><li>4th digits of a<sub>1</sub>, a<sub>2</sub>, a<sub>3</sub> are 1, 0, 1 -&gt; a<sub>0</sub> = 110011</li></ul>
+                <p>Convert all a<sub>i</sub> excluding a<sub>0</sub> from gray code to binary.</p>
+                <p>To convert from gray code to binary, set the first bit of binary equal to the first bit of gray code,
+                    the subsequent bits are as follows: binary[i] = binary[i-1] XOR grayCode[i]. </p>
+                <ol>
+                    <li>000111 -&gt; 000101</li>
+                    <li>111011 -&gt; 101101</li>
+                    <li>011100 -&gt; 010111</li>
+                </ol>
+                <p>XOR a<sub>0</sub> with all other a<sub>i</sub>. Replace all 0s with "-" and all 1s with "+".
+                Assosiate the string of axes on the bottom of page 7 of the original manual with the result.
+                This is the position of the anchor sphere.</p>
+                <ul><li>110011 XOR 000101 XOR 101101 XOR 010111 = 001100 -&gt; --++-- (XYZWVU) -&gt; 
+                    anchor sphere = -X-Y+Z+W-V-U</li></ul>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>

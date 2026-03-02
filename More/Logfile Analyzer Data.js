@@ -1481,7 +1481,7 @@ let parseData = [
 		loggingTag: 'Apple Pen',
 		matches: [
 			{
-				regex: /(?:[PAN] ?){36}/,
+				regex: /(?:[PAN] ?){16}/,
 				handler: function (match, module) {
 					module.grid = match[0].split(' ');
 				}
@@ -1491,14 +1491,14 @@ let parseData = [
 				handler: function (match, module) {
 					const icons = { 'A': 'apple', 'P': 'pen', 'N': 'pineapple' };
 
-					const startCol = 'ABCDEF'.indexOf(match[1][0]);
+					const startCol = 'ABCD'.indexOf(match[1][0]);
 					const startRow = match[1][1] - '1';
 
 					let table = "<table class='ppap-table' style='width: 3in;'>";
-					for (let row = 0; row < 6; row++) {
+					for (let row = 0; row < 4; row++) {
 						table += '<tr>';
-						for (let col = 0; col < 6; col++) {
-							const icon = icons[module.grid[6 * row + col]];
+						for (let col = 0; col < 4; col++) {
+							const icon = icons[module.grid[4 * row + col]];
 							const fill = row == startRow && col == startCol ? '#8F8' : 'none';
 							table += `<td style='background: ${fill}'>
 										<img src='img/PPAP/${icon}.png'>
