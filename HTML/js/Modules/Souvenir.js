@@ -183,7 +183,7 @@ let SouvenirModuleData = [
 	{ name: "Encrypted Equations",	id: "EncryptedEquationsModule",	questions: ["What were the main shapes of the three operands?"] },
 	{ name: "Encrypted Hangman",	id: "encryptedHangman",	questions: ["What was the encrypted module name and encryption method?"] },
 	{ name: "Encrypted Maze",	id: "encryptedMaze",	questions: ["Which symbol was spinning which way?"] },
-	{ name: "Encrypted Morse",	id: "EncryptedMorse",	questions: ["What were the received call and sent response?"] },
+	{ name: "Encrypted Morse",	id: "EncryptedMorse",	questions: ["What was the received key?"] },
 	{ name: "Encryption Bingo",	id: "encryptionBingo",	questions: ["What was the first encoding used?"] },
 	{ name: "English Entries",	id: "EnglishEntries",	questions: ["What was the displayed quote?"] },
 	{ name: "Enigma Cycle",	id: "enigmaCycle",	questions: ["Which direction were the dials pointing?","What was written on each dial?"] },
