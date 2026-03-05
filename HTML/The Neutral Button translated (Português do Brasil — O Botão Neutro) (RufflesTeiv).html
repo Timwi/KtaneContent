@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>O Botão Neutro — Módulo para Keep Talking and Nobody Explodes</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        #closed {
+            visibility: hidden;
+        }
+
+        svg.closed #closed {
+            visibility: visible;
+        }
+
+        svg.closed #open {
+            visibility: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Mod para Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">O Botão Neutro</span>
+            </div>
+            <div class="page-content">
+                <svg class="diagram" id="face" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 348 348">
+                    <path stroke="#000" stroke-width="2" d="M5.08 5.78h336.91v337.67H5.08z" />
+                    <path id="status-light" stroke="#000" stroke-width="2"
+                        d="M282.73 40.55c0-8.37 6.97-15.16 15.56-15.16 4.13 0 8.09 1.6 11 4.44a14.97 14.97 0 0 1 4.56 10.72c0 8.38-6.96 15.17-15.56 15.17-8.59 0-15.56-6.8-15.56-15.17z" />
+                    <circle cx="173.535" cy="174.615" r="120" fill="#ffcc4d" stroke="#000" stroke-width="4" />
+                    <path d="M129.662 220.78h89.076" fill="#664500" stroke="#664500" stroke-width="17.231"
+                        stroke-linecap="round" />
+                    <g id="open">
+                        <ellipse cx="217.143" cy="164.027" rx="15.608" ry="23.412" fill="#664500" />
+                        <ellipse cx="130.143" cy="164.027" rx="15.608" ry="23.412" fill="#664500" />
+                    </g>
+                    <g id="closed">
+                        <path d="M110.349 164.027h39.589" fill="#664500" stroke="#664500" stroke-width="11.487"
+                            stroke-linecap="round" />
+                        <path d="M197.349 164.027h39.589" fill="#664500" stroke="#664500" stroke-width="11.487"
+                            stroke-linecap="round" />
+                    </g>
+                </svg>
+                <h2>A Respeito do Botão Neutro</h2>
+                <p class="flavour-text" id="flavour-text">Você consegue desarmá-lo em um piscar de olhos.</p>
+                <p>O rosto no botão irá piscar. Aperte o botão até meio segundo depois dele piscar para desarmar o módulo. Não aperte o botão em nenhum outro momento.</p>
+                <p id="count"></p>
+            </div>
+            <div class="page-footer relative-footer">Página 1 de 1</div>
+        </div>
+    </div>
+    <script>
+        let face = document.getElementById("face");
+        let sl = document.getElementById("status-light");
+        let blinksCount = 0;
+        let hitCount = 0;
+        let strikeCount = 0;
+        let correct = false;
+        let solved = false;
+        updateVisuals();
+
+        face.onclick = () => {
+            if (solved)
+                return;
+            if (!correct) {
+                sl.style.fill = "#f00";
+                strikeCount++;
+                window.setTimeout(() => { sl.style.fill = "#fff" }, 1000);
+            }
+            else {
+                sl.style.fill = "#0f0";
+                blinksCount--;
+                solved = true;
+            }
+            updateVisuals();
+        };
+
+        function blink() {
+            correct = true;
+            face.classList.add("closed");
+            window.setTimeout(unblink, 150);
+            window.setTimeout(() => { correct = false; }, 500);
+        }
+        function unblink() {
+            face.classList.remove("closed");
+            window.setTimeout(blink, Math.random() * 10000 + 5000);
+            if (!solved)
+                blinksCount++;
+            updateVisuals();
+        }
+
+        function updateVisuals() {
+            if (blinksCount == 0 && strikeCount == 0)
+                return;
+
+            document.getElementById("flavour-text").innerHTML = `
+            ${blinksCount == 0 ? "" : `Você perdeu o momento ${blinksCount} vez${blinksCount == 1 ? "" : "es"}.`}
+            ${strikeCount == 0 ? "" : ` Você errou ${strikeCount} vez${strikeCount == 1 ? "" : "es"}.`}
+            ${!solved ? "" : ` Você desarmou o módulo!`}`;
+            window.localStorage.setItem("neutralHighScore", hitCount)
+            window.localStorage.setItem("neutralLowScore", blinksCount);
+        }
+
+        window.setTimeout(blink, 20000);
+    </script>
+</body>
+
+</html>
