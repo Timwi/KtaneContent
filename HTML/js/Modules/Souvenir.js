@@ -629,6 +629,7 @@ let SouvenirModuleData = [
 	{ name: "Transmitted Morse",	id: "transmittedMorseModule",	questions: ["What were the received messages?"] },
 	{ name: "Triamonds",	id: "triamonds",	questions: ["What was the pulsing colour sequence?"] },
 	{ name: "Tribal Council",	id: "TribalCouncil",	questions: ["What were the northeast and southwest names?"] },
+	{ name: "Tricky Tetris Pieces",	id: "TrickyTetrisPieces",	questions: ["What was the the shape of the first piece you pressed?","What was the second color palette that the pieces converted to?"] },
 	{ name: "Triple Term",	id: "tripleTermModule",	questions: ["What were the passwords?"] },
 	{ name: "Turtle Robot",	id: "turtleRobot",	questions: ["What were the commented out code lines?"] },
 	{ name: "Two Bits",	id: "TwoBits",	questions: ["What were the correct three query responses?"] },
