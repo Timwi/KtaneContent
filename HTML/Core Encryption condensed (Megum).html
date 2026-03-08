@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Core Encryption — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        $(function() {
+            const colours = { 0: "#EEE", 1: "D00" };
+            const cellLayout = [
+                [ "00000000", "01010111", "01010001", "01011101", "01010001", "01011101", "01010001", "01000101" ],
+                [ "00000010", "01111010", "01000010", "01111010", "00010000", "01011110", "01000010", "01011000" ]
+            ]
+
+            let mazeClass = $(".core-maze");
+
+            let mazes = document.getElementsByClassName("core-maze");
+            count = 0
+            for (let maze of mazes) {
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        if (cellLayout[count][row].charAt(col) == '1') {
+                            maze.append(MakeSvgElem("rect", { class: "red-cell", x: 5 + col * 100, y: 5 + row * 100, width: 101, height: 101, fill: "#C22A" }));
+                        }
+                    }
+                }
+                count++;
+            }
+
+            mazeClass.append(MakeSvgElem("rect", { class: "border", x: 5, y: 5, height: 800, width: 800 }));
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    mazeClass.append(MakeSvgElem("rect", { class:"highlightable", x: 5 + col * 100, y: 5 + row * 100, width: 100, height: 100 }));
+                }
+            }
+        });
+    </script>
+    <style>
+        .core-maze {
+            width: 160px;
+            float: right;
+            stroke: #000;
+            stroke-width: 0.5px;
+            margin: auto 6px;
+        }
+        .core-maze .border {
+            stroke-width: 10px;
+            fill: none;
+        }
+        .core-maze .highlightable, .dark .core-maze .highlightable { fill: transparent; }
+        .core-maze :not(.highlightable) {
+            user-select: none;
+            pointer-events: none;
+        }
+        .dark .core-maze { stroke: #DDD; }
+        .dark .red-cell { fill: #B33A; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Core Encryption</span>
+            </div>
+            <div class="page-content">
+
+                <img src="img/Component/Core Encryption.svg" class="diagram">
+                <h2>On the Subject of Core Encryption</h2>
+                <p class="flavour-text">Core Encryption more like Shifting Shifting Shifting Shifting Maze</p>
+                <h2>Solving the maze</h2>
+                <ol>
+                    <li>Write down the 4 flashing numbers in order starting from anywhere.</li>
+                    <li>Calculate 5 numbers where <i>n</i>th number is the sum of all digits on <i>n</i>th position.</li>
+                    <li>Modulo all of them by 8 and Add 1 to the <b>first 4</b> numbers.</li>
+                    <li>First 2 numbers: starting row and column. 3rd and 4th numbers: goal row and column (top-left is 1,1).</li>
+                    <li>5th number: odd -> left maze, even -> right maze.</li>
+                </ol>
+                <svg class="core-maze" viewbox="0 0 810 810" xmlns="http://www.w3.org/2000/svg"></svg>
+                <svg class="core-maze" viewbox="0 0 810 810" xmlns="http://www.w3.org/2000/svg"></svg>
+                <p>Red cells are walls. Navigating into a wall will strike and show the current coordinate. 
+                    Upon reaching the goal an indicator will start flashing.</p>
+                <h2>Decoding the numbers</h2>
+                <p>Reorder the 4 initial numbers (called Ni below) starting from the one which flashes alongside the indicator.
+                    Calculate 4 shifts (Di means <i>i</i>th digit). <b>If any shift ends up less than 10000 add 10000.</b></p>
+                <ul>
+                    <li><strong>S1</strong> = floor((N1 ^ 2 + product of N1 digits) % 88889)</li>
+                    <li><strong>S2</strong> = floor(((D1 of N1) + (D2 of N2) - (D3 of N3) + (D4 of N4) + 10) % 88889)</li>
+                    <li><strong>S3</strong> = floor(((N3 * N1) / (N2 * N4) + 9999) % 88889)</li>
+                    <li><strong>S4</strong> = floor((((D3 of N3) * N4) / (N2 - (D3 of N1)) + 11111) % 88889)</li>
+                </ul>
+                <p>Calculate the following:</p>
+                <ul>
+                    <li>End numbers: Ei = Ni + Si</li>
+                    <li>(E1 - E2 + E3 - E4 + 1000000) % 44445. Modulo each digit by 5 and submit.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Core Encryption</span>
+            </div>
+            <div class="page-content">
+                <h2>Solving the maze AGAIN</h2>
+                <ol>
+                    <li>Perform steps 1, 2 and 5 from "Solving the maze" section for the new numbers. 
+                        The 5 numbers at this point will be called Ci.</li>
+                    <li>Modify C1: add D1 of <b>old</b> N1</li>
+                    <li>Modify C2: add D5 of <b>old</b> N1</li>
+                    <li>Modify C3: maze 1 -> add plates, maze 2 -> add ports</li>
+                    <li>Modify C4: maze 1 -> add holders, maze 2 -> add batteries</li>
+                    <li>Perform steps 3, 4 from "Solving the maze" to solve the module.</li>
+                </ol>
+                <p>
+                    If any button is pressed out of place, such as arrows in 
+                    "Decoding the numbers" or buttons in "Solving the maze" and
+                    "Solving the maze AGAIN", a strike will be given.
+                </p>
+
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
