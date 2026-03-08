@@ -1,0 +1,2288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Insomnious Automaton — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <style>
+        @font-face {
+            font-family: 'GOST Common';
+            src: url('font/GOST Common.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body, body.dark{
+            background: #000000 url("img/Insomnious Automaton/bg.png");
+        }
+        .page, .dark .page{
+            background-image: none;
+        }
+        .page-bg-01{
+            background-color: #303030;
+            color: #ffffff;
+        }
+        .dark .page-bg-01 {
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .page-bg-02{
+            font-family: 'GOST Common';
+            font-size: 105%;
+        }
+        .page-bg-02 {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .dark .page-bg-02 {
+            background-color: #222222;
+            color: #ffffff;
+        }
+
+        table {
+            margin: 1em auto;
+            border: none;
+            text-align: center;
+        }
+        h1{
+            text-align: center;
+            margin-top: 0;
+        }
+        input, button {
+            font-family: 'GOST Common';
+            text-align: center;
+        }
+        input { width: 1.55em; }
+        button { font-size: 125%; }
+        p { margin-bottom: 0; }
+        ul, ol, .hstack table { margin-top: 0; }
+
+        th:not(.corner) { background-color: #DDD; }
+        .dark th:not(.corner) { background-color: #555; }
+
+        .note, .z-table { font-size: 80%; }
+        .truth-table { font-size: 74%; }
+        .truth-table-example { font-size: 83%; }
+        .large-list { font-size: 85%; }
+        .bar { border-top: 1px solid; } 
+
+        .red { background-color: #FAA; }
+        .green { background-color: #AFA; }
+        .blue { background-color: #AAF; }
+        .dark .red { background-color: #600; }
+        .dark .green { background-color: #060; }
+        .dark .blue { background-color: #006; }
+        
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 6'; }
+        .example-footer::after { content: ' of 11'; }
+    </style>
+    <script>
+        $(function() {
+            $(".clear").click(function() {
+                let kmInputs = $("#karnaugh input");
+                for (let i = 0; i < kmInputs.length; i++) {
+                    kmInputs[i]["value"] = "";
+                }
+            });
+        })
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Insomnious Automaton</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Insomnious Automaton.svg" class="diagram">
+                <h2>On the Subject of the Insomnious Automaton</h2>
+                <p class="flavour-text">If my mind was also a finite state machine, then, honestly, I think I’d also have constant insomnia...</p>
+                <p>Note down the three variables that should be submitted (from the module’s top display) <strong>in order</strong> left-to-right.</p>
+                <p>
+                    For variables fi and Fi, convert them to Ri/Si/Ji/Ki according to the table below
+                    (the “Clouds” and “No Clouds” rows refer to whether or not clouds are drawn on the module’s purple box):
+                </p>
+                <table>
+                    <tr><th class="corner"></th><th>fi</th><th>Fi</th></tr>
+                    <tr><th>Clouds</th><td>Ji</td><td>Ki</td></tr>
+                    <tr><th>No Clouds</th><td>Ri</td><td>Si</td></tr>
+                </table>
+
+                <p>Follow the instructions on the next pages to determine and submit the three desired variables.</p>
+                <br>
+                <p>How input works for the module:</p>
+                <ul>
+                    <li>Initially, the module will be in the <strong>Awake</strong> state. Hover over the box’s lid for 3 seconds to transition the module into the <strong>Ready</strong> state.</li>
+                    <li>
+                        In the <strong>Ready</strong> state:
+                        <ul>
+                            <li>The Left and Right sides input 0 and 1, respectively.</li>
+                            <li>The Bottom side completely resets input.</li>
+                            <li>The Front side deletes the last inputted character (be careful - pressing this side at least twice within 0.2 seconds will cause a strike).</li>
+                            <li>
+                                Pressing the lid will transition the module into the <strong>Submitting</strong> state,
+                                in which it’ll check for the input being correct, strike if it’s wrong, and solve (go into the <strong>Asleep</strong> state)
+                                if all three variables have been correctly inputted.
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <h1>Mechanism Debugging+: Extended Instructions.</h1>
+                <h3>Generating the automaton</h3>
+                <p>
+                    Convert the first character of the serial number from base-36 to decimal.
+                    If it is odd, then this module’s automaton has 5 states (q0, q1, q2, q3, q4). If it is even - 6 states (q0, q1, q2, q3, q4, q5).
+                </p>
+                <p>Construct the table below. If the automaton has 5 states, discard the q5 column.</p>
+                <table>
+                    <tr>
+                        <th class="corner"></th>
+                        <th colspan="2"><input value="q0"></th>
+                        <th colspan="2"><input value="q1"></th>
+                        <th colspan="2"><input value="q2"></th>
+                        <th colspan="2"><input value="q3"></th>
+                        <th colspan="2"><input value="q4"></th>
+                        <th colspan="2"><input value="q5"></th>
+                    </tr>
+                    <tr>
+                        <th><input value="x0"></th>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                    </tr>
+                    <tr>
+                        <th><input value="x1"></th>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                    </tr>
+                    <tr>
+                        <th><input value="x2"></th>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                        <td><input value="qj"></td><td><input value="yi"></td>
+                    </tr>
+                </table>
+                <p>In this table, the intersection of an initial state (column, qi) and the input (row, xi) gives a ”transition”, which returns two values - the final state (qj), and the output (yi).</p>
+                <p>
+                    To determine the final state of each transition, first, determine the functions z0(i), z1(i), and z2(i) by following the instructions on the next page.
+                    After doing that, to determine the final state of a transition with the initial state qi and input xj:
+                </p>
+                <ol>
+                    <li>Calculate zj(i), and keep the result in range [-5; 5] by adding/subtracting 3.</li>
+                    <li>Add i to the result.</li>
+                    <li>If in step 1 you used the z2 function, take the absolute value of the current result.</li>
+                    <li>Prepend ‘q’ to the result to get the final state of the transition.</li>
+                    <li>If the final state of the transition doesn’t have a column corresponding to it, it is <strong>impossible</strong> - make sure to mark this in the table.</li>
+                </ol>
+                <p>Determine the output of all transitions with initial state qi and final state qj:</p>
+                <ul>
+                    <li>If the final state has been marked as impossible, the transition doesn’t have an output.</li>
+                    <li>If i&lt;j, then the output is y0,</li>
+                    <li>If i&gt;j, then the output is y1,</li>
+                    <li>If i=j, then the output is y2,</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <h3>Determining the z functions</h3>
+                <p>
+                    Represent the fourth and fifth characters of the serial number as their alphabetical positions and convert them to base-3. Pad them with leading zeros to three trits, if needed.
+                    To determine z0(i), use the most significant trits, for z1(i) - the second, and for z2(i) - the least significant.
+                </p>
+                <p>Use the trits of the fourth character of the serial number for columns and the trits of the fifth for rows.</p>
+                    <table class="z-table">
+                        <tr><td>z0(i)</td><td>0</td><td>1</td><td>2</td></tr>
+                        <tr><td>0</td><td>SN6 - 5</td><td>AA - D</td><td>LI - UI</td></tr>
+                        <tr><td>1</td><td>EMP - NOEMP</td><td>3 - B</td><td>2 * PP - 3</td></tr>
+                        <tr><td>2</td><td>BH - I</td><td>PT - 3</td><td>2 * P - SN3 - 2</td></tr>
+                    </table>
+                    <table class="z-table">
+                        <tr><td>z1(i)</td><td>0</td><td>1</td><td>2</td></tr>
+                        <tr><td>0</td><td>SN3 - 2 * i</td><td>3 * B - D - 2 * i</td><td>4 + FRK + TRN - BOB - SND - 2 * i</td></tr>
+                        <tr><td>1</td><td>2 + PAR + SER - 2 * i</td><td>floor(SN2 / 4) - 2 * i</td><td>NOEMP + I - 2 * i</td></tr>
+                        <tr><td>2</td><td>4 + P - LI - UI - 2 * i</td><td>PT + AA - EMP - 2 * i</td><td>(SN6 % 4) + BH + floor(PP / 2) - 2 * i</td></tr>
+                    </table>
+                    <table class="z-table">
+                        <tr><td>z2(i)</td><td>0</td><td>1</td><td>2</td></tr>
+                        <tr><td>0</td><td>round((SN2 - SN3 - SN6) / 3 - (1 + EMP) * i / (1 + BH))</td><td>2 + B - floor((D + 7) * i / (3 + UI))</td><td>6 - I - 2 * i * (BOB + SIG + MSA + IND)</td></tr>
+                        <tr><td>1</td><td>2 + PP - ceil(i * PT / 2)</td><td>1 + AA - i * (I - CLR - CAR - FRQ - NSA)</td><td>LI - i * (1 + RJ + PS + RCA - DVI)</td></tr>
+                        <tr><td>2</td><td>3 + UI - i * (round(2 * (5 - SN3) / 3) + BOB)</td><td>4 - i * (1 + floor((1 + P) / (1 + (SN2 % 3))))</td><td>3 + ceil(round(SN6 / 2) / 2) - i * (2 + ceil(NOEMP / 2))</td></tr>
+                    </table>
+                <p>Variables in this table:</p>
+                <ul>
+                    <li>SN2, SN3, SN6 - the second, third, and sixth characters of the serial number respectively. For SN2, convert from base-36 to decimal.</li>
+                    <li>B, BH, AA, D - total number of batteries, number of battery holders, number of AA batteries and D batteries respectively.</li>
+                    <li>
+                        P, PT, PP, EMP, NOEMP, DVI, PS, RCA, RJ, PAR, SER - number of ports, number of distinct port types, number of port plates,
+                        number of empty and non-empty plates, number of DVI-D, PS/2, Stereo RCA, RJ-45, Parallel, and Serial ports respectively.
+                    </li>
+                    <li>I, LI, UI - number of indicators, number of lit and unlit indicators respectively.</li>
+                    <li>&lt;indicator name&gt; - presence of an indicator with that name. If such an indicator is present, this variable equals 1, otherwise 0.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content" style="font-size: 90%;">
+                <h3>Assigning binaries</h3>
+                <p>Order all final states (q0 through q4 for 5 states, and q0 through q5 for 6 states), inputs (x0, x1, x2), and outputs (y0, y1, y2) in descending order of frequencies within the automaton’s table.</p>
+                <ul>
+                    <li>An input’s frequency is equal to how many transitions with a possible final state it is a part of.</li>
+                    <li>When ordering, ties are broken in ascending order of indexes (e.g. q2 comes before q3)</li>
+                </ul>
+                <p>In the sorted order:</p>
+                <ul>
+                    <li>Assign the inputs and the outputs binaries 00, 01, and 10.</li>
+                    <li>
+                        Assign the final states binaries 000, 001, 010, 100, 011, and 101.
+                        <ul><li>If the automaton has 5 states, 101 will be left unassigned.</li></ul>
+                    </li>
+                </ul>
+                <p>
+                    Replace all final states, inputs, and outputs within the automaton’s table with their assigned binarires.
+                    Additionally, replace all initial states with their corresponding final states’ binaries, and also replace the input rows’ labels with their corresponding inputs’ binaries.
+                </p>
+
+                <h3>Filling in the truth table</h3>
+                <p>Construct the truth table on the next page. Set the output columns to the module’s desired variables. For every variable Ri/Si/Ji/Ki, if wi is not yet an output column, set it to be one.</p>
+                <p>Fill in all of your wi and vi output columns. For every row:</p>
+                <ol>
+                    <li>Take the input columns’ u’s and w’s binaries in this row.</li>
+                    <li>Use u’s binary as the row (input) and w’s binary as the column (initial state) for your automaton’s table.</li>
+                    <li>If the intersection’s final state is impossible or if the row/column that needs to be used doesn’t exist in automaton’s table, set <strong>all of the outputs</strong> in the current row to ‘*’.</li>
+                    <li>Otherwise:
+                        <ul>
+                            <li>Look at the intersection’s final state - the truth table’s wi output in the current row will be equal to the (i + 1)th bit of the final state’s binary.</li>
+                            <li>Look at the intersection’s output - the truth table’s vi output in the current row will be equal to the (i + 1)th bit of the output’s binary.</li>
+                        </ul>
+                </ol>
+                <p>Fill in all of your Ri/Si/Ji/Ki output columns. For every row where the output columns haven’t been set to ‘*’, for every output column Ri/Si/Ji/Ki:</p>
+                <ol>
+                    <li>Take the (i + 1)th bit of the input column w’s binary in this row, and take the output column wi’s bit in this row.</li>
+                    <li>Use both of the obtained bits in the table below to obtain the value of the Ri/Si/Ji/Ki output column in the current row.</li>
+                </ol>
+                <table>
+                    <tr><th>w<br>(input)</th><th>wi<br>(output)</th><th>Ri</th><th>Si</th><th>Ji</th><th>Ki</th></tr>
+                    <tr><td>0</td><td>0</td><td>*</td><td>0</td><td>0</td><td>*</td></tr>
+                    <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td><td>*</td></tr>
+                    <tr><td>1</td><td>0</td><td>1</td><td>0</td><td>*</td><td>1</td></tr>
+                    <tr><td>1</td><td>1</td><td>0</td><td>*</td><td>*</td><td>0</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <table class="truth-table">
+                    <tr>
+                        <th colspan="2">Input</th>
+                        <th colspan="6">Output</th>
+                    </tr>
+                    <tr>
+                        <th>u</th>
+                        <th>w</th>
+                        <th><input></th>
+                        <th><input></th>
+                        <th><input></th>
+                        <th><input></th>
+                        <th><input></th>
+                        <th><input></th>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>000</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>000</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>000</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>000</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>001</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>001</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>001</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>001</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>010</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>010</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>010</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>010</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>011</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>011</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>011</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>011</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>100</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>100</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>100</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>100</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>101</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>101</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>101</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>101</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>110</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>110</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>110</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>110</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>111</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>111</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>111</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>111</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content" style="font-size: 95%;">
+                <h3>Submitting the variables</h3>
+                <p>For each variable that needs to be submitted (<strong>in left-to-right order</strong> on the module’s display):</p>
+                <ul>
+                    <li>
+                        Prepare the table below.
+                        <ul><li>A <span class="bar">bar on top of a variable</span> is the variable with a NOT operator applied to it.</li></ul>
+                    </li>
+                </ul>
+                <table id="karnaugh">
+                    <tr>
+                        <th class="corner" colspan="2" rowspan="2"><button class="clear">Clear</button></th>
+                        <th><span class="bar">w0w1w2</span></th>
+                        <th><span class="bar">w0w1</span>w2</th>
+                        <th><span class="bar">w0</span>w1w2</th>
+                        <th><span class="bar">w0</span>w1<span class="bar">w2</span></th>
+                        <th>w0w1<span class="bar">w2</span></th>
+                        <th>w0w1w2</th>
+                        <th>w0<span class="bar">w1</span>w2</th>
+                        <th>w0<span class="bar">w1w2</span></th>
+                    </tr>
+                    <tr>
+                        <th>000</th>
+                        <th>001</th>
+                        <th>011</th>
+                        <th>010</th>
+                        <th>110</th>
+                        <th>111</th>
+                        <th>101</th>
+                        <th>100</th>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0u1</span></th>
+                        <th>00</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0</span>u1</th>
+                        <th>01</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>u0u1</th>
+                        <th>11</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                    <tr>
+                        <th>u0<span class="bar">u1</span></th>
+                        <th>10</th>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input></td>
+                    </tr>
+                </table>
+                <ul>
+                    <li>
+                        Fill the table in using the previously made truth table.
+                        <ul>
+                            <li>
+                                For every cell in the table, use its row’s binary for the u input column in the truth table, its column’s binary for the w input column,
+                                and the variable you are currently submitting for the output column.
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        Write a logical expression for the Karnaugh map formed by the filled-in table.
+                        <ul>
+                            <li>Remember - the logical expression should cover all of the map’s ‘1’s, none of its ‘0’s, and each groups of the expression should cover at least one ‘1’.</li>
+                            <li>The manual for the module <a href="Karnaugh Map.html">Karnaugh Map</a> has more instructions on how to work with Karnaugh maps (although, on a smaller scale).</li>
+                        </ul>
+                    </li>
+                    <li>
+                        If the entire map can be covered with the logical expression FALSE or TRUE, submit ”0” or ”1” (press the box’s Left/Right side then <strong>immediately</strong> press its Lid) for the current variable, respectively.
+                        Otherwise, keep following these instructions.
+                    </li>
+                    <li>Convert all variables in the expression to digits according to the table below.</li>
+                </ul>
+                <table>
+                    <tr><th>w0</th><th>w1</th><th>w2</th><th>u0</th><th>u1</th></tr>
+                    <tr><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+                </table>
+                <ul>
+                    <li>
+                        Transform every group in the expression into inputtable characters for the module:
+                        <ul>
+                            <li>For every variable with a NOT operator applied to it (<span class="bar">x</span>), note it down as ”x-”.</li>
+                            <li>
+                                Note down the first variable of the group, then, for every other variable in the group (a), append ”-a-!” to it.
+                                <ul><li>E.g., if you have the group x<span class="bar">y</span>zw, you would note it down as ”x-y--!-z-!-w-!”.</li></ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>Write all of the transformed groups as one string of characters.</li>
+                    <li>Remove all occurrences of double-‘-’s (”--”) in the string.</li>
+                    <li>Append ”!-” to the string the number of times equal to the number of groups in the expression minus 1.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">5</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <ul>
+                    <li>
+                        Input all of the characters of the resulting string into the module according to the table below.
+                        <ul><li>Remember, Left side = 0, Right side = 1, Lid = submit input.</li></ul>
+                    </li>
+                </ul>
+                <table>
+                    <tr><th>0</th><td>100</td></tr>
+                    <tr><th>1</th><td>101</td></tr>
+                    <tr><th>2</th><td>110</td></tr>
+                    <tr><th>3</th><td>000</td></tr>
+                    <tr><th>4</th><td>001</td></tr>
+                    <tr><th>-</th><td>011</td></tr>
+                    <tr><th>!</th><td>111</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">6</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <h1>Mechanism Debugging+: Full Example.</h1>
+                <h4>Bomb Edgework</h4>
+                <ul>
+                    <li>2 Batteries in 1 Holder (2 AA-Batteries, 0 D-Batteries),</li>
+                    <li>A Lit FRK indicator, a Lit SND indicator, and an Unlit TRN indicator,</li>
+                    <li>A plate with a Serial port,</li>
+                    <li>Serial Number (S#): AE5PH8.</li>
+                </ul>
+                <h4>Module Read</h4>
+                <ul>
+                    <li>Top display: w1, v1, f2.</li>
+                    <li>The purple box has clouds drawn on it.</li>
+                    <li>”Clouds” + fi = Ji in the table, so f2 = J2.</li>
+                    <li>The variables that should be submitted are w1, v1, and J2.</li>
+                </ul>
+                <h3>Determining the z functions</h3>
+                <ul>
+                    <li>Fourth S# character - P, alphabetical position = 16 &rarr; 121 (in ternary).</li>
+                    <li>Fifth S# character - H, alphabetical position = 8 &rarr; 022 (in ternary).</li>
+                    <li>z0(i) (column 1, row 0) = AA - D.</li>
+                    <li>z1(i) (column 2, row 2) = (SN6 % 4) + BH + floor(PP / 2) - 2 * i.</li>
+                    <li>z2(i) (column 1, row 2) = 4 - i * (1 + floor((1 + P) / (1 + (SN2 % 3)))).</li>
+                    <li>
+                        For convenience, simplifying the functions by substituting values of edgework variables:
+                        <ul>
+                            <li>z0(i) = AA - D<br>= 2 - 0<br>= 2.</li>
+                            <li>z1(i) = (SN6 % 4) + BH + floor(PP / 2) - 2 * i<br>= (8 % 4) + 1 + floor(1 / 2) - 2 * i<br>= 0 + 1 + 0 - 2 * i<br>= 1 - 2 * i.</li>
+                            <li>
+                                z2(i) = 4 - i * (1 + floor((1 + P) / (1 + (SN2 % 3))))<br>= 4 - i * (1 + floor((1 + 1) / (1 + (14 % 3))))<br>= 4 - i * (1 + floor(2 / (1 + 2)))
+                                <br>= 4 - i * (1 + floor(2 / 3))<br>= 4 - i * (1 + 0)<br>= 4 - i.
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        After simplifying:
+                        <ul><li>z0(i) = 2</li></ul>
+                        <ul><li>z1(i) = 1 - 2 * i</li></ul>
+                        <ul><li>z2(i) = 4 - i</li></ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer example-footer">1</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <h3>Generating the automaton</h3>
+                <ul><li>First character of S# - A &rarr; 10 (from base-36 to decimal), even, so the automaton has 6 states:</li></ul>
+                <table>
+                    <tr>
+                        <th class="corner"></th>
+                        <th colspan="2">q0</th>
+                        <th colspan="2">q1</th>
+                        <th colspan="2">q2</th>
+                        <th colspan="2">q3</th>
+                        <th colspan="2">q4</th>
+                        <th colspan="2">q5</th>
+                    </tr>
+                    <tr>
+                        <th>x0</th>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                    </tr>
+                    <tr>
+                        <th>x1</th>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                    </tr>
+                    <tr>
+                        <th>x2</th>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                        <td>qj<td>yi</td>
+                    </tr>
+                </table>
+                <ul>
+                    <li>
+                        Calculating final states:
+                        <ul class="large-list">
+                            <li>x0, q0: z0(0) = 2 + 0 = 2 &rarr; final state - q2.</li>
+                            <li>x0, q1: z0(1) = 2 + 1 = 3 &rarr; final state - q3.</li>
+                            <li>x0, q2: z0(2) = 2 + 2 = 4 &rarr; final state - q4.</li>
+                            <li>x0, q3: z0(3) = 2 + 3 = 5 &rarr; final state - q5.</li>
+                            <li>x0, q4: z0(4) = 2 + 4 = 6 &rarr; final state - q6, which doesn’t have a column - <strong>impossible</strong>.</li>
+                            <li>x0, q5: z0(5) = 2 + 5 = 7 &rarr; final state - q7, which doesn’t have a column - <strong>impossible</strong>.</li>
+                            <li>x1, q0: z1(0) = 1 + 0 = 1 &rarr; final state - q1</li>
+                            <li>x1, q1: z1(1) = -1 + 1 = 0 &rarr; final state - q0</li>
+                            <li>x1, q2: z1(2) = -3 + 2 = -1 &rarr; final state - q-1, which doesn’t have a column - <strong>impossible</strong>.</li>
+                            <li>x1, q3: z1(3) = -5 + 3 = -2 &rarr; final state - q-2, which doesn’t have a column - <strong>impossible</strong>.</li>
+                            <li>x1, q4: z1(4) = -7, keeping in range [-5; 5] &rarr; -4 + 4 = 0 &rarr; final state - q0.</li>
+                            <li>x1, q5: z1(5) = -9, keeping in range [-5; 5] &rarr; -3 + 5 = 2 &rarr; final state - q2.</li>
+                            <li>x2, q0: z2(0) = 4 + 0 = 4 &rarr; final state - q4.</li>
+                            <li>x2, q1: z2(1) = 3 + 1 = 4 &rarr; final state - q4.</li>
+                            <li>x2, q2: z2(2) = 2 + 2 = 4 &rarr; final state - q4.</li>
+                            <li>x2, q3: z2(3) = 1 + 3 = 4 &rarr; final state - q4.</li>
+                            <li>x2, q4: z2(4) = 0 + 4 = 4 &rarr; final state - q4.</li>
+                            <li>x2, q5: z2(5) = -1 + 5 = 4 &rarr; final state - q4.</li>
+                        </ul>
+                    </li>
+                    <li>Filling in the final states in the table (impossible final states are marked with a ‘-’):</li>
+                </ul>
+                <table>
+                    <tr>
+                        <th class="corner"></th>
+                        <th colspan="2">q0</th>
+                        <th colspan="2">q1</th>
+                        <th colspan="2">q2</th>
+                        <th colspan="2">q3</th>
+                        <th colspan="2">q4</th>
+                        <th colspan="2">q5</th>
+                    </tr>
+                    <tr>
+                        <th>x0</th>
+                        <td>q2<td>yi</td>
+                        <td>q3<td>yi</td>
+                        <td>q4<td>yi</td>
+                        <td>q5<td>yi</td>
+                        <td>-<td>yi</td>
+                        <td>-<td>yi</td>
+                    </tr>
+                    <tr>
+                        <th>x1</th>
+                        <td>q1<td>yi</td>
+                        <td>q0<td>yi</td>
+                        <td>-<td>yi</td>
+                        <td>-<td>yi</td>
+                        <td>q0<td>yi</td>
+                        <td>q2<td>yi</td>
+                    </tr>
+                    <tr>
+                        <th>x2</th>
+                        <td>q4<td>yi</td>
+                        <td>q4<td>yi</td>
+                        <td>q4<td>yi</td>
+                        <td>q4<td>yi</td>
+                        <td>q4<td>yi</td>
+                        <td>q4<td>yi</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer example-footer">2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <ul>
+                    <li>
+                        Determining outputs:
+                        <ul class="large-list">
+                            <li>x0, q0: q0 &rarr; q2, 0 &lt; 2 - output is y0.</li>
+                            <li>x0, q1: q1 &rarr; q3, 1 &lt; 3 - output is y0.</li>
+                            <li>x0, q2: q2 &rarr; q4, 2 &lt; 4 - output is y0.</li>
+                            <li>x0, q3: q3 &rarr; q5, 3 &lt; 5 - output is y0.</li>
+                            <li>x0, q4: impossible final state, <strong>no output</strong>.</li>
+                            <li>x0, q5: impossible final state,  <strong>no output</strong>.</li>
+                            <li>x1, q0: q0 &rarr; q1, 0 &lt; 1 - output is y0.</li>
+                            <li>x1, q1: q1 &rarr; q0, 1 &gt; 0 - output is y1.</li>
+                            <li>x1, q2: impossible final state,  <strong>no output</strong>.</li>
+                            <li>x1, q3: impossible final state,  <strong>no output</strong>.</li>
+                            <li>x1, q4: q4 &rarr; q0, 4 &gt; 0 - output is y1.</li>
+                            <li>x1, q5: q5 &rarr; q2, 5 &gt; 2 - output is y1.</li>
+                            <li>x2, q0: q0 &rarr; q4, 0 &lt; 4 - output is y0.</li>
+                            <li>x2, q1: q1 &rarr; q4, 1 &lt; 4 - output is y0.</li>
+                            <li>x2, q2: q2 &rarr; q4, 2 &lt; 4 - output is y0.</li>
+                            <li>x2, q3: q3 &rarr; q4, 3 &lt; 4 - output is y0.</li>
+                            <li>x2, q4: q4 &rarr; q4, 4 = 4 - output is y2.</li>
+                            <li>x2, q5: q5 &rarr; q4, 5 &gt; 4 - output is y1.</li>
+                        </ul>
+                    </li>
+                    <li>Filling in the outputs in the table (absent outputs are marked with a ‘-’):</li>
+                </ul>
+                <table>
+                    <tr>
+                        <th class="corner"></th>
+                        <th colspan="2">q0</th>
+                        <th colspan="2">q1</th>
+                        <th colspan="2">q2</th>
+                        <th colspan="2">q3</th>
+                        <th colspan="2">q4</th>
+                        <th colspan="2">q5</th>
+                    </tr>
+                    <tr>
+                        <th>x0</th>
+                        <td>q2<td>y0</td>
+                        <td>q3<td>y0</td>
+                        <td>q4<td>y0</td>
+                        <td>q5<td>y0</td>
+                        <td>-<td>-</td>
+                        <td>-<td>-</td>
+                    </tr>
+                    <tr>
+                        <th>x1</th>
+                        <td>q1<td>y0</td>
+                        <td>q0<td>y1</td>
+                        <td>-<td>-</td>
+                        <td>-<td>-</td>
+                        <td>q0<td>y1</td>
+                        <td>q2<td>y1</td>
+                    </tr>
+                    <tr>
+                        <th>x2</th>
+                        <td>q4<td>y0</td>
+                        <td>q4<td>y0</td>
+                        <td>q4<td>y0</td>
+                        <td>q4<td>y0</td>
+                        <td>q4<td>y2</td>
+                        <td>q4<td>y1</td>
+                    </tr>
+                </table>
+
+                <h3>Assigning binaries</h3>
+                <ul><li>Frequencies of final states, inputs, and outputs within the automaton’s table:</li></ul>
+                <div class="hstack">
+                    <table>
+                        <tr><th>q0</th><td>2</td></tr>
+                        <tr><th>q1</th><td>1</td></tr>
+                        <tr><th>q2</th><td>2</td></tr>
+                        <tr><th>q3</th><td>1</td></tr>
+                        <tr><th>q4</th><td>7</td></tr>
+                        <tr><th>q5</th><td>1</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>x0</th><td>4</td></tr>
+                        <tr><th>x1</th><td>4</td></tr>
+                        <tr><th>x2</th><td>6</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>y0</th><td>9</td></tr>
+                        <tr><th>y1</th><td>4</td></tr>
+                        <tr><th>y2</th><td>1</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer example-footer">3</div>
+        </div>
+        
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <ul><li>Ordering everything in descending order of frequencies (and in ascending order of indexes in case of ties):</li></ul>
+                <div class="hstack">
+                    <table>
+                        <tr><th>q4</th><td>7</td></tr>
+                        <tr><th>q0</th><td rowspan="2">2</td></tr>
+                        <tr><th>q2</th></tr>
+                        <tr><th>q1</th><td rowspan="3">1</td></tr>
+                        <tr><th>q3</th></tr>
+                        <tr><th>q5</th></tr>
+                    </table>
+                    <table>
+                        <tr><th>x2</th><td>6</td></tr>
+                        <tr><th>x0</th><td rowspan="2">4</td></tr>
+                        <tr><th>x1</th></tr>
+                    </table>
+                    <table>
+                        <tr><th>y0</th><td>9</td></tr>
+                        <tr><th>y1</th><td>4</td></tr>
+                        <tr><th>y2</th><td>1</td></tr>
+                    </table>
+                </div>
+                <ul><li>Assigning binaries in the sorted order:</li></ul>
+                <div class="hstack">
+                    <table>
+                        <tr><th>q4</th><td>000</td></tr>
+                        <tr><th>q0</th><td>001</td></tr>
+                        <tr><th>q2</th><td>010</td></tr>
+                        <tr><th>q1</th><td>100</td></tr>
+                        <tr><th>q3</th><td>011</td></tr>
+                        <tr><th>q5</th><td>101</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>x2</th><td>00</td></tr>
+                        <tr><th>x0</th><td>01</td></tr>
+                        <tr><th>x1</th><td>10</td></tr>
+                    </table>
+                    <table>
+                        <tr><th>y0</th><td>00</td></tr>
+                        <tr><th>y1</th><td>01</td></tr>
+                        <tr><th>y2</th><td>10</td></tr>
+                    </table>
+                </div>
+                <ul><li>Replacing everything in automaton’s table with the corresponding binaries:</li></ul>
+                <table>
+                    <tr>
+                        <th class="corner"></th>
+                        <th colspan="2">001</th>
+                        <th colspan="2">100</th>
+                        <th colspan="2">010</th>
+                        <th colspan="2">011</th>
+                        <th colspan="2">000</th>
+                        <th colspan="2">101</th>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <td>010<td>00</td>
+                        <td>011<td>00</td>
+                        <td>000<td>00</td>
+                        <td>101<td>00</td>
+                        <td>-<td>-</td>
+                        <td>-<td>-</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <td>100<td>00</td>
+                        <td>001<td>01</td>
+                        <td>-<td>-</td>
+                        <td>-<td>-</td>
+                        <td>001<td>01</td>
+                        <td>010<td>01</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <td>000<td>00</td>
+                        <td>000<td>00</td>
+                        <td>000<td>00</td>
+                        <td>000<td>00</td>
+                        <td>000<td>10</td>
+                        <td>000<td>01</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer example-footer">4</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <h3>Filling in the truth table</h3>
+                <ul>
+                    <li>
+                        Setting the output columns to the module’s desired variables - w1, v1, and J2.
+                        Because we have an J2 output column, and w2 is not yet one, we set it to be an output column too:
+                    </li>
+                </ul>
+                <table class="truth-table-example">
+                    <tr>
+                        <th colspan="2">Input</th>
+                        <th colspan="4">Output</th>
+                    </tr>
+                    <tr>
+                        <th>u</th>
+                        <th>w</th>
+                        <th>w1</th>
+                        <th>w2</th>
+                        <th>v1</th>
+                        <th>J2</th>
+                    </tr>
+                    <tr><td colspan="6">...</td></tr>
+                </table>
+                <ul>
+                    <li>
+                        Filling in the w1, w2, and v1 output columns (w1 = 2nd bit of each final state’s binary,<br>w2 = 3rd bit of each final state’s binary, v1 = 2nd bit of every output’s binary):
+                        <ul class="large-list">
+                            <li>u = 00, w = 000: final state - 000 &rarr; w1 = 0, w2 = 0; output - 10 &rarr; v1 = 0.</li>
+                            <li>u = 01, w = 000: impossible final state &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 10, w = 000: final state - 001 &rarr; w1 = 0, w2 = 1; output - 01 &rarr; v1 = 1.</li>
+                            <li>u = 11, w = 000: row ”11” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 00, w = 001: final state - 000 &rarr; w1 = 0, w2 = 0; output - 00 &rarr; v1 = 0.</li>
+                            <li>u = 01, w = 001: final state - 010 &rarr; w1 = 1, w2 = 0; output - 00 &rarr; v1 = 0.</li>
+                            <li>u = 10, w = 001: final state - 100 &rarr; w1 = 0, w2 = 0; output - 00 &rarr; v1 = 0.</li>
+                            <li>u = 11, w = 001: row ”11” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 00, w = 010: final state - 000 &rarr; w1 = 0, w2 = 0; output - 00 &rarr; v1 = 0.</li>
+                            <li>u = 01, w = 010: final state - 000 &rarr; w1 = 0, w2 = 0; output - 00 &rarr; v1 = 0.</li>
+                            <li>u = 10, w = 010: impossible final state &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 11, w = 010: row ”11” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 00, w = 011: final state - 000 &rarr; w1 = 0, w2 = 0; output - 00 &rarr; v1 = 0.</li>
+                            <li>u = 01, w = 011: final state - 101 &rarr; w1 = 0, w2 = 1; output - 00 &rarr; v1 = 0.</li>
+                            <li>u = 10, w = 011: impossible final state &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 11, w = 011: row ”11” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 00, w = 100: final state - 000 &rarr; w1 = 0, w2 = 0; output - 00 &rarr; v1 = 0.</li>
+                            <li>u = 01, w = 100: final state - 011 &rarr; w1 = 1, w2 = 1; output - 00 &rarr; v1 = 0.</li>
+                            <li>u = 10, w = 100: final state - 001 &rarr; w1 = 0, w2 = 1; output - 01 &rarr; v1 = 1.</li>
+                            <li>u = 11, w = 100: row ”11” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 00, w = 101: final state - 000 &rarr; w1 = 0, w2 = 0; output - 01 &rarr; v1 = 1.</li>
+                            <li>u = 01, w = 101: impossible final state &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 10, w = 101: final state - 010 &rarr; w1 = 1, w2 = 0; output - 01 &rarr; v1 = 1.</li>
+                            <li>u = 11, w = 101: row ”11” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 00, w = 110: column ”110” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 01, w = 110: column ”110” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 10, w = 110: column ”110” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 11, w = 110: column ”110” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 00, w = 111: column ”111” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 01, w = 111: column ”111” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 10, w = 111: column ”111” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                            <li>u = 11, w = 111: column ”111” doesn’t exist &rarr; w1 = w2 = v1 = J2 = *.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer example-footer">5</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <table class="truth-table-example">
+                    <tr>
+                        <th colspan="2">Input</th>
+                        <th colspan="4">Output</th>
+                    </tr>
+                    <tr>
+                        <th>u</th>
+                        <th>w</th>
+                        <th>w1</th>
+                        <th>w2</th>
+                        <th>v1</th>
+                        <th>J2</th>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>000</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>000</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>000</th>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>1</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>000</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>001</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>001</th>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>001</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>001</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>010</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>010</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>010</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>010</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>011</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>011</th>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>011</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>011</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>100</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>100</th>
+                        <td>1</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>100</th>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>1</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>100</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>101</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>1</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>101</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>101</th>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>1</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>101</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>110</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>110</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>110</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>110</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>111</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>111</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>111</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>111</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer example-footer">6</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <ul>
+                    <li>
+                        Filling in the J2 output column for rows where it isn’t an ‘*’ already:
+                        <ul>
+                            <li>u = 00, w = 000: 3rd bit of the input w - 0, w2 = 0 &rarr; 0,0 in the table &rarr; J2 = 0.</li>
+                            <li>u = 10, w = 000: 3rd bit of the input w - 0, w2 = 1 &rarr; 0,1 in the table &rarr; J2 = 1.</li>
+                            <li>u = 00, w = 001: 3rd bit of the input w - 1, w2 = 0 &rarr; 1,0 in the table &rarr; J2 = *.</li>
+                            <li>u = 01, w = 001: 3rd bit of the input w - 1, w2 = 0 &rarr; 1,0 in the table &rarr; J2 = *.</li>
+                            <li>u = 10, w = 001: 3rd bit of the input w - 1, w2 = 0 &rarr; 1,0 in the table &rarr; J2 = *.</li>
+                            <li>u = 00, w = 010: 3rd bit of the input w - 0, w2 = 0 &rarr; 0,0 in the table &rarr; J2 = 0.</li>
+                            <li>u = 01, w = 010: 3rd bit of the input w - 0, w2 = 0 &rarr; 0,0 in the table &rarr; J2 = 0.</li>
+                            <li>u = 00, w = 011: 3rd bit of the input w - 1, w2 = 0 &rarr; 1,0 in the table &rarr; J2 = *.</li>
+                            <li>u = 01, w = 011: 3rd bit of the input w - 1, w2 = 1 &rarr; 1,1 in the table &rarr; J2 = *.</li>
+                            <li>u = 00, w = 100: 3rd bit of the input w - 0, w2 = 0 &rarr; 0,0 in the table &rarr; J2 = 0.</li>
+                            <li>u = 01, w = 100: 3rd bit of the input w - 0, w2 = 1 &rarr; 0,1 in the table &rarr; J2 = 1.</li>
+                            <li>u = 10, w = 100: 3rd bit of the input w - 0, w2 = 1 &rarr; 0,1 in the table &rarr; J2 = 1.</li>
+                            <li>u = 00, w = 101: 3rd bit of the input w - 1, w2 = 0 &rarr; 1,0 in the table &rarr; J2 = *.</li>
+                            <li>u = 10, w = 101: 3rd bit of the input w - 1, w2 = 0 &rarr; 1,0 in the table &rarr; J2 = *.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <table>
+                    <caption style="font-size: 85%;">Snippet of the relevant table</caption>
+                    <tr><th>w<br>(input)</th><th>wi<br>(output)</th><th>Ji</th></tr>
+                    <tr><td>0</td><td>0</td><td>0</td></tr>
+                    <tr><td>0</td><td>1</td><td>1</td></tr>
+                    <tr><td>1</td><td>0</td><td>*</td></tr>
+                    <tr><td>1</td><td>1</td><td>*</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer example-footer">7</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <table class="truth-table-example">
+                    <caption>Final Truth Table</caption>
+                    <tr>
+                        <th colspan="2">Input</th>
+                        <th colspan="4">Output</th>
+                    </tr>
+                    <tr>
+                        <th>u</th>
+                        <th>w</th>
+                        <th>w1</th>
+                        <th>w2</th>
+                        <th>v1</th>
+                        <th>J2</th>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>000</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>000</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>000</th>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>1</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>000</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>001</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>001</th>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>001</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>001</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>010</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>010</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>010</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>010</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>011</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>011</th>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>011</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>011</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>100</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>100</th>
+                        <td>1</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>100</th>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>1</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>100</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>101</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>101</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>101</th>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>101</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>110</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>110</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>110</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>110</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>00</th>
+                        <th>111</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>01</th>
+                        <th>111</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>10</th>
+                        <th>111</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>11</th>
+                        <th>111</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer example-footer">8</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <h3>Submitting the variables</h3>
+                <ul><li>First variable for submission - w1. Filling in the Karnaugh map for it:</li></ul>
+                <table>
+                    <tr>
+                        <th class="corner" colspan="2" rowspan="2"></th>
+                        <th><span class="bar">w0w1w2</span></th>
+                        <th><span class="bar">w0w1</span>w2</th>
+                        <th><span class="bar">w0</span>w1w2</th>
+                        <th><span class="bar">w0</span>w1<span class="bar">w2</span></th>
+                        <th>w0w1<span class="bar">w2</span></th>
+                        <th>w0w1w2</th>
+                        <th>w0<span class="bar">w1</span>w2</th>
+                        <th>w0<span class="bar">w1w2</span></th>
+                    </tr>
+                    <tr>
+                        <th>000</th>
+                        <th>001</th>
+                        <th>011</th>
+                        <th>010</th>
+                        <th>110</th>
+                        <th>111</th>
+                        <th>101</th>
+                        <th>100</th>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0u1</span></th>
+                        <th>00</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0</span>u1</th>
+                        <th>01</th>
+                        <td>*</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <th>u0u1</th>
+                        <th>11</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>u0<span class="bar">u1</span></th>
+                        <th>10</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>1</td>
+                        <td>0</td>
+                    </tr>
+                </table>
+                <ul>
+                    <li>
+                        A logical expression for this map -
+                        <span class="red">w0u1</span> + <span class="green">w0w2u0<span class="bar">u1</span></span> + <span class="blue"><span class="bar">w0w1</span>u1</span>*:
+                    </li>
+                </ul>
+                <table>
+                    <tr>
+                        <th class="corner" colspan="2" rowspan="2"></th>
+                        <th><span class="bar">w0w1w2</span></th>
+                        <th><span class="bar">w0w1</span>w2</th>
+                        <th><span class="bar">w0</span>w1w2</th>
+                        <th><span class="bar">w0</span>w1<span class="bar">w2</span></th>
+                        <th>w0w1<span class="bar">w2</span></th>
+                        <th>w0w1w2</th>
+                        <th>w0<span class="bar">w1</span>w2</th>
+                        <th>w0<span class="bar">w1w2</span></th>
+                    </tr>
+                    <tr>
+                        <th>000</th>
+                        <th>001</th>
+                        <th>011</th>
+                        <th>010</th>
+                        <th>110</th>
+                        <th>111</th>
+                        <th>101</th>
+                        <th>100</th>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0u1</span></th>
+                        <th>00</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0</span>u1</th>
+                        <th>01</th>
+                        <td class="blue">*</td>
+                        <td class="blue">1</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                        <td class="red">1</td>
+                    </tr>
+                    <tr>
+                        <th>u0u1</th>
+                        <th>11</th>
+                        <td class="blue">*</td>
+                        <td class="blue">*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                    </tr>
+                    <tr>
+                        <th>u0<span class="bar">u1</span></th>
+                        <th>10</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td class="green">*</td>
+                        <td class="green">1</td>
+                        <td>0</td>
+                    </tr>
+                </table>
+                <ul>
+                    <li>Converting variables in the expressions to digits: 04 + 023<span class="bar">4</span> + <span class="bar">01</span>4.</li>
+                    <li>
+                        Transforming all groups into inputtable characters:
+                        <ul>
+                            <li>04 &rarr; 0-4-!.</li>
+                            <li>023<span class="bar">4</span> &rarr; 0234- &rarr; 0-2-!-3-!-4--!.</li>
+                            <li><span class="bar">01</span>4 &rarr; 0-1-4 &rarr; 0--1--!-4-!.</li>
+                        </ul>
+                    </li>
+                    <li>Writing the groups as one string: 0-4-!0-2-!-3-!-4--!0--1--!-4-!.</li>
+                    <li>Removing double-‘-’s: 0-4-!0-2-!-3-!-4!01!-4-!.</li>
+                    <li>Appending 2 ”!-”s (3 groups, 3 - 1 = 2): 0-4-!0-2-!-3-!-4!01!-4-!!-!-.</li>
+                    <li>Inputting all the characters into the module: 100 011 001 011 111 100 011 110 011 111 011 000 011 111 011 001 111 100 101 111 011 001 011 111 111 011 111 011.</li>
+                    <li>Submitting input - correct.</li>
+                </ul>
+                <p class="note">
+                    * An alternative and more optimized logical expression for this variable’s map (utilizing just 2 groups instead of 3) was
+                    <strong><span class="bar">w1</span>u1</strong> + <span class="green">w0w2u0<span class="bar">u1</span></span>.
+                </p>
+            </div>
+            <div class="page-footer relative-footer example-footer">9</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <ul><li>Second variable for submission - v1. Filling in the Karnaugh map for it:</li></ul>
+                <table>
+                    <tr>
+                        <th class="corner" colspan="2" rowspan="2"></th>
+                        <th><span class="bar">w0w1w2</span></th>
+                        <th><span class="bar">w0w1</span>w2</th>
+                        <th><span class="bar">w0</span>w1w2</th>
+                        <th><span class="bar">w0</span>w1<span class="bar">w2</span></th>
+                        <th>w0w1<span class="bar">w2</span></th>
+                        <th>w0w1w2</th>
+                        <th>w0<span class="bar">w1</span>w2</th>
+                        <th>w0<span class="bar">w1w2</span></th>
+                    </tr>
+                    <tr>
+                        <th>000</th>
+                        <th>001</th>
+                        <th>011</th>
+                        <th>010</th>
+                        <th>110</th>
+                        <th>111</th>
+                        <th>101</th>
+                        <th>100</th>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0u1</span></th>
+                        <th>00</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>1</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0</span>u1</th>
+                        <th>01</th>
+                        <td>*</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th>u0u1</th>
+                        <th>11</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>u0<span class="bar">u1</span></th>
+                        <th>10</th>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>1</td>
+                        <td>1</td>
+                    </tr>
+                </table>
+                <ul><li>A logical expression for this map - <span class="red"><span class="bar">w2</span>u0</span> + <span class="blue">w0<span class="bar">w1</span>w2</span>:</li></ul>
+                <table>
+                    <tr>
+                        <th class="corner" colspan="2" rowspan="2"></th>
+                        <th><span class="bar">w0w1w2</span></th>
+                        <th><span class="bar">w0w1</span>w2</th>
+                        <th><span class="bar">w0</span>w1w2</th>
+                        <th><span class="bar">w0</span>w1<span class="bar">w2</span></th>
+                        <th>w0w1<span class="bar">w2</span></th>
+                        <th>w0w1w2</th>
+                        <th>w0<span class="bar">w1</span>w2</th>
+                        <th>w0<span class="bar">w1w2</span></th>
+                    </tr>
+                    <tr>
+                        <th>000</th>
+                        <th>001</th>
+                        <th>011</th>
+                        <th>010</th>
+                        <th>110</th>
+                        <th>111</th>
+                        <th>101</th>
+                        <th>100</th>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0u1</span></th>
+                        <th>00</th>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td class="blue">1</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0</span>u1</th>
+                        <th>01</th>
+                        <td>*</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td class="blue">*</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th>u0u1</th>
+                        <th>11</th>
+                        <td class="red">*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                        <td>*</td>
+                        <td class="blue">*</td>
+                        <td class="red">*</td>
+                    </tr>
+                    <tr>
+                        <th>u0<span class="bar">u1</span></th>
+                        <th>10</th>
+                        <td class="red">1</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                        <td>*</td>
+                        <td class="blue">1</td>
+                        <td class="red">1</td>
+                    </tr>
+                </table>
+                <ul>
+                    <li>Converting variables in the expressions to digits: <span class="bar">2</span>3 + 0<span class="bar">1</span>2.</li>
+                    <li>
+                        Transforming all groups into inputtable characters:
+                        <ul>
+                            <li><span class="bar">2</span>3 &rarr; 2-3 &rarr; 2--3-!.</li>
+                            <li>0<span class="bar">1</span>2 &rarr; 01-2 &rarr; 0-1--!-2-!.</li>
+                        </ul>
+                    </li>
+                    <li>Writing the groups as one string of characters: 2--3-!0-1--!-2-!.</li>
+                    <li>Removing double-‘-’s: 23-!0-1!-2-!.</li>
+                    <li>Appending 1 ”!-” (2 groups, 2 - 1 = 1): 23-!0-1!-2-!!-.</li>
+                    <li>Inputting all the characters into the module: 110 000 011 111 100 011 101 111 011 110 011 111 111 011.</li>
+                    <li>Submitting input - correct.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer example-footer">10</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-content">
+                <ul><li>Third and last variable for submission - J2. Filling in the Karnaugh map for it:</li></ul>
+                <table>
+                    <tr>
+                        <th class="corner" colspan="2" rowspan="2"></th>
+                        <th><span class="bar">w0w1w2</span></th>
+                        <th><span class="bar">w0w1</span>w2</th>
+                        <th><span class="bar">w0</span>w1w2</th>
+                        <th><span class="bar">w0</span>w1<span class="bar">w2</span></th>
+                        <th>w0w1<span class="bar">w2</span></th>
+                        <th>w0w1w2</th>
+                        <th>w0<span class="bar">w1</span>w2</th>
+                        <th>w0<span class="bar">w1w2</span></th>
+                    </tr>
+                    <tr>
+                        <th>000</th>
+                        <th>001</th>
+                        <th>011</th>
+                        <th>010</th>
+                        <th>110</th>
+                        <th>111</th>
+                        <th>101</th>
+                        <th>100</th>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0u1</span></th>
+                        <th>00</th>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0</span>u1</th>
+                        <th>01</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <th>u0u1</th>
+                        <th>11</th>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                    </tr>
+                    <tr>
+                        <th>u0<span class="bar">u1</span></th>
+                        <th>10</th>
+                        <td>1</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>1</td>
+                    </tr>
+                </table>
+                <ul><li>A logical expression for this map - <span class="red">u0<span class="bar">u1</span></span> + <span class="blue"><span class="bar">w1</span>u1</span>:</li></ul>
+                <table>
+                    <tr>
+                        <th class="corner" colspan="2" rowspan="2"></th>
+                        <th><span class="bar">w0w1w2</span></th>
+                        <th><span class="bar">w0w1</span>w2</th>
+                        <th><span class="bar">w0</span>w1w2</th>
+                        <th><span class="bar">w0</span>w1<span class="bar">w2</span></th>
+                        <th>w0w1<span class="bar">w2</span></th>
+                        <th>w0w1w2</th>
+                        <th>w0<span class="bar">w1</span>w2</th>
+                        <th>w0<span class="bar">w1w2</span></th>
+                    </tr>
+                    <tr>
+                        <th>000</th>
+                        <th>001</th>
+                        <th>011</th>
+                        <th>010</th>
+                        <th>110</th>
+                        <th>111</th>
+                        <th>101</th>
+                        <th>100</th>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0u1</span></th>
+                        <th>00</th>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <th><span class="bar">u0</span>u1</th>
+                        <th>01</th>
+                        <td class="blue">*</td>
+                        <td class="blue">*</td>
+                        <td>*</td>
+                        <td>0</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td class="blue">*</td>
+                        <td class="blue">1</td>
+                    </tr>
+                    <tr>
+                        <th>u0u1</th>
+                        <th>11</th>
+                        <td class="blue">*</td>
+                        <td class="blue">*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td>*</td>
+                        <td class="blue">*</td>
+                        <td class="blue">*</td>
+                    </tr>
+                    <tr>
+                        <th>u0<span class="bar">u1</span></th>
+                        <th>10</th>
+                        <td class="red">1</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                        <td class="red">*</td>
+                        <td class="red">1</td>
+                    </tr>
+                </table>
+                <ul>
+                    <li>Converting variables in the expressions to digits: 3<span class="bar">4</span> + <span class="bar">1</span>4.</li>
+                    <li>
+                        Transforming all groups into inputtable characters:
+                        <ul>
+                            <li>3<span class="bar">4</span> &rarr; 34- &rarr; 3-4--!.</li>
+                            <li><span class="bar">1</span>4 &rarr; 1-4 &rarr; 1--4-!.</li>
+                        </ul>
+                    </li>
+                    <li>Writing the groups as one string  of characters: 3-4--!1--4-!.</li>
+                    <li>Removing double-‘-’s: 3-4!14-!.</li>
+                    <li>Appending 1 ”!-” (2 groups, 2 - 1 = 1): 3-4!14-!!-.</li>
+                    <li>Inputting all the characters into the module: 000 011 001 111 101 001 011 111 111 011.</li>
+                    <li>Submitting input - correct. Module solved!</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer example-footer">11</div>
+        </div>
+    </div>
+</body>
+</html>
