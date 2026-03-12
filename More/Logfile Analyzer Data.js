@@ -20227,6 +20227,70 @@ let parseData = [
 		moduleID: "needyTypingTutor",
 		loggingTag: "Needy Typing Tutor"
 	},
+		{
+		moduleID: "ubermodule",
+		loggingTag: "Übermodule",
+		matches: [
+			{
+				regex: /Entering Startup Phase\.{3}/,
+				handler: function (matches, module) {
+					module.startDropdown = [matches[0], []];
+					module.push(module.startDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /This module (?:WILL|WILL NOT) count ignored modules as potential stages\.|This module will generate stages (?:EARLY|LATE)\.|Hard Mode is enabled! Normal stage generation procedures have been overridden\.|All dashes will be registered on the module when holding for more than \d+\.\d+ second\(s\)\.|There are 0 non-ignored modules\.|Generated manditory stage (?:\d+) requiring (?:Morse|Tap Code) input\./,
+				handler: function (matches, module) {
+					module.startDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /There are this many non-ignored Modules: (\d+) Some non-ignored modules are the following: (.+)/,
+				handler: function (matches, module) {
+
+					module.startDropdown[1].push(`There are ${matches[1]} non-ignored module(s). Some non-ignored modules are ${matches[2]}`);
+					return true;
+				}
+			},
+			{
+				regex: /Non-ignored Modules:\s(.+)/,
+				handler: function (matches, module) {
+
+					module.startDropdown[1].push(`There are ${matches[1].split(",").length} non-ignored module(s): ${matches[1]}`);
+					return true;
+				}
+			},
+			{
+				regex: /All non-ignored modules have been solved, activating "finale" phase\./,
+				handler: function (matches, module) {
+
+					module.submissionDropdown = [matches[0], []];
+					module.push(module.submissionDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /You need to input from the module that was solved \d+(?:st|nd|rd|th)\./,
+				handler: function (matches, module) {
+
+					moduleSubmissionStageDropdown = [matches[0], []];
+					module.submissionDropdown[1].push(moduleSubmissionStageDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /You need to input the correct letter in (?:.+)\.|The solved module for that stage was: (?:.+)|Strike! "." was inputted which is not correct!|Revealing module name that was solved that advanced the counter to \d+|Correct character inputted\. Moving on to next stage\.|No more stages to go\./,
+				handler: function (matches, module) {
+					moduleSubmissionStageDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+
+		]
+	},
 	{
 		displayName: "UIN(+L)",
 		moduleID: "UINpL",
