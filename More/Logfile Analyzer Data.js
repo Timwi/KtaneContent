@@ -2528,6 +2528,55 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "BlackoutModule",
+		loggingTag: "Blackout",
+		matches: [
+			{
+				regex: /Stage (\d+): (.+ was chosen\.)/,
+				handler: function (matches, module) {
+					module.stageNum = matches[1];
+
+					if(module.stageNum == 0) {
+						module.push(matches[0]);
+					}
+
+					else {
+						module.currentStage = [matches[0], [matches[2]]]; 
+						module.push(module.currentStage);
+					}
+					
+					return true;
+				}
+			},
+			{
+				regex: /===================================/,
+				handler: function (matches, module) {
+					return true;
+				}
+			},
+			{
+				regex: /Applying (.+) and (.+) using (.+) results in (.+)\./,
+				handler: function (matches, module) {
+					module.currentStage[0] = `Stage ${module.stageNum}: ${matches[1]} ${matches[3]} ${matches[2]} = ${matches[4]}`;
+				}
+			},
+			{
+				regex: /Last stage reached. Module solved./,
+				handler: function (matches, module) {
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					module.currentStage[1].push(matches[0]);
+					return true;
+				}
+			}
+		]
+	},
+	{
 		displayName: "Bob Barks",
 		moduleID: "ksmBobBarks",
 		loggingTag: "Bob Barks",
