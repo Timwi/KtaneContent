@@ -13576,6 +13576,44 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "overKilo",
+		loggingTag: "Over Kilo",
+		matches: [
+			{
+				regex: /CurrentNumber: (\d+) \| prevNum: (\d+) \| multiplier: (\d+)\| adder: (\d+) \| sum: (\d+) \| checked Num: (\d+)\| (.+)/,
+				handler: function (matches, module) {
+					if(!module.dropdown) {
+						module.slideNum = 1;
+						module.push(`Multiplier: x${matches[3]}`);
+					}
+					else {
+						module.slideNum++;
+					}
+
+					module.dropdown = [`Slide ${module.slideNum}`, []];
+					module.dropdown[1].push(`Displayed Value: ${matches[1].padStart(2, "0")}`);
+					module.dropdown[1].push(`Bonus: ${matches[4]}`);
+					module.dropdown[1].push(`Total sum after multiplier: ${matches[6]}`);
+					const isKilo = !matches[7].includes("Isnt"); 
+					module.dropdown[1].push(isKilo ?  "This is over kilo. Press the OK button" : "This is not over kilo" );
+
+					if(!isKilo) {
+						if(module.slideNum != 1) {
+							const comparison = parseInt(matches[1]) > parseInt(matches[2]) ? "greater than" : "less than";
+							module.dropdown[1].push(`This slide is ${comparison} the previous, press the ${comparison} button.`);
+						}
+
+						else {
+							module.dropdown[1].push("This is the first slide, press either round button.");
+						}
+					}
+					
+					module.push(module.dropdown);
+				}
+			}
+		]
+	},
+	{
 		moduleID: "PapyrusTiles",
 		loggingTag: "Papyrus Tiles",
 		matches: [
