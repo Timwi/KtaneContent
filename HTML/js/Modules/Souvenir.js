@@ -1,5 +1,5 @@
 
-async function createSouvenirManual(fncFormatModule, fncSort)
+async function createSouvenirManual(fncFormatModule, fncPage, translatedSouvenirName)
 {
 	let section = document.querySelector('div.section');
 	let curPage = document.querySelector('div.souvenir');
@@ -26,7 +26,7 @@ async function createSouvenirManual(fncFormatModule, fncSort)
 			newPage.innerHTML = `
 				<div class='page-header'>
 					<span class='page-header-doc-title'>Keep Talking and Nobody Explodes Mod</span>
-					<span class='page-header-section-title'>Souvenir</span>
+					<span class='page-header-section-title'></span>
 				</div>
 				<div class='page-content'>
 					<div class='souvenir'></div>
@@ -34,6 +34,7 @@ async function createSouvenirManual(fncFormatModule, fncSort)
 				<div class='page-footer relative-footer'></div>
 			`;
 			section.appendChild(newPage);
+			newPage.querySelector('span.page-header-section-title').innerText = translatedSouvenirName;
 
 			curPage = newPage.querySelector('div.souvenir');
 			curPage.appendChild(moduleDiv);
@@ -45,5 +46,5 @@ async function createSouvenirManual(fncFormatModule, fncSort)
 
 	let pageFooters = Array.from(document.querySelectorAll('.page-footer'));
 	for (let i = 0; i < pageFooters.length; i++)
-		pageFooters[i].innerText = `Page ${i+1} of ${pageFooters.length}`;
+		pageFooters[i].innerText = fncPage(i+1, pageFooters.length);
 }
