@@ -19600,6 +19600,14 @@ let parseData = [
 		loggingTag: "Ten-Button Color Code",
 		matches: [
 			{
+				regex: /Stage (\d) starting rule number: \d+/,
+				handler: function (matches, module) {
+					module.dropdown = [`Stage ${matches[1]}`, [matches[0]]];
+					module.push(module.dropdown);
+					return true;
+				}
+			},
+			{
 				regex: /^(.*:) ([RGB]{10})$/,
 				handler: function (matches, module) {
 					let colors = {
@@ -19609,7 +19617,7 @@ let parseData = [
 					};
 					let cells = Array(10).fill(null).map((_, ix) => `<td style='background: ${colors[matches[2][ix]]}; width: 25px; border: 5px solid black;'></td>`);
 					let rows = Array(2).fill(null).map((_, row) => `<tr style='height: 40px'>${cells.slice(5 * row, 5 * (row + 1)).join('')}</tr>`);
-					module.push({ label: matches[1], obj: `<table>${rows.join('')}</table>` });
+					module.dropdown[1].push({ label: matches[1], obj: `<table>${rows.join('')}</table>` });
 					return true;
 				}
 			},
