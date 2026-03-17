@@ -12276,7 +12276,7 @@ let parseData = [
 				regex: /Final ice cream counts:/,
 				handler: function (matches, module) {
 					const dropdown = [matches[0], []];
-					const regex = /\d+\s(?:SpongeBob Bars|Chipwich|Push-Up Pop|Choco Taco|Strawberry Shortcake|Snow Cone|Firecracker|Screw Ball|King Cone|Ice Cream Sandwich|Drumstick|Banana Fudge Bomb|Creamsicle|Chocolate Eclair|Fudge Pop)\./;
+					const regex = /\d+\s(?:SpongeBob Bar|Chipwich|Push-Up Pop|Choco Taco|Strawberry Shortcake|Snow Cone|Firecracker|Screw Ball|King Cone|Ice Cream Sandwich|Drumstick|Banana Fudge Bomb|Creamsicle|Chocolate Eclair|Fudge Pop)s?\./
 					let line = readTaggedLine().match(regex);
 					do {
 						dropdown[1].push(line[0]);
