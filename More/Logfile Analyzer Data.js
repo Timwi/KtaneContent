@@ -12045,6 +12045,259 @@ let parseData = [
 		loggingTag: "SquaresOfMisery"
 	},
 	{
+		moduleID: "misterSoftee",
+		loggingTag: "Mister Softee",
+		matches: [
+			{
+				regex: /Ice creams present: (.+)\./,
+				handler: function (matches, module) {
+					const parentDiv = $('<div>').addClass("parent-mister-softee");
+					const iceCreams = matches[1].split(", ");
+					iceCreams.forEach(iceCream => {
+						let div = $('<div>').addClass("mister-softee").appendTo(parentDiv);
+						$('<img>').attr('src', `../HTML/img/Mister Softee/${iceCream}.png`).addClass("mister-softee").appendTo(div);
+						$(`<p>${iceCream}</p>`).addClass("mister-softee").appendTo(div);
+					});
+					module.push({ label: "Ice creams present:", obj: parentDiv });
+					return true;
+				}
+			},
+			{
+				regex: /The SpongeBob Bar is in position (\d)\./,
+				handler: function (matches, module) {
+					const spongebobPos = matches[1];
+					module.positions = [{x: 4 + 4 * ((spongebobPos - 1) % 3), y: 4 + 4 * Math.floor((spongebobPos - 1) / 3)}]
+					return true;
+				}
+			},
+			{
+				regex: /Drove (down|left|right|up), now facing (down|left|right|up)\./,
+				handler: function (matches, module) {
+					if (!module.misterSofteePages) {
+						module.misterSofteePages = [];
+					}
+
+					const lastPosition = module.positions[module.positions.length - 1];
+
+					const direction = matches[1];
+
+					const endX = direction == "right" ? lastPosition.x + 4 : direction == "left" ? lastPosition.x - 4 : lastPosition.x;
+					const endY = direction == "up"    ? lastPosition.y - 4 : direction == "down" ? lastPosition.y + 4 : lastPosition.y;
+
+					module.misterSofteePages.push({ message: matches[0] });
+					module.positions.push({x: endX, y: endY})
+					return true;
+				}
+			},
+			{
+				regex: /\(Note that in the following logging, directions refer to the perspective of a bird's-eye view, and not the perspective of the driver\.\)/,
+				handler: function (matches, module) {
+					return true;
+				}
+			},
+			{
+				regex: /(.+) ordered a (.+)\./,
+				handler: function (matches, module) {
+					const lastIndex = module.misterSofteePages.length - 1;
+					const text = module.misterSofteePages[lastIndex].message;
+					module.misterSofteePages[lastIndex].message = text + " " + matches[0];
+					return true;
+				}
+			},
+			{
+				regex: /Duplicated road taken. Hit the brakes!/,
+				handler: function (matches, module) {
+					function makeText(x, y, text) {
+							const xOffset = 8;
+							$SVG("<text>")
+							.attr("x", x * rectDimension + xOffset)
+							.attr("y", y * rectDimension)
+							.text(text)
+							.addClass("mister-softee")
+							.appendTo(svg);
+					}
+
+					function addLine(start, end, color, svg) {
+						const radius = 7;
+						// start circle
+						$SVG("<circle>")
+							.attr("cx", start.x)
+							.attr("cy", start.y)
+							.attr("r", radius)
+							.attr("fill", color)
+							.appendTo(svg);
+
+						// end circle
+						$SVG("<circle>")
+							.attr("cx", end.x)
+							.attr("cy", end.y)
+							.attr("r", radius)
+							.attr("fill", color)
+							.appendTo(svg);
+
+						// connecting line
+						$SVG("<path>")
+							.attr("d", `M${start.x},${start.y} L${end.x},${end.y}`)
+							.attr("stroke", color)
+							.addClass("mister-softee")
+							.appendTo(svg);
+					}
+
+					const topDiv = $('<div>').addClass("mister-softee-top");
+					const leftButton = $('<button>')
+					.text("◀")
+					.attr("type", "button")
+					.addClass("mister-softee")
+					.addClass("mister-softee-left")
+					.appendTo(topDiv)
+
+					const rightButton = $('<button>')
+					.text("▶")
+					.attr("type", "button")
+					.addClass("mister-softee")
+					.addClass("mister-softee-right")
+					.appendTo(topDiv)
+
+					const label = $('<div>')
+					.text("label test")
+					.addClass("mister-softee-label")
+					.appendTo(topDiv);
+
+					const bottomDiv = $('<div>').addClass("mister-softee-bottom")
+
+					let curPage = 0;
+
+					const rectDimension = 25;
+					const rows = 17;
+					const cols = 17;
+					const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 ${(cols + 1)*rectDimension} ${(rows + 1)*rectDimension}'>`)
+					.appendTo(bottomDiv);
+
+					//make the grid
+					for(let row = 0; row < rows; row++) {
+						for(let col = 0; col < cols; col++) {
+							const rowMod4 = row % 4;
+							const colMod4 = col % 4;
+							const x = col * rectDimension;
+							const y = row * rectDimension;
+							let fill = null;
+
+							if(colMod4 == 0 && rowMod4 == 0)
+								fill = "#846780"; //purple (truck stops)
+							else if (colMod4 == 0 || rowMod4 == 0)
+								fill = "#47484C"; //gray (roads)
+							else if((colMod4 == 1 || colMod4 == 3) && (rowMod4 == 1 || rowMod4 == 3))
+								fill = "#000"; //black (corners)
+
+							if(fill) {
+								$SVG("<rect>")
+								.attr("width", rectDimension)
+								.attr("height", rectDimension)
+								.attr("x", x)
+								.attr("y", y)
+								.attr("fill", fill)
+								.appendTo(svg);	
+							}
+						}
+					}
+
+					//set the letters
+					makeText(3, 3, "I");
+					makeText(2, 4, "I");
+					makeText(5, 3, "C");
+					makeText(6, 4, "C");
+					makeText(14, 2, "E");
+					makeText(13, 3, "E");
+					makeText(15, 3, "E");
+					makeText(14, 4, "E");
+					makeText(3, 7, "H");
+					makeText(5, 7, "A");
+					makeText(6, 8, "A");
+					makeText(10, 6, "M");
+					makeText(11, 7, "M");
+					makeText(10, 8, "M");
+					makeText(14, 6, "B");
+					makeText(15, 7, "B");
+					makeText(14, 8, "B");
+					makeText(2, 10, "N");
+					makeText(3, 11, "N");
+					makeText(2, 12, "N");
+					makeText(6, 10, "K");
+					makeText(5, 11, "K");
+					makeText(7, 11, "K");
+					makeText(6, 12, "K");
+					makeText(11, 11, "G");
+					makeText(10, 12, "G");
+					makeText(15, 11, "F");
+					makeText(1, 15, "D");
+					makeText(2, 16, "D");
+					makeText(10, 14, "J");
+					makeText(9, 15, "J");
+					makeText(11, 15, "J");
+					makeText(14, 14, "L");
+					makeText(13, 15, "L");
+					makeText(14, 16, "L");
+
+					const lines = $SVG("<g>").appendTo(svg);
+
+					function setPage() {
+						label.text(module.misterSofteePages[curPage].message);
+						lines.empty();
+
+						for(let i = 0; i <= curPage; i++) {
+							
+							// green: latest movement, red: previous movements
+							const color = i == curPage ? "#0f0" : "#f00";
+							const start = {x: module.positions[i].x * rectDimension + rectDimension / 2, y: module.positions[i].y * rectDimension + rectDimension / 2};
+							const end = {x: module.positions[i + 1].x * rectDimension + rectDimension / 2, y: module.positions[i + 1].y * rectDimension + rectDimension / 2};
+							addLine(start, end, color, lines);
+						}
+					}
+
+
+					leftButton.on("click", function () {
+						curPage = Math.max(curPage - 1, 0);
+						setPage();
+					});
+
+					rightButton.on("click", function () {
+						curPage = Math.min(curPage + 1, module.misterSofteePages.length - 1);
+						setPage();
+					});
+
+					module.push({ obj: topDiv, nobullet: true });
+					module.push({ obj: bottomDiv, nobullet: true });
+
+					setPage();
+					return true;
+				}
+			},
+			{
+				regex: /Final ice cream counts:/,
+				handler: function (matches, module) {
+					const dropdown = [matches[0], []];
+					const regex = /\d+\s(?:SpongeBob Bars|Chipwich|Push-Up Pop|Choco Taco|Strawberry Shortcake|Snow Cone|Firecracker|Screw Ball|King Cone|Ice Cream Sandwich|Drumstick|Banana Fudge Bomb|Creamsicle|Chocolate Eclair|Fudge Pop)\./;
+					let line = readTaggedLine().match(regex);
+					do {
+						dropdown[1].push(line[0]);
+						line = readTaggedLine().match(regex)
+					} while (line != null);
+					linen--;
+					module.push(dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /These amounts of ice cream were bought \(reading order\): (\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+)\./,
+				handler: function (matches, module) {
+					module.push({label: "Ice cream bought in reading order", obj: pre(`${matches[1]} ${matches[2]} ${matches[3]}\n${matches[4]} ${matches[5]} ${matches[6]}\n${matches[7]} ${matches[8]} ${matches[9]}`)})
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "MistakeModule",
 		displayName: "A Mistake",
 		loggingTag: "Mistake"
