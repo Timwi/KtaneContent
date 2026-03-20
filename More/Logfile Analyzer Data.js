@@ -19539,6 +19539,108 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "symbolicPasswordModule",
+		loggingTag: "Symbolic Password",
+		matches: [
+			{
+				regex: /Position in grid: \((\d+), (\d+)\)/,
+				handler: function(matches, module) {
+					module.position = {x: parseInt(matches[1]) - 1, y: parseInt(matches[2]) - 1};
+					return true;
+				}
+			},
+			{
+				regex: /Initial display: (.+) \/ (.+)/,
+				handler: function (matches, module) {
+					module.symbolDict = {
+						"Ϙ": "28-balloon",
+						"Ӭ": "16-euro",
+						"©": "1-copyright",
+						"Ϭ": "11-six",
+						"¿": "20-questionmark",
+						"Ѧ": "13-at",
+						"¶": "21-paragraph",
+						"ټ": "4-smileyface",
+						"☆": "3-hollowstar",
+						"ƛ": "30-upsidedowny",
+						"Ͽ": "23-leftc",
+						"Ҩ": "26-cursive",
+						"Ѣ": "31-bt",
+						"҂": "27-tracks",
+						"Ϟ": "12-squigglyn",
+						"Җ": "5-doublek",
+						"Ѭ": "7-squidknife",
+						"Ͼ": "22-rightc",
+						"æ": "14-ae",
+						"Ԇ": "15-meltedthree",
+						"Ψ": "24-pitchfork",
+						"ϗ": "9-hookn",
+						"Ѯ": "19-dragon",
+						"Ҋ": "18-nwithhat",
+						"★": "2-filledstar",
+						"Ω": "6-omega",
+						"Ѽ": "8-pumpkin",
+					};
+					module.getImage = (symbol) => `../HTML/img/Keypad/${module.symbolDict[symbol]}.png`
+					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-small");
+					const list = matches[1] + matches[2];
+					for(let i = 0; i < 6; i++) {
+						$('<img>').attr('src', module.getImage(list[i])).appendTo(div);
+
+					}
+					module.push({label: "Inital Display", obj: div})
+					return true;
+				}
+			},
+			{
+				regex: /Solution/,
+				handler: function (matches, module) {
+					const grid = 
+					[
+					 'Ϙ', 'Ӭ', '©', 'Ϭ', 'Ψ', 'Ϭ', '¿', 
+					 'Ѧ', 'Ϙ', 'Ѽ', '¶', 'ټ', 'Ӭ', '☆', 
+					 'ƛ', 'Ͽ', 'Ҩ', 'Ѣ', 'Ѣ', '҂', 'Ϙ', 
+					 'Ϟ', 'Ҩ', 'Җ', 'Ѭ', 'Ͼ', 'æ', 'ƛ', 
+					 'Ѭ', '☆', 'Ԇ', 'Җ', '¶', 'Ψ', 'Ҩ', 
+					 'ϗ', 'ϗ', 'ƛ', '¿', 'Ѯ', 'Ҋ', 'Ӭ', 
+					 'Ͽ', '¿', '☆', 'ټ', '★', 'Ω', 'Ѽ'
+					];
+
+					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-big");
+
+					console.log(module.position)
+					for(let i = 0; i < grid.length; i++) {
+						let symbol = grid[i];
+						const x = i % 7;
+						const y = Math.floor(i / 7);
+
+						const inXRange = x >= module.position.x && x <= module.position.x + 2
+						const inyRange = y == module.position.y || y == module.position.y + 1
+						const inRange = inXRange && inyRange
+						$('<img>').attr('src', module.getImage(symbol)).addClass(inRange ? "symbolic-password-solution" : "").appendTo(div);
+					}
+					module.push({label: "Solution", obj: div})
+					return true;
+				}
+
+			},
+			{
+				regex: /You submitted: (.+) \/ (.+)/,
+				handler: function (matches, module) {
+					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-small");
+					const list = matches[1] + matches[2];
+					for(let i = 0; i < 6; i++) {
+						$('<img>').attr('src', module.getImage(list[i])).appendTo(div);
+
+					}
+					module.push({label: "You submitted:", obj: div})
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "sync125_3",
 		displayName: "SYNC-125 [3]",
 		loggingTag: "SYNC-125-3"
