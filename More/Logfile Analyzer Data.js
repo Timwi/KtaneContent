@@ -3512,6 +3512,59 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "clearanceCodeModule",
+		loggingTag: "Clearance Code",
+		matches: [
+			{
+				regex: /Watch out! This module has been updated to have a lot more settings and calculations!/,
+				handler: function (matches, module) {
+					module.settingsDropdown = ["Mod Settings", [matches[0]]];
+					module.push(module.settingsDropdown)
+					return true;
+				}
+			},
+			{
+				regex: /.+ digits will be displayed, .+ of which are part of the initial code\.|Initial digits of the code must be grabbed .+ from top.+\.|For stage 1.+, .+ the distances to each digit of the code\.(?:.+)?|For each stage after the first, you will need the last stage's code\.|For stage 2.+, .+ each digit of the code for this stage\.(?:.+)?|Digits will be shuffled every stage regardless if the module is ready to input or not\.|Digits will only be shuffled when the module is ready to input\.|Distances between the digits must be obtained going .+\./,
+				handler: function (matches, module) {
+					module.settingsDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /--------------- Stage (\d+) ---------------/,
+				handler: function (matches, module) {
+					module.stageDropdown = [`Stage ${matches[1]}`, []];
+					module.push(module.stageDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Picked digits in .+ order: .+|When inputting the digits will be shuffled to the following in clockwise order, from top:.+|Distances .+ from previous position:.+|Expected code for stage.+|The last stage's code to input was .+, .+ each digit of this code from .+\./,
+				handler: function(matches, module) {
+					module.stageDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /--------------- User Interactions ---------------/,
+				handler: function (matches, module) {
+					module.interaction = ["User Interactions", []];
+					module.push(module.interaction);
+					return true;
+				}
+			},
+			{
+				regex: /Solve detected, revealing layout for inputting stage \d+|Denied code for stage \d+: .+|Accepted intended code for stage \d+\./,
+				handler: function (matches, module) {
+					module.interaction[1].push(matches[0]);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+
+	},
+	{
 		moduleID: "colorGrid",
 		loggingTag: "Color Grid",
 		matches: [
