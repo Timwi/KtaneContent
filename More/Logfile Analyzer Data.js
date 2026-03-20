@@ -4274,6 +4274,150 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "CruelBooleanWires",
+		loggingTag: "Cruel Boolean Wires",
+		matches: [
+			{ 
+				regex: /<<<< (Attempt (\d) \(Stage \d\/\d\)) >>>>/,
+				handler: function (matches, module) {
+					if (matches[2] == "1") {
+						module.dropdowns = [];
+					}
+					module.attemptDropdown = [matches[1], []];
+					module.push(module.attemptDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /==BOOLEAN GENERATION==/,
+				handler: function (_, module) {
+					let booleanGeneration = ["Boolean generation", []];
+					module.attemptDropdown[1].push(booleanGeneration);
+					while (true) {
+						booleanGeneration[1].push(readTaggedLine().replace("> ", ""));
+						if (booleanGeneration[1].at(-1).match(/Value Z/)) {
+							break;
+						}
+					}
+					module.attemptDropdown[1].push(`Summary of generated values: ${readTaggedLine().match(/[TUF]+/g)[4]}`);
+					return true;
+				}
+			},
+			{
+				regex: /==STAGE GENERATION==/,
+				handler: function (_, module) {
+					let stageGeneration = ["Stage generation", []];
+					module.attemptDropdown[1].push(stageGeneration);
+					while (true) {
+						stageGeneration[1].push(readTaggedLine());
+						if (stageGeneration[1].at(-1).match(/and the wires are .+/)) {
+							module.wireColor = stageGeneration[1].at(-1).match(/and the wires are (.+)\./)[1];
+						}
+						if (stageGeneration[1].at(-1).match(/This is our submission/)) {
+							break;
+						}
+					}
+					return true;
+				}
+			},
+			{
+				regex: /The following wires.+/,
+				handler: function (matches, module) {
+					module.attemptDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /(>> YOUR SUBMISSION SHOULD LOOK LIKE THIS: ([01]+))|(>>> SUBMITTED: ([01]+); RESEMBLES (.+))/,
+				handler: function (matches, module) {
+					let wireStates = "";
+					if (matches[1]) {
+						module.attemptDropdown[1].push("Your submission should look like this:");
+						wireStates = matches[2];
+					}
+					else {
+						module.attemptDropdown[1].push(`Submitted: (resembles ${matches[5]})`);
+						wireStates = matches[4];
+					}
+
+					const wireColorDict = {
+						"red": "#F00",
+						"green": "#0F0",
+						"blue": "#00F",
+					};
+					const wirePaths = [
+						"M34 47h422",
+						"M504 47h422",
+						"M34 676h422",
+						"M504 676h422",
+						"M34 360h422",
+						"M504 360h422",
+						"M16 64v284",
+						"M16 372v284",
+						"M945 64v284",
+						"M945 372v284",
+						"M480 65v283",
+						"M480 372v284",
+						"m31 65 431 284",
+						"M927 64 496 349",
+						"m499 373 430 284",
+						"M461 373 30 658",
+						"M461 65 30 349",
+						"m498 64 431 285",
+						"m32 373 431 285",
+						"M928 373 497 657"
+					];
+	
+					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 960 720' class='cruel-boolean-wires'>");
+					let g = $SVG("<g>")
+						.attr("stroke", wireColorDict[module.wireColor]).attr("stroke-linecap", "round")
+						.attr("stroke-linejoin", "round");
+					g.appendTo(svg);
+
+					for (let w = 0; w < 20; w++) {
+						let path = $SVG("<path>").attr("stroke-width", 16).attr("d", wirePaths[w]);
+						if (wireStates[w] == "0") {
+							path.attr("style", "stroke-dasharray:6,12; stroke-dashoffset:0; stroke-width:3");
+						}
+						path.appendTo(g);
+					}
+					
+					module.attemptDropdown[1].push({ obj: svg, nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: />>> CORRECT SUBMISSION; ADVANCING STAGE/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Correct submission; Advancing stage.");
+					return true;
+				}
+			},
+			{
+				regex: />>> FIVE STAGES PASSED; MODULE SOLVED/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Five stages passed; Module solved.");
+					return true;
+				}
+			},
+			{
+				regex: />>> INCORRECT SUBMISSION; MODULE STRIKED/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Incorrect submission; Module struck.");
+					return true;
+				}
+			},
+			{
+				regex: />>> MODULE VOLUNTARILY RESET/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Module voluntarily reset.");
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "matchemcruel",
 		loggingTag: "Cruel Match 'em",
 		matches: [
