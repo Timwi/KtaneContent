@@ -3512,6 +3512,59 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "clearanceCodeModule",
+		loggingTag: "Clearance Code",
+		matches: [
+			{
+				regex: /Watch out! This module has been updated to have a lot more settings and calculations!/,
+				handler: function (matches, module) {
+					module.settingsDropdown = ["Mod Settings", [matches[0]]];
+					module.push(module.settingsDropdown)
+					return true;
+				}
+			},
+			{
+				regex: /.+ digits will be displayed, .+ of which are part of the initial code\.|Initial digits of the code must be grabbed .+ from top.+\.|For stage 1.+, .+ the distances to each digit of the code\.(?:.+)?|For each stage after the first, you will need the last stage's code\.|For stage 2.+, .+ each digit of the code for this stage\.(?:.+)?|Digits will be shuffled every stage regardless if the module is ready to input or not\.|Digits will only be shuffled when the module is ready to input\.|Distances between the digits must be obtained going .+\./,
+				handler: function (matches, module) {
+					module.settingsDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /--------------- Stage (\d+) ---------------/,
+				handler: function (matches, module) {
+					module.stageDropdown = [`Stage ${matches[1]}`, []];
+					module.push(module.stageDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Picked digits in .+ order: .+|When inputting the digits will be shuffled to the following in clockwise order, from top:.+|Distances .+ from previous position:.+|Expected code for stage.+|The last stage's code to input was .+, .+ each digit of this code from .+\./,
+				handler: function(matches, module) {
+					module.stageDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /--------------- User Interactions ---------------/,
+				handler: function (matches, module) {
+					module.interaction = ["User Interactions", []];
+					module.push(module.interaction);
+					return true;
+				}
+			},
+			{
+				regex: /Solve detected, revealing layout for inputting stage \d+|Denied code for stage \d+: .+|Accepted intended code for stage \d+\./,
+				handler: function (matches, module) {
+					module.interaction[1].push(matches[0]);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+
+	},
+	{
 		moduleID: "colorGrid",
 		loggingTag: "Color Grid",
 		matches: [
@@ -4214,6 +4267,150 @@ let parseData = [
 					module.push({ label: 'Submitted grid:', obj: tables[0] });
 					module.push({ label: 'Expected grid:', obj: tables[1] });
 					module.push('Strike!')
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
+		moduleID: "CruelBooleanWires",
+		loggingTag: "Cruel Boolean Wires",
+		matches: [
+			{ 
+				regex: /<<<< (Attempt (\d) \(Stage \d\/\d\)) >>>>/,
+				handler: function (matches, module) {
+					if (matches[2] == "1") {
+						module.dropdowns = [];
+					}
+					module.attemptDropdown = [matches[1], []];
+					module.push(module.attemptDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /==BOOLEAN GENERATION==/,
+				handler: function (_, module) {
+					let booleanGeneration = ["Boolean generation", []];
+					module.attemptDropdown[1].push(booleanGeneration);
+					while (true) {
+						booleanGeneration[1].push(readTaggedLine().replace("> ", ""));
+						if (booleanGeneration[1].at(-1).match(/Value Z/)) {
+							break;
+						}
+					}
+					module.attemptDropdown[1].push(`Summary of generated values: ${readTaggedLine().match(/[TUF]+/g)[4]}`);
+					return true;
+				}
+			},
+			{
+				regex: /==STAGE GENERATION==/,
+				handler: function (_, module) {
+					let stageGeneration = ["Stage generation", []];
+					module.attemptDropdown[1].push(stageGeneration);
+					while (true) {
+						stageGeneration[1].push(readTaggedLine());
+						if (stageGeneration[1].at(-1).match(/and the wires are .+/)) {
+							module.wireColor = stageGeneration[1].at(-1).match(/and the wires are (.+)\./)[1];
+						}
+						if (stageGeneration[1].at(-1).match(/This is our submission/)) {
+							break;
+						}
+					}
+					return true;
+				}
+			},
+			{
+				regex: /The following wires.+/,
+				handler: function (matches, module) {
+					module.attemptDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /(>> YOUR SUBMISSION SHOULD LOOK LIKE THIS: ([01]+))|(>>> SUBMITTED: ([01]+); RESEMBLES (.+))/,
+				handler: function (matches, module) {
+					let wireStates = "";
+					if (matches[1]) {
+						module.attemptDropdown[1].push("Your submission should look like this:");
+						wireStates = matches[2];
+					}
+					else {
+						module.attemptDropdown[1].push(`Submitted: (resembles ${matches[5]})`);
+						wireStates = matches[4];
+					}
+
+					const wireColorDict = {
+						"red": "#F00",
+						"green": "#0F0",
+						"blue": "#00F",
+					};
+					const wirePaths = [
+						"M34 47h422",
+						"M504 47h422",
+						"M34 676h422",
+						"M504 676h422",
+						"M34 360h422",
+						"M504 360h422",
+						"M16 64v284",
+						"M16 372v284",
+						"M945 64v284",
+						"M945 372v284",
+						"M480 65v283",
+						"M480 372v284",
+						"m31 65 431 284",
+						"M927 64 496 349",
+						"m499 373 430 284",
+						"M461 373 30 658",
+						"M461 65 30 349",
+						"m498 64 431 285",
+						"m32 373 431 285",
+						"M928 373 497 657"
+					];
+	
+					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 960 720' class='cruel-boolean-wires'>");
+					let g = $SVG("<g>")
+						.attr("stroke", wireColorDict[module.wireColor]).attr("stroke-linecap", "round")
+						.attr("stroke-linejoin", "round");
+					g.appendTo(svg);
+
+					for (let w = 0; w < 20; w++) {
+						let path = $SVG("<path>").attr("stroke-width", 16).attr("d", wirePaths[w]);
+						if (wireStates[w] == "0") {
+							path.attr("style", "stroke-dasharray:6,12; stroke-dashoffset:0; stroke-width:3");
+						}
+						path.appendTo(g);
+					}
+					
+					module.attemptDropdown[1].push({ obj: svg, nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: />>> CORRECT SUBMISSION; ADVANCING STAGE/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Correct submission; Advancing stage.");
+					return true;
+				}
+			},
+			{
+				regex: />>> FIVE STAGES PASSED; MODULE SOLVED/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Five stages passed; Module solved.");
+					return true;
+				}
+			},
+			{
+				regex: />>> INCORRECT SUBMISSION; MODULE STRIKED/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Incorrect submission; Module struck.");
+					return true;
+				}
+			},
+			{
+				regex: />>> MODULE VOLUNTARILY RESET/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Module voluntarily reset.");
 					return true;
 				}
 			},
@@ -12045,6 +12242,259 @@ let parseData = [
 		loggingTag: "SquaresOfMisery"
 	},
 	{
+		moduleID: "misterSoftee",
+		loggingTag: "Mister Softee",
+		matches: [
+			{
+				regex: /Ice creams present: (.+)\./,
+				handler: function (matches, module) {
+					const parentDiv = $('<div>').addClass("parent-mister-softee");
+					const iceCreams = matches[1].split(", ");
+					iceCreams.forEach(iceCream => {
+						let div = $('<div>').addClass("mister-softee").appendTo(parentDiv);
+						$('<img>').attr('src', `../HTML/img/Mister Softee/${iceCream}.png`).addClass("mister-softee").appendTo(div);
+						$(`<p>${iceCream}</p>`).addClass("mister-softee").appendTo(div);
+					});
+					module.push({ label: "Ice creams present:", obj: parentDiv });
+					return true;
+				}
+			},
+			{
+				regex: /The SpongeBob Bar is in position (\d)\./,
+				handler: function (matches, module) {
+					const spongebobPos = matches[1];
+					module.positions = [{x: 4 + 4 * ((spongebobPos - 1) % 3), y: 4 + 4 * Math.floor((spongebobPos - 1) / 3)}]
+					return true;
+				}
+			},
+			{
+				regex: /Drove (down|left|right|up), now facing (down|left|right|up)\./,
+				handler: function (matches, module) {
+					if (!module.misterSofteePages) {
+						module.misterSofteePages = [];
+					}
+
+					const lastPosition = module.positions[module.positions.length - 1];
+
+					const direction = matches[1];
+
+					const endX = direction == "right" ? lastPosition.x + 4 : direction == "left" ? lastPosition.x - 4 : lastPosition.x;
+					const endY = direction == "up"    ? lastPosition.y - 4 : direction == "down" ? lastPosition.y + 4 : lastPosition.y;
+
+					module.misterSofteePages.push({ message: matches[0] });
+					module.positions.push({x: endX, y: endY})
+					return true;
+				}
+			},
+			{
+				regex: /\(Note that in the following logging, directions refer to the perspective of a bird's-eye view, and not the perspective of the driver\.\)/,
+				handler: function (matches, module) {
+					return true;
+				}
+			},
+			{
+				regex: /(.+) ordered a (.+)\./,
+				handler: function (matches, module) {
+					const lastIndex = module.misterSofteePages.length - 1;
+					const text = module.misterSofteePages[lastIndex].message;
+					module.misterSofteePages[lastIndex].message = text + " " + matches[0];
+					return true;
+				}
+			},
+			{
+				regex: /Duplicated road taken. Hit the brakes!/,
+				handler: function (matches, module) {
+					function makeText(x, y, text) {
+							const xOffset = 8;
+							$SVG("<text>")
+							.attr("x", x * rectDimension + xOffset)
+							.attr("y", y * rectDimension)
+							.text(text)
+							.addClass("mister-softee")
+							.appendTo(svg);
+					}
+
+					function addLine(start, end, color, svg) {
+						const radius = 7;
+						// start circle
+						$SVG("<circle>")
+							.attr("cx", start.x)
+							.attr("cy", start.y)
+							.attr("r", radius)
+							.attr("fill", color)
+							.appendTo(svg);
+
+						// end circle
+						$SVG("<circle>")
+							.attr("cx", end.x)
+							.attr("cy", end.y)
+							.attr("r", radius)
+							.attr("fill", color)
+							.appendTo(svg);
+
+						// connecting line
+						$SVG("<path>")
+							.attr("d", `M${start.x},${start.y} L${end.x},${end.y}`)
+							.attr("stroke", color)
+							.addClass("mister-softee")
+							.appendTo(svg);
+					}
+
+					const topDiv = $('<div>').addClass("mister-softee-top");
+					const leftButton = $('<button>')
+					.text("◀")
+					.attr("type", "button")
+					.addClass("mister-softee")
+					.addClass("mister-softee-left")
+					.appendTo(topDiv)
+
+					const rightButton = $('<button>')
+					.text("▶")
+					.attr("type", "button")
+					.addClass("mister-softee")
+					.addClass("mister-softee-right")
+					.appendTo(topDiv)
+
+					const label = $('<div>')
+					.text("label test")
+					.addClass("mister-softee-label")
+					.appendTo(topDiv);
+
+					const bottomDiv = $('<div>').addClass("mister-softee-bottom")
+
+					let curPage = 0;
+
+					const rectDimension = 25;
+					const rows = 17;
+					const cols = 17;
+					const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 ${(cols + 1)*rectDimension} ${(rows + 1)*rectDimension}'>`)
+					.appendTo(bottomDiv);
+
+					//make the grid
+					for(let row = 0; row < rows; row++) {
+						for(let col = 0; col < cols; col++) {
+							const rowMod4 = row % 4;
+							const colMod4 = col % 4;
+							const x = col * rectDimension;
+							const y = row * rectDimension;
+							let fill = null;
+
+							if(colMod4 == 0 && rowMod4 == 0)
+								fill = "#846780"; //purple (truck stops)
+							else if (colMod4 == 0 || rowMod4 == 0)
+								fill = "#47484C"; //gray (roads)
+							else if((colMod4 == 1 || colMod4 == 3) && (rowMod4 == 1 || rowMod4 == 3))
+								fill = "#000"; //black (corners)
+
+							if(fill) {
+								$SVG("<rect>")
+								.attr("width", rectDimension)
+								.attr("height", rectDimension)
+								.attr("x", x)
+								.attr("y", y)
+								.attr("fill", fill)
+								.appendTo(svg);	
+							}
+						}
+					}
+
+					//set the letters
+					makeText(3, 3, "I");
+					makeText(2, 4, "I");
+					makeText(5, 3, "C");
+					makeText(6, 4, "C");
+					makeText(14, 2, "E");
+					makeText(13, 3, "E");
+					makeText(15, 3, "E");
+					makeText(14, 4, "E");
+					makeText(3, 7, "H");
+					makeText(5, 7, "A");
+					makeText(6, 8, "A");
+					makeText(10, 6, "M");
+					makeText(11, 7, "M");
+					makeText(10, 8, "M");
+					makeText(14, 6, "B");
+					makeText(15, 7, "B");
+					makeText(14, 8, "B");
+					makeText(2, 10, "N");
+					makeText(3, 11, "N");
+					makeText(2, 12, "N");
+					makeText(6, 10, "K");
+					makeText(5, 11, "K");
+					makeText(7, 11, "K");
+					makeText(6, 12, "K");
+					makeText(11, 11, "G");
+					makeText(10, 12, "G");
+					makeText(15, 11, "F");
+					makeText(1, 15, "D");
+					makeText(2, 16, "D");
+					makeText(10, 14, "J");
+					makeText(9, 15, "J");
+					makeText(11, 15, "J");
+					makeText(14, 14, "L");
+					makeText(13, 15, "L");
+					makeText(14, 16, "L");
+
+					const lines = $SVG("<g>").appendTo(svg);
+
+					function setPage() {
+						label.text(module.misterSofteePages[curPage].message);
+						lines.empty();
+
+						for(let i = 0; i <= curPage; i++) {
+							
+							// green: latest movement, red: previous movements
+							const color = i == curPage ? "#0f0" : "#f00";
+							const start = {x: module.positions[i].x * rectDimension + rectDimension / 2, y: module.positions[i].y * rectDimension + rectDimension / 2};
+							const end = {x: module.positions[i + 1].x * rectDimension + rectDimension / 2, y: module.positions[i + 1].y * rectDimension + rectDimension / 2};
+							addLine(start, end, color, lines);
+						}
+					}
+
+
+					leftButton.on("click", function () {
+						curPage = Math.max(curPage - 1, 0);
+						setPage();
+					});
+
+					rightButton.on("click", function () {
+						curPage = Math.min(curPage + 1, module.misterSofteePages.length - 1);
+						setPage();
+					});
+
+					module.push({ obj: topDiv, nobullet: true });
+					module.push({ obj: bottomDiv, nobullet: true });
+
+					setPage();
+					return true;
+				}
+			},
+			{
+				regex: /Final ice cream counts:/,
+				handler: function (matches, module) {
+					const dropdown = [matches[0], []];
+					const regex = /\d+\s(?:SpongeBob Bar|Chipwich|Push-Up Pop|Choco Taco|Strawberry Shortcake|Snow Cone|Firecracker|Screw Ball|King Cone|Ice Cream Sandwich|Drumstick|Banana Fudge Bomb|Creamsicle|Chocolate Eclair|Fudge Pop)s?\./
+					let line = readTaggedLine().match(regex);
+					do {
+						dropdown[1].push(line[0]);
+						line = readTaggedLine().match(regex)
+					} while (line != null);
+					linen--;
+					module.push(dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /These amounts of ice cream were bought \(reading order\): (\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+)\./,
+				handler: function (matches, module) {
+					module.push({label: "Ice cream bought in reading order", obj: pre(`${matches[1]} ${matches[2]} ${matches[3]}\n${matches[4]} ${matches[5]} ${matches[6]}\n${matches[7]} ${matches[8]} ${matches[9]}`)})
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "MistakeModule",
 		displayName: "A Mistake",
 		loggingTag: "Mistake"
@@ -19089,6 +19539,108 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "symbolicPasswordModule",
+		loggingTag: "Symbolic Password",
+		matches: [
+			{
+				regex: /Position in grid: \((\d+), (\d+)\)/,
+				handler: function(matches, module) {
+					module.position = {x: parseInt(matches[1]) - 1, y: parseInt(matches[2]) - 1};
+					return true;
+				}
+			},
+			{
+				regex: /Initial display: (.+) \/ (.+)/,
+				handler: function (matches, module) {
+					module.symbolDict = {
+						"Ϙ": "28-balloon",
+						"Ӭ": "16-euro",
+						"©": "1-copyright",
+						"Ϭ": "11-six",
+						"¿": "20-questionmark",
+						"Ѧ": "13-at",
+						"¶": "21-paragraph",
+						"ټ": "4-smileyface",
+						"☆": "3-hollowstar",
+						"ƛ": "30-upsidedowny",
+						"Ͽ": "23-leftc",
+						"Ҩ": "26-cursive",
+						"Ѣ": "31-bt",
+						"҂": "27-tracks",
+						"Ϟ": "12-squigglyn",
+						"Җ": "5-doublek",
+						"Ѭ": "7-squidknife",
+						"Ͼ": "22-rightc",
+						"æ": "14-ae",
+						"Ԇ": "15-meltedthree",
+						"Ψ": "24-pitchfork",
+						"ϗ": "9-hookn",
+						"Ѯ": "19-dragon",
+						"Ҋ": "18-nwithhat",
+						"★": "2-filledstar",
+						"Ω": "6-omega",
+						"Ѽ": "8-pumpkin",
+					};
+					module.getImage = (symbol) => `../HTML/img/Keypad/${module.symbolDict[symbol]}.png`
+					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-small");
+					const list = matches[1] + matches[2];
+					for(let i = 0; i < 6; i++) {
+						$('<img>').attr('src', module.getImage(list[i])).appendTo(div);
+
+					}
+					module.push({label: "Inital Display", obj: div})
+					return true;
+				}
+			},
+			{
+				regex: /Solution/,
+				handler: function (matches, module) {
+					const grid = 
+					[
+					 'Ϙ', 'Ӭ', '©', 'Ϭ', 'Ψ', 'Ϭ', '¿', 
+					 'Ѧ', 'Ϙ', 'Ѽ', '¶', 'ټ', 'Ӭ', '☆', 
+					 'ƛ', 'Ͽ', 'Ҩ', 'Ѣ', 'Ѣ', '҂', 'Ϙ', 
+					 'Ϟ', 'Ҩ', 'Җ', 'Ѭ', 'Ͼ', 'æ', 'ƛ', 
+					 'Ѭ', '☆', 'Ԇ', 'Җ', '¶', 'Ψ', 'Ҩ', 
+					 'ϗ', 'ϗ', 'ƛ', '¿', 'Ѯ', 'Ҋ', 'Ӭ', 
+					 'Ͽ', '¿', '☆', 'ټ', '★', 'Ω', 'Ѽ'
+					];
+
+					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-big");
+
+					console.log(module.position)
+					for(let i = 0; i < grid.length; i++) {
+						let symbol = grid[i];
+						const x = i % 7;
+						const y = Math.floor(i / 7);
+
+						const inXRange = x >= module.position.x && x <= module.position.x + 2
+						const inyRange = y == module.position.y || y == module.position.y + 1
+						const inRange = inXRange && inyRange
+						$('<img>').attr('src', module.getImage(symbol)).addClass(inRange ? "symbolic-password-solution" : "").appendTo(div);
+					}
+					module.push({label: "Solution", obj: div})
+					return true;
+				}
+
+			},
+			{
+				regex: /You submitted: (.+) \/ (.+)/,
+				handler: function (matches, module) {
+					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-small");
+					const list = matches[1] + matches[2];
+					for(let i = 0; i < 6; i++) {
+						$('<img>').attr('src', module.getImage(list[i])).appendTo(div);
+
+					}
+					module.push({label: "You submitted:", obj: div})
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "sync125_3",
 		displayName: "SYNC-125 [3]",
 		loggingTag: "SYNC-125-3"
@@ -19347,6 +19899,14 @@ let parseData = [
 		loggingTag: "Ten-Button Color Code",
 		matches: [
 			{
+				regex: /Stage (\d) starting rule number: \d+/,
+				handler: function (matches, module) {
+					module.dropdown = [`Stage ${matches[1]}`, [matches[0]]];
+					module.push(module.dropdown);
+					return true;
+				}
+			},
+			{
 				regex: /^(.*:) ([RGB]{10})$/,
 				handler: function (matches, module) {
 					let colors = {
@@ -19356,7 +19916,7 @@ let parseData = [
 					};
 					let cells = Array(10).fill(null).map((_, ix) => `<td style='background: ${colors[matches[2][ix]]}; width: 25px; border: 5px solid black;'></td>`);
 					let rows = Array(2).fill(null).map((_, row) => `<tr style='height: 40px'>${cells.slice(5 * row, 5 * (row + 1)).join('')}</tr>`);
-					module.push({ label: matches[1], obj: `<table>${rows.join('')}</table>` });
+					module.dropdown[1].push({ label: matches[1], obj: `<table>${rows.join('')}</table>` });
 					return true;
 				}
 			},
