@@ -13744,6 +13744,33 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "omegaForget",
+		loggingTag: "OmegaForget",
+		matches: [
+			{
+				regex: /-----STAGE (\d+)-----/,
+				handler: function (matches, module) {
+					module.dropdown = [`Stage ${matches[1]}`, []];
+					module.push(module.dropdown)
+					return true;
+				}
+			},
+			{
+				regex: /The number in Base 36 is .+\.|The rotation this stage is .+\.|The LED colors are .+ and .+\.|In Base 10, the number displayed is .+\.|After converting to Base 8, modulo 1000, the new number is .+\.|The combined LED value is .+\.|The E value is .+\.|The D value is .+\.|X is .+\.|The number being used for the button is .+\.|The value from the table is .+\.|The correct input for stage \d+ is (.+)\./,
+				handler: function (matches, module) {
+					module.dropdown[1].push(matches[0])
+					if(matches[1] !== undefined) {
+						module.dropdown[0] += `: ${matches[1]}`
+					}
+					return true;
+				}
+			},
+
+			
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "OnlyConnectModule",
 		loggingTag: "Only Connect",
 		matches: [
