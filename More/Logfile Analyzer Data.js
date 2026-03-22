@@ -18998,6 +18998,61 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "SlowMathModule",
+		loggingTag: "Slow Math",
+		matches: [
+			{
+				regex: /===============================================/,
+				handler: function (matches, module){ return true; }
+			},
+			{
+				regex: /There will be.+/,
+				handler: function (matches, module){
+					if(!module.attemptDropdown){
+						module.attemptDropdown = ["Attempt 1", []];
+						module.attemptNum = 1;
+						module.push(module.attemptDropdown);
+					}
+					module.attemptDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /Stage (\d):/,
+				handler: function (matches, module){
+					module.stageDropDown = [`Stage ${matches[1]}`, []];
+					module.attemptDropdown[1].push(module.stageDropDown);
+					return true;
+				}
+			},
+			{
+				regex: /Chosen letters: .+|Intersections, in reading order: .+|Solution for this stage: .+|Calculated solution: .+/,
+				handler: function (matches, module){
+					module.stageDropDown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /.+Strike./,
+				handler: function (matches, module){
+					module.attemptDropdown[1].push(matches[0]);
+					module.attemptNum++;
+					module.attemptDropdown = [`Attempt ${module.attemptNum}`, []];
+					module.push(module.attemptDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Correctly.+|Moving.+|Module solved./,
+				handler: function (matches, module){
+					module.attemptDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Snakes and Ladders",
 		moduleID: "snakesAndLadders",
 		loggingTag: "Snakes and Ladders",
