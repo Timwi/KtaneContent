@@ -19008,24 +19008,20 @@ let parseData = [
 			{
 				regex: /There will be.+/,
 				handler: function (matches, module){
-
-
+					if(!module.attemptDropdown){
+						module.attemptDropdown = ["Attempt 1", []];
+						module.attemptNum = 1;
+						module.push(module.attemptDropdown);
+					}
+					module.attemptDropdown[1].push(matches[0]);
 					return true;
 				}
 			},
 			{
 				regex: /Stage (\d):/,
 				handler: function (matches, module){
-
-					if(!module.attemptDropdown){
-						module.attemptDropdown = ["Attempt 1", []];
-						module.attemptNum = 1;
-						module.push(module.attemptDropdown);
-					}
-						
-					module.stageDropDown = [`Stage ${matches[1]}:`, []];
+					module.stageDropDown = [`Stage ${matches[1]}`, []];
 					module.attemptDropdown[1].push(module.stageDropDown);
-					
 					return true;
 				}
 			},
@@ -19047,7 +19043,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /Correctly.+|Moving.+/,
+				regex: /Correctly.+|Moving.+|Module solved./,
 				handler: function (matches, module){
 					module.attemptDropdown[1].push(matches[0]);
 					return true;
