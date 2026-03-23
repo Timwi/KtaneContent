@@ -19371,6 +19371,94 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "spongebobPatrick",
+		loggingTag: "Spongebob Patrick Squidward Sandy",
+		matches: [
+			{
+				regex: /Traveling from .+ to .+ changed the state of the maze to:/,
+            	handler: function (matches, module) {
+					module.push({ label: matches[0], obj: pre(readTaggedLines(4).join("\n")) });
+            	    return true;
+            	}
+			},
+			{
+				regex: /Resulting maze .+/,
+            	handler: function (matches, module) {
+					const upEmpty = "╚╝╩╠╣╬";
+					const rightEmpty = "╒╚╔╩╠╦╬";
+					const downEmpty = "╖╗╔╠╣╦╬";
+					const leftEmpty = "╕╝╗╩╣╦╬"
+
+					let horizWalls = [[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]];
+					let vertWalls = [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]];
+					for (let i = 0; i < 4; i++) {
+						let line = readTaggedLine();
+						for (let j = 0; j < 4; j++) {
+							let cell = line[j];
+							if (upEmpty.includes(cell)) {
+								horizWalls[i - 1][j] = 0;
+							}
+							if (rightEmpty.includes(cell)) {
+								vertWalls[i][j] = 0;
+							}
+							if (downEmpty.includes(cell)) {
+								horizWalls[i][j] = 0;
+							}
+							if (leftEmpty.includes(cell)) {
+								vertWalls[i][j - 1] = 0;
+							}
+						}
+					}
+					let maze = ["•———•———•———•———•"];
+					for (let i = 0; i < 4; i++) {
+						maze.push(`|   ${vertWalls[i][0] ? "|" : " "}   ${vertWalls[i][1] ? "|" : " "}   ${vertWalls[i][2] ? "|" : " "}   |`);
+						let row = `•${horizWalls[i][0] ? "———" : "   "}•${horizWalls[i][1] ? "———" : "   "}•${horizWalls[i][2] ? "———" : "   "}•${horizWalls[i][3] ? "———" : "   "}•`;
+						while (row.includes("   •   ")) {
+							row = row.replace("   •   ", "       ");
+						}
+						maze.push(row);
+					}
+
+					let finalMaze = (matches[0] == "Resulting maze after merging areas and pruning disconnected areas:");
+					if (finalMaze) {
+						startLine = readTaggedLine();
+						let startCoord = startLine.match(/Your starting coordinate is \((\d), (\d)\)./).slice(1);
+						let startRow = 2 * parseInt(startCoord[1]) - 1;
+						let startCol = 4 * parseInt(startCoord[0]) - 2;
+						maze[startRow] = maze[startRow].slice(0, startCol) + "S" + maze[startRow].slice(startCol + 1);
+
+						goalsLine = readTaggedLine();
+						let goalCoords = Array.from(goalsLine.matchAll(/\d/g));
+						for (let i = 0; i < goalCoords.length; i += 2) {
+							let goalRow = 2 * parseInt(goalCoords[i + 1]) - 1;
+							let goalCol = 4 * parseInt(goalCoords[i]) - 2;
+							maze[goalRow] = maze[goalRow].slice(0, goalCol) + "G" + maze[goalRow].slice(goalCol + 1);
+						}
+					}
+
+					module.push({ label: matches[0], obj: pre(maze.join("\n")) });
+					if (finalMaze) {
+						module.push(startLine);
+						module.push(goalsLine);
+						module.push(readTaggedLine());
+						module.push(readTaggedLine());
+						module.moveDropdown = ["Movement:", []]
+						module.push(module.moveDropdown);
+					}
+            	    return true;
+            	}
+			},
+			{
+				regex: /(.+ has been pressed\.)|(Ran into a wall. Resetting the module.)/,
+				handler: function (matches, module) {
+					module.moveDropdown[1].push(matches[0]);
+            	    return true;
+            	}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Stack’em",
 		moduleID: "stackem",
 		loggingTag: "Stack'em"
