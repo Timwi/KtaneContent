@@ -343,7 +343,7 @@ let SouvenirModuleData = [
 	{ original: "Slow Math",	name: "Mathe in Zeitlupe",	id: "SlowMathModule",	questions: ["Was war das letzte Buchstabentripel?"] },
 	{ original: "Fast Math",	name: "Mathe in Zeitraffer",	id: "fastMath",	questions: ["Was war das letzte Buchstabenpaar?"] },
 	{ original: "Mashematics",	name: "Mathe-Marterei",	id: "mashematics",	questions: ["Welche Zahlen kamen in der Rechenaufgabe vor?"] },
-	{ original: "The Matrix",	name: "DieMatrix",	id: "matrix",	questions: ["Welches Wort kam im letzten Zugangscode vor?", "Wie lautete das gestörte Wort?"] },
+	{ original: "The Matrix",	name: "DieMatrix",	id: "matrix",	questions: ["Welches Wort kam im zuletzt verwendeten Zugangscode vor?"] },
 	{ original: "Mouse In The Maze",	name: "Maus im Labyrinth",	id: "MouseInTheMaze",	questions: ["Welche Farbe hatte der Torus?"] },
 	{ original: "More Code",	name: "Mehr-Code",	id: "MoreCode",	questions: ["Welches Wort wurde übermittelt?"] },
 	{ original: "Memory",	name: "Memory",	id: "Memory",	questions: ["Welche Ziffer war in welcher Stufe auf dem Display?"] },

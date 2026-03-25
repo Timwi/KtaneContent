@@ -338,7 +338,7 @@ let SouvenirModuleData = [
 	{ name: "Master Tapes",	id: "masterTape",	questions: ["Which song was played?"] },
 	{ name: "Match Refereeing",	id: "matchRefereeing",	questions: ["Which planets were present in each stage?"] },
 	{ name: "Math ’em",	id: "mathem",	questions: ["What were the color and design of each tile before the shuffle?"] },
-	{ name: "The Matrix",	id: "matrix",	questions: ["Which word was part of the latest access code?", "What was the glitched word?"] },
+	{ name: "The Matrix",	id: "matrix",	questions: ["Which word was part of the latest access code used?"] },
 	{ name: "Maze",	id: "Maze",	questions: ["What was the starting position?"] },
 	{ name: "Maze Identification",	id: "GSMazeIdentification",	questions: ["What was the seed?", "What function did each button have?"] },
 	{ name: "Maze Scrambler",	id: "MazeScrambler",	questions: ["What was the starting position?", "What was the goal position?", "Which positions were the maze markings?"] },
