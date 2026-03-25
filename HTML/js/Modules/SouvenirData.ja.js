@@ -338,7 +338,7 @@ let SouvenirModuleData = [
 	{ original: "Master Tapes",	name: "マスターテープ",	id: "masterTape",	questions: ["再生された曲は？"] },
 	{ original: "Match Refereeing",	name: "Match Refereeing",	id: "matchRefereeing",	questions: ["各ステージにあった惑星は？"] },
 	{ original: "Math ’em",	name: "計算神経衰弱",	id: "mathem",	questions: ["シャッフル前の各タイルのデザインと色は？"] },
-	{ original: "The Matrix",	name: "マトリックス",	id: "matrix",	questions: ["最新のアクセスコードの一部になっている単語はどれ？", "問題のある単語は？"] },
+	{ original: "The Matrix",	name: "マトリックス",	id: "matrix",	questions: ["Which word was part of the latest access code used?"] },
 	{ original: "Maze",	name: "迷路",	id: "Maze",	questions: ["開始位置は？"] },
 	{ original: "Maze Identification",	name: "Maze Identification",	id: "GSMazeIdentification",	questions: ["Seed値は？", "各ボタンの機能は？"] },
 	{ original: "Maze Scrambler",	name: "迷路スクランブラー",	id: "MazeScrambler",	questions: ["開始位置は？", "ゴールの位置は？", "迷路のマークはどの位置にあった？"] },
