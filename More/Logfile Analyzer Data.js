@@ -14443,6 +14443,102 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "paintingCube",
+		loggingTag: "Painting Cube",
+		matches: [
+			{
+				regex: /The missing color from the grid is: (.+). The correct vertex to use is: \[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\]/,
+				handler: function (matches, module){
+					const vertexSVG = $("<svg xmlns='http://www.w3.org/2000/svg' style='width: 20%' viewbox='0 0 70 70'>");
+					
+					const vertexPaths = [
+						"M 30.914392,2.2200195 3.5357015,17.987533 30.914392,33.754529 58.293083,17.987533 Z",
+						"M 3.0974854,18.738908 3.1321086,50.332845 30.476176,66.159786 30.441553,34.565849 Z",
+						"M 58.724581,18.738908 31.380514,34.565849 31.34589,66.160303 58.689958,50.332845 Z"
+					]
+
+					const textPlacement = [
+						[30.914, 21.987],
+						[16.787, 46.449],
+						[45.035, 46.449],
+					]
+
+					function addToVertex(index, colour){
+						$SVG("<path>")
+						.attr("d", vertexPaths[index])
+						.addClass(`painting-cube`)
+						.addClass(`painting-cube-${colour.toLowerCase()}`)
+						.appendTo(vertexSVG);
+						$SVG(`<text>${colour[0]}`)
+						.attr("x", textPlacement[index][0])
+						.attr("y", textPlacement[index][1])
+						.addClass(`painting-cube`)
+						.appendTo(vertexSVG);						
+					}
+					
+					for(var i = 0; i < 3; i++){ addToVertex(i, matches[i+2]); }
+					
+					module.push(`The missing color from the grid is: ${matches[1]}`);
+					module.push("The correct vertex to use is as follows:");
+					module.push({ obj: vertexSVG, nobullet: true });					
+					return true;
+				}
+			},
+			{
+				regex: /The initial grid is: (.+)/,
+				handler: function(matches, module){
+					var grid = (matches[1].split(';')).map(x => x.split(']')).map(r => r.map(x => x.replace(/\[/g, "")));
+
+					module.gridSVG = $("<svg xmlns='http://www.w3.org/2000/svg' style='width: 50%' viewbox='-2 -2 104 104'>");
+					
+					function addToGrid(row, col, colour){
+						$SVG("<path>")
+						.attr("d", `M ${col*25},${row*25} H ${(col+1)*25} V ${(row+1)*25} H ${col*25} Z`)
+						.addClass(`painting-cube`)
+						.addClass(`painting-cube-${colour.toLowerCase()}`)
+						.appendTo(module.gridSVG);
+						$SVG(`<text>${colour[0] != 'X' ? colour[0] : ""}`)
+						.attr("x", col*25 +12.5)
+						.attr("y", row*25 +16.5)
+						.addClass(`painting-cube`)
+						.appendTo(module.gridSVG);	
+					}
+
+					for(var r = 0; r < 4; r++)
+						for(var c = 0; c < 4; c++)
+							addToGrid(r, c, grid[r][c]);
+
+					module.push("The initial grid is as follows:");
+					return true;
+				}
+			},
+			{
+				regex: /The cube's starting position is at (.+)/,
+				handler: function (matches, module){
+					var qbStart = ["ABCD".indexOf(matches[1][0]), "1234".indexOf(matches[1][1])];
+					var row = qbStart[0];
+					var col = qbStart[1];
+
+					$SVG("<path>")
+					.attr("d", `M ${row*25},${col*25} H ${(row+1)*25} V ${(col+1)*25} H ${row*25} Z`)
+					.addClass(`painting-cube`)
+					.addClass(`painting-cube-start`)
+					.appendTo(module.gridSVG);
+					$SVG(`<text>START`)
+					.attr("x", row*25 +12.5)
+					.attr("y", col*25 +13.5)
+					.addClass(`painting-cube`)
+					.addClass(`painting-cube-start`)
+					.appendTo(module.gridSVG);	
+					
+					module.push({ obj: module.gridSVG, nobullet: true });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "pawns",
 		loggingTag: "Pawns",
 		matches: [
