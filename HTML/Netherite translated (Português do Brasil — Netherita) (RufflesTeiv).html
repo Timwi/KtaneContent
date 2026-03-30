@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Netherita — Módulo para Keep Talking and Nobody Explodes</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        li {
+            margin-bottom: 3%;
+        }
+
+        table {
+            margin: auto;
+            margin-bottom: 9%;
+        }
+
+        .rule-table {
+            font-size: 36px;
+        }
+
+        .number-table {
+            font-size: 24px;
+        }
+
+        .ruleseeded {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+        .ruleseeded-table {
+            background-color: rgba(199, 140, 140, 0.1);
+        }
+    </style>
+    <script>
+        const default_rules = {
+            "#addend": "1",
+            "#sn-direction": "esquerda pra direita",
+            "#modded-widget-pos": "um <a href='https://ktane.timwi.de/HTML/Voltage Meter.html'>Medidor de Tensão (Voltage Meter)</a> existir",
+            "#modded-widget-neg": "um <a href='https://ktane.timwi.de/HTML/Voltage Meter.html'>Medidor de Tensão (Voltage Meter)</a> não existir",
+            "#modded-1": "o dígito decimal da tensão for 5",
+            "#modded-2": "a tensão for maior que 5",
+            "#vanilla-1": "o número de indicadores acesos",
+            "#vanilla-2": "o número de indicadores apagados",
+            "#asterisk": "",
+            tables: [
+                [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                [7, 8, 9, 4, 5, 6, 1, 2, 3],
+                [3, 2, 1, 6, 5, 4, 9, 8, 7],
+                [9, 8, 7, 6, 5, 4, 3, 2, 1],
+                [1, 4, 7, 2, 5, 8, 3, 6, 9],
+                [7, 4, 1, 8, 5, 2, 9, 6, 3],
+                [3, 6, 9, 2, 5, 8, 1, 4, 7],
+                [9, 6, 3, 8, 5, 2, 7, 4, 1]
+            ]
+        };
+        const possible_rules = {
+            "#sn-direction": ["esquerda pra direita", "direita pra esquerda"],
+            modded_widget: [
+                {
+                    "#modded-widget-pos": "um <a href='https://ktane.timwi.de/HTML/Voltage Meter.html'>Medidor de Tensão (Voltage Meter)</a> existir",
+                    "#modded-widget-neg": "um <a href='https://ktane.timwi.de/HTML/Voltage Meter.html'>Medidor de Tensão (Voltage Meter)</a> não existir",
+                    "#asterisk": "",
+                    query: [
+                        "o dígito decimal da tensão for 0",
+                        "o dígito decimal da tensão for 5",
+                        "a tensão for maior que 5",
+                        "a tensão for menor que 6",
+                        "a parte inteira da tensão for par",
+                        "a parte inteira da tensão for ímpar"
+                    ]
+                },
+                {
+                    "#modded-widget-pos": "pelo menos uma <a href='https://ktane.timwi.de/HTML/Modded Ports.html'>Entrada Modificada (Modded Port)</a> existir",
+                    "#modded-widget-neg": "uma <a href='https://ktane.timwi.de/HTML/Modded Ports.html'>Entrada Modificada (Modded Port)</a> não existir",
+                    "#asterisk": "",
+                    query: [
+                        "existir pelo menos uma entrada AC",
+                        "existir pelo menos uma entrada Vídeo Componente (Component Video)",
+                        "existir pelo menos uma entrada HDMI",
+                        "existir pelo menos uma entrada de Vídeo Composto (Composite Video)",
+                        "existir pelo menos uma entrada VGA",
+                        "existir pelo menos uma entrada USB",
+                        "existir pelo menos uma entrada PCMCIA"
+                    ]
+                },
+                {
+                    "#modded-widget-pos": "um widget de <a href='https://ktane.timwi.de/HTML/Two Factor translated (Português do Brasil — Dois Fatores) (RufflesTeiv).html'>Dois Fatores (Two Factor)</a> existir",
+                    "#modded-widget-neg": "um widget de <a href='https://ktane.timwi.de/HTML/Two Factor translated (Português do Brasil — Dois Fatores) (RufflesTeiv).html'>Dois Fatores (Two Factor)</a> não existir",
+                    "#asterisk": "*Medido no momento que você interagir",
+                    query: [
+                        "qualquer código de Dois Fatores terminar com um dígito ímpar*",
+                        "qualquer código de Dois Fatores terminar com um dígito par*",
+                        "qualquer código de Dois Fatores começar com um dígito ímpar*",
+                        "qualquer código de Dois Fatores começar com um dígito par*"
+                    ]
+                }
+            ],
+            vanilla_widget: [
+                "o número de indicadores acesos",
+                "o número de indicadores apagados",
+                "o número de pilhas",
+                "o número de caixas de pilhas",
+                "o número de entradas",
+                "o número de placas de entrada",
+                "o número de módulos na bomba dividido por dez (arredondado para baixo)",
+                "o número de módulos na bomba dividido por dez (arredondado para cima)"
+            ]
+        };
+        const simple_rules = [
+            "#addend",
+            "#sn-direction",
+            "#modded-widget-pos",
+            "#modded-widget-neg",
+            "#modded-1",
+            "#modded-2",
+            "#vanilla-1",
+            "#vanilla-2",
+            "#asterisk"
+        ];
+        function setDefaultRules() {
+            for (const e of document.querySelectorAll(".number-table"))
+                if (e.classList.contains("ruleseeded-table"))
+                    e.classList.remove("ruleseeded-table");
+            setAllRules(default_rules);
+        }
+        function setRules(seed) {
+            let rules = {};
+
+            rules["#addend"] = seed.nextMax(10);
+            rules["#sn-direction"] = possible_rules["#sn-direction"][seed.nextMax(2)];
+            let modded = possible_rules.modded_widget[seed.nextMax(possible_rules.modded_widget.length)];
+            rules["#modded-widget-pos"] = modded["#modded-widget-pos"];
+            rules["#modded-widget-neg"] = modded["#modded-widget-neg"];
+            rules["#asterisk"] = modded["#asterisk"];
+            let queries = seed.shuffleArray(modded.query);
+            rules["#modded-1"] = queries[0];
+            rules["#modded-2"] = queries[1];
+            queries = seed.shuffleArray(possible_rules.vanilla_widget);
+            rules["#vanilla-1"] = queries[0];
+            rules["#vanilla-2"] = queries[1];
+            rules.tables = seed.shuffleArray(default_rules.tables);
+
+            for (const key of simple_rules)
+                rules[key] = `<span class="ruleseeded">${rules[key]}</span>`;
+            for (const e of document.querySelectorAll(".number-table"))
+                if (!e.classList.contains("ruleseeded-table"))
+                    e.classList.add("ruleseeded-table");
+            setAllRules(rules);
+        }
+        function setAllRules(rules) {
+            for (const key of simple_rules) {
+                for (const e of document.querySelectorAll(key)) {
+                    e.innerHTML = rules[key];
+                }
+            }
+            for (const i of [0, 1, 2, 3]) {
+                document.querySelector(`#number-table-${i}`).innerHTML = [0, 1, 2]
+                    .map(r => `<tr>${[0, 1, 2].map(c => `<td>${rules.tables[i][3 * r + c]}</td>`).join("")
+                        }</tr>`).join("");
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Mod para Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Netherita</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Netherite.svg" class="diagram">
+                <h2>A Respeito da Netherita</h2>
+                <p class="flavour-text">Na minha época só tinha diamante...
+                </p>
+
+                <p>Você acabou de encontrar um Detrito Ancestral, um minério raro encontrado no Nether, sendo a principal fonte de fragmentos de netherita.</p>
+                <p>Infelizmente, você não trouxe nenhuma picareta. Sua única escolha é quebrar este bloco na porrada. Isso significa que você não vai receber nenhum fragmento de netherita ao desarmar este módulo, mas é sem dúvida melhor do que se explodir.</p>
+
+                <h3>Primeiro Passo: A Sequência</h3>
+                <ul>
+                    <li>Crie uma sequência de números.</li>
+                        <ol>
+                            <li>O primeiro número é o número de outras Netheritas desarmadas + <span id="addend">1</span>.</li>
+                            <li>Todos os outros números são os dígitos do número de série da <span id="sn-direction">esquerda pra direita</span>.</li>
+                        </ol>
+                    </li>
+                    <li>Repita a sequência até ela ter 11 dígitos.</li>
+                </ul>
+
+                <h3>Segundo Passo: A Matriz</h3>
+                <ul>
+                    <li>O bloco é uma matriz 3×3. Apertar uma das células da matriz enviará um número para o módulo.</li>
+                    <li>O número se baseia em 2 regras diferentes serem verdadeiras ou falsas.</li>
+                    <li>Use essas 2 regras se <span id="modded-widget-pos">um <a href="https://ktane.timwi.de/HTML/Voltage Meter.html">Medidor de Tensão (Voltage Meter)</a> existir</span>:</li>
+                        <ol>
+                            <li>Se <span id="modded-1">o dígito decimal da tensão for 5</span>, a primeira regra é verdadeira.</li>
+                            <li>Se <span id="modded-2">a tensão for maior que 5</span>, a segunda regra é verdadeira.
+                            </li>
+                        </ol>
+                    </li>
+                    <li>
+                        Use estas 2 regras se <span id="modded-widget-neg">um <a href='https://ktane.timwi.de/HTML/Voltage Meter.html'>Medidor de Tensão (Voltage Meter)</a> não existir</span>:
+                        <ol>
+                            <li>Se o número de série <strong>OU</strong> a soma dos dígitos do número de série contiver um dígito igual a<span id="vanilla-1">o número de indicadores acesos</span>, a primeira regra é verdadeira.</li>
+                            <li>Se o número de série <strong>OU</strong> a soma dos dígitos do número de série contiver um dígito igual a<span id="vanilla-2">o número de indicadores apagados</span>, a segunda regra é verdadeira.</li>
+                        </ol>
+                    </li>
+                    <li>Use a tabela na próxima página que alinha ambas as regras para saber quais áreas do bloco correspondem aos números serem enviados.</li>
+                </ul>
+                <div id="asterisk"></div>
+            </div>
+            <div class="page-footer relative-footer">Página 1 de 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Mod para Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Netherita</span>
+            </div>
+            <div class="page-content">
+                <table class="rule-table">
+                    <tr>
+                        <th><sub>1<sup>a</sup></sub>\<sup>2<sup>a</sup></sup></th>
+                        <th>FALSA</th>
+                        <th>VERDADEIRA</th>
+                    </tr>
+                    <tr>
+                        <th>FALSA</th>
+                        <td>
+                            <table class="number-table" id="number-table-0">
+                                <tr>
+                                    <td>1</td>
+                                    <td>2</td>
+                                    <td>3</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>5</td>
+                                    <td>6</td>
+                                </tr>
+                                <tr>
+                                    <td>7</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="number-table" id="number-table-1">
+                                <tr>
+                                    <td>7</td>
+                                    <td>8</td>
+                                    <td>9</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>5</td>
+                                    <td>6</td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>2</td>
+                                    <td>3</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>VERDADEIRA</th>
+                        <td>
+                            <table class="number-table" id="number-table-2">
+                                <tr>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>5</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>9</td>
+                                    <td>8</td>
+                                    <td>7</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="number-table" id="number-table-3">
+                                <tr>
+                                    <td>9</td>
+                                    <td>8</td>
+                                    <td>7</td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>5</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                <h3>Terceiro Passo: O Envio</h3>
+                <ul>
+                    <li>Crie a primeira rachadura ao pressionar a célula do Passo 2 que coincide com primeiro dígito da sequência do Passo 1.</li>
+                        <ul>
+                            <li>Se o número for maior que 9, subtraia 9 até ele ser menor que 9.</li>
+                        </ul>
+                    </li>
+                    <li>A partir daí, pressione a célula que coincide com a soma do próximo dígito na sequência com todos os dígitos anteriores a ele.</li>
+                        <ul>
+                            <li>Se o número for maior que 9, subtraia 9 até ele ser menor que 9.</li>
+                        </ul>
+                    </li>
+                    <li>Repita o passo acima 10 vezes para quebrar o bloco, e desarmar o módulo.</li>
+                    <li>Caso uma célula incorreta seja pressionada, ela ainda rachará o bloco, o que significa que o erro não deverá ser corrigido; prossiga como se você tivesse inserido o número correto.</li>
+                </ul>
+                <p><strong>NOTA:</strong> Se existir outra Netherita na bomba que estiver parcialmente rachada, você <strong>não deve</strong> rachar quaisquer outras Netheritas até terminar de quebrar o bloco por completo.</p>
+            </div>
+            <div class="page-footer relative-footer">Página 2 de 2</div>
+        </div>
+    </div>
+</body>
+
+</html>
