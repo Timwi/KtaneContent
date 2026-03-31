@@ -468,7 +468,7 @@ const allQuizzes = {
 			]
 		},
 		'Dragon Energy': {
-			'CSS': 'flags',
+			'CSS': 'dragon-energy',
 			'RandomizeRight': true,
 			'Groups': ['names', 'characters'],
 			'Items': [
