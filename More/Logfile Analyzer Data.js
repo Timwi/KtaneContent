@@ -2528,6 +2528,55 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "BlackoutModule",
+		loggingTag: "Blackout",
+		matches: [
+			{
+				regex: /Stage (\d+): (.+ was chosen\.)/,
+				handler: function (matches, module) {
+					module.stageNum = matches[1];
+
+					if(module.stageNum == 0) {
+						module.push(matches[0]);
+					}
+
+					else {
+						module.currentStage = [matches[0], [matches[2]]]; 
+						module.push(module.currentStage);
+					}
+					
+					return true;
+				}
+			},
+			{
+				regex: /===================================/,
+				handler: function (matches, module) {
+					return true;
+				}
+			},
+			{
+				regex: /Applying (.+) and (.+) using (.+) results in (.+)\./,
+				handler: function (matches, module) {
+					module.currentStage[0] = `Stage ${module.stageNum}: ${matches[1]} ${matches[3]} ${matches[2]} = ${matches[4]}`;
+				}
+			},
+			{
+				regex: /Last stage reached. Module solved./,
+				handler: function (matches, module) {
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					module.currentStage[1].push(matches[0]);
+					return true;
+				}
+			}
+		]
+	},
+	{
 		displayName: "Bob Barks",
 		moduleID: "ksmBobBarks",
 		loggingTag: "Bob Barks",
@@ -3463,6 +3512,59 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "clearanceCodeModule",
+		loggingTag: "Clearance Code",
+		matches: [
+			{
+				regex: /Watch out! This module has been updated to have a lot more settings and calculations!/,
+				handler: function (matches, module) {
+					module.settingsDropdown = ["Mod Settings", [matches[0]]];
+					module.push(module.settingsDropdown)
+					return true;
+				}
+			},
+			{
+				regex: /.+ digits will be displayed, .+ of which are part of the initial code\.|Initial digits of the code must be grabbed .+ from top.+\.|For stage 1.+, .+ the distances to each digit of the code\.(?:.+)?|For each stage after the first, you will need the last stage's code\.|For stage 2.+, .+ each digit of the code for this stage\.(?:.+)?|Digits will be shuffled every stage regardless if the module is ready to input or not\.|Digits will only be shuffled when the module is ready to input\.|Distances between the digits must be obtained going .+\./,
+				handler: function (matches, module) {
+					module.settingsDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /--------------- Stage (\d+) ---------------/,
+				handler: function (matches, module) {
+					module.stageDropdown = [`Stage ${matches[1]}`, []];
+					module.push(module.stageDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Picked digits in .+ order: .+|When inputting the digits will be shuffled to the following in clockwise order, from top:.+|Distances .+ from previous position:.+|Expected code for stage.+|The last stage's code to input was .+, .+ each digit of this code from .+\./,
+				handler: function(matches, module) {
+					module.stageDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /--------------- User Interactions ---------------/,
+				handler: function (matches, module) {
+					module.interaction = ["User Interactions", []];
+					module.push(module.interaction);
+					return true;
+				}
+			},
+			{
+				regex: /Solve detected, revealing layout for inputting stage \d+|Denied code for stage \d+: .+|Accepted intended code for stage \d+\./,
+				handler: function (matches, module) {
+					module.interaction[1].push(matches[0]);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+
+	},
+	{
 		moduleID: "colorGrid",
 		loggingTag: "Color Grid",
 		matches: [
@@ -4165,6 +4267,150 @@ let parseData = [
 					module.push({ label: 'Submitted grid:', obj: tables[0] });
 					module.push({ label: 'Expected grid:', obj: tables[1] });
 					module.push('Strike!')
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
+		moduleID: "CruelBooleanWires",
+		loggingTag: "Cruel Boolean Wires",
+		matches: [
+			{ 
+				regex: /<<<< (Attempt (\d) \(Stage \d\/\d\)) >>>>/,
+				handler: function (matches, module) {
+					if (matches[2] == "1") {
+						module.dropdowns = [];
+					}
+					module.attemptDropdown = [matches[1], []];
+					module.push(module.attemptDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /==BOOLEAN GENERATION==/,
+				handler: function (_, module) {
+					let booleanGeneration = ["Boolean generation", []];
+					module.attemptDropdown[1].push(booleanGeneration);
+					while (true) {
+						booleanGeneration[1].push(readTaggedLine().replace("> ", ""));
+						if (booleanGeneration[1].at(-1).match(/Value Z/)) {
+							break;
+						}
+					}
+					module.attemptDropdown[1].push(`Summary of generated values: ${readTaggedLine().match(/[TUF]+/g)[4]}`);
+					return true;
+				}
+			},
+			{
+				regex: /==STAGE GENERATION==/,
+				handler: function (_, module) {
+					let stageGeneration = ["Stage generation", []];
+					module.attemptDropdown[1].push(stageGeneration);
+					while (true) {
+						stageGeneration[1].push(readTaggedLine());
+						if (stageGeneration[1].at(-1).match(/and the wires are .+/)) {
+							module.wireColor = stageGeneration[1].at(-1).match(/and the wires are (.+)\./)[1];
+						}
+						if (stageGeneration[1].at(-1).match(/This is our submission/)) {
+							break;
+						}
+					}
+					return true;
+				}
+			},
+			{
+				regex: /The following wires.+/,
+				handler: function (matches, module) {
+					module.attemptDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /(>> YOUR SUBMISSION SHOULD LOOK LIKE THIS: ([01]+))|(>>> SUBMITTED: ([01]+); RESEMBLES (.+))/,
+				handler: function (matches, module) {
+					let wireStates = "";
+					if (matches[1]) {
+						module.attemptDropdown[1].push("Your submission should look like this:");
+						wireStates = matches[2];
+					}
+					else {
+						module.attemptDropdown[1].push(`Submitted: (resembles ${matches[5]})`);
+						wireStates = matches[4];
+					}
+
+					const wireColorDict = {
+						"red": "#F00",
+						"green": "#0F0",
+						"blue": "#00F",
+					};
+					const wirePaths = [
+						"M34 47h422",
+						"M504 47h422",
+						"M34 676h422",
+						"M504 676h422",
+						"M34 360h422",
+						"M504 360h422",
+						"M16 64v284",
+						"M16 372v284",
+						"M945 64v284",
+						"M945 372v284",
+						"M480 65v283",
+						"M480 372v284",
+						"m31 65 431 284",
+						"M927 64 496 349",
+						"m499 373 430 284",
+						"M461 373 30 658",
+						"M461 65 30 349",
+						"m498 64 431 285",
+						"m32 373 431 285",
+						"M928 373 497 657"
+					];
+	
+					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 960 720' class='cruel-boolean-wires'>");
+					let g = $SVG("<g>")
+						.attr("stroke", wireColorDict[module.wireColor]).attr("stroke-linecap", "round")
+						.attr("stroke-linejoin", "round");
+					g.appendTo(svg);
+
+					for (let w = 0; w < 20; w++) {
+						let path = $SVG("<path>").attr("stroke-width", 16).attr("d", wirePaths[w]);
+						if (wireStates[w] == "0") {
+							path.attr("style", "stroke-dasharray:6,12; stroke-dashoffset:0; stroke-width:3");
+						}
+						path.appendTo(g);
+					}
+					
+					module.attemptDropdown[1].push({ obj: svg, nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: />>> CORRECT SUBMISSION; ADVANCING STAGE/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Correct submission; Advancing stage.");
+					return true;
+				}
+			},
+			{
+				regex: />>> FIVE STAGES PASSED; MODULE SOLVED/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Five stages passed; Module solved.");
+					return true;
+				}
+			},
+			{
+				regex: />>> INCORRECT SUBMISSION; MODULE STRIKED/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Incorrect submission; Module struck.");
+					return true;
+				}
+			},
+			{
+				regex: />>> MODULE VOLUNTARILY RESET/,
+				handler: function (_, module) {
+					module.attemptDropdown[1].push("Module voluntarily reset.");
 					return true;
 				}
 			},
@@ -11996,6 +12242,259 @@ let parseData = [
 		loggingTag: "SquaresOfMisery"
 	},
 	{
+		moduleID: "misterSoftee",
+		loggingTag: "Mister Softee",
+		matches: [
+			{
+				regex: /Ice creams present: (.+)\./,
+				handler: function (matches, module) {
+					const parentDiv = $('<div>').addClass("parent-mister-softee");
+					const iceCreams = matches[1].split(", ");
+					iceCreams.forEach(iceCream => {
+						let div = $('<div>').addClass("mister-softee").appendTo(parentDiv);
+						$('<img>').attr('src', `../HTML/img/Mister Softee/${iceCream}.png`).addClass("mister-softee").appendTo(div);
+						$(`<p>${iceCream}</p>`).addClass("mister-softee").appendTo(div);
+					});
+					module.push({ label: "Ice creams present:", obj: parentDiv });
+					return true;
+				}
+			},
+			{
+				regex: /The SpongeBob Bar is in position (\d)\./,
+				handler: function (matches, module) {
+					const spongebobPos = matches[1];
+					module.positions = [{x: 4 + 4 * ((spongebobPos - 1) % 3), y: 4 + 4 * Math.floor((spongebobPos - 1) / 3)}]
+					return true;
+				}
+			},
+			{
+				regex: /Drove (down|left|right|up), now facing (down|left|right|up)\./,
+				handler: function (matches, module) {
+					if (!module.misterSofteePages) {
+						module.misterSofteePages = [];
+					}
+
+					const lastPosition = module.positions[module.positions.length - 1];
+
+					const direction = matches[1];
+
+					const endX = direction == "right" ? lastPosition.x + 4 : direction == "left" ? lastPosition.x - 4 : lastPosition.x;
+					const endY = direction == "up"    ? lastPosition.y - 4 : direction == "down" ? lastPosition.y + 4 : lastPosition.y;
+
+					module.misterSofteePages.push({ message: matches[0] });
+					module.positions.push({x: endX, y: endY})
+					return true;
+				}
+			},
+			{
+				regex: /\(Note that in the following logging, directions refer to the perspective of a bird's-eye view, and not the perspective of the driver\.\)/,
+				handler: function (matches, module) {
+					return true;
+				}
+			},
+			{
+				regex: /(.+) ordered a (.+)\./,
+				handler: function (matches, module) {
+					const lastIndex = module.misterSofteePages.length - 1;
+					const text = module.misterSofteePages[lastIndex].message;
+					module.misterSofteePages[lastIndex].message = text + " " + matches[0];
+					return true;
+				}
+			},
+			{
+				regex: /Duplicated road taken. Hit the brakes!/,
+				handler: function (matches, module) {
+					function makeText(x, y, text) {
+							const xOffset = 8;
+							$SVG("<text>")
+							.attr("x", x * rectDimension + xOffset)
+							.attr("y", y * rectDimension)
+							.text(text)
+							.addClass("mister-softee")
+							.appendTo(svg);
+					}
+
+					function addLine(start, end, color, svg) {
+						const radius = 7;
+						// start circle
+						$SVG("<circle>")
+							.attr("cx", start.x)
+							.attr("cy", start.y)
+							.attr("r", radius)
+							.attr("fill", color)
+							.appendTo(svg);
+
+						// end circle
+						$SVG("<circle>")
+							.attr("cx", end.x)
+							.attr("cy", end.y)
+							.attr("r", radius)
+							.attr("fill", color)
+							.appendTo(svg);
+
+						// connecting line
+						$SVG("<path>")
+							.attr("d", `M${start.x},${start.y} L${end.x},${end.y}`)
+							.attr("stroke", color)
+							.addClass("mister-softee")
+							.appendTo(svg);
+					}
+
+					const topDiv = $('<div>').addClass("mister-softee-top");
+					const leftButton = $('<button>')
+					.text("◀")
+					.attr("type", "button")
+					.addClass("mister-softee")
+					.addClass("mister-softee-left")
+					.appendTo(topDiv)
+
+					const rightButton = $('<button>')
+					.text("▶")
+					.attr("type", "button")
+					.addClass("mister-softee")
+					.addClass("mister-softee-right")
+					.appendTo(topDiv)
+
+					const label = $('<div>')
+					.text("label test")
+					.addClass("mister-softee-label")
+					.appendTo(topDiv);
+
+					const bottomDiv = $('<div>').addClass("mister-softee-bottom")
+
+					let curPage = 0;
+
+					const rectDimension = 25;
+					const rows = 17;
+					const cols = 17;
+					const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 ${(cols + 1)*rectDimension} ${(rows + 1)*rectDimension}'>`)
+					.appendTo(bottomDiv);
+
+					//make the grid
+					for(let row = 0; row < rows; row++) {
+						for(let col = 0; col < cols; col++) {
+							const rowMod4 = row % 4;
+							const colMod4 = col % 4;
+							const x = col * rectDimension;
+							const y = row * rectDimension;
+							let fill = null;
+
+							if(colMod4 == 0 && rowMod4 == 0)
+								fill = "#846780"; //purple (truck stops)
+							else if (colMod4 == 0 || rowMod4 == 0)
+								fill = "#47484C"; //gray (roads)
+							else if((colMod4 == 1 || colMod4 == 3) && (rowMod4 == 1 || rowMod4 == 3))
+								fill = "#000"; //black (corners)
+
+							if(fill) {
+								$SVG("<rect>")
+								.attr("width", rectDimension)
+								.attr("height", rectDimension)
+								.attr("x", x)
+								.attr("y", y)
+								.attr("fill", fill)
+								.appendTo(svg);	
+							}
+						}
+					}
+
+					//set the letters
+					makeText(3, 3, "I");
+					makeText(2, 4, "I");
+					makeText(5, 3, "C");
+					makeText(6, 4, "C");
+					makeText(14, 2, "E");
+					makeText(13, 3, "E");
+					makeText(15, 3, "E");
+					makeText(14, 4, "E");
+					makeText(3, 7, "H");
+					makeText(5, 7, "A");
+					makeText(6, 8, "A");
+					makeText(10, 6, "M");
+					makeText(11, 7, "M");
+					makeText(10, 8, "M");
+					makeText(14, 6, "B");
+					makeText(15, 7, "B");
+					makeText(14, 8, "B");
+					makeText(2, 10, "N");
+					makeText(3, 11, "N");
+					makeText(2, 12, "N");
+					makeText(6, 10, "K");
+					makeText(5, 11, "K");
+					makeText(7, 11, "K");
+					makeText(6, 12, "K");
+					makeText(11, 11, "G");
+					makeText(10, 12, "G");
+					makeText(15, 11, "F");
+					makeText(1, 15, "D");
+					makeText(2, 16, "D");
+					makeText(10, 14, "J");
+					makeText(9, 15, "J");
+					makeText(11, 15, "J");
+					makeText(14, 14, "L");
+					makeText(13, 15, "L");
+					makeText(14, 16, "L");
+
+					const lines = $SVG("<g>").appendTo(svg);
+
+					function setPage() {
+						label.text(module.misterSofteePages[curPage].message);
+						lines.empty();
+
+						for(let i = 0; i <= curPage; i++) {
+							
+							// green: latest movement, red: previous movements
+							const color = i == curPage ? "#0f0" : "#f00";
+							const start = {x: module.positions[i].x * rectDimension + rectDimension / 2, y: module.positions[i].y * rectDimension + rectDimension / 2};
+							const end = {x: module.positions[i + 1].x * rectDimension + rectDimension / 2, y: module.positions[i + 1].y * rectDimension + rectDimension / 2};
+							addLine(start, end, color, lines);
+						}
+					}
+
+
+					leftButton.on("click", function () {
+						curPage = Math.max(curPage - 1, 0);
+						setPage();
+					});
+
+					rightButton.on("click", function () {
+						curPage = Math.min(curPage + 1, module.misterSofteePages.length - 1);
+						setPage();
+					});
+
+					module.push({ obj: topDiv, nobullet: true });
+					module.push({ obj: bottomDiv, nobullet: true });
+
+					setPage();
+					return true;
+				}
+			},
+			{
+				regex: /Final ice cream counts:/,
+				handler: function (matches, module) {
+					const dropdown = [matches[0], []];
+					const regex = /\d+\s(?:SpongeBob Bar|Chipwich|Push-Up Pop|Choco Taco|Strawberry Shortcake|Snow Cone|Firecracker|Screw Ball|King Cone|Ice Cream Sandwich|Drumstick|Banana Fudge Bomb|Creamsicle|Chocolate Eclair|Fudge Pop)s?\./
+					let line = readTaggedLine().match(regex);
+					do {
+						dropdown[1].push(line[0]);
+						line = readTaggedLine().match(regex)
+					} while (line != null);
+					linen--;
+					module.push(dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /These amounts of ice cream were bought \(reading order\): (\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+)\./,
+				handler: function (matches, module) {
+					module.push({label: "Ice cream bought in reading order", obj: pre(`${matches[1]} ${matches[2]} ${matches[3]}\n${matches[4]} ${matches[5]} ${matches[6]}\n${matches[7]} ${matches[8]} ${matches[9]}`)})
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "MistakeModule",
 		displayName: "A Mistake",
 		loggingTag: "Mistake"
@@ -13245,6 +13744,33 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "omegaForget",
+		loggingTag: "OmegaForget",
+		matches: [
+			{
+				regex: /-----STAGE (\d+)-----/,
+				handler: function (matches, module) {
+					module.dropdown = [`Stage ${matches[1]}`, []];
+					module.push(module.dropdown)
+					return true;
+				}
+			},
+			{
+				regex: /The number in Base 36 is .+\.|The rotation this stage is .+\.|The LED colors are .+ and .+\.|In Base 10, the number displayed is .+\.|After converting to Base 8, modulo 1000, the new number is .+\.|The combined LED value is .+\.|The E value is .+\.|The D value is .+\.|X is .+\.|The number being used for the button is .+\.|The value from the table is .+\.|The correct input for stage \d+ is (.+)\./,
+				handler: function (matches, module) {
+					module.dropdown[1].push(matches[0])
+					if(matches[1] !== undefined) {
+						module.dropdown[0] += `: ${matches[1]}`
+					}
+					return true;
+				}
+			},
+
+			
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "OnlyConnectModule",
 		loggingTag: "Only Connect",
 		matches: [
@@ -13522,6 +14048,44 @@ let parseData = [
 				handler: function (matches, module) {
 					module.currentDropdown[1][1][1].push(matches[0]);
 					return true;
+				}
+			}
+		]
+	},
+	{
+		moduleID: "overKilo",
+		loggingTag: "Over Kilo",
+		matches: [
+			{
+				regex: /CurrentNumber: (\d+) \| prevNum: (\d+) \| multiplier: (\d+)\| adder: (\d+) \| sum: (\d+) \| checked Num: (\d+)\| (.+)/,
+				handler: function (matches, module) {
+					if(!module.dropdown) {
+						module.slideNum = 1;
+						module.push(`Multiplier: x${matches[3]}`);
+					}
+					else {
+						module.slideNum++;
+					}
+
+					module.dropdown = [`Slide ${module.slideNum}`, []];
+					module.dropdown[1].push(`Displayed Value: ${matches[1].padStart(2, "0")}`);
+					module.dropdown[1].push(`Bonus: ${matches[4]}`);
+					module.dropdown[1].push(`Total sum after multiplier: ${matches[6]}`);
+					const isKilo = !matches[7].includes("Isnt"); 
+					module.dropdown[1].push(isKilo ?  "This is over kilo. Press the OK button" : "This is not over kilo" );
+
+					if(!isKilo) {
+						if(module.slideNum != 1) {
+							const comparison = parseInt(matches[1]) > parseInt(matches[2]) ? "greater than" : "less than";
+							module.dropdown[1].push(`This slide is ${comparison} the previous, press the ${comparison} button.`);
+						}
+
+						else {
+							module.dropdown[1].push("This is the first slide, press either round button.");
+						}
+					}
+					
+					module.push(module.dropdown);
 				}
 			}
 		]
@@ -13872,6 +14436,102 @@ let parseData = [
 			{
 				regex: /Determining active color-blind set/,
 				handler: function () {
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
+		moduleID: "paintingCube",
+		loggingTag: "Painting Cube",
+		matches: [
+			{
+				regex: /The missing color from the grid is: (.+). The correct vertex to use is: \[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\]/,
+				handler: function (matches, module){
+					const vertexSVG = $("<svg xmlns='http://www.w3.org/2000/svg' style='width: 20%' viewbox='0 0 70 70'>");
+					
+					const vertexPaths = [
+						"M 30.914392,2.2200195 3.5357015,17.987533 30.914392,33.754529 58.293083,17.987533 Z",
+						"M 3.0974854,18.738908 3.1321086,50.332845 30.476176,66.159786 30.441553,34.565849 Z",
+						"M 58.724581,18.738908 31.380514,34.565849 31.34589,66.160303 58.689958,50.332845 Z"
+					]
+
+					const textPlacement = [
+						[30.914, 21.987],
+						[16.787, 46.449],
+						[45.035, 46.449],
+					]
+
+					function addToVertex(index, colour){
+						$SVG("<path>")
+						.attr("d", vertexPaths[index])
+						.addClass(`painting-cube`)
+						.addClass(`painting-cube-${colour.toLowerCase()}`)
+						.appendTo(vertexSVG);
+						$SVG(`<text>${colour[0]}`)
+						.attr("x", textPlacement[index][0])
+						.attr("y", textPlacement[index][1])
+						.addClass(`painting-cube`)
+						.appendTo(vertexSVG);						
+					}
+					
+					for(var i = 0; i < 3; i++){ addToVertex(i, matches[i+2]); }
+					
+					module.push(`The missing color from the grid is: ${matches[1]}`);
+					module.push("The correct vertex to use is as follows:");
+					module.push({ obj: vertexSVG, nobullet: true });					
+					return true;
+				}
+			},
+			{
+				regex: /The initial grid is: (.+)/,
+				handler: function(matches, module){
+					var grid = (matches[1].split(';')).map(x => x.split(']')).map(r => r.map(x => x.replace(/\[/g, "")));
+
+					module.gridSVG = $("<svg xmlns='http://www.w3.org/2000/svg' style='width: 50%' viewbox='-2 -2 104 104'>");
+					
+					function addToGrid(row, col, colour){
+						$SVG("<path>")
+						.attr("d", `M ${col*25},${row*25} H ${(col+1)*25} V ${(row+1)*25} H ${col*25} Z`)
+						.addClass(`painting-cube`)
+						.addClass(`painting-cube-${colour.toLowerCase()}`)
+						.appendTo(module.gridSVG);
+						$SVG(`<text>${colour[0] != 'X' ? colour[0] : ""}`)
+						.attr("x", col*25 +12.5)
+						.attr("y", row*25 +16.5)
+						.addClass(`painting-cube`)
+						.appendTo(module.gridSVG);	
+					}
+
+					for(var r = 0; r < 4; r++)
+						for(var c = 0; c < 4; c++)
+							addToGrid(r, c, grid[r][c]);
+
+					module.push("The initial grid is as follows:");
+					return true;
+				}
+			},
+			{
+				regex: /The cube's starting position is at (.+)/,
+				handler: function (matches, module){
+					var qbStart = ["ABCD".indexOf(matches[1][0]), "1234".indexOf(matches[1][1])];
+					var row = qbStart[0];
+					var col = qbStart[1];
+
+					$SVG("<path>")
+					.attr("d", `M ${row*25},${col*25} H ${(row+1)*25} V ${(col+1)*25} H ${row*25} Z`)
+					.addClass(`painting-cube`)
+					.addClass(`painting-cube-start`)
+					.appendTo(module.gridSVG);
+					$SVG(`<text>START`)
+					.attr("x", row*25 +12.5)
+					.attr("y", col*25 +13.5)
+					.addClass(`painting-cube`)
+					.addClass(`painting-cube-start`)
+					.appendTo(module.gridSVG);	
+					
+					module.push({ obj: module.gridSVG, nobullet: true });
 					return true;
 				}
 			},
@@ -18434,6 +19094,61 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "SlowMathModule",
+		loggingTag: "Slow Math",
+		matches: [
+			{
+				regex: /===============================================/,
+				handler: function (matches, module){ return true; }
+			},
+			{
+				regex: /There will be.+/,
+				handler: function (matches, module){
+					if(!module.attemptDropdown){
+						module.attemptDropdown = ["Attempt 1", []];
+						module.attemptNum = 1;
+						module.push(module.attemptDropdown);
+					}
+					module.attemptDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /Stage (\d):/,
+				handler: function (matches, module){
+					module.stageDropDown = [`Stage ${matches[1]}`, []];
+					module.attemptDropdown[1].push(module.stageDropDown);
+					return true;
+				}
+			},
+			{
+				regex: /Chosen letters: .+|Intersections, in reading order: .+|Solution for this stage: .+|Calculated solution: .+/,
+				handler: function (matches, module){
+					module.stageDropDown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /.+Strike./,
+				handler: function (matches, module){
+					module.attemptDropdown[1].push(matches[0]);
+					module.attemptNum++;
+					module.attemptDropdown = [`Attempt ${module.attemptNum}`, []];
+					module.push(module.attemptDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Correctly.+|Moving.+|Module solved./,
+				handler: function (matches, module){
+					module.attemptDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Snakes and Ladders",
 		moduleID: "snakesAndLadders",
 		loggingTag: "Snakes and Ladders",
@@ -18474,6 +19189,98 @@ let parseData = [
 					return true;
 				}
 			},
+			{ regex: /.+/ }
+		]
+	},
+	{
+		moduleID: "solitaireCipher",
+		loggingTag: "Solitaire Cipher",
+		matches: [
+			{
+				regex: /Key: (.+)/,
+				handler: function (matches, module) {
+					if(module.keyCount === undefined) {
+						module.answers = []
+						module.keyCount = 1;
+						module.firstStage = true;
+						module.decrypted = ""
+						module.encrypted = ""
+						module.words = ["ALUMNI", "AROUND", "ACROSS", "ALWAYS", "ACCESS", "ALMOST", "ACTION", "ACTUAL", "ANNUAL", "AMOUNT", "ANYONE", "ACTIVE", "ANSWER", "AGENCY", "APPEAR", "AFFECT", "ACCEPT", "ADVOCE", "APPEAL", "ATTACK", "AUTHOR", "ANIMAL", "ACTING", "ASSUME", "ASSIST", "ATTEND", "ANYWAY", "ASPECT", "AFFORD", "ARTIST", "ALPACA", "AFRAID", "AGENDA", "ARRIVE", "ADVISE", "ALLIED", "ABSENT", "ADJUST", "AUTUMN", "ACCENT", "ABSORB", "ASLEEP", "ANCHOR", "ATOMIC", "ATTACH", "ATTAIN", "ASSERT", "ABSURD", "ASSIGN", "ADMIRE", "ARCADE", "ARCHER", "ABRUPT", "AFFIRM", "ASHORE", "ACCUSE", "ANALOG", "ALMOND", "APATHY", "ASCEND", "BEFORE", "BETTER", "BECOME", "BEHIND", "BECAME", "BEYOND", "BUDGET", "BOTTOM", "BRANCH", "BOUGHT", "BATTLE", "BRIDGE", "BROKEN", "BANDIT", "BACKED", "BRIGHT", "BEHALF", "BEAUTY", "BAYOUS", "BORDER", "BREATH", "BOTTLE", "BELONG", "BUTTON", "BARELY", "BESIDE", "BREACH", "BITTER", "BOTHER", "BUTTER", "BAOBAB", "BUTLER", "BASKET", "BALLET", "BRONZE", "BARREL", "BORROW", "BEHAVE", "BUNDLE", "BANNER", "BANKER", "BOXING", "BREEZE", "BUBBLE", "BINARY", "BUCKET", "BOUNCE", "BROWSE", "BUFFET", "BANANA", "BOILER", "BEACON", "BEWARE", "BAKERY", "BOILED", "BUMPER", "BINDER", "BEAVER", "BADGER", "BAMBOO", "CHANGE", "COMMON", "COURSE", "COMING", "CREATE", "CHOICE", "CREDIT", "CHARGE", "CHANCE", "CLIENT", "CLOSED", "COUPLE", "CENTER", "CHOOSE", "CHOSEN", "CAUGHT", "COWBOY", "CORNER", "CLOSER", "COFFEE", "CUSTOM", "CIRCLE", "CAMERA", "COLUMN", "COPPER", "CASTLE", "COMPLY", "CARBON", "COSTLY", "CASUAL", "CARING", "COMEDY", "COTTON", "COMMIT", "CARPET", "CATTLE", "CLEVER", "CRUISE", "CONVEY", "COLLAR", "CANYON", "CHERRY", "COUPON", "CANVAS", "CEMENT", "CHORUS", "CANNON", "CALLER", "CIRCUS", "CANDLE", "COOLER", "COOLED", "CRUNCH", "CEREAL", "CLOSET", "CELLAR", "COSMIC", "CATBOY", "DESIGN", "DEMAND", "DIRECT", "DEGREE", "DOUBLE", "DAMAGE", "DEVICE", "DETAIL", "DOCTOR", "DECIDE", "DESIRE", "DEPEND", "DANGER", "DEFINE", "DEVILS", "DEALER", "DEFEAT", "DESERT", "DEFEND", "DETECT", "DECENT", "DIVINE", "DENIAL", "DRAGON", "DONATE", "DRAWER", "DELETE", "DEPART", "DOMINO", "DONKEY", "DELUXE", "DIALOG", "DECEIT", "DEFUSE", "DEDUCE", "DEDUCT", "DEBRIS", "DIVERT", "DEMISE", "DOMAIN", "DEBATE", "DECADE", "DIFFER", "DIGEST", "DEVOTE", "DEVISE", "DISMAY", "EITHER", "ENOUGH", "EFFECT", "EXPECT", "ENERGY", "EASILY", "EXCEPT", "ENABLE", "EFFORT", "ENGINE", "EDITOR", "EXPAND", "EXPERT", "EXTEND", "ENDING", "EATING", "ESCAPE", "EXPORT", "EMPIRE", "ENGAGE", "ENTITY", "EXCUSE", "EXEMPT", "EXOTIC", "EVOLVE", "EXPOSE", "EXPIRE", "ESTEEM", "ENDURE", "ELDEST", "EMBARK", "ENCORE", "EDIBLE", "EMBLEM", "ENIGMA", "EXPEND", "EUREKA", "ERRAND", "ELIXIR", "EXHALE", "ENDEAR", "EQUATE", "EMBRYO", "ENZYME", "ENTIRE", "ESTATE", "FUTURE", "FAMILY", "FORMER", "FOURTH", "FIGURE", "FOLLOW", "FRIEND", "FACTOR", "FORCED", "FORMAL", "FOREST", "FAMOUS", "FACING", "FLIGHT", "FAIRLY", "FELLOW", "FINISH", "FORMAT", "FORGET", "FLYING", "FALLEN", "FOUGHT", "FINGER", "FABRIC", "FROZEN", "FILTER", "FARMER", "FLOWER", "FISHER", "FUSION", "FLAVOR", "FIERCE", "FREEZE", "FORGOT", "FOSSIL", "FINITE", "FINALE", "FADING", "FAULTY", "FOLDER", "FACADE", "FRENZY", "FALCON", "FRIDGE", "FUNGUS", "FORBID", "FIASCO", "FIDDLE", "FLUFFY", "FERRET", "FAUCET", "GROWTH", "GLOBAL", "GROUND", "GARDEN", "GOLDEN", "GATHER", "GLANCE", "GARAGE", "GENTLE", "GUITAR", "GENIUS", "GAMBLE", "GALAXY", "GRAVEL", "GAMING", "GALLON", "GARLIC", "GRADES", "GIFTED", "GOTTEN", "GINGER", "GROOVE", "GREASE", "GLOOMY", "GREEDY", "GRASSY", "GREASY", "GUTTER", "GOALIE", "GLIDER", "GIGGLE", "GALLOP", "GRUDGE", "GADGET", "GRUMPY", "GOBLIN", "GOBLET", "GLITCH", "GEYSER", "GAZEBO", "GROOVY", "GALORE", "GRIEVE", "GRANNY", "GOVERN", "GUILTY", "GENDER", "GOPHER", "HEALTH", "HAPPEN", "HANDLE", "HARDLY", "HARDER", "HIDDEN", "HEIGHT", "HONEST", "HUNGRY", "HEAVEN", "HORROR", "HUNTER", "HARBOR", "HYBRID", "HEATED", "HEATER", "HAMMER", "HAZARD", "HUNGER", "HOCKEY", "HOLLOW", "HUMBLE", "HOOKED", "HEROIC", "HELMET", "HASSLE", "HURDLE", "HOURLY", "HUMANE", "HINDER", "HOPPER", "HERBAL", "HALVES", "HELPER", "HELPED", "HANGAR", "HUMMER", "HARDEN", "HAMPER", "HELIUM", "HIATUS", "HERESY", "HUSTLE", "HORRID", "HOMELY", "HEALER", "HOOVES", "HICCUP", "HIJACK", "INCOME", "IMPACT", "INSIDE", "INDEED", "ISLAND", "INTEND", "INTENT", "INVEST", "IMPORT", "IGNORE", "INFORM", "IMMUNE", "INVITE", "INSIST", "INTACT", "INDOOR", "INSERT", "IRONIC", "INSURE", "INSECT", "INSULT", "INWARD", "INVENT", "INSANE", "INJECT", "INVADE", "INFECT", "IMPAIR", "IMPEDE", "IGNITE", "INJURE", "INJURY", "INDIGO", "INHALE", "INVERT", "IMPURE", "INFAMY", "INDENT", "ICEBOX", "ICICLE", "INFEST", "INDUCT", "INFUSE", "IMPART", "INDUCE", "IMPOSE", "ITSELF", "INFANT", "INVOKE", "JUNIOR", "JERSEY", "JACKET", "JUNGLE", "JUMPER", "JUMPED", "JARGON", "JAGUAR", "JOYFUL", "JUMBLE", "JOYOUS", "JIGSAW", "JUGGLE", "JINGLE", "JESTER", "JUICED", "JUICER", "JAILER", "JAILED", "JAILOR", "JIGGLE", "JETWAY", "JETLAG", "JOCKEY", "JUNKER", "JASPER", "JAUNTY", "JOINED", "JOVIAL", "JINGLY", "JIVING", "JINXED", "JINXES", "JAMMED", "JAMMER", "JANGLY", "JEWELS", "JOKERS", "JOKILY", "JOKING", "JOULES", "JOGGER", "JUDGER", "JUKING", "JURIES", "JURORS", "JUSTLY", "JUSTLE", "JUICES", "JACKED", "JACKER", "KNIGHT", "KIDNEY", "KEEPER", "KINDLY", "KETTLE", "KARATE", "KITTEN", "KICKER", "KICKED", "KEYPAD", "KINDLE", "KINGLY", "KAZOOS", "KELVIN", "KERNEL", "KENNEL", "KEENED", "KEENLY", "KEELED", "KEBOBS", "KNOCKS", "KRAKEN", "LITTLE", "LEADER", "LIKELY", "LIVING", "LATEST", "LETTER", "LEAGUE", "LISTEN", "LAUNCH", "LENGTH", "LEAVES", "LINKED", "LOSING", "LIGHTS", "LIQUID", "LEGACY", "LUXURY", "LAWYER", "LESSON", "LOVELY", "LESSER", "LOADED", "LINEAR", "LANDED", "LOCATE", "LAYOUT", "LOVING", "LEGEND", "LIVELY", "LOUNGE", "LONELY", "LATELY", "LADDER", "LEGION", "LOCKER", "LAPTOP", "LAWFUL", "LINGER", "LUMBER", "LOSSEN", "LAGOON", "LIZARD", "LOTION", "LOCALE", "LIVERY", "LOATHE", "LOADER", "LOCUST", "MANIAC", "MARKET", "MAKING", "MEMBER", "MATTER", "MIDDLE", "MOVING", "MANAGE", "MOMENT", "MODERN", "METHOD", "MINUTE", "MEMORY", "MASTER", "MANNER", "MYSELF", "MEDIUM", "MUSKET", "MAINLY", "MOTION", "MOBILE", "MARKED", "MUSEUM", "MOSTLY", "MUTUAL", "MARGIN", "MODULE", "MINING", "MANUAL", "MODEST", "MIRROR", "MATURE", "MUSCLE", "MATRIX", "MEDIAN", "MODIFY", "MORALE", "MARBLE", "MOTIVE", "MARKER", "METRIC", "MENTOR", "MAGNET", "MELODY", "MONKEY", "MEADOW", "MYSTIC", "MAYHEM", "MAKEUP", "MANTLE", "MAILED", "MAILER", "MOLTEN", "MEMOIR", "MIRAGE", "MUTANT", "MISLED", "MISUSE", "NUMBER", "NEARLY", "NATURE", "NATION", "NORMAL", "NOTICE", "NATIVE", "NOBODY", "NARROW", "NEARBY", "NIGHTS", "NEEDLE", "NOTIFY", "NOVICE", "NICKEL", "NOZZLE", "NIMBLE", "NAPKIN", "NEGATE", "NECTAR", "NUGGET", "NODDLE", "NIBBLE", "NOTATE", "NEATLY", "NICEST", "NINJAS", "NOBLES", "NOSIER", "NOSILY", "NOVELS", "NUDGER", "NUDGES", "NURSED", "NUANCE", "OFFICE", "OPTION", "OBTAIN", "OUTPUT", "ONLINE", "OBJECT", "ORANGE", "OFFSET", "ORIGIN", "OXYGEN", "OCCUPY", "OPPOSE", "OUTLET", "OUTFIT", "ORDEAL", "ONWARD", "OYSTER", "OUTLAW", "OUTAGE", "OBTUSE", "OUTWIT", "OCELOT", "OBEYED", "OCCURS", "OCTAVE", "OCTANE", "OCULAR", "OFFERS", "OLIVES", "OLDEST", "OMELET", "ONIONS", "OPENLY", "OUNCES", "OVERDO", "OVERLY", "OWNING", "PEOPLE", "PUBLIC", "PERIOD", "PLEASE", "POLICY", "PERSON", "POLICE", "PROFIT", "PLAYER", "PRETTY", "PARENT", "PROPER", "PICKED", "PLENTY", "PROVEN", "PURSUE", "PARTLY", "PREFER", "PRINCE", "POCKET", "PACKED", "PALACE", "PHRASE", "PLANET", "PACKET", "POETRY", "PORTAL", "POWDER", "POLISH", "PLASMA", "PROMPT", "PARADE", "PURPLE", "PEPPER", "POSTER", "PENCIL", "POTATO", "PURITY", "PUZZLE", "POLITE", "PICKUP", "POETIC", "PICNIC", "PARDON", "PLAQUE", "PILLOW", "PILLAR", "PASTRY", "PIGEON", "PEANUT", "QUARTZ", "QUARRY", "QUAINT", "QUIVER", "QUENCH", "QUEASY", "QUICHE", "QUOTES", "QUOTER", "QUALMS", "QUAILS", "QUAKES", "QUAKED", "QUARKS", "QUACKS", "QUEENS", "QUEUES", "QUEUED", "QUIRKS", "QUIRKY", "QUILLS", "REPORT", "RESULT", "REALLY", "RECENT", "RECORD", "RETURN", "RATHER", "REASON", "REVIEW", "REFORM", "REDUCE", "REMAIN", "REGION", "RAISED", "RELIEF", "RISING", "REMOTE", "RETAIN", "REGARD", "REMOVE", "RATING", "RELATE", "REPAIR", "RARELY", "RULING", "RESORT", "REPEAT", "ROBUST", "REVEAL", "REPLAY", "RECALL", "RANDOM", "REWARD", "RIDING", "RESCUE", "RUBBER", "REVISE", "REFUSE", "RESIST", "RETIRE", "RENTAL", "REMIND", "REJECT", "RHYTHM", "REMEDY", "RUNNER", "RECIPE", "RITUAL", "RIBBON", "ROCKET", "RABBIT", "RESIGN", "REMARK", "RADIUS", "REFUGE", "REFUND", "REPAID", "RIPPED", "ROSTER", "ROTARY", "REDEEM", "REVIVE", "RIDDEN", "RUNWAY", "REVOLT", "REFINE", "ROTTEN", "RECKON", "REPEAL", "RELISH", "ROTATE", "REVERT", "REFLEX", "RUBBLE", "REOPEN", "SHOULD", "SYSTEM", "SECOND", "SCHOOL", "STRONG", "SIZZLE", "SINGLE", "SOCIAL", "SERIES", "STREET", "SENIOR", "SIMPLY", "SOURCE", "SUPPLY", "SIMPLE", "SEASON", "SUMMER", "SAYING", "SAFETY", "SECTOR", "STATUS", "SIGNED", "SQUARE", "SECURE", "SURVEY", "SEARCH", "SPRING", "SCREEN", "STUDIO", "SPREAD", "SELECT", "SPEECH", "SYMBOL", "SPIRIT", "STABLE", "SOUGHT", "SAMPLE", "SCHEME", "SILVER", "SIGNAL", "STRIKE", "SEVERE", "SECRET", "SWITCH", "SAVING", "STEADY", "STRUCK", "STREAM", "SMOOTH", "SURELY", "SOLELY", "SUMMIT", "SUDDEN", "SLIGHT", "SPOKEN", "SILENT", "SETTLE", "STRICT", "SUBMIT", "STRING", "STOLEN", "SHADOW", "SINGER", "SOCCER", "SUPERB", "SERIAL", "SUBTLE", "SOONER", "STATIC", "SHIELD", "STANCE", "SCRIPT", "SACRED", "SIERRA", "SELDOM", "SALMON", "SHOWER", "SPHERE", "SPRINT", "SUNSET", "STRIVE", "STEREO", "SCARCE", "THOUGH", "TAKING", "TRYING", "TARGET", "TRAVEL", "THEORY", "TETRIS", "THANKS", "TOWARD", "TIMING", "TALENT", "TAUGHT", "TEAPOT", "TICKET", "TISSUE", "TENNIS", "TIMELY", "TENDER", "THROWN", "TACKLE", "TURKEY", "TRIPLE", "TEMPLE", "THROAT", "TIMBER", "TUNNEL", "TONGUE", "TRAGIC", "TROPHY", "TITLED", "THESIS", "TOILET", "THEIRS", "TAILOR", "THREAD", "THRIVE", "TOMATO", "THRILL", "TRICKY", "THRONE", "TACTIC", "TAXING", "TRENDY", "THIRST", "TUMBLE", "TURTLE", "TRIVIA", "TANGLE", "THWART", "TYCOON", "TESTER", "TRIPOD", "TINKER", "TUXEDO", "UNITED", "UNIQUE", "UNLESS", "USEFUL", "UNABLE", "UPDATE", "UNLIKE", "URGENT", "UNFAIR", "UPWARD", "UPTIME", "UNPAID", "UPLOAD", "UNUSED", "UPHELD", "UNREST", "UNEVEN", "UNLOCK", "UNSURE", "UTMOST", "UNEASY", "USABLE", "UNSAFE", "UNSEEN", "UPTAKE", "UPHOLD", "UNTRUE", "UNVEIL", "UNJUST", "UNISON", "UMPIRE", "UNFOLD", "UPSIDE", "UNREAL", "UNWISE", "UNLOAD", "UTOPIA", "UPROAR", "UNRULY", "UNWIND", "URCHIN", "UNWELL", "UPROOT", "UNWRAP", "VALLEY", "VOLUME", "VISION", "VISUAL", "VENDOR", "VERSUS", "VICTIM", "VARIED", "VIABLE", "VIRTUE", "VESSEL", "VERBAL", "VACUUM", "VACANT", "VIEWER", "VECTOR", "VERIFY", "VELVET", "VOYAGE", "VANITY", "VIOLIN", "VIOLET", "VANISH", "VEILED", "VORTEX", "VERSED", "VOLLEY", "VIGOUR", "VOODOO", "VERTEX", "VACATE", "VERMIN", "VAULTS", "VARIES", "VASTLY", "VALUED", "VALUES", "VALVES", "VEGGIE", "VEXING", "VIKING", "VIEWED", "WYVERN", "WITHIN", "WEIGHT", "WINDOW", "WINTER", "WEALTH", "WINNER", "WONDER", "WEEKLY", "WORKER", "WOODEN", "WISDOM", "WORTHY", "WARMTH", "WIRING", "WIZARD", "WALNUT", "WALLET", "WEAKEN", "WANDER", "WOLVES", "WAITER", "WEAKLY", "WORSEN", "WASHER", "WRENCH", "WREATH", "WITHER", "WAFFLE", "WEASEL", "WETTER", "WOBBLE", "WIGGLE", "WHIMSY", "WIDGET", "WELDER", "WOEFUL", "WADDLE", "WHEEZE", "WALRUS", "WEBBED", "WALKER", "WALKED", "WHEELS", "WORKED", "WRITES", "YELLOW", "YEARLY", "YOGURT", "YONDER", "YACHTS", "ZODIAC", "ZOMBIE", "ZIPPER", "ZIGZAG", "ZEALOT", "ZINGER", "ZAPPED", "ZAPPER", "ZIGGED", "ZAGGED", "ZOOMED", "ZEBRAS", "ZEROES"]
+
+					}
+					else {
+						module.keyCount++;
+					}
+
+					if(module.firstStage) {
+						switch(module.keyCount) {
+							case 1:
+								module.answers.push(`Key: ${matches[1]} (Initial)`)
+								break;
+
+							case 2:
+								module.dropDown = ["Placeholder", [`Key: ${matches[1]} (Shift 1 and 2)`]];
+								module.answers.push(module.dropDown)
+								break;
+
+							case 3:
+								module.dropDown[1].push(`Key: ${matches[1]} (Triple Cut)`);
+								break;
+
+							case 4:
+								module.dropDown[1].push(`Key: ${matches[1]} (Count Cut)`);
+								break;
+						}
+					}
+					else {
+
+						switch(module.keyCount) {
+							case 1:
+								module.dropDown = ["Placeholder", [`Key: ${matches[1]} (Shift 1 and 2)`]];
+								module.answers.push(module.dropDown)
+								break;
+
+							case 2:
+								module.dropDown[1].push(`Key: ${matches[1]} (Triple Cut)`);
+								break;
+
+							case 3:
+								module.dropDown[1].push(`Key: ${matches[1]} (Count Cut)`);
+								break;
+						}
+
+					}
+
+					return true;
+				}
+
+			},
+			{
+				regex: /(.) -> (.)/,
+				handler: function (matches, module) {
+					if(module.firstStage) {
+						module.firstStage = false;
+					}
+
+					module.keyCount = 0;
+					module.dropDown[0] = matches[0];
+					module.decrypted += matches[1];
+					module.encrypted += matches[2];
+					if(module.words.includes(module.decrypted)) {
+						module.push(`Decrypted word: ${module.decrypted}`);
+						console.log(module.answers)
+						for(let a of module.answers) {
+							module.push(a)
+						}
+						module.push(`Encrypted word: ${module.encrypted}`);
+					}
+					return true;
+				}
+
+			},
+
+			
+
 			{ regex: /.+/ }
 		]
 	},
@@ -18657,6 +19464,94 @@ let parseData = [
 			{
 				regex: /^(?!-+$)(.+)$/
 			}
+		]
+	},
+	{
+		moduleID: "spongebobPatrick",
+		loggingTag: "Spongebob Patrick Squidward Sandy",
+		matches: [
+			{
+				regex: /Traveling from .+ to .+ changed the state of the maze to:/,
+            	handler: function (matches, module) {
+					module.push({ label: matches[0], obj: pre(readTaggedLines(4).join("\n")) });
+            	    return true;
+            	}
+			},
+			{
+				regex: /Resulting maze .+/,
+            	handler: function (matches, module) {
+					const upEmpty = "╚╝╩╠╣╬";
+					const rightEmpty = "╒╚╔╩╠╦╬";
+					const downEmpty = "╖╗╔╠╣╦╬";
+					const leftEmpty = "╕╝╗╩╣╦╬"
+
+					let horizWalls = [[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]];
+					let vertWalls = [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]];
+					for (let i = 0; i < 4; i++) {
+						let line = readTaggedLine();
+						for (let j = 0; j < 4; j++) {
+							let cell = line[j];
+							if (upEmpty.includes(cell)) {
+								horizWalls[i - 1][j] = 0;
+							}
+							if (rightEmpty.includes(cell)) {
+								vertWalls[i][j] = 0;
+							}
+							if (downEmpty.includes(cell)) {
+								horizWalls[i][j] = 0;
+							}
+							if (leftEmpty.includes(cell)) {
+								vertWalls[i][j - 1] = 0;
+							}
+						}
+					}
+					let maze = ["•———•———•———•———•"];
+					for (let i = 0; i < 4; i++) {
+						maze.push(`|   ${vertWalls[i][0] ? "|" : " "}   ${vertWalls[i][1] ? "|" : " "}   ${vertWalls[i][2] ? "|" : " "}   |`);
+						let row = `•${horizWalls[i][0] ? "———" : "   "}•${horizWalls[i][1] ? "———" : "   "}•${horizWalls[i][2] ? "———" : "   "}•${horizWalls[i][3] ? "———" : "   "}•`;
+						while (row.includes("   •   ")) {
+							row = row.replace("   •   ", "       ");
+						}
+						maze.push(row);
+					}
+
+					let finalMaze = (matches[0] == "Resulting maze after merging areas and pruning disconnected areas:");
+					if (finalMaze) {
+						startLine = readTaggedLine();
+						let startCoord = startLine.match(/Your starting coordinate is \((\d), (\d)\)./).slice(1);
+						let startRow = 2 * parseInt(startCoord[1]) - 1;
+						let startCol = 4 * parseInt(startCoord[0]) - 2;
+						maze[startRow] = maze[startRow].slice(0, startCol) + "S" + maze[startRow].slice(startCol + 1);
+
+						goalsLine = readTaggedLine();
+						let goalCoords = Array.from(goalsLine.matchAll(/\d/g));
+						for (let i = 0; i < goalCoords.length; i += 2) {
+							let goalRow = 2 * parseInt(goalCoords[i + 1]) - 1;
+							let goalCol = 4 * parseInt(goalCoords[i]) - 2;
+							maze[goalRow] = maze[goalRow].slice(0, goalCol) + "G" + maze[goalRow].slice(goalCol + 1);
+						}
+					}
+
+					module.push({ label: matches[0], obj: pre(maze.join("\n")) });
+					if (finalMaze) {
+						module.push(startLine);
+						module.push(goalsLine);
+						module.push(readTaggedLine());
+						module.push(readTaggedLine());
+						module.moveDropdown = ["Movement:", []]
+						module.push(module.moveDropdown);
+					}
+            	    return true;
+            	}
+			},
+			{
+				regex: /(.+ has been pressed\.)|(Ran into a wall. Resetting the module.)/,
+				handler: function (matches, module) {
+					module.moveDropdown[1].push(matches[0]);
+            	    return true;
+            	}
+			},
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -19002,6 +19897,108 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "symbolicPasswordModule",
+		loggingTag: "Symbolic Password",
+		matches: [
+			{
+				regex: /Position in grid: \((\d+), (\d+)\)/,
+				handler: function(matches, module) {
+					module.position = {x: parseInt(matches[1]) - 1, y: parseInt(matches[2]) - 1};
+					return true;
+				}
+			},
+			{
+				regex: /Initial display: (.+) \/ (.+)/,
+				handler: function (matches, module) {
+					module.symbolDict = {
+						"Ϙ": "28-balloon",
+						"Ӭ": "16-euro",
+						"©": "1-copyright",
+						"Ϭ": "11-six",
+						"¿": "20-questionmark",
+						"Ѧ": "13-at",
+						"¶": "21-paragraph",
+						"ټ": "4-smileyface",
+						"☆": "3-hollowstar",
+						"ƛ": "30-upsidedowny",
+						"Ͽ": "23-leftc",
+						"Ҩ": "26-cursive",
+						"Ѣ": "31-bt",
+						"҂": "27-tracks",
+						"Ϟ": "12-squigglyn",
+						"Җ": "5-doublek",
+						"Ѭ": "7-squidknife",
+						"Ͼ": "22-rightc",
+						"æ": "14-ae",
+						"Ԇ": "15-meltedthree",
+						"Ψ": "24-pitchfork",
+						"ϗ": "9-hookn",
+						"Ѯ": "19-dragon",
+						"Ҋ": "18-nwithhat",
+						"★": "2-filledstar",
+						"Ω": "6-omega",
+						"Ѽ": "8-pumpkin",
+					};
+					module.getImage = (symbol) => `../HTML/img/Keypad/${module.symbolDict[symbol]}.png`
+					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-small");
+					const list = matches[1] + matches[2];
+					for(let i = 0; i < 6; i++) {
+						$('<img>').attr('src', module.getImage(list[i])).appendTo(div);
+
+					}
+					module.push({label: "Inital Display", obj: div})
+					return true;
+				}
+			},
+			{
+				regex: /Solution/,
+				handler: function (matches, module) {
+					const grid = 
+					[
+					 'Ϙ', 'Ӭ', '©', 'Ϭ', 'Ψ', 'Ϭ', '¿', 
+					 'Ѧ', 'Ϙ', 'Ѽ', '¶', 'ټ', 'Ӭ', '☆', 
+					 'ƛ', 'Ͽ', 'Ҩ', 'Ѣ', 'Ѣ', '҂', 'Ϙ', 
+					 'Ϟ', 'Ҩ', 'Җ', 'Ѭ', 'Ͼ', 'æ', 'ƛ', 
+					 'Ѭ', '☆', 'Ԇ', 'Җ', '¶', 'Ψ', 'Ҩ', 
+					 'ϗ', 'ϗ', 'ƛ', '¿', 'Ѯ', 'Ҋ', 'Ӭ', 
+					 'Ͽ', '¿', '☆', 'ټ', '★', 'Ω', 'Ѽ'
+					];
+
+					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-big");
+
+					console.log(module.position)
+					for(let i = 0; i < grid.length; i++) {
+						let symbol = grid[i];
+						const x = i % 7;
+						const y = Math.floor(i / 7);
+
+						const inXRange = x >= module.position.x && x <= module.position.x + 2
+						const inyRange = y == module.position.y || y == module.position.y + 1
+						const inRange = inXRange && inyRange
+						$('<img>').attr('src', module.getImage(symbol)).addClass(inRange ? "symbolic-password-solution" : "").appendTo(div);
+					}
+					module.push({label: "Solution", obj: div})
+					return true;
+				}
+
+			},
+			{
+				regex: /You submitted: (.+) \/ (.+)/,
+				handler: function (matches, module) {
+					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-small");
+					const list = matches[1] + matches[2];
+					for(let i = 0; i < 6; i++) {
+						$('<img>').attr('src', module.getImage(list[i])).appendTo(div);
+
+					}
+					module.push({label: "You submitted:", obj: div})
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "sync125_3",
 		displayName: "SYNC-125 [3]",
 		loggingTag: "SYNC-125-3"
@@ -19260,6 +20257,14 @@ let parseData = [
 		loggingTag: "Ten-Button Color Code",
 		matches: [
 			{
+				regex: /Stage (\d) starting rule number: \d+/,
+				handler: function (matches, module) {
+					module.dropdown = [`Stage ${matches[1]}`, [matches[0]]];
+					module.push(module.dropdown);
+					return true;
+				}
+			},
+			{
 				regex: /^(.*:) ([RGB]{10})$/,
 				handler: function (matches, module) {
 					let colors = {
@@ -19269,7 +20274,7 @@ let parseData = [
 					};
 					let cells = Array(10).fill(null).map((_, ix) => `<td style='background: ${colors[matches[2][ix]]}; width: 25px; border: 5px solid black;'></td>`);
 					let rows = Array(2).fill(null).map((_, row) => `<tr style='height: 40px'>${cells.slice(5 * row, 5 * (row + 1)).join('')}</tr>`);
-					module.push({ label: matches[1], obj: `<table>${rows.join('')}</table>` });
+					module.dropdown[1].push({ label: matches[1], obj: `<table>${rows.join('')}</table>` });
 					return true;
 				}
 			},
@@ -20226,6 +21231,70 @@ let parseData = [
 		displayName: "Typing Tutor",
 		moduleID: "needyTypingTutor",
 		loggingTag: "Needy Typing Tutor"
+	},
+		{
+		moduleID: "ubermodule",
+		loggingTag: "Übermodule",
+		matches: [
+			{
+				regex: /Entering Startup Phase\.{3}/,
+				handler: function (matches, module) {
+					module.startDropdown = [matches[0], []];
+					module.push(module.startDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /This module (?:WILL|WILL NOT) count ignored modules as potential stages\.|This module will generate stages (?:EARLY|LATE)\.|Hard Mode is enabled! Normal stage generation procedures have been overridden\.|All dashes will be registered on the module when holding for more than \d+\.\d+ second\(s\)\.|There are 0 non-ignored modules\.|Generated manditory stage (?:\d+) requiring (?:Morse|Tap Code) input\./,
+				handler: function (matches, module) {
+					module.startDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /There are this many non-ignored Modules: (\d+) Some non-ignored modules are the following: (.+)/,
+				handler: function (matches, module) {
+
+					module.startDropdown[1].push(`There are ${matches[1]} non-ignored module(s). Some non-ignored modules are ${matches[2]}`);
+					return true;
+				}
+			},
+			{
+				regex: /Non-ignored Modules:\s(.+)/,
+				handler: function (matches, module) {
+
+					module.startDropdown[1].push(`There are ${matches[1].split(",").length} non-ignored module(s): ${matches[1]}`);
+					return true;
+				}
+			},
+			{
+				regex: /All non-ignored modules have been solved, activating "finale" phase\./,
+				handler: function (matches, module) {
+
+					module.submissionDropdown = [matches[0], []];
+					module.push(module.submissionDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /You need to input from the module that was solved \d+(?:st|nd|rd|th)\./,
+				handler: function (matches, module) {
+
+					moduleSubmissionStageDropdown = [matches[0], []];
+					module.submissionDropdown[1].push(moduleSubmissionStageDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /You need to input the correct letter in (?:.+)\.|The solved module for that stage was: (?:.+)|Strike! "." was inputted which is not correct!|Revealing module name that was solved that advanced the counter to \d+|Correct character inputted\. Moving on to next stage\.|No more stages to go\./,
+				handler: function (matches, module) {
+					moduleSubmissionStageDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+
+		]
 	},
 	{
 		displayName: "UIN(+L)",
@@ -22055,6 +23124,130 @@ let parseData = [
 					let lines = readLines(21);
 
 					module.push({ label: "The path the observer took is as follows:", obj: pre(lines.join("\n")) });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
+		loggingTag: "Worse Venn Diagram",
+		moduleID: "worseVenn",
+		matches: [
+			{
+				regex: /Select the areas the return (.+): (.+)/,
+				handler: function (matches, module) {
+					const svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 420 150'>")
+
+					function addPath (path, colour){
+						$SVG("<path>")
+						.attr("d", path)
+						.addClass(`worse-venn-${colour}`)
+						.addClass(`worse-venn`)
+						.appendTo(svg);
+					}
+					
+					const namesToPaths = {
+						"O" : "m 147.78025,9.8199524 a 13.47,13.47 0 0 0 -13.47036,13.4698486 13.47,13.47 0 0 0 13.47036,13.470366 13.47,13.47 0 0 0 13.46985,-13.46003 v -0.01034 A 13.47,13.47 0 0 0 147.78025,9.8199524 Z",
+						"c" : "m 118.35701,45.937297 a 48.47,48.47 0 0 1 0.10284,3.062832 48.47,48.47 0 0 1 -2.08875,14.06929 34.24,34.24 0 0 1 9.019,22.97047 34.24,34.24 0 0 1 -34.239953,34.239961 34.24,34.24 0 0 1 -7.210859,-0.82113 48.47,48.47 0 0 1 -13.755618,10.09179 48.47,48.47 0 0 0 20.966477,4.96967 48.47,48.47 0 0 0 48.479783,-48.480291 48.47,48.47 0 0 0 -21.27292,-40.102592 z",
+						"C" : "m 116.3711,63.069419 a 48.47,48.47 0 0 1 -19.174351,26.036403 48.47,48.47 0 0 1 -13.257461,30.352898 34.24,34.24 0 0 0 7.210859,0.82113 34.24,34.24 0 0 0 34.239953,-34.239961 34.24,34.24 0 0 0 -9.019,-22.97047 z",
+						
+						"b" : "M 23.711503,62.931961 A 48.47,48.47 0 0 1 21.499773,49.000129 48.47,48.47 0 0 1 21.759186,46.035481 48.47,48.47 0 0 0 0.34002765,86.039889 48.47,48.47 0 0 0 48.819806,134.52018 48.47,48.47 0 0 0 70.18367,129.55051 48.47,48.47 0 0 1 56.218249,119.40394 34.24,34.24 0 0 1 48.819806,120.27985 34.24,34.24 0 0 1 14.579848,86.039889 34.24,34.24 0 0 1 23.711503,62.931961 Z",
+						"bc" : "m 56.218249,119.40394 a 48.47,48.47 0 0 0 13.965421,10.14657 48.47,48.47 0 0 0 13.755618,-10.09179 34.24,34.24 0 0 1 -13.949402,-6.71116 34.24,34.24 0 0 1 -13.771637,6.65638 z",
+						"bC" : "M 97.196749,89.105822 A 48.47,48.47 0 0 1 81.370994,96.11928 34.24,34.24 0 0 1 69.989886,112.74756 34.24,34.24 0 0 0 83.939288,119.45872 48.47,48.47 0 0 0 97.196749,89.105822 Z",
+						
+						"B" : "M 42.941151,89.029342 A 48.47,48.47 0 0 1 23.711503,62.931961 34.24,34.24 0 0 0 14.579848,86.039889 34.24,34.24 0 0 0 48.819806,120.27985 34.24,34.24 0 0 0 56.218249,119.40394 48.47,48.47 0 0 1 42.941151,89.029342 Z",
+						"Bc" : "M 58.554518,95.939448 A 48.47,48.47 0 0 1 42.941151,89.029342 48.47,48.47 0 0 0 56.218249,119.40394 34.24,34.24 0 0 0 69.989886,112.74756 34.24,34.24 0 0 1 58.554518,95.939448 Z",
+						"BC" : "M 81.370994,96.11928 A 48.47,48.47 0 0 1 70.000221,97.479907 48.47,48.47 0 0 1 58.554518,95.939448 34.24,34.24 0 0 0 69.989886,112.74756 34.24,34.24 0 0 0 81.370994,96.11928 Z",
+						
+						"a" : "M 70.000221,0.53016962 A 48.47,48.47 0 0 0 21.759186,46.035481 48.47,48.47 0 0 1 37.380304,39.114006 34.24,34.24 0 0 1 69.989886,14.760172 34.24,34.24 0 0 1 102.70024,38.973964 48.47,48.47 0 0 1 118.35701,45.937297 48.47,48.47 0 0 0 70.000221,0.53016962 Z",
+						"ac" : "m 118.35701,45.937297 a 48.47,48.47 0 0 0 -15.65677,-6.963333 34.24,34.24 0 0 1 1.51978,10.026165 34.24,34.24 0 0 1 -0.42477,5.27663 34.24,34.24 0 0 1 12.57585,8.79266 48.47,48.47 0 0 0 2.08875,-14.06929 48.47,48.47 0 0 0 -0.10284,-3.062832 z",
+						"aC" : "m 116.3711,63.069419 a 34.24,34.24 0 0 0 -12.57585,-8.79266 34.24,34.24 0 0 1 -8.554436,17.822513 48.47,48.47 0 0 1 2.048951,13.940617 H 97.3001 A 48.47,48.47 0 0 1 97.196749,89.105822 48.47,48.47 0 0 0 116.3711,63.069419 Z",
+						
+						"ab" : "m 23.711503,62.931961 a 34.24,34.24 0 0 1 12.555701,-8.68259 34.24,34.24 0 0 1 -0.517276,-5.249242 34.24,34.24 0 0 1 1.630376,-9.886123 48.47,48.47 0 0 0 -15.621118,6.921475 48.47,48.47 0 0 0 -0.259413,2.964648 48.47,48.47 0 0 0 2.21173,13.931832 z",
+						"abc" : "M 147.88981,0.45989035 A 22.72,22.72 0 0 0 125.17978,23.180248 22.72,22.72 0 0 0 147.90014,45.90009 22.72,22.72 0 0 0 170.59983,23.180248 h 0.0103 A 22.72,22.72 0 0 0 147.88981,0.45989035 Z M 147.78025,9.8199524 A 13.47,13.47 0 0 1 161.2501,23.289801 v 0.01034 A 13.47,13.47 0 0 1 147.78025,36.760167 13.47,13.47 0 0 1 134.30989,23.289801 13.47,13.47 0 0 1 147.78025,9.8199524 Z",
+						"abC" : "M 97.196749,89.105822 A 48.47,48.47 0 0 0 97.3001,86.039889 h -0.01033 a 48.47,48.47 0 0 0 -2.048951,-13.940617 34.24,34.24 0 0 1 -12.695226,8.730132 34.24,34.24 0 0 1 0.514175,5.210485 34.24,34.24 0 0 1 -1.688769,10.079391 48.47,48.47 0 0 0 15.825755,-7.013458 z",
+						
+						"aB" : "M 42.941151,89.029342 A 48.47,48.47 0 0 1 42.680188,86.039889 48.47,48.47 0 0 1 44.889334,72.12666 34.24,34.24 0 0 1 36.267204,54.249371 34.24,34.24 0 0 0 23.711503,62.931961 48.47,48.47 0 0 0 42.941151,89.029342 Z",
+						"aBc" : "m 58.554518,95.939448 a 34.24,34.24 0 0 1 -1.63451,-9.899559 34.24,34.24 0 0 1 0.517276,-5.23839 34.24,34.24 0 0 1 -12.54795,-8.674839 48.47,48.47 0 0 0 -2.209146,13.913229 48.47,48.47 0 0 0 0.260963,2.989453 48.47,48.47 0 0 0 15.613367,6.910106 z",
+						"aBC" : "m 81.370994,96.11928 a 34.24,34.24 0 0 0 1.688769,-10.079391 34.24,34.24 0 0 0 -0.514175,-5.210485 34.24,34.24 0 0 1 -12.545367,2.410683 34.24,34.24 0 0 1 -12.562937,-2.438588 34.24,34.24 0 0 0 -0.517276,5.23839 34.24,34.24 0 0 0 1.63451,9.899559 48.47,48.47 0 0 0 11.445703,1.540459 48.47,48.47 0 0 0 11.370773,-1.360627 z",
+						
+						"A" : "M 37.380304,39.114006 A 48.47,48.47 0 0 1 48.819806,37.569929 48.47,48.47 0 0 1 70.17902,42.541671 48.47,48.47 0 0 1 91.150147,37.569929 48.47,48.47 0 0 1 102.70024,38.973964 34.24,34.24 0 0 0 69.989886,14.760172 34.24,34.24 0 0 0 37.380304,39.114006 Z",
+						"Ac" : "m 70.17902,42.541671 a 48.47,48.47 0 0 1 13.752516,10.091793 34.24,34.24 0 0 1 7.218611,-0.823714 34.24,34.24 0 0 1 12.645103,2.467009 34.24,34.24 0 0 0 0.42477,-5.27663 34.24,34.24 0 0 0 -1.51978,-10.026165 48.47,48.47 0 0 0 -11.550093,-1.404035 48.47,48.47 0 0 0 -20.971127,4.971742 z",
+						"AC" : "M 83.931536,52.633464 A 48.47,48.47 0 0 1 95.240814,72.099272 34.24,34.24 0 0 0 103.79525,54.276759 34.24,34.24 0 0 0 91.150147,51.80975 34.24,34.24 0 0 0 83.931536,52.633464 Z",
+						
+						"Ab" : "m 37.380304,39.114006 a 34.24,34.24 0 0 0 -1.630376,9.886123 34.24,34.24 0 0 0 0.517276,5.249242 34.24,34.24 0 0 1 12.552602,-2.439621 34.24,34.24 0 0 1 7.398443,0.875907 A 48.47,48.47 0 0 1 70.17902,42.541671 48.47,48.47 0 0 0 48.819806,37.569929 48.47,48.47 0 0 0 37.380304,39.114006 Z",
+						"Abc": "M 70.17902,42.541671 A 48.47,48.47 0 0 0 56.218249,52.685657 34.24,34.24 0 0 1 69.989886,59.342551 34.24,34.24 0 0 1 83.931536,52.633464 48.47,48.47 0 0 0 70.17902,42.541671 Z",
+						"AbC" : "M 83.931536,52.633464 A 34.24,34.24 0 0 0 69.989886,59.342551 34.24,34.24 0 0 1 82.545588,80.829404 34.24,34.24 0 0 0 95.240814,72.099272 48.47,48.47 0 0 0 83.931536,52.633464 Z",
+						
+						"AB" : "M 44.889334,72.12666 A 48.47,48.47 0 0 1 56.218249,52.685657 34.24,34.24 0 0 0 48.819806,51.80975 34.24,34.24 0 0 0 36.267204,54.249371 34.24,34.24 0 0 0 44.889334,72.12666 Z",
+						"ABc" : "M 57.437284,80.801499 A 34.24,34.24 0 0 1 69.989886,59.342551 34.24,34.24 0 0 0 56.218249,52.685657 48.47,48.47 0 0 0 44.889334,72.12666 a 34.24,34.24 0 0 0 12.54795,8.674839 z",
+						"ABC" : "M 82.545588,80.829404 A 34.24,34.24 0 0 0 69.989886,59.342551 34.24,34.24 0 0 0 57.437284,80.801499 34.24,34.24 0 0 0 70.000221,83.240087 34.24,34.24 0 0 0 82.545588,80.829404 Z",
+					}
+
+					module.namesToManualNames = {
+						"O" : "FFF",
+						"c" : "FFU",
+						"C" : "FFT",
+
+						"b" : "FUF",
+						"bc" : "FUU",
+						"bC" : "FUT",
+
+						"B" : "FTF",
+						"Bc" : "FTU",
+						"BC" : "FTT",
+
+						"a" : "UFF",
+						"ac" : "UFU",
+						"aC" : "UFT",
+
+						"ab" : "UUF",
+						"abc" : "UUU",
+						"abC" : "UUT",
+
+						"aB" : "UTF",
+						"aBc" : "UTU",
+						"aBC" : "UTT",
+
+						"A" : "TFF",
+						"Ac" : "TFU",
+						"AC" : "TFT",
+
+						"Ab" : "TUF",
+						"Abc": "TUU",
+						"AbC" : "TUT",
+
+						"AB" : "TTF",
+						"ABc" : "TTU",
+						"ABC" : "TTT",
+					}
+
+					const valueToColour = {
+						"False" : "red", 
+						"Unknown" : "blue", 
+						"True" : "green",
+					}
+
+					const clr = valueToColour[matches[1]];
+					const correctRegions = matches[2].split(', ');
+					var renamedCorrectRegions = [];
+					for(var name in namesToPaths){
+						if(correctRegions.includes(name)){
+							addPath(namesToPaths[name], clr);
+							renamedCorrectRegions.push(module.namesToManualNames[name]);
+						} else addPath(namesToPaths[name], "none");
+					}
+					
+					module.push({ label: `Select the areas to return ${matches[1]}: ${renamedCorrectRegions.join(", ")}`, obj: svg });
+					return true;
+				}
+			},
+			{
+				regex: /Incorrect area selected: (.+)/,
+				handler: function (matches, module) {
+			
+					module.push(`Incorrect area selected: ${module.namesToManualNames[matches[1]]}`)
 					return true;
 				}
 			},
