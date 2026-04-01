@@ -4418,6 +4418,54 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "cruelDividableBy2",
+		loggingTag: "Cruel Dividable By 2",
+		matches: [
+			{
+				regex: /Module's flashing sequence of digits is: \d+. This gives:/,
+				handler: function (matches, module) {
+					let seqDropdown = [matches[0], []];
+
+					let nLine = readTaggedLine();
+					let nVal = parseInt(nLine.match(/\d\d/)[0]);
+					seqDropdown[1].push([nLine, readTaggedLines(nVal)])
+
+					let movesLine = readTaggedLine();
+					let moveCount = movesLine.match(/,/g).length + 1;
+					let movesDropdown = [movesLine, []];
+					for (let i = 0; i < moveCount; i++) {
+						movesDropdown[1].push([readTaggedLine(), readTaggedLines(nVal)]);
+					}
+					seqDropdown[1].push(movesDropdown);
+					module.push(seqDropdown);
+
+					let pressesDropdown = [readTaggedLine(), []];
+					for (let i = 0; i < 5; i++) {
+						let rowLine = readTaggedLine();
+						let pressLine = readTaggedLine();
+						let press = pressLine.match(/"[NY]"/)[0];
+						let timesLine = readTaggedLine();
+						let pressTimes = timesLine.match(/(at .+)\./)[1];
+						pressesDropdown[1].push([`${rowLine} ${press} ${pressTimes}:`, [pressLine, timesLine]]);
+					}
+					module.push(pressesDropdown);
+
+					module.inputDropdown = ["User interactions:", []];
+					module.push(module.inputDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Pressed.+/,
+				handler: function (matches, module) {
+					module.inputDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "matchemcruel",
 		loggingTag: "Cruel Match 'em",
 		matches: [
