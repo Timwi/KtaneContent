@@ -544,6 +544,7 @@ let SouvenirModuleData = [
 	{ original: "Sbemail Songs",	name: "Sbemail Songs",	id: "sbemailsongs",	questions: ["Какие песни были показаны на каждом этапе?"] },
 	{ original: "Scavenger Hunt",	name: "Scavenger Hunt",	id: "scavengerHunt",	questions: ["Какая плитка была правильно выбрана на первом этапе?", "Где была красная, зелёная и синяя плитка на первом этапе?"] },
 	{ original: "Schlag den Bomb",	name: "Schlag den Bomb",	id: "qSchlagDenBomb",	questions: ["Какие были имена участников и их счёт?"] },
+	{ original: "Scorching Alchemist",	name: "Scorching Alchemist",	id: "ScorchingAlchemist",	questions: ["Which sword was present on the ground?"] },
 	{ original: "Scramboozled Eggain",	name: "Scramboozled Eggain",	id: "ScramboozledEggainModule",	questions: ["Какие слова были зашифрованы?"] },
 	{ original: "Scrutiny Squares",	name: "Scrutiny Squares",	id: "scrutinySquares",	questions: ["Какое свойство первого квадрата было изменено?"] },
 	{ original: "Semamorse",	name: "Semamorse",	id: "semamorse",	questions: ["Какие буквы Морзе, буквы семафора и какой цвет были использованы в начальном значении?"] },

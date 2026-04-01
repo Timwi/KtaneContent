@@ -488,6 +488,7 @@ let SouvenirModuleData = [
 	{ original: "Creation",	name: "Schöpfung",	id: "CreationModule",	questions: ["Wie war das Wetter am ersten Tag?"] },
 	{ original: "Not The Screw",	name: "DieSchraube Mal Anders",	id: "notTheScrew",	questions: ["Wo war die Startposition?"] },
 	{ original: "Black Cipher",	name: "Schwarze Geheimschrift",	id: "blackCipher",	questions: ["Was stand auf welchem Display?"] },
+	{ original: "Scorching Alchemist",	name: "Scorching Alchemist",	id: "ScorchingAlchemist",	questions: ["Which sword was present on the ground?"] },
 	{ original: "Sea Shells",	name: "Sea Shells",	id: "SeaShells",	questions: ["Welche Phrasen kamen vor?"] },
 	{ original: "Visual Impairment",	name: "Sehbehinderung",	id: "visual_impairment",	questions: ["Welche Farben wurden verlangt?"] },
 	{ original: "Shogi Identification",	name: "Shogi-Identifikation",	id: "shogiIdentification",	questions: ["Welcher Spielstein war zu sehen?"] },
