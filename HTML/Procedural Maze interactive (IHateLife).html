@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Procedural Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .dark table, table { margin: auto; }
+        .dark .diagram {
+            background-color: transparent;
+            filter:invert(87%);
+        }
+        .page.strip { --strip-color: #75007A; }
+
+        :root {
+            --grid-size: 6;
+            --cell-size: 100px;
+
+            --core-size: 25px;
+            --ring-size: 48px;
+            --ring-thickness: 4px;
+
+            --wall-thickness: 12px;
+            --wall-line: 2px;
+
+            --cell-bg: transparent;
+            --core-default: #777777;
+            --triangle-color: red;
+        }
+        
+        #grid-wrapper {
+            position: relative;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(var(--grid-size), var(--cell-size));
+            grid-template-rows: repeat(var(--grid-size), var(--cell-size));
+        }
+
+        .cell {
+            position: relative;
+            width: var(--cell-size);
+            height: var(--cell-size);
+            background: var(--cell-bg);
+        }
+
+        .core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: var(--core-size);
+            height: var(--core-size);
+            transform: translate(-50%, -50%);
+            background: var(--core-default);
+            border: 2px solid black;
+        }
+
+        .core.filled {
+            background: white;
+        }
+
+        .core.triangle {
+            background: var(--triangle-color);
+            border: none;
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+        }
+
+        .player {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: var(--core-size);
+            height: var(--core-size);
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 2px solid black;
+            pointer-events: none;
+        }
+
+        .ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: var(--ring-size);
+            height: var(--ring-size);
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: var(--ring-thickness) solid limegreen;
+            pointer-events: none;
+        }
+
+        .wall {
+            position: absolute;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        .wall.horizontal {
+            width: var(--cell-size);
+            height: var(--wall-thickness);
+            clip-path: polygon(
+                0% 50%,
+                calc(var(--wall-thickness) / 2) 0%,
+                calc(100% - var(--wall-thickness) / 2) 0%,
+                100% 50%,
+                calc(100% - var(--wall-thickness) / 2) 100%,
+                calc(var(--wall-thickness) / 2) 100%,
+                0% 50%
+            );
+        }
+
+        .wall.vertical {
+            width: var(--wall-thickness);
+            height: var(--cell-size);
+            clip-path: polygon(
+                50% 0%,
+                100% calc(var(--wall-thickness) / 2),
+                100% calc(100% - var(--wall-thickness) / 2),
+                50% 100%,
+                0% calc(100% - var(--wall-thickness) / 2),
+                0% calc(var(--wall-thickness) / 2)
+            );
+        }
+
+        .wall.solid {
+            background: black;
+        }
+        .dark .wall.solid {background: white;}
+
+        .wall.dotted::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border: var(--wall-line) dashed black;
+            clip-path: inherit;
+        }
+        .dark .wall.dotted::after {border: var(--wall-line) dashed white !important;}
+
+        .wall.empty {
+            background: transparent;
+        }
+
+        .mode-indicator {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            padding: 6px 10px;
+            background: black;
+            color: white;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Procedural Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Procedural Maze.svg" class="diagram">
+                <h2>On the Subject of Procedural Mazes</h2>
+                <p class="flavour-text">No, this isn’t a “Not” module. No, this isn’t based on Generated Maze.</p>
+                <p>The defuser must navigate the white light to the blue triangle using the arrow buttons, while avoiding the invisible walls in the maze.</p>
+                <p>Each wall is either present, absent, or undecided. The initial state of the walls is determined as follows.</p>
+                <ol>
+                    <li>All walls on the border of the maze are present.</li>
+                    <li>Any remaining undecided walls around the starting position are absent.</li>
+                    <li>The remaining walls are undecided, and will be generated as the defuser traverses the maze.</li>
+                </ol>
+                <p>
+                    If the defuser attempts to cross a present wall, the module will strike and regenerate. The defuser can also regenerate the module, without striking,
+                    by holding any button for three seconds.
+                </p>
+                
+                <h3>The Initial Seed</h3>
+                <p>Create a binary number consisting of six bits using the number of circles in each column of the maze, left to right. If the number of circles is even, that column’s bit is a 1.
+                    Otherwise, it’s a 0. This is the initial seed; the seed will change as walls are generated, but will always be six bits long.
+                </p>
+                
+                <h3>Generating Walls</h3>
+                <p>
+                    After each move, look at the previously undecided walls around the current cell, beginning with the wall the defuser just crossed and going clockwise.
+                    For each of these, determine if the wall is now present or absent, as follows.
+                </p>
+                <ol>
+                    <li>Use the table on the next page to determine a slice of the maze to use as a bitmask.</li>
+                    <li>For each cell in the bitmask with a circle, check if there is a “1” in the same position in the current seed.</li>
+                    <li>If there is an <strong>even</strong> number of such cells, the wall is <strong>present</strong>. Prepend a “1” to the start of the current seed and remove the rightmost bit.</li>
+                    <li>If there is an <strong>odd</strong> number of such cells, the wall is <strong>absent</strong>. Prepend a “0” to the start of the current seed and remove the rightmost bit.</li>
+                </ol>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        
+        <div class="page page-bg-02 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Procedural Maze</span>
+            </div>
+            <div class="page-content">
+                <table>
+                    <tr>
+                        <th>If the most recent move was...</th>
+                        <th>...then the bitmask is the current...</th>
+                    </tr>
+                    <tr><td>right</td><td>column, from top to bottom.</td></tr>
+                    <tr><td>up</td><td>row, from left to right.</td></tr>
+                    <tr><td>left</td><td>column, from bottom to top.</td></tr>
+                    <tr><td>down</td><td>row, from right to left.</td></tr>
+                </table>
+                <p>In Edit, left click to place green indicators and right click to place you and the goal.</p>
+                <p>In <button onclick="setModeMove()">Move</button>, use arrow keys to move yourself and WASD to toggle walls. Alternatively, move with right click and toggle walls with left click.</p>
+                <div class="mode-indicator" id="modeIndicator">MODE: EDIT</div>
+                <div style="align-items: center; justify-content: center; width: 100%; display: flex; margin-top: 3em;">
+                    <div id="grid-wrapper">
+                        <div id="grid"></div>
+                    </div>
+                </div>
+                <script>
+                    function getCSSNumber(name) {
+                        return parseFloat(
+                            getComputedStyle(document.documentElement)
+                                .getPropertyValue(name)
+                        );
+                    }
+
+                    const GRID_SIZE = getCSSNumber("--grid-size");
+                    const CELL_SIZE = getCSSNumber("--cell-size");
+                    const WALL_THICKNESS = getCSSNumber("--wall-thickness");
+
+                    const grid = document.getElementById("grid");
+                    const wrapper = document.getElementById("grid-wrapper");
+                    const modeIndicator = document.getElementById("modeIndicator");
+
+                    let mode = "edit";
+                    let cycleState = 0;
+                    let cellA = null;
+                    let cellB = null;
+                    let currentPos = null;
+                    let playerEl = null;
+
+                    function updateModeIndicator() {
+                        modeIndicator.textContent = `MODE: ${mode.toUpperCase()}`;
+                    }
+
+                    function cellIndex(r, c) {
+                        return r * GRID_SIZE + c;
+                    }
+
+                    function getWallsOfCell(r, c) {
+                        return Array.from(document.querySelectorAll(".wall")).filter(wall => {
+                            if (wall.orientation === "horizontal") {
+                                return (
+                                    (wall.r === r && wall.c === c) ||
+                                    (wall.r === r + 1 && wall.c === c)
+                                );
+                            }
+
+                            return (
+                                (wall.c === c && wall.r === r) ||
+                                (wall.c === c + 1 && wall.r === r)
+                            );
+                        });
+                    }
+
+                    function getWallAt(r, c, dir) {
+                        return Array.from(document.querySelectorAll(".wall")).find(wall => {
+                            if (dir === "up") {
+                                return wall.orientation === "horizontal" && wall.r === r && wall.c === c;
+                            }
+                            if (dir === "down") {
+                                return wall.orientation === "horizontal" && wall.r === r + 1 && wall.c === c;
+                            }
+                            if (dir === "left") {
+                                return wall.orientation === "vertical" && wall.r === r && wall.c === c;
+                            }
+                            if (dir === "right") {
+                                return wall.orientation === "vertical" && wall.r === r && wall.c === c + 1;
+                            }
+                        });
+                    }
+
+                    function restyleWalls() {
+                        document.querySelectorAll(".wall").forEach(wall => {
+                            if (
+                                (wall.orientation === "horizontal" &&
+                                    (wall.r === 0 || wall.r === GRID_SIZE)) ||
+                                (wall.orientation === "vertical" &&
+                                    (wall.c === 0 || wall.c === GRID_SIZE))
+                            ) {
+                                wall.className = `wall ${wall.orientation} solid`;
+                                return;
+                            }
+
+                            if (wall.lockedInvisible) {
+                                wall.className = `wall ${wall.orientation} empty`;
+                                return;
+                            }
+
+                            wall.className =
+                                `wall ${wall.orientation} ${["empty", "dotted", "solid"][wall.state]}`;
+                        });
+                    }
+
+                    function cycleWall(wall) {
+                        if (wall.lockedInvisible) return;
+                        wall.state = (wall.state + 1) % 3;
+                        restyleWalls();
+                    }
+
+                    function setModeMove() {
+                        if (mode === "edit" && cellA && cellB) {
+                            mode = "move";
+
+                            const index = Array.from(grid.children).indexOf(cellA.cell);
+                            currentPos = {
+                                r: Math.floor(index / GRID_SIZE),
+                                c: index % GRID_SIZE
+                            };
+
+                            cellA.core.className = "core";
+                            cellA = null;
+
+                            playerEl = document.createElement("div");
+                            playerEl.className = "player";
+                            grid.children[index].appendChild(playerEl);
+
+                            getWallsOfCell(currentPos.r, currentPos.c)
+                                .forEach(wall => wall.lockedInvisible = true);
+
+                            restyleWalls();
+                        };
+                        updateModeIndicator();
+                        return;
+                    }
+                    document.addEventListener("keydown", event => {
+                        const key = event.key.toLowerCase();
+                        if (key === "arrowup" || key === "arrowdown" || key === "arrowleft" || key === "arrowright") {event.preventDefault();}
+
+                        // MODE TOGGLE
+                        if (key === "m") {
+                            if (mode === "edit" && cellA && cellB) {
+                                mode = "move";
+
+                                const index = Array.from(grid.children).indexOf(cellA.cell);
+                                currentPos = {
+                                    r: Math.floor(index / GRID_SIZE),
+                                    c: index % GRID_SIZE
+                                };
+
+                                cellA.core.className = "core";
+                                cellA = null;
+
+                                playerEl = document.createElement("div");
+                                playerEl.className = "player";
+                                grid.children[index].appendChild(playerEl);
+
+                                getWallsOfCell(currentPos.r, currentPos.c)
+                                    .forEach(wall => wall.lockedInvisible = true);
+
+                                restyleWalls();
+                            };
+                            updateModeIndicator();
+                            return;
+                        }
+
+                        if (mode !== "move" || !currentPos) return;
+
+                            // MOVEMENT (ARROWS)
+                            let dr = 0;
+                            let dc = 0;
+
+                            if (key === "arrowup") dr = -1;
+                            if (key === "arrowdown") dr = 1;
+                            if (key === "arrowleft") dc = -1;
+                            if (key === "arrowright") dc = 1;
+
+                            if (dr !== 0 || dc !== 0) {
+                                const nr = currentPos.r + dr;
+                                const nc = currentPos.c + dc;
+
+                                if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return;
+
+                                grid.children[cellIndex(currentPos.r, currentPos.c)]
+                                    .removeChild(playerEl);
+
+                                currentPos = { r: nr, c: nc };
+                                grid.children[cellIndex(nr, nc)].appendChild(playerEl);
+
+                                restyleWalls();
+                                return;
+                            }
+
+                            // WALL CYCLING (WASD)
+                            const wallMap = {
+                                "w": "up",
+                                "a": "left",
+                                "s": "down",
+                                "d": "right"
+                            };
+
+                            if (wallMap[key]) {
+                                const wall = getWallAt(currentPos.r, currentPos.c, wallMap[key]);
+                                if (wall) cycleWall(wall);
+                            }
+                        });
+
+                    for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+                        const cell = document.createElement("div");
+                        cell.className = "cell";
+
+                        const core = document.createElement("div");
+                        core.className = "core";
+                        cell.appendChild(core);
+
+                        cell.addEventListener("click", () => {
+                            if (mode !== "edit") return;
+
+                            const ring = cell.querySelector(".ring");
+                            if (ring) {
+                                ring.remove();
+                            } else {
+                                const r = document.createElement("div");
+                                r.className = "ring";
+                                cell.appendChild(r);
+                            }
+                        });
+
+                        cell.addEventListener("contextmenu", event => {
+                            event.preventDefault();
+
+                            if (mode === "edit") {
+                                if (cycleState === 0) {
+                                    if (cellA) cellA.core.className = "core";
+                                    core.className = "core filled";
+                                    cellA = { cell, core };
+                                    cycleState = 1;
+                                    return;
+                                }
+
+                                if (cycleState === 1) {
+                                    if (cellA && cell === cellA.cell) return;
+                                    if (cellB) cellB.core.className = "core";
+                                    core.className = "core triangle";
+                                    cellB = { cell, core };
+                                    cycleState = 2;
+                                    return;
+                                }
+
+                                if (cellA) cellA.core.className = "core";
+                                if (cellB) cellB.core.className = "core";
+                                cellA = null;
+                                cellB = null;
+                                cycleState = 0;
+                                return;
+                            }
+
+                            if (mode === "move") {
+                                const index = Array.from(grid.children).indexOf(cell);
+
+                                grid.children[
+                                    cellIndex(currentPos.r, currentPos.c)
+                                ].removeChild(playerEl);
+
+                                currentPos = {
+                                    r: Math.floor(index / GRID_SIZE),
+                                    c: index % GRID_SIZE
+                                };
+
+                                cell.appendChild(playerEl);
+                                restyleWalls();
+                            }
+                        });
+
+                        grid.appendChild(cell);
+                    }
+
+                    for (let r = 0; r <= GRID_SIZE; r++) {
+                        for (let c = 0; c < GRID_SIZE; c++) {
+                            const wall = document.createElement("div");
+                            wall.className = "wall horizontal dotted";
+                            wall.orientation = "horizontal";
+                            wall.state = 1;
+                            wall.r = r;
+                            wall.c = c;
+
+                            wall.style.left = `${c * CELL_SIZE}px`;
+                            wall.style.top = `${r * CELL_SIZE - WALL_THICKNESS / 2}px`;
+
+                            wall.addEventListener("click", () => {
+                                if (mode === "move") cycleWall(wall);
+                            });
+
+                            wrapper.appendChild(wall);
+                        }
+                    }
+
+                    for (let r = 0; r < GRID_SIZE; r++) {
+                        for (let c = 0; c <= GRID_SIZE; c++) {
+                            const wall = document.createElement("div");
+                            wall.className = "wall vertical dotted";
+                            wall.orientation = "vertical";
+                            wall.state = 1;
+                            wall.r = r;
+                            wall.c = c;
+
+                            wall.style.left = `${c * CELL_SIZE - WALL_THICKNESS / 2}px`;
+                            wall.style.top = `${r * CELL_SIZE}px`;
+
+                            wall.addEventListener("click", () => {
+                                if (mode === "move") cycleWall(wall);
+                            });
+
+                            wrapper.appendChild(wall);
+                        }
+                    }
+
+                    updateModeIndicator();
+                </script>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
