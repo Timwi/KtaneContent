@@ -8283,6 +8283,128 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Piece Positioning",
+		moduleID: "piecePositioning",
+		loggingTag: "Piece Positioning",
+		matches: [
+			{
+				regex: /The board is set up as follows:\s*(\/[0-9.#]+(?:\/[0-9.#]+)*\/)/i,
+				handler: function (matches, module) {
+					if (!module.hasSetProperties) {
+						module.parsePiecePositioningPieces = function(rawLine) {
+							const pieces = [];
+							const pieceRegex = /\{\s*Colour\s*:\s*([0-3])\s*,\s*Moves\s*:\s*([01?]{6})\s*,\s*Coordinate\s*:\s*([A-Z][0-9])\s*\}/gi;
+							let match;
+							while ((match = pieceRegex.exec(rawLine))) {
+								pieces.push({
+									colour: parseInt(match[1], 10),
+									moves: match[2],
+									coordinate: match[3]
+								});
+							}
+							return pieces;
+						};
+						module.tryRenderPiecePositioning = function() {
+							const state = module.piecePositioningState;
+							if (!state || state.rendered) return false;
+							if (!state.board || !state.pieces) return false;
+
+							const sideLength = 10;
+							const height = sideLength * Math.sqrt(3);
+							const pointsXY = [sideLength * Math.cos(Math.PI / 3), sideLength * Math.sin(Math.PI / 3)];
+							const hexagon = `${sideLength},0 ${pointsXY[0]},${pointsXY[1]} -${pointsXY[0]},${pointsXY[1]} -${sideLength},0 -${pointsXY[0]},-${pointsXY[1]} ${pointsXY[0]},-${pointsXY[1]}`;
+
+							const rows = state.board.map(line => line.trim().split(''));
+							const coords = [];
+							rows.forEach((row, r) => {
+								row.forEach((cell, q) => {
+									const x = q * sideLength * 1.5;
+									const y = (r - q / 2) * height;
+									coords.push({ x, y, cell, q, r });
+								});
+							});
+
+							const minX = Math.min(...coords.map(c => c.x - sideLength));
+							const maxX = Math.max(...coords.map(c => c.x + sideLength));
+							const minY = Math.min(...coords.map(c => c.y - pointsXY[1]));
+							const maxY = Math.max(...coords.map(c => c.y + pointsXY[1]));
+							const padding = 4;
+
+							const svg = $SVG(`<svg viewBox="${minX - padding} ${minY - padding} ${maxX - minX + padding * 2} ${maxY - minY + padding * 2}" class="piece-positioning"></svg>`);
+
+							coords.forEach(({ x, y, cell }) => {
+								const group = $SVG(`<g transform="translate(${x} ${y})"></g>`).appendTo(svg);
+								const type = cell === '#' ? 'blocked' : cell === '.' ? 'empty' : 'number';
+								$SVG('<polygon>').attr('points', hexagon).addClass('tile').addClass(type).appendTo(group);
+							});
+
+							const directionVectors = [
+								[0, -sideLength * 0.5],
+								[sideLength * 0.5 * Math.cos(Math.PI / 6), -sideLength * 0.5 * Math.sin(Math.PI / 6)],
+								[sideLength * 0.5 * Math.cos(Math.PI / 6), sideLength * 0.5 * Math.sin(Math.PI / 6)],
+								[0, sideLength * 0.5],
+								[-sideLength * 0.5 * Math.cos(Math.PI / 6), sideLength * 0.5 * Math.sin(Math.PI / 6)],
+								[-sideLength * 0.5 * Math.cos(Math.PI / 6), -sideLength * 0.5 * Math.sin(Math.PI / 6)]
+							];
+
+							state.pieces.forEach(piece => {
+								const column = piece.coordinate.charCodeAt(0) - 65;
+								let row = parseInt(piece.coordinate[1], 10) - 1;
+								if (column === 3) { // D列
+									row += 1;
+								} else if (column === 4) { // E列
+									row += 2;
+								}
+								const gridCell = coords.find(c => c.q === column && c.r === row);
+								if (!gridCell) return;
+
+								const group = $SVG(`<g transform="translate(${gridCell.x} ${gridCell.y})"></g>`).appendTo(svg);
+								$SVG('<circle>').attr({ cx: 0, cy: 0, r: sideLength * 0.6 }).addClass('piece').addClass(`colour-${piece.colour}`).appendTo(group);
+
+								piece.moves.split('').forEach((bit, index) => {
+									const [dx, dy] = directionVectors[index];
+									$SVG('<line>').attr({ x1: 0, y1: 0, x2: dx, y2: dy }).addClass('move-line').addClass(bit === '1' ? 'active' : 'inactive').appendTo(group);
+								});
+
+								const center = $SVG('<circle>').attr({ cx: 0, cy: 0, r: sideLength * 0.1 }).addClass('piece-center');
+								if (piece.colour === 3)
+									center.addClass('unknown');
+								center.appendTo(group);
+							});
+
+							module.push({ label: 'The board (and one possible solution) is:', obj: svg });
+							state.rendered = true;
+							return true;
+						};
+						module.hasSetProperties = true;
+					}
+					module.piecePositioningState = module.piecePositioningState || {};
+					module.piecePositioningState.board = matches[1].slice(1, -1).split('/');
+					return module.tryRenderPiecePositioning();
+				}
+			},
+			{
+				regex: /colour order is\s*([0-3](?:-[0-3])*)/i,
+				handler: function (matches, module) {
+					const colorNames = ['Green', 'Blue', 'Magenta', 'Colour 3'];
+					const orderText = 'Colour Order: ' + matches[1].split('-').map(c => colorNames[parseInt(c)] ?? `Colour ${c}`).join(', ');
+					module.push(orderText);
+					module.piecePositioningState = module.piecePositioningState || {};
+					module.piecePositioningState.colorOrder = matches[1].split('-').map(Number);
+					return module.tryRenderPiecePositioning();
+				}
+			},
+			{
+				regex: /The pieces.*?:\s*(.+)/i,
+				handler: function (matches, module) {
+					module.piecePositioningState = module.piecePositioningState || {};
+					module.piecePositioningState.pieces = module.parsePiecePositioningPieces(matches[1]);
+					return module.tryRenderPiecePositioning();
+				}
+			}
+		]
+	},
+	{
 		moduleID: 'hiddenInPlainSightModule',
 		loggingTag: 'Hidden In Plain Sight',
 		matches: [
