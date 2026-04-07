@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Game of Life 3D — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .row {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .grid-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 2px;
+        }
+
+        .tile {
+            width: 50px;
+            height: 50px;
+            background: grey;
+            border: 2px solid black;
+            box-sizing: border-box;
+        }
+
+        .label {
+            margin-bottom: 5px;
+        }
+
+        .cubes {
+            margin-bottom: 40px;
+            width: 100%;
+        }
+        .row {
+            align-items: center;
+        }
+        .buttons {
+            display: flex;
+            margin-bottom: 5px;
+            gap: 5px;
+            justify-content: center;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Game of Life 3D</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Game of Life 3D.svg" class="diagram">
+                <h2>On the Subject of Game of Life 3D</h2>
+                <p class="flavour-text">Life-and-death scenarios aren’t limited to the second dimension, y’know.</p>
+                <p>
+                    A 3×3×3 arrangement of black and white cells will be floating in front of the module. Apply the rules of Conway’s Game of Life to the arrangement of cells once, then enter this
+                    generation into the module. When pressed, the arrows surrounding the cells will rotate the formation 90 degrees in their respective directions. You may do this to get a better view
+                    of the arrangement of cells.
+                </p>
+                <p>
+                    Click a cell to toggle its state. The button labelled RESET will return the module to its initial state; the button labelled CLEAR will make all of the cells black. Both of these
+                    buttons will reset the rotation of the arrangement of cells.
+                </p>
+                <p>
+                    Centre cells are adjacent to all cells on the same face. An edge cell is adjacent to the two corner cells, two centre cells and four edge cells closest to it (creating a “square” of 
+                    cells that straddles the edge of the formation). A corner cell is adjacent to the three edge cells and three centre cells closest to it (creating a “hexagon” of cells surrounding it).
+                    There is no cell in the centre of the arrangement.
+                </p>
+                <h3>Conway’s Game of Life Rules</h3>
+                <ul>
+                    <li>Alive cells will stay alive if they have two or three alive neighbours, otherwise they will die.</li>
+                    <li>Dead cells will be born if they have exactly three alive neighbours, otherwise they will stay dead.</li>
+                    <li>White cells are considered alive. Black cells are considered dead.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Game of Life 3D</span>
+            </div>
+            <div class="page-content">
+                <div class="cubes">
+                    <h3>Given</h3>
+                    <div id="given" class="row"></div>
+                </div>
+                <div class="buttons">
+                    <p>Obligatory mobile controls: <button id="upBtn">Up</button> <button id="downBtn">Down</button> <button id="leftBtn">Left</button> <button id="rightBtn">Right</button></p>   
+
+                </div>
+                <div class="buttons">
+                    <button id="transferBtn" disabled>Transfer</button> 
+                    <button id="backBtn">Go Back</button> 
+                    <button id="resetRotationBtn">Reset Rotation</button>
+                </div>
+                <div class="cubes">
+                    <h3>Answer</h3>
+                    <div id="answer" class="row"></div>
+                </div>
+                <script>
+                    const SIZE = 3;
+                    let isTransferred = false;
+                    let hoverTarget = null; // {x, y, z}
+                    let rotationHistory = [];
+
+                    const transferBtn = document.getElementById("transferBtn");
+                    const backBtn = document.getElementById("backBtn");
+                    const upBtn = document.getElementById("upBtn");
+                    const downBtn = document.getElementById("downBtn");
+                    const leftBtn = document.getElementById("leftBtn");
+                    const rightBtn = document.getElementById("rightBtn");
+                    const resetRotationBtn = document.getElementById("resetRotationBtn");
+
+                    upBtn.onclick = () => applyRotation(
+                        (x,y,z) => [x, z, -y],
+                        (x,y,z) => [x, -z, y]
+                    );
+                    downBtn.onclick = () => applyRotation(
+                        (x,y,z) => [x, -z, y],
+                        (x,y,z) => [x, z, -y]
+                    );
+                    rightBtn.onclick = () => applyRotation(
+                        (x,y,z) => [z, y, -x],
+                        (x,y,z) => [-z, y, x]
+                    );
+                    leftBtn.onclick = () => applyRotation(
+                        (x,y,z) => [-z, y, x],
+                        (x,y,z) => [z, y, -x]
+                    );
+                    document.addEventListener("keydown", (e) => {
+                        switch (e.key) {
+                            case "ArrowUp":
+                                e.preventDefault();
+                                upBtn.click();
+                                break;
+
+                            case "ArrowDown":
+                                e.preventDefault();
+                                downBtn.click();
+                                break;
+
+                            case "ArrowLeft":
+                                e.preventDefault();
+                                leftBtn.click();
+                                break;
+
+                            case "ArrowRight":
+                                e.preventDefault();
+                                rightBtn.click();
+                                break;
+                        }
+                    });
+
+                    function applyRotation(transformFn, inverseFn) {
+                        const newGiven = rotateCube(givenCube, transformFn);
+                        const newAnswer = rotateCube(answerCube, transformFn);
+
+                        Object.assign(givenCube, newGiven);
+                        Object.assign(answerCube, newAnswer);
+
+                        // store inverse for reset
+                        rotationHistory.push(inverseFn);
+
+                        render();
+                    }
+
+                    transferBtn.addEventListener("click", () => {
+                        if (!isCubeFilled(givenCube)) return;
+
+                        copyCube(givenCube, answerCube);
+
+                        isTransferred = true;
+                        render();
+                    });
+
+                    backBtn.addEventListener("click", () => {
+                        isTransferred = false;
+                        resetCube(answerCube);
+                        render();
+                    });
+
+                    resetRotationBtn.onclick = () => {
+                        // apply inverse rotations in reverse order
+                        while (rotationHistory.length > 0) {
+                            const inverseFn = rotationHistory.pop();
+
+                            const newGiven = rotateCube(givenCube, inverseFn);
+                            const newAnswer = rotateCube(answerCube, inverseFn);
+
+                            Object.assign(givenCube, newGiven);
+                            Object.assign(answerCube, newAnswer);
+                        }
+
+                        render();
+                    };
+
+                    function createCube() {
+                        const cube = {};
+
+                        for (let x = -1; x <= 1; x++) {
+                            cube[x] = {};
+                            for (let y = -1; y <= 1; y++) {
+                                cube[x][y] = {};
+                                for (let z = -1; z <= 1; z++) {
+                                    if (x === 0 && y === 0 && z === 0) {
+                                        continue; // remove center
+                                    }
+                                    cube[x][y][z] = {
+                                        state: "gray"
+                                    };
+                                }
+                            }
+                        }
+
+                        return cube;
+                    }
+
+                    const givenCube = createCube();
+                    const answerCube = createCube();
+                    let initialGiven = null;
+
+                    function createGrid(cube, zLevel, labelText, isInteractable, isAnswerCube) {
+                        const container = document.createElement("div");
+                        container.className = "grid-container";
+
+                        const label = document.createElement("div");
+                        label.className = "label";
+                        label.innerText = labelText;
+
+                        const grid = document.createElement("div");
+                        grid.className = "grid";
+
+                        for (let y = 1; y >= -1; y--) {
+                            for (let x = -1; x <= 1; x++) {
+                                const tile = document.createElement("div");
+                                tile.className = "tile";
+                                tile.dataset.x = x;
+                                tile.dataset.y = y;
+                                tile.dataset.z = zLevel;
+
+                                if (cube[x] && cube[x][y] && cube[x][y][zLevel]) {
+                                    const state = cube[x][y][zLevel].state;
+                                    tile.style.background = state;
+
+                                    if (isInteractable) {
+                                        tile.style.cursor = "pointer";
+
+                                        tile.addEventListener("click", () => {
+                                            handleTileClick(cube, x, y, zLevel);
+                                        });
+                                    }
+
+                                    if (isAnswerCube && isInteractable) {
+                                        tile.addEventListener("mouseenter", () => {
+                                            hoverTarget = { x, y, z: zLevel };
+                                            updateHighlights();
+                                        });
+
+                                        tile.addEventListener("mouseleave", () => {
+                                            hoverTarget = null;
+                                            updateHighlights();
+                                        });
+                                    }
+                                } else {
+                                    tile.style.visibility = "hidden";
+                                }
+
+                                grid.appendChild(tile);
+                            }
+                        }
+
+                        container.appendChild(label);
+                        container.appendChild(grid);
+
+                        return container;
+                    }
+
+                    function handleTileClick(cube, x, y, z) {
+                        const tile = cube[x][y][z];
+
+                        if (tile.state === "gray") {
+                            tile.state = "black";
+                        } else if (tile.state === "black") {
+                            tile.state = "white";
+                        } else {
+                            tile.state = "black";
+                        }
+
+                        render();
+                    }
+
+                    function updateHighlights() {
+                        const allTiles = document.querySelectorAll(".tile");
+
+                        allTiles.forEach(tile => {
+                            tile.style.border = "2px solid black";
+                        });
+
+                        if (!hoverTarget) return;
+
+                        const answerTiles = document.querySelectorAll("#answer .tile");
+
+                        answerTiles.forEach(tile => {
+                            const x = +tile.dataset.x;
+                            const y = +tile.dataset.y;
+                            const z = +tile.dataset.z;
+
+                            if (x === hoverTarget.x && y === hoverTarget.y && z === hoverTarget.z) {
+                                tile.style.border = "4px solid red";
+                            }
+                        });
+
+                        const givenTiles = document.querySelectorAll("#given .tile");
+
+                        givenTiles.forEach(tile => {
+                            const x = +tile.dataset.x;
+                            const y = +tile.dataset.y;
+                            const z = +tile.dataset.z;
+
+                            if (isAdjacent({x,y,z}, hoverTarget)) {
+                                tile.style.border = "4px solid red";
+                            }
+                        });
+                    }
+
+                    function isCubeFilled(cube) {
+                        for (let x = -1; x <= 1; x++) {
+                            for (let y = -1; y <= 1; y++) {
+                                for (let z = -1; z <= 1; z++) {
+                                    if (x === 0 && y === 0 && z === 0) continue;
+
+                                    const cell = cube[x]?.[y]?.[z];
+                                    if (cell && cell.state === "gray") {
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                        return true;
+                    }
+
+                    function getCubeletType(x, y, z) {
+                        const nonZero = [x, y, z].filter(v => v !== 0).length;
+
+                        if (nonZero === 3) return "corner";
+                        if (nonZero === 2) return "edge";
+                        if (nonZero === 1) return "face";
+                    }
+
+                    function isAdjacent(a, b) {
+                    if (a.x === b.x && a.y === b.y && a.z === b.z) return false;
+
+                    const typeA = getCubeletType(a.x, a.y, a.z);
+
+                    if (typeA === "face") {
+                        // same face = share the same non-zero axis
+                        if (a.x !== 0 && b.x === a.x) return true;
+                        if (a.y !== 0 && b.y === a.y) return true;
+                        if (a.z !== 0 && b.z === a.z) return true;
+                        return false;
+                    }
+
+                    if (typeA === "corner") {
+                        const dx = Math.abs(a.x - b.x);
+                        const dy = Math.abs(a.y - b.y);
+                        const dz = Math.abs(a.z - b.z);
+
+                        const typeB = getCubeletType(b.x, b.y, b.z);
+
+                        // must be within 1 step
+                        if (dx > 1 || dy > 1 || dz > 1) return false;
+
+                        // exactly one coordinate differs = edge neighbor
+                        const diffCount = (dx > 0) + (dy > 0) + (dz > 0);
+
+                        if (typeB === "edge" && diffCount === 1) return true;
+
+                        // exactly two coordinates differ = face center
+                        if (typeB === "face" && diffCount === 2) return true;
+
+                        return false;
+                    }
+
+                    if (typeA === "edge") {
+                        const dx = Math.abs(a.x - b.x);
+                        const dy = Math.abs(a.y - b.y);
+                        const dz = Math.abs(a.z - b.z);
+
+                        const typeB = getCubeletType(b.x, b.y, b.z);
+
+                        if (dx > 1 || dy > 1 || dz > 1) return false;
+
+                        const diffCount = (dx > 0) + (dy > 0) + (dz > 0);
+
+                        // edge - corner (touching)
+                        if (typeB === "corner" && diffCount === 1) return true;
+
+                        // edge - face center
+                        if (typeB === "face" && diffCount === 1) return true;
+
+                        // edge - edge (vertex-sharing)
+                        if (typeB === "edge" && diffCount === 2) return true;
+
+                        return false;
+                    }
+
+                    return false;
+                }
+                    
+                    function copyCube(from, to) {
+                        for (let x = -1; x <= 1; x++) {
+                            for (let y = -1; y <= 1; y++) {
+                                for (let z = -1; z <= 1; z++) {
+                                    if (x === 0 && y === 0 && z === 0) continue;
+
+                                    if (from[x]?.[y]?.[z]) {
+                                        to[x][y][z].state = from[x][y][z].state;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    function rotateCube(cube, transformFn) {
+                        const newCube = createCube();
+
+                        for (let x = -1; x <= 1; x++) {
+                            for (let y = -1; y <= 1; y++) {
+                                for (let z = -1; z <= 1; z++) {
+                                    if (x === 0 && y === 0 && z === 0) continue;
+
+                                    const cell = cube[x]?.[y]?.[z];
+                                    if (!cell) continue;
+
+                                    const [nx, ny, nz] = transformFn(x, y, z);
+
+                                    newCube[nx][ny][nz].state = cell.state;
+                                }
+                            }
+                        }
+
+                        return newCube;
+                    }
+
+                    function resetCube(cube) {
+                        for (let x = -1; x <= 1; x++) {
+                            for (let y = -1; y <= 1; y++) {
+                                for (let z = -1; z <= 1; z++) {
+                                    if (x === 0 && y === 0 && z === 0) continue;
+
+                                    if (cube[x]?.[y]?.[z]) {
+                                        cube[x][y][z].state = "gray";
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    function solve() {
+                        const newStates = {};
+
+                        for (let x = -1; x <= 1; x++) {
+                            newStates[x] = {};
+                            for (let y = -1; y <= 1; y++) {
+                                newStates[x][y] = {};
+                                for (let z = -1; z <= 1; z++) {
+                                    if (x === 0 && y === 0 && z === 0) continue;
+
+                                    const current = answerCube[x]?.[y]?.[z];
+                                    if (!current) continue;
+
+                                    let whiteCount = 0;
+
+                                    // count white neighbors
+                                    for (let nx = -1; nx <= 1; nx++) {
+                                        for (let ny = -1; ny <= 1; ny++) {
+                                            for (let nz = -1; nz <= 1; nz++) {
+                                                if (nx === 0 && ny === 0 && nz === 0) continue;
+
+                                                const bx = x + nx;
+                                                const by = y + ny;
+                                                const bz = z + nz;
+
+                                                if (bx < -1 || bx > 1 ||
+                                                    by < -1 || by > 1 ||
+                                                    bz < -1 || bz > 1) continue;
+
+                                                if (bx === 0 && by === 0 && bz === 0) continue;
+
+                                                const neighbor = { x: bx, y: by, z: bz };
+                                                const currentPos = { x, y, z };
+
+                                                if (isAdjacent(currentPos, neighbor)) {
+                                                    if (givenCube[bx]?.[by]?.[bz]?.state === "white") {
+                                                        whiteCount++;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    const currentState = current.state;
+                                    let nextState = currentState;
+
+                                    if (currentState === "white") {
+                                        if (whiteCount === 2 || whiteCount === 3) {
+                                            nextState = "white";
+                                        } else {
+                                            nextState = "black";
+                                        }
+                                    } else if (currentState === "black") {
+                                        if (whiteCount === 3) {
+                                            nextState = "white";
+                                        } else {
+                                            nextState = "black";
+                                        }
+                                    }
+
+                                    newStates[x][y][z] = nextState;
+                                }
+                            }
+                        }
+
+                        // apply new states
+                        for (let x = -1; x <= 1; x++) {
+                            for (let y = -1; y <= 1; y++) {
+                                for (let z = -1; z <= 1; z++) {
+                                    if (x === 0 && y === 0 && z === 0) continue;
+
+                                    if (newStates[x]?.[y]?.[z]) {
+                                        answerCube[x][y][z].state = newStates[x][y][z];
+                                    }
+                                }
+                            }
+                        }
+
+                        render();
+                    }
+
+                    function render() {
+                        const givenDiv = document.getElementById("given");
+                        const answerDiv = document.getElementById("answer");
+
+                        givenDiv.innerHTML = "";
+                        answerDiv.innerHTML = "";
+
+                        const filled = isCubeFilled(givenCube);
+
+                        // transfer button state
+                        transferBtn.disabled = !filled || isTransferred;
+
+                        givenDiv.appendChild(createGrid(givenCube, 1, "Top", !isTransferred, false));
+                        givenDiv.appendChild(createGrid(givenCube, 0, "Middle", !isTransferred, false));
+                        givenDiv.appendChild(createGrid(givenCube, -1, "Bottom", !isTransferred, false));
+
+                        answerDiv.appendChild(createGrid(answerCube, 1, "Top", isTransferred, true));
+                        answerDiv.appendChild(createGrid(answerCube, 0, "Middle", isTransferred, true));
+                        answerDiv.appendChild(createGrid(answerCube, -1, "Bottom", isTransferred, true));
+                    }
+                    
+                    render();
+                </script>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
