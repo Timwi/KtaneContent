@@ -661,7 +661,7 @@ let SouvenirModuleData = [
 	{ original: "Character Shift",	name: "Character Shift",	id: "characterShift",	questions: ["Какие были символы на ползунках?"] },
 	{ original: "Character Slots",	name: "Character Slots",	id: "characterSlots",	questions: ["Кто был показан в каждом слоте на каждом этапе?"] },
 	{ original: "Cheat Checkout",	name: "Cheat Checkout",	id: "kataCheatCheckout",	questions: ["What was the cryptocurrency?", "What was the site and hack method for each hack?"] },
-	{ original: "Cheep Checkout",	name: "Cheep Checkout",	id: "cheepCheckout",	questions: ["Which bird sounds can be heard?"] },
+	{ original: "Cheep Checkout",	name: "Cheep Checkout",	id: "cheepCheckout",	questions: ["Which bird sounds could be heard?"] },
 	{ original: "Chinese Counting",	name: "Chinese Counting",	id: "chineseCounting",	questions: ["Каких цветов были светодиоды?"] },
 	{ original: "Chinese Remainder Theorem",	name: "Chinese Remainder Theorem",	id: "ChineseRemainderTheoremModule",	questions: ["Какие были уравнения?"] },
 	{ original: "↻↺",	name: "↻↺",	id: "clockCounter",	questions: ["Какие стрелки были показаны?"] },

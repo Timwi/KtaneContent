@@ -190,7 +190,7 @@ let SouvenirModuleData = [
 	{ original: "The Gamepad",	name: "DasGamepad",	id: "TheGamepadModule",	questions: ["Welche Zahlen kamen vor?"] },
 	{ original: "Garfield Kart",	name: "Garfield Kart",	id: "garfieldKart",	questions: ["Welchen Namen hatte die Rennstrecke?", "Wie viele Puzzleteile waren zu sehen?"] },
 	{ original: "Who’s on Gas",	name: "“Gas” Steht Auf Dem Knopf",	id: "whosOnGas",	questions: ["Was war in welcher Stufe während der ersten Phase auf dem Display?"] },
-	{ original: "Safety Square",	name: "Gefahrendiamant",	id: "safetySquare",	questions: ["Welche Ziffern waren auf dem Diamanten?", "What was displayed on the white diamond?"] },
+	{ original: "Safety Square",	name: "Gefahrendiamant",	id: "safetySquare",	questions: ["Welche Ziffern waren auf dem Diamanten?", "Was stand auf dem weißen Diamanten?"] },
 	{ original: "Prison Break",	name: "Gefängnisausbruch",	id: "prisonBreak",	questions: ["Wo ging es für den Gefangenen und den Entschärfer los?"] },
 	{ original: "Colored Squares",	name: "Gefärbte Felder",	id: "ColoredSquaresModule",	questions: ["Welche Farbe hatte die erste Eingabe?"] },
 	{ original: "Not Colored Squares",	name: "Gefärbte Felder Mal Anders",	id: "NotColoredSquaresModule",	questions: ["Welche Position wurde als erste eingegeben?"] },
@@ -681,6 +681,6 @@ let SouvenirModuleData = [
 	{ original: "Listening",	name: "Zuhören",	id: "Listening",	questions: ["Welcher Klang war zu hören?"] },
 	{ original: "Ingredients",	name: "Zutaten",	id: "ingredients",	questions: ["Welche Zutaten kamen vor?"] },
 	{ original: "Two Bits",	name: "Zwei Bits",	id: "TwoBits",	questions: ["Welche Antwort kam auf die drei korrekten Anfragen?"] },
-	{ original: "Cheep Checkout",	name: "Zwitscherkasse",	id: "cheepCheckout",	questions: ["Which bird sounds can be heard?"] },
+	{ original: "Cheep Checkout",	name: "Zwitscherkasse",	id: "cheepCheckout",	questions: ["Welche Vogelrufe waren zu hören?"] },
 	{ original: "Twodoku",	name: "Zwodoku",	id: "TwodokuModule",	questions: ["Welche Ziffern, Symbole und Hervorhebungen waren wo?"] },
 ];
