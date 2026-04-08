@@ -97,7 +97,7 @@ let SouvenirModuleData = [
 	{ original: "Character Slots",	name: "キャラクタースロット",	id: "characterSlots",	questions: ["各ステージでそれぞれのスロットに誰が表示されていた？"] },
 	{ original: "Cheap Checkout",	name: "安勘定",	id: "CheapCheckoutModule",	questions: ["支払金額は？"] },
 	{ original: "Cheat Checkout",	name: "狡勘定",	id: "kataCheatCheckout",	questions: ["仮想通貨は？", "各ハッキングにおけるサイトとハッキングの手法は？"] },
-	{ original: "Cheep Checkout",	name: "鳥勘定",	id: "cheepCheckout",	questions: ["Which bird sounds can be heard?"] },
+	{ original: "Cheep Checkout",	name: "鳥勘定",	id: "cheepCheckout",	questions: ["Which bird sounds could be heard?"] },
 	{ original: "Chess",	name: "チェス",	id: "ChessModule",	questions: ["座標は？"] },
 	{ original: "Chinese Counting",	name: "中国の数え方",	id: "chineseCounting",	questions: ["LEDの色は？"] },
 	{ original: "Chinese Remainder Theorem",	name: "中国剰余定理",	id: "ChineseRemainderTheoremModule",	questions: ["方程式は？"] },
