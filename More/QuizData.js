@@ -467,6 +467,34 @@ const allQuizzes = {
 				]
 			]
 		},
+		'Cube Symbols': {
+			'CSS': 'textonly cube',
+			'DelayShowWrongRight': 2,
+			'RandomizeRight': true,
+			'Groups': ['symbols', 'names'],
+			'Items': [
+				[
+					['Tunnel', 'A'],
+					['Dolls', 'B'],
+					['Pluto', 'C'],
+					['Squeeze', 'D'],
+					['Flag', 'E'],
+					['Pepsi', 'F'],
+					['Eclipse', 'G'],
+					['Fast Ball', 'H'],
+					['C', 'I'],
+					['O', 'J'],
+					['Stonehenge', 'K'],
+					['Vortex', 'L'],
+					['Ribbon', 'M'],
+					['Meteor', 'N'],
+					['Check', 'O'],
+					['Coffee', 'P'],
+					['Globe', 'Q'],
+					['Star', 'x'],
+				]
+			]
+		},
 		'Dragon Energy': {
 			'CSS': 'dragon-energy',
 			'RandomizeRight': true,
