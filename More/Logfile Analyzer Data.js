@@ -23527,6 +23527,78 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "yesandno",
+		loggingTag: "Yes and No",
+		matches: [
+			{
+				regex: /----------MODULE SETUP----------/,
+				handler: function (matches, module) {
+					module.setupDropdown = ["Module Setup", []];
+					module.leftConditionDropdown = ["Left Switch Conditions", []];
+					module.rightConditionDropdown = ["Right Switch Conditions", []];
+					module.questionDropdown = ["Questions and Answers", []];
+					module.selctedDropdown = ["Selected Conditions", []];
+					module.inputDropdown = ["Defuser Input", []];
+
+					module.currentDropdown = module.setupDropdown;
+					module.push(module.setupDropdown);
+					module.push(module.leftConditionDropdown);
+					module.push(module.rightConditionDropdown);
+					module.push(module.questionDropdown);
+					module.push(module.selctedDropdown);
+					module.push(module.inputDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /----------Left Switch Conditions----------/,
+				handler: function (matches, module) {
+					module.currentDropdown = module.leftConditionDropdown;
+					return true;
+				}
+			},
+			{
+				regex: /----------Right Switch Conditions----------/,
+				handler: function (matches, module) {
+					module.currentDropdown = module.rightConditionDropdown;
+					return true;
+				}
+			},
+			{
+				regex: /----------Questions and Answers----------/,
+				handler: function (matches, module) {
+					module.currentDropdown = module.questionDropdown;
+					return true;
+				}
+			},
+			{
+				regex: /----------Selected Conditions----------/,
+				handler: function (matches, module) {
+					module.currentDropdown = module.selctedDropdown;
+					return true;
+				}
+			},
+			{
+				regex: /----------DEFUSER INPUT----------/,
+				handler: function (matches, module) {
+					module.currentDropdown = module.inputDropdown;
+					return true;
+				}
+			},
+			{ 
+				regex: /.+/,
+				handler: function (matches, module) {
+					if(matches[0].match(/Version: (.+)/) || matches[0] == "Module solved.") {
+						module.push(matches[0]);
+					}
+					else {
+						module.currentDropdown[1].push(matches[0]);
+					}
+				}
+			}
+		]
+	},
+	{
 		matches: [
 			{
 				regex: /Query(Responses|Lookups): (\[[\d\w]{1,2}\]: [\d\w]{1,2})/,
