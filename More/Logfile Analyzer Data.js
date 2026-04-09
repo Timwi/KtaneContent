@@ -7481,6 +7481,50 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "freeParking",
+		loggingTag: "Free Parking",
+		matches: [
+			{
+				regex: /Your base money is \$\d+\./,
+				handler: function (matches, module) {
+					const lines = readTaggedLines(8);
+					lines.unshift(matches[0]);
+					const value = lines[lines.length - 1].match(/.+(\$\d+)\./)[1];
+					const dropdown = [`The base value is ${value}`, lines];
+					module.push(dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Your base money is \$\d+\./,
+				handler: function (matches, module) {
+					const lines = readTaggedLines(8);
+					lines.unshift(matches[0]);
+					const value = lines[lines.length - 1].match(/.+(\$\d+)\./)[1];
+					const dropdown = [`The base value is ${value}`, lines];
+					module.push(dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /The total solved modules is now (\d+)\. The total strike count is now (\d+)\. The original base value was \$(-?\d+). A total of \$(-?\d+) has now been added\/subtracted\. The new value is \$(-?\d+)\./,
+				handler: function (matches, module) {
+					const lines = [`Total solves: ${matches[1]}`, `Total strikes: ${matches[2]}`, `Original base value: $${matches[3]}`, `Added/Subtracted money: $${matches[4]}`];
+					const dropdown = [`The new base value after calculations is ${matches[5]}`, lines];
+					module.push(dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /A module has been solved or a strike has been incurred\. The value is being recalculated\./,
+				handler: function (matches, module) {
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "FriendshipModule",
 		loggingTag: "Friendship",
 		matches: [
