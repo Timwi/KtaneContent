@@ -17573,7 +17573,7 @@ let parseData = [
 					verticalLines = verticalLines * 2 + 1;
 					horizontalLines = horizontalLines * 2 + 1
 					const dimension = 20;
-					const mazeSvg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 400 230'>").addClass("seeded-maze");
+					const mazeSvg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 ${20 * horizontalLines} ${20 * verticalLines}'>`).addClass("seeded-maze");
 					for (let row = 0; row < verticalLines; row++) {
 						for (let col = 0; col < horizontalLines; col++) {
 							const realRow = 9 - Math.floor(verticalLines / 2) + row;
