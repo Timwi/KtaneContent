@@ -20157,7 +20157,7 @@ let parseData = [
 					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-small");
 					const list = matches[1] + matches[2];
 					for(let i = 0; i < 6; i++) {
-						$('<img>').attr('src', module.getImage(list[i])).appendTo(div);
+						$('<img>').addClass("symbolic-password").attr('src', module.getImage(list[i])).appendTo(div);
 
 					}
 					module.push({label: "Inital Display", obj: div})
@@ -20189,7 +20189,7 @@ let parseData = [
 						const inXRange = x >= module.position.x && x <= module.position.x + 2
 						const inyRange = y == module.position.y || y == module.position.y + 1
 						const inRange = inXRange && inyRange
-						$('<img>').attr('src', module.getImage(symbol)).addClass(inRange ? "symbolic-password-solution" : "").appendTo(div);
+						$('<img>').addClass("symbolic-password").attr('src', module.getImage(symbol)).addClass(inRange ? "symbolic-password-solution" : "").appendTo(div);
 					}
 					module.push({label: "Solution", obj: div})
 					return true;
@@ -20202,7 +20202,7 @@ let parseData = [
 					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-small");
 					const list = matches[1] + matches[2];
 					for(let i = 0; i < 6; i++) {
-						$('<img>').attr('src', module.getImage(list[i])).appendTo(div);
+						$('<img>').addClass("symbolic-password").attr('src', module.getImage(list[i])).appendTo(div);
 
 					}
 					module.push({label: "You submitted:", obj: div})
