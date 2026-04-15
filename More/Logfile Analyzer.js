@@ -289,8 +289,9 @@ class BombGroup {
 
         // Copy DMG string
         const parseSpecialPool = (module, sources) => {
-            const isVanilla = sources.includes("Vanilla");
-            const isModded = sources.includes("Modded");
+            // sources will be empty if Tweaks is not installed; in which case we will assume the pool is fully generic, even if it's not
+            const isVanilla = sources.length ? sources.includes("Vanilla") : true;
+            const isModded = sources.length ? sources.includes("Modded") : true;
             return module === "ALL_NEEDY" ? isModded ? isVanilla ? "ALL_NEEDY" : "ALL_MODS_NEEDY" : "ALL_VANILLA_NEEDY" 
                 : isModded ? isVanilla ? "ALL_SOLVABLE" : "ALL_MODS" : "ALL_VANILLA";
         };
