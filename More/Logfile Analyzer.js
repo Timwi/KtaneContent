@@ -288,6 +288,12 @@ class BombGroup {
         if (this.CompetitiveLogger) missionInfoTree.push("Competitive Logger enabled.");
 
         // Copy DMG string
+        const parseSpecialPool = (module, sources) => {
+            const isVanilla = sources.includes("Vanilla");
+            const isModded = sources.includes("Modded");
+            return module === "ALL_NEEDY" ? isModded ? isVanilla ? "ALL_NEEDY" : "ALL_MODS_NEEDY" : "ALL_VANILLA_NEEDY" 
+                : isModded ? isVanilla ? "ALL_SOLVABLE" : "ALL_MODS" : "ALL_VANILLA";
+        };
         const dmgString =
             `/// ${this.MissionName}\n\n` +
             this.loggedBombs
@@ -297,7 +303,7 @@ class BombGroup {
                         formatTime(bomb.Time, false),
                         `strikes:${bomb.TotalStrikes}`,
                         `widgets:${bomb.Widgets - 1}`,
-                        ...bomb.Pools.map(pool => (pool.Count == 1 ? "" : `${pool.Count}*`) + pool.Modules.map(module => module.includes(" ") ? `"${module}"` : module).join(", ")),
+                        ...bomb.Pools.map(pool => (pool.Count === 1 ? "" : `${pool.Count}*`) + pool.Modules.map(module => (module === "ALL_SOLVABLE" || module === "ALL_NEEDY") ? parseSpecialPool(module, pool.Sources) : module.includes(" ") ? `"${module}"` : module).join(", ")),
                         this.isSingleBomb ? null : ")"
                     ].filter(line => line != null).map(line => (this.isSingleBomb ? "" : "\t") + line).join("\n"))
                 .join("\n\n");
@@ -1468,8 +1474,8 @@ function parseLog(opt) {
         if (pool) {
             const poolCount = parseInt(pool[1]);
             for (let i = 0; i < poolCount; i++) {
-                const matches = /\[(.+)\] Count: (\d+)/.exec(readLine());
-                bomb.Pools.push({ Modules: matches[1].split(", "), Count: parseInt(matches[2]) });
+                const matches = /\[(.+)\] Count: (\d+)(?:, Sources: (.+))?/.exec(readLine());
+                bomb.Pools.push({ Modules: matches[1].split(", "), Count: parseInt(matches[2]), Sources: matches[3]?.split(", ") ?? [] });
             }
 
             linen += 1;
