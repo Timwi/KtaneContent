@@ -132,6 +132,9 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     $("body").removeClass("multipage");
                     localStorage.setItem('ktane-page-layout', 'vertical');
                 }
+                $('.ktane-highlight').each(function(_, e) {
+                    setPosition($(e));
+                });
             }
             $('.page-layout').click(function() { updateMultipageView(); });
 
