@@ -578,7 +578,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 opacity: 0.4
             }).appendTo(document.body)[0];
             const drawCtx = drawCanvas.getContext('2d');
-            let strokes = []; // Each stroke contains {color, width, points:[{x,y}]}
+            let strokes = []; // Each stroke contains {erase, color, width, points:[{x,y}]}
             let currentStroke = null;
             let sizingCanvas = false;
 
@@ -612,9 +612,11 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             function drawStart(e) {
                 if (!drawEnabled()) return;
                 drawCanvas.setPointerCapture(e.pointerId);
+                const erase = e.button === 2;
                 let solidColor = colors[currentColor].color.replace("0.4","1.0");
                 currentStroke = {
-                    color: solidColor,
+                    erase,
+                    color: erase ?  null : solidColor,
                     width: +$('#draw-width').val(),
                     points: [{x: e.pageX, y: e.pageY}]
                 };
@@ -637,8 +639,8 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             }
 
             function setupStroke(s) {
-                drawCtx.globalCompositeOperation = 'source-over';
-                drawCtx.strokeStyle = s.color;
+                drawCtx.globalCompositeOperation = s.erase ? 'destination-out' : 'source-over';
+                drawCtx.strokeStyle = s.color || '#000';
                 drawCtx.lineWidth = s.width;
                 drawCtx.lineCap = 'round';
                 drawCtx.lineJoin = 'round';
@@ -674,6 +676,9 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 showNotification( `Brush size: ${$('#draw-width').val()/5}`, colors[currentColor].color)
             });
 
+            drawCanvas.addEventListener('contextmenu', e => {
+                if (drawEnabled()) e.preventDefault();
+            });
             drawCanvas.addEventListener('pointerdown', e =>  { drawStart(e) });
             drawCanvas.addEventListener('pointermove', e => { drawMove(e) });
             ['pointerup','pointercancel'].forEach(ev =>
