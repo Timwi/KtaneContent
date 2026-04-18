@@ -792,8 +792,10 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 if (sizingCanvas) return;
                 sizingCanvas = true;
                 drawCanvas.style.display = 'none';
-                const w = Math.max(document.documentElement.scrollWidth, window.innerWidth);
-                const h = Math.max(document.documentElement.scrollHeight, window.innerHeight);           
+                const root = document.documentElement; 
+                const margin = 1; // It needs a non-zero margin to not show additional scrolls
+                const w = Math.max(root.scrollWidth, root.clientWidth)-margin;
+                const h = Math.max(root.scrollHeight, root.clientHeight)-margin;
                 drawCanvas.style.display = '';
                 drawCanvas.width = w;
                 drawCanvas.height = h;
