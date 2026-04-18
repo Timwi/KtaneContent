@@ -593,9 +593,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 }
             }
 
-            function clearCurrentStroke() {
-                currentStroke = null;
-            }
+            function clearCurrentStroke() { currentStroke = null; }
 
             function clearStrokes() {
                 strokes = [];
@@ -614,7 +612,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 if (!drawEnabled()) return;
                 drawCanvas.setPointerCapture(e.pointerId);
                 const erase = e.button === 2;
-                let solidColor = colors[currentColor].color.replace("0.4","1.0");
+                let solidColor = getSolidColor(colors[currentColor].color);
                 currentStroke = {
                     erase,
                     color: erase ?  null : solidColor,
@@ -637,6 +635,11 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 drawCtx.beginPath();
                 s.points.forEach((p,i) => i ? drawCtx.lineTo(p.x,p.y) : drawCtx.moveTo(p.x,p.y));
                 drawCtx.stroke();
+            }
+
+            function getSolidColor(c) {
+                let solidColor = c.replace(/(rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*)[\d.]+(\s*\))/, '$11.0$2');
+                return solidColor;
             }
 
             function setupStroke(s) {
