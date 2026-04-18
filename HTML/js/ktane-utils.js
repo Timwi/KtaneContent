@@ -579,7 +579,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 opacity: 0.4
             }).appendTo(document.body)[0];
             const drawCtx = drawCanvas.getContext('2d');
-            let strokes = []; // Each stroke contains {erase, color, width, points:[{x,y}]}
+            let strokes = []; // Each stroke contains {erase, color, width, points:[{x,y}], centerX}
             let currentStroke = null;
             let sizingCanvas = false;
             let modifiersHeld = false;
@@ -622,7 +622,8 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     erase,
                     color: erase ?  null : solidColor,
                     width: +$('#draw-width').val(),
-                    points: [{x: e.pageX, y: e.pageY}]
+                    points: [{x: e.pageX, y: e.pageY}],
+                    centerX: drawCanvas.width / 2
                 };
                 strokes.push(currentStroke);
             }
@@ -637,8 +638,10 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
 
             function drawStroke(s) {
                 setupStroke(s);
+                const dx = (drawCanvas.width / 2) - s.centerX
                 drawCtx.beginPath();
-                s.points.forEach((p,i) => i ? drawCtx.lineTo(p.x,p.y) : drawCtx.moveTo(p.x,p.y));
+                s.points.forEach((p,i) =>
+                    i ? drawCtx.lineTo(p.x+dx, p.y) : drawCtx.moveTo(p.x+dx,p.y));
                 drawCtx.stroke();
             }
 
@@ -667,9 +670,12 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             function sizeCanvas() {
                 if (sizingCanvas) return;
                 sizingCanvas = true;
+                drawCanvas.style.display = 'none';
                 const w = Math.max(document.documentElement.scrollWidth, window.innerWidth);
                 const h = Math.max(document.documentElement.scrollHeight, window.innerHeight);           
-                drawCanvas.width = w; drawCanvas.height = h;
+                drawCanvas.style.display = '';
+                drawCanvas.width = w;
+                drawCanvas.height = h;
                 redrawStrokes();
                 sizingCanvas = false;
             }
