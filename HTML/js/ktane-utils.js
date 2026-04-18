@@ -570,6 +570,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             setColor(1);
 
             // FREEFORM DRAW
+            // Setup canvas
             const drawCanvas = $('<canvas id="draw-canvas">').css({
                 position: 'absolute',
                 top: 0,
@@ -578,13 +579,50 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 zIndex: 9000,
                 opacity: 0.4
             }).appendTo(document.body)[0];
+            drawCanvas.addEventListener('contextmenu', e => {
+                if (drawEnabled()) e.preventDefault();
+            });
+            drawCanvas.addEventListener('pointerdown', e =>  { drawStart(e) });
+            drawCanvas.addEventListener('pointermove', e => { drawMove(e) });
+            ['pointerup','pointercancel'].forEach(ev =>
+                drawCanvas.addEventListener(ev, clearCurrentStroke)
+            );
             const drawCtx = drawCanvas.getContext('2d');
+
+            // Add new events to the window
+            window.addEventListener('resize', sizeCanvas);
+            window.addEventListener('blur', () => {
+                // On alt-tabbing, clear modifiers held
+                if (!modifiersHeld)
+                    return;
+                modifiersHeld = false;
+                updateDrawMode();
+            });
+            ['keydown','keyup'].forEach(evName => {
+                window.addEventListener(evName, e => {
+                    let hasModKey = eventHasModifierKeys(e)
+                    if (hasModKey === modifiersHeld)
+                        return;
+                    modifiersHeld = hasModKey;
+                    updateDrawMode();
+                })
+            });
+            new MutationObserver(sizeCanvas).observe(
+                document.body,
+                { childList: true, subtree: true }
+            );
+
             let strokes = []; // Each stroke contains {erase, color, width, points:[{x,y}], centerX}
             let currentStroke = null;
             let sizingCanvas = false;
             let modifiersHeld = false;
 
+            // Start freeform service
+            sizeCanvas();
+            updateDrawMode();
+
             function changeBrushSize(byAmount) {
+                // Changes brush size, keeping the value between 5 and 50 pixels.
                 if (!drawEnabled()) return
                 let currentValue = +$('#draw-width').val()
                 let newValue = Math.min(50, Math.max(5, currentValue+byAmount))
@@ -606,6 +644,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             }
 
             function drawMove(e) {
+                // Called when the mouse moves while drawing. Draws new points.
                 if (!currentStroke) return;
                 const p = {x: e.pageX, y: e.pageY}
                 currentStroke.points.push(p);
@@ -614,6 +653,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             }
 
             function drawStart(e) {
+                // Called when the user first clicks to start a drawing.
                 if (!drawEnabled()) return;
                 drawCanvas.setPointerCapture(e.pointerId);
                 const erase = e.button === 2;
@@ -637,6 +677,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             }
 
             function drawStroke(s) {
+                // Called mainly while redrawing the user's brush strokes.
                 setupStroke(s);
                 const dx = (drawCanvas.width / 2) - s.centerX
                 drawCtx.beginPath();
@@ -650,11 +691,13 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             }
 
             function getSolidColor(c) {
+                // Replaces a rgba string's alpha value with 1.0.
                 let solidColor = c.replace(/(rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*)[\d.]+(\s*\))/, '$11.0$2');
                 return solidColor;
             }
 
             function setupStroke(s) {
+                // Setups current stroke with its color and width.
                 drawCtx.globalCompositeOperation = s.erase ? 'destination-out' : 'source-over';
                 drawCtx.strokeStyle = s.color || '#000';
                 drawCtx.lineWidth = s.width;
@@ -668,6 +711,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             }
 
             function sizeCanvas() {
+                // For initial canvas sizing, and for when the window resizes.
                 if (sizingCanvas) return;
                 sizingCanvas = true;
                 drawCanvas.style.display = 'none';
@@ -681,6 +725,8 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             }
 
             function updateDrawMode(showNotif = false) {
+                // Called when enabling freeform draw mode, or when the user presses
+                // a modifier key.
                 const on = drawEnabled();
                 if (showNotif) {
                     showNotification(
@@ -697,38 +743,6 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             $('#draw-width').on('change', () => {
                 showNotification( `Brush size: ${$('#draw-width').val()/5}`, colors[currentColor].color)
             });
-
-            drawCanvas.addEventListener('contextmenu', e => {
-                if (drawEnabled()) e.preventDefault();
-            });
-            drawCanvas.addEventListener('pointerdown', e =>  { drawStart(e) });
-            drawCanvas.addEventListener('pointermove', e => { drawMove(e) });
-            ['pointerup','pointercancel'].forEach(ev =>
-                drawCanvas.addEventListener(ev, clearCurrentStroke)
-            );
-
-            window.addEventListener('resize', sizeCanvas);
-            window.addEventListener('blur', () => {
-                if (!modifiersHeld)
-                    return;
-                modifiersHeld = false;
-                updateDrawMode();
-            });
-            ['keydown','keyup'].forEach(evName => {
-                window.addEventListener(evName, e => {
-                    let hasModKey = eventHasModifierKeys(e)
-                    if (hasModKey === modifiersHeld)
-                        return;
-                    modifiersHeld = hasModKey;
-                    updateDrawMode();
-                })
-            });
-            new MutationObserver(sizeCanvas).observe(
-                document.body,
-                { childList: true, subtree: true }
-            );
-            sizeCanvas();
-            updateDrawMode();
         });
     };
 }
