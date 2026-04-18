@@ -248,12 +248,12 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     $('#freeform-drawing-enabled').prop('checked', !drawEnabled())
                     .trigger('change');
                 }
-                // Alt +: Increash draw mode brush size
-                else if (event.keyCode == 187) {
+                // Alt-Plus: Increash draw mode brush size
+                else if (event.keyCode === 187 || event.keyCode === 61 || event.keyCode === 171) {
                     changeBrushSize(+5)
                 }
-                // Alt -: Decrease draw mode brush size
-                else if (event.keyCode == 189) {
+                // Alt-Minus: Decrease draw mode brush size
+                else if (event.keyCode === 189 || event.keyCode === 173 || event.keyCode === 109) {
                     changeBrushSize(-5)
                 }
                 // Alt-#: Select highlight color
