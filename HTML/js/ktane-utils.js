@@ -334,8 +334,8 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                             .append($(penSvg.replace(/\{0\}/g, "<path d='M 400 0 600 0 600 1000 400 1000 z' class='ktane-highlight-pen'/>")));
                     }
                 }
-
                 // Draw button
+                drawIconRightPos = btnRightPos;
                 $('<div class="ktane-highlight-btn draw">')
                     .data('mode','draw')
                     .css({right: nextIconPos()})
@@ -343,11 +343,29 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     .append(
                         $('<svg viewBox="0 0 938 822" fill="none" xmlns="http://www.w3.org/2000/svg" class="ktane-highlight-svg"> <path class="ktane-highlight-pen" d="M378.5 446.494C426.602 468.915 458.654 492.087 493.5 553.494M278.5 599.201C312 612.701 327 629.201 325.5 666.201C582.334 483.605 713.321 350.451 916 39.7014C921.658 31.0271 905.687 15.5636 897 21.2014C576.595 229.139 445.807 356.741 278.5 599.201ZM20 712.201C19.999 819.715 335.5 866.201 308 638.201C171 530.701 120 689.201 80.9999 702.201C31.4918 698.221 20.0001 700.201 20 712.201Z" stroke="black" stroke-width="30"/></svg>')
                     )
+                $('<div class="ktane-highlight-btn erase">')
+                    .data('mode', 'erase')
+                    .css({ right: drawIconRightPos, top: 60 })
+                    .appendTo(document.body)                                                                 
+                    .append($(
+                        '<svg width="810" height="775" viewBox="0 0 810 775" fill="none" xmlns="http://www.w3.org/2000/svg" class="ktane-highlight-svg">'+
+                            '<path class="ktane-highlight-pen" d="M227.217 750.541L22.2501 524.313C12.1672 513.185 12.6589 496.083 23.3646 485.552L148.457 362.501L493.55 23.0388C504.439 12.3272 521.904 12.3194 532.803 23.0213L571.542 61.0603L738.103 224.611L786.048 271.69C797.152 282.593 797.235 300.458 786.233 311.464L441.836 655.984L338.116 759.741H247.967C240.062 759.741 232.525 756.399 227.217 750.541Z"/>'+
+                            '<path d="M227.217 750.541L238.333 740.47L238.333 740.469L227.217 750.541ZM22.2501 524.313L33.3661 514.242H33.3661L22.2501 524.313ZM662.772 774.741C671.056 774.741 677.772 768.025 677.772 759.741C677.772 751.457 671.056 744.741 662.772 744.741V759.741V774.741ZM786.233 311.464L796.842 322.069V322.069L786.233 311.464ZM23.3646 485.552L12.8456 474.859H12.8456L23.3646 485.552ZM493.55 23.0388L504.069 33.7323V33.7323L493.55 23.0388ZM209.333 423.398L198.725 434.003V434.003L209.333 423.398ZM532.803 23.0213L543.312 12.3184V12.3184L532.803 23.0213ZM738.103 224.611L748.613 213.908V213.908L738.103 224.611ZM786.048 271.69L775.539 282.393V282.393L786.048 271.69ZM227.217 750.541L238.333 740.469L33.3661 514.242L22.2501 524.313L11.134 534.385L216.101 760.612L227.217 750.541ZM247.967 759.741V774.741H338.116V759.741V744.741H247.967V759.741ZM338.116 759.741V774.741H662.772V759.741V744.741H338.116V759.741ZM786.233 311.464L775.625 300.859L431.228 645.379L441.836 655.984L452.445 666.589L796.842 322.069L786.233 311.464ZM441.836 655.984L431.228 645.379L327.507 749.136L338.116 759.741L348.724 770.346L452.445 666.589L441.836 655.984ZM23.3646 485.552L33.8836 496.246L158.976 373.194L148.457 362.501L137.938 351.807L12.8456 474.859L23.3646 485.552ZM148.457 362.501L158.976 373.194L504.069 33.7323L493.55 23.0388L483.031 12.3453L137.938 351.807L148.457 362.501ZM209.333 423.398L219.942 412.793L159.066 351.896L148.457 362.501L137.849 373.105L198.725 434.003L209.333 423.398ZM532.803 23.0213L522.294 33.7242L561.033 71.7631L571.542 61.0603L582.052 50.3574L543.312 12.3184L532.803 23.0213ZM209.333 423.398L219.942 434.003L582.151 71.665L571.542 61.0603L560.934 50.4555L198.725 412.793L209.333 423.398ZM446.077 660.227L456.686 649.622L452.445 645.379L441.836 655.984L431.228 666.589L435.469 670.831L446.077 660.227ZM441.836 655.984L452.445 645.379L384.969 577.879L374.36 588.484L363.752 599.089L431.228 666.589L441.836 655.984ZM374.36 588.484L384.969 577.879L219.942 412.793L209.333 423.398L198.725 434.003L363.752 599.089L374.36 588.484ZM571.542 61.0603L561.033 71.7631L727.594 235.314L738.103 224.611L748.613 213.908L582.052 50.3574L571.542 61.0603ZM738.103 224.611L727.594 235.314L775.539 282.393L786.048 271.69L796.558 260.987L748.613 213.908L738.103 224.611ZM374.36 588.484L384.969 599.089L748.712 235.216L738.103 224.611L727.495 214.007L363.752 577.879L374.36 588.484ZM786.233 311.464L796.842 322.069C813.737 305.167 813.61 277.731 796.558 260.987L786.048 271.69L775.539 282.393C780.694 287.455 780.733 295.75 775.625 300.859L786.233 311.464ZM493.55 23.0388L504.069 33.7323C509.125 28.7591 517.233 28.7554 522.294 33.7242L532.803 23.0213L543.312 12.3184C526.575 -4.1166 499.754 -4.10468 483.031 12.3453L493.55 23.0388ZM22.2501 524.313L33.3661 514.242C28.6848 509.075 28.9131 501.135 33.8836 496.246L23.3646 485.552L12.8456 474.859C-3.59521 491.031 -4.35044 517.294 11.134 534.385L22.2501 524.313ZM227.217 750.541L216.101 760.612C224.252 769.609 235.827 774.741 247.967 774.741V759.741V744.741C244.297 744.741 240.797 743.189 238.333 740.47L227.217 750.541Z" fill="black"/>'+
+                        '</svg>'
+                    ))
+                    .hide(); 
 
                 $('.ktane-highlight-btn').click(function()
                 {
                     let newMode = $(this).data('mode');
                     const drawingCheckbox = $('#freeform-drawing-enabled');
+                    const uncheckAllTools = () => {
+                        $('.ktane-highlight-btn').removeClass('selected');
+                        if (drawingCheckbox.prop('checked')) {
+                            drawingCheckbox.prop('checked',false);
+                            updateDrawMode();
+                        }
+                    };
                     switch(newMode) {
                         case "theme":
                             const darkModeCheckbox = $('#dark-mode-enabled');
@@ -358,19 +376,22 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                             setColor((currentColor + 1) % colors.length);
                             break;
                         case "draw":
-                            const enablingDraw = !drawingCheckbox.prop('checked')
-                            drawingCheckbox.prop('checked', enablingDraw).trigger('change');
-                            $('.ktane-highlight-btn').removeClass('selected');
+                            const enablingDraw = mobileEraserMode || !drawingCheckbox.prop('checked')
+                            uncheckAllTools();
+                            drawingCheckbox.prop('checked', enablingDraw);
+                            updateDrawMode();
                             if (enablingDraw) {
                                 mode = null;
                                 $(this).addClass('selected');
                             }
                             break;
+                        case "erase":
+                            mobileEraserMode = !mobileEraserMode;
+                            $(this).toggleClass('selected');
+                            $('.ktane-highlight-btn.draw').toggleClass('selected',!mobileEraserMode);
+                            break;
                         default:
-                            $('.ktane-highlight-btn').removeClass('selected');
-                            if (drawingCheckbox.prop('checked')) {
-                                drawingCheckbox.prop('checked', false).trigger('change');
-                            }
+                            uncheckAllTools();
                             if (newMode === mode)
                                 mode = null;
                             else {
@@ -661,10 +682,17 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 { childList: true, subtree: true }
             );
 
+            // Add events to options menu components
+            $('#freeform-drawing-enabled').on('change',() => {updateDrawMode(true)});
+            $('#draw-width').on('change', () => {
+                showNotification( `Brush size: ${$('#draw-width').val()/5}`, colors[currentColor].color)
+            });
+
             let strokes = []; // Each stroke contains {erase, color, width, points:[{x,y}], centerX}
             let currentStroke = null;
             let sizingCanvas = false;
             let modifiersHeld = false;
+            let mobileEraserMode = false;
 
             // Start freeform service
             sizeCanvas();
@@ -705,7 +733,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 // Called when the user first clicks to start a drawing.
                 if (!drawEnabled()) return;
                 drawCanvas.setPointerCapture(e.pointerId);
-                const erase = e.button === 2;
+                const erase = e.button === 2 || mobileEraserMode;
                 let solidColor = getSolidColor(colors[currentColor].color);
                 currentStroke = {
                     erase,
@@ -784,18 +812,19 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     )
                 }
                 drawCanvas.style.cursor = on ? 'crosshair' : '';
-                $('.ktane-highlight-btn.draw').toggleClass('selected', on);
                 if (mobileControls) {
+                    $('.ktane-highlight-btn.draw').toggleClass('selected', on);
+                    $('.ktane-highlight-btn.erase').toggle(on);
                     $('html, body').css('overflow', on ? 'hidden' : '');
+
+                    if (!on) {
+                        mobileEraserMode = false;
+                        $('.ktane-highlight-btn.erase').removeClass('selected');
+                    }
                 }
                 const activeEvents = on && !modifiersHeld
                 drawCanvas.style.pointerEvents = activeEvents ? 'auto' : 'none';
             }
-
-            $('#freeform-drawing-enabled').on('change',() => {updateDrawMode(true)});
-            $('#draw-width').on('change', () => {
-                showNotification( `Brush size: ${$('#draw-width').val()/5}`, colors[currentColor].color)
-            });
         });
     };
 }
