@@ -65,6 +65,11 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     <div><input type='checkbox' id='dark-mode-enabled'>&nbsp;<label for='dark-mode-enabled'>Enabled</label> (Alt-W)</div>
                 </div>
                 <div class='option-group'>
+                    <h3>Freeform Drawing (experimental)</h3>
+                    <div><input type='checkbox' id='freeform-drawing-enabled'>&nbsp;<label for='freeform-drawing-enabled'>Enabled</label> (Alt-D)</div>
+                    <div>Width: <input type='range' id='draw-width' min='5' max='50' step='5' value='20'></div>
+                </div>
+                <div class='option-group'>
                     <h3>Developer mode</h3>
                     <div><input type='checkbox' id='developer-mode-enabled'>&nbsp;<label for='developer-mode-enabled'>Enabled</label> (Alt-P)</div>
                 </div>
@@ -225,6 +230,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 else if (k == "c" || event.keyCode === 67)
                 {
                     clearHighlights.click();
+                    clearStrokes();
                 }
                 // Alt-W: Dark mode
                 else if (k == "w" || event.keyCode === 87)
@@ -235,6 +241,19 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 else if (k == "p" || event.keyCode === 80)
                 {
                     $('#developer-mode-enabled').click();
+                }
+                // Alt-D: Toggle freeform drawing mode
+                else if (k == "d" || event.keyCode == 68) {
+                    $('#freeform-drawing-enabled').prop('checked', !drawEnabled())
+                    .trigger('change');
+                }
+                // Alt +: Increash draw mode brush size
+                else if (event.keyCode == 187) {
+                    changeBrushSize(+5)
+                }
+                // Alt -: Decrease draw mode brush size
+                else if (event.keyCode == 189) {
+                    changeBrushSize(-5)
                 }
                 // Alt-#: Select highlight color
                 else if (!ctrlSelectsColors && n !== null)
@@ -548,6 +567,126 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             updateDarkMode();
             updateDeveloperMode();
             setColor(1);
+
+            // FREEFORM DRAW
+            const drawCanvas = $('<canvas id="draw-canvas">').css({
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                pointerEvents: 'none',
+                zIndex: 9000,
+                opacity: 0.4
+            }).appendTo(document.body)[0];
+            const drawCtx = drawCanvas.getContext('2d');
+            let strokes = []; // Each stroke contains {color, width, points:[{x,y}]}
+            let currentStroke = null;
+            let sizingCanvas = false;
+
+            function changeBrushSize(byAmount) {
+                if (!drawEnabled()) return
+                let currentValue = +$('#draw-width').val()
+                let newValue = Math.min(50, Math.max(5, currentValue+byAmount))
+                $('#draw-width').val(newValue)
+                if (currentValue != newValue) {
+                    $('#draw-width').trigger('change')
+                }
+            }
+
+            function clearCurrentStroke() {
+                currentStroke = null;
+            }
+
+            function clearStrokes() {
+                strokes = [];
+                redrawStrokes();
+            }
+
+            function drawMove(e) {
+                if (!currentStroke) return;
+                const p = {x: e.pageX, y: e.pageY}
+                currentStroke.points.push(p);
+                const prev = currentStroke.points[currentStroke.points.length-2];
+                drawNewPoint(currentStroke,prev,p);
+            }
+
+            function drawStart(e) {
+                if (!drawEnabled()) return;
+                drawCanvas.setPointerCapture(e.pointerId);
+                let solidColor = colors[currentColor].color.replace("0.4","1.0");
+                currentStroke = {
+                    color: solidColor,
+                    width: +$('#draw-width').val(),
+                    points: [{x: e.pageX, y: e.pageY}]
+                };
+                strokes.push(currentStroke);
+            }
+
+            function drawNewPoint(s,prev,current) {
+                setupStroke(s);
+                drawCtx.beginPath();
+                drawCtx.moveTo(prev.x,prev.y);
+                drawCtx.lineTo(current.x,current.y);
+                drawCtx.stroke();
+            }
+
+            function drawStroke(s) {
+                setupStroke(s);
+                drawCtx.beginPath();
+                s.points.forEach((p,i) => i ? drawCtx.lineTo(p.x,p.y) : drawCtx.moveTo(p.x,p.y));
+                drawCtx.stroke();
+            }
+
+            function setupStroke(s) {
+                drawCtx.globalCompositeOperation = 'source-over';
+                drawCtx.strokeStyle = s.color;
+                drawCtx.lineWidth = s.width;
+                drawCtx.lineCap = 'round';
+                drawCtx.lineJoin = 'round';
+            }
+
+            function drawEnabled() {
+                return $('#freeform-drawing-enabled').prop('checked');
+            }
+
+            function redrawStrokes() {
+                drawCtx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+                for (const s of strokes) drawStroke(s);
+            }
+
+            function sizeCanvas() {
+                if (sizingCanvas) return;
+                sizingCanvas = true;
+                const w = Math.max(document.documentElement.scrollWidth, window.innerWidth);
+                const h = Math.max(document.documentElement.scrollHeight, window.innerHeight);           
+                drawCanvas.width = w; drawCanvas.height = h;
+                redrawStrokes();
+                sizingCanvas = false;
+            }
+
+            function updateDrawMode() {
+                const on = drawEnabled();
+                drawCanvas.style.pointerEvents = on ? 'auto' : 'none';
+                drawCanvas.style.cursor = on ? 'crosshair' : '';
+            }
+
+            $('#freeform-drawing-enabled').on('change',updateDrawMode);
+            $('#draw-width').on('change', () => {
+                showNotification( `Brush size: ${$('#draw-width').val()/5}`, colors[currentColor].color)
+            });
+
+            drawCanvas.addEventListener('pointerdown', e =>  { drawStart(e) });
+            drawCanvas.addEventListener('pointermove', e => { drawMove(e) });
+            ['pointerup','pointercancel'].forEach(ev =>
+                drawCanvas.addEventListener(ev, clearCurrentStroke)
+            );
+
+            window.addEventListener('resize', sizeCanvas);
+            new MutationObserver(sizeCanvas).observe(
+                document.body,
+                { childList: true, subtree: true }
+            );
+            sizeCanvas();
+            updateDrawMode();
         });
     };
 }
