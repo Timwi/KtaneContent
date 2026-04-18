@@ -582,6 +582,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             let strokes = []; // Each stroke contains {erase, color, width, points:[{x,y}]}
             let currentStroke = null;
             let sizingCanvas = false;
+            let modifiersHeld = false;
 
             function changeBrushSize(byAmount) {
                 if (!drawEnabled()) return
@@ -598,6 +599,10 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             function clearStrokes() {
                 strokes = [];
                 redrawStrokes();
+            }
+
+            function drawEnabled() {
+                return $('#freeform-drawing-enabled').prop('checked');
             }
 
             function drawMove(e) {
@@ -637,6 +642,10 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 drawCtx.stroke();
             }
 
+            function eventHasModifierKeys(event) {
+                return event.ctrlKey || event.altKey || event.shiftKey || event.metaKey;
+            }
+
             function getSolidColor(c) {
                 let solidColor = c.replace(/(rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*)[\d.]+(\s*\))/, '$11.0$2');
                 return solidColor;
@@ -648,10 +657,6 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 drawCtx.lineWidth = s.width;
                 drawCtx.lineCap = 'round';
                 drawCtx.lineJoin = 'round';
-            }
-
-            function drawEnabled() {
-                return $('#freeform-drawing-enabled').prop('checked');
             }
 
             function redrawStrokes() {
@@ -669,19 +674,20 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 sizingCanvas = false;
             }
 
-            function updateDrawMode(start = false) {
+            function updateDrawMode(showNotif = false) {
                 const on = drawEnabled();
-                if (!start) {
+                if (showNotif) {
                     showNotification(
                         `Freeform draw ${on ? "enabled" : "disabled"}`,
                         colors[on ? 8 : 9].color
                     )
                 }
-                drawCanvas.style.pointerEvents = on ? 'auto' : 'none';
                 drawCanvas.style.cursor = on ? 'crosshair' : '';
+                const activeEvents = on && !modifiersHeld
+                drawCanvas.style.pointerEvents = activeEvents ? 'auto' : 'none';
             }
 
-            $('#freeform-drawing-enabled').on('change',() => {updateDrawMode(false)});
+            $('#freeform-drawing-enabled').on('change',() => {updateDrawMode(true)});
             $('#draw-width').on('change', () => {
                 showNotification( `Brush size: ${$('#draw-width').val()/5}`, colors[currentColor].color)
             });
@@ -696,12 +702,27 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             );
 
             window.addEventListener('resize', sizeCanvas);
+            window.addEventListener('blur', () => {
+                if (!modifiersHeld)
+                    return;
+                modifiersHeld = false;
+                updateDrawMode();
+            });
+            ['keydown','keyup'].forEach(evName => {
+                window.addEventListener(evName, e => {
+                    let hasModKey = eventHasModifierKeys(e)
+                    if (hasModKey === modifiersHeld)
+                        return;
+                    modifiersHeld = hasModKey;
+                    updateDrawMode();
+                })
+            });
             new MutationObserver(sizeCanvas).observe(
                 document.body,
                 { childList: true, subtree: true }
             );
             sizeCanvas();
-            updateDrawMode(true);
+            updateDrawMode();
         });
     };
 }
