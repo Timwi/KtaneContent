@@ -65,7 +65,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     <div><input type='checkbox' id='dark-mode-enabled'>&nbsp;<label for='dark-mode-enabled'>Enabled</label> (Alt-W)</div>
                 </div>
                 <div class='option-group'>
-                    <h3>Freeform Drawing (experimental)</h3>
+                    <h3>Freeform Drawing</h3>
                     <div><input type='checkbox' id='freeform-drawing-enabled'>&nbsp;<label for='freeform-drawing-enabled'>Enabled</label> (Alt-D)</div>
                     <div>Brush size: (Alt-Minus / Alt-Plus)</div>
                     <div><input type='range' id='draw-width' min='5' max='50' step='5' value='20'></div>
