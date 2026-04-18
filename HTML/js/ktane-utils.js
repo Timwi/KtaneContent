@@ -188,6 +188,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                         $(this).css("fill", $(this).data('origFill'));
                     }
                 }).removeClass("svgIsHighlighted");
+                clearStrokes();
             });
 
             // Takes a keypress event; returns a number 0-9 if a number key was pressed (ignoring modifiers), else null.
@@ -230,7 +231,6 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 else if (k == "c" || event.keyCode === 67)
                 {
                     clearHighlights.click();
-                    clearStrokes();
                 }
                 // Alt-W: Dark mode
                 else if (k == "w" || event.keyCode === 87)
