@@ -665,13 +665,19 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 sizingCanvas = false;
             }
 
-            function updateDrawMode() {
+            function updateDrawMode(start = false) {
                 const on = drawEnabled();
+                if (!start) {
+                    showNotification(
+                        `Freeform draw ${on ? "enabled" : "disabled"}`,
+                        colors[on ? 8 : 9].color
+                    )
+                }
                 drawCanvas.style.pointerEvents = on ? 'auto' : 'none';
                 drawCanvas.style.cursor = on ? 'crosshair' : '';
             }
 
-            $('#freeform-drawing-enabled').on('change',updateDrawMode);
+            $('#freeform-drawing-enabled').on('change',() => {updateDrawMode(false)});
             $('#draw-width').on('change', () => {
                 showNotification( `Brush size: ${$('#draw-width').val()/5}`, colors[currentColor].color)
             });
@@ -691,7 +697,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 { childList: true, subtree: true }
             );
             sizeCanvas();
-            updateDrawMode();
+            updateDrawMode(true);
         });
     };
 }
