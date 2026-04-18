@@ -46,6 +46,13 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             // Note: this change _only_ applies to the highlight color selection; other keybinds like Alt-O and Alt-C remain on Alt.
             let ctrlSelectsColors = localStorage.getItem('ktane-ctrl-selects-colors') !== null;
 
+            // Freeform draw variables
+            let strokes = []; // Each stroke contains {erase, color, width, points:[{x,y}], centerX}
+            let currentStroke = null;
+            let sizingCanvas = false;
+            let modifiersHeld = false;
+            let mobileEraserMode = false;
+
             // OPTIONS MENU
             let options = $(`<div id="optionsMenu">
                 <h2>Options (Alt-O)</h2>
@@ -128,6 +135,11 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             // PAGE-LAYOUT OPTIONS
             function updateMultipageView()
             {
+                if (strokes.length !== 0) {
+                    let continueUpdate = confirm("Are you sure you want to change the page layout? This will clear all of your freeform drawings.")
+                    if (!continueUpdate) { return }
+                    clearStrokes()
+                }
                 if ($('#page-layout-side-by-side').prop('checked'))
                 {
                     $("body").addClass("multipage");
@@ -687,12 +699,6 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             $('#draw-width').on('change', () => {
                 showNotification( `Brush size: ${$('#draw-width').val()/5}`, colors[currentColor].color)
             });
-
-            let strokes = []; // Each stroke contains {erase, color, width, points:[{x,y}], centerX}
-            let currentStroke = null;
-            let sizingCanvas = false;
-            let modifiersHeld = false;
-            let mobileEraserMode = false;
 
             // Start freeform service
             sizeCanvas();
