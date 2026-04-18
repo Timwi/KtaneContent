@@ -249,11 +249,11 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     .trigger('change');
                 }
                 // Alt-Plus: Increash draw mode brush size
-                else if ([187,61,171,107].includes(event.keyCode)) {
+                else if ([187,61,171,107].includes(event.keyCode) || ["=","+","Add"].includes(event.key)) {
                     changeBrushSize(+5)
                 }
                 // Alt-Minus: Decrease draw mode brush size
-                else if ([189,173,109].includes(event.keyCode)) {
+                else if ([189,173,109].includes(event.keyCode) || ["-","Subtract"].includes(event.key)) {
                     changeBrushSize(-5)
                 }
                 // Alt-#: Select highlight color
