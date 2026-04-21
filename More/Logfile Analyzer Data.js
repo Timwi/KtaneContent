@@ -16441,6 +16441,47 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "ReadingBetweentheLines",
+		loggingTag: "Reading Between the Lines",
+		matches: [
+			{
+				regex: /The word "(.+)" is split into (.) groups of (.)\./,
+				handler: function (matches, module) {					
+					let obj = document.createElement('span');
+					obj.innerHTML = `The word <span class="rbtl">${matches[1].toUpperCase()}</span> is split into ${matches[2]} groups of ${matches[3]}.`;
+					module.push({obj : obj});
+					return true;
+				}
+			},
+			{
+				regex: /The shown mess is (.+)./,
+				handler: function (matches, module) {
+					module.mess = matches[1].toUpperCase();
+					let obj = document.createElement('span');
+					obj.innerHTML = `The shown mess is <span class="rbtl">${module.mess}</span>`;
+					module.push({obj : obj});
+					return true;
+				}
+			},
+			{
+				regex: /One possible solution is (.+)./,
+				handler: function (matches, module) {
+					var payload = "<span class=\"rbtl\">";
+					for(var i = 0; i < 24; i++)
+						payload += `<span class="rbtl-${matches[1][i].toLowerCase()}">${module.mess[i]}</span>`;
+					payload += "</span>"
+
+					let obj = document.createElement('span');
+					obj.innerHTML = `One possible solution is ${payload} (<span class="rbtl">${matches[1]}</span>)`;
+					module.push({ obj: obj });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+
+	},
+	{
 		moduleID: "laserreflection",
 		loggingTag: "Reflection",
 		matches: [
