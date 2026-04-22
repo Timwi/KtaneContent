@@ -22441,6 +22441,104 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "varicolourFlash",
+		loggingTag: "Varicolour Flash",
+		matches: [
+			{
+				regex: /Stage (\d)- The displays .+: (.+)/,
+				handler: function (matches, module){
+					module.stageDropDown = [`Stage ${matches[1]}`, [`The displays are ${matches[2]}`]];
+					module.push(module.stageDropDown);
+					return true;
+				}
+			},
+			{
+				regex: /The initial subgrid is (.+)\./,
+				handler: function (matches, module){
+					module.currentPosition = ["ABCDEFGHI".indexOf(matches[1][0])+1, Number(matches[1][1])];
+					return true;
+				}
+			},
+			{
+				regex: /The grid moves: (.+)\./,
+				handler: function (matches, module){
+					var moveList = matches[1].split(", ");
+					for(var i = 1; i <= 4; i++){
+						console.log(module.currentPosition);
+						switch(moveList[i-1]){
+							case "Up":
+								module.currentPosition[1] -= i;
+								break;
+							case "Down":
+								module.currentPosition[1] += i;
+								break;
+							case "Left":
+								module.currentPosition[0] -= i;
+								break;
+							case "Right":
+								module.currentPosition[0] += i;
+								break;
+						}
+					}
+				}
+			},
+			{
+				regex: /The(.+)subgrid contains the displays: .+/,
+				handler: function (matches, module){
+					module.gridSVG = $("<svg xmlns='http://www.w3.org/2000/svg' style='width: 50%' viewbox='-10 -3 154 147'>");
+
+					const grid = [
+						[33, 18,  3, 30, 29, 19,  0, 16, 11, 13, 10,  1],
+						[21, 13, 25,  4, 34, 24,  5,  2, 15, 23, 35, 22],
+						[27, 31, 17, 35, 22, 28, 20,  7, 30, 24,  3, 32],
+						[14,  8, 11, 15,  1, 10,  9, 21, 34,  4, 31,  6],
+						[ 2, 16, 20,  7, 26, 32, 25, 19, 27, 33, 12,  8],
+						[ 0,  5,  9, 23,  6, 12, 14, 29, 18, 28, 26, 17],
+						[17, 34,  4, 21, 27,  0,  8, 11, 35,  7,  1, 10],
+						[32, 29, 30, 18, 28,  5, 17, 15,  9, 22, 13, 24],
+						[ 7, 20, 26, 31, 24,  1, 30,  3, 25,  0, 27,  5],
+						[12, 33, 16, 25, 35, 22, 34,  6, 23, 14,  4, 31],
+						[ 3, 11, 15,  2, 14,  8, 21, 18, 33, 20, 19, 28],
+						[ 9, 19, 23,  6, 10, 13, 16, 32, 12,  2, 29, 26], ];
+
+					function populateGrid(col, row, data){
+						$SVG("<path>")
+						.attr("d", `M ${col*12},${row*12} H ${(col+1)*12} V ${(row+1)*12} H ${col*12} Z`)
+						.addClass(`vcf`)
+						.addClass(`vcf-${data[1].toLowerCase()}`)
+						.appendTo(module.gridSVG);
+						$SVG(`<text>${data[0]}`)
+						.attr("x", col*12 +6)
+						.attr("y", row*12 +7.5)
+						.addClass(`vcf`)
+						.appendTo(module.gridSVG);						
+					}
+					
+					for(var row = 0; row < 12; row++)
+						for(var col = 0; col < 12; col++)
+							populateGrid(col, row, ["RGBMYW"[Math.floor(grid[row][col]/6)], "RGBMYW"[grid[row][col]%6]]);
+					
+					$SVG("<path>")
+					.attr("d", `M ${(module.currentPosition[0]-1)*12},${(module.currentPosition[1]-1)*12} H ${(module.currentPosition[0]+3)*12} V ${(module.currentPosition[1]+3)*12} H ${(module.currentPosition[0]-1)*12} Z`)
+					.addClass(`vcf-subgrid`)
+					.appendTo(module.gridSVG);			
+
+
+					module.stageDropDown[1].push(`The${matches[1]}subgrid is as follows:`);
+					module.stageDropDown[1].push({ obj: module.gridSVG, nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module){
+					module.stageDropDown[1].push(matches[0]);
+					return true;
+				}	
+			}
+		]
+	},
+	{
 		displayName: "Venting Gas",
 		moduleID: "NeedyVentGas",
 		loggingTag: "NeedyVentComponent",
