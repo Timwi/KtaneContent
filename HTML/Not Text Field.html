@@ -16,24 +16,73 @@
 
         function addZoomersClickListeners() {
             zoomers = document.getElementsByClassName('zoom-container');
-            zoomed = [false,false,false,false,false,false]
+            zoomed = Array(6).fill(false)
             for (let idx = 0; idx < zoomers.length; idx++) {
                 const zoomer = zoomers.item(idx)
                 zoomer.onclick = (event) => {zoomIn(idx,event)}
             }
-            // for (const [idx, zoomer] of zoomers.entries()) {
-            //     zoomer.onclick = (event) => {zoomIn(idx,event)}
-            // }
         }
 
         function zoomIn(idx,event) {
             if (event.altKey)
                 return;
-            zoomed[idx] = !zoomed[idx]
-            if (zoomed[idx])
-                zoomers[idx].classList.add('zoomed');
-            else
-                zoomers[idx].classList.remove('zoomed');
+            const zoomer = zoomers[idx];
+            const isZoomed = zoomed[idx];
+            const transitionStart = zoomer.getBoundingClientRect();
+            zoomed[idx] = !isZoomed;
+            if (zoomed[idx]) {
+                createZoomPlaceholder(transitionStart,idx,zoomer);
+                zoomer.classList.add('zoomed');
+            } else {
+                removeZoomPlaceholder(idx);
+                zoomer.classList.remove('zoomed');
+            }
+            const transitionEnd = zoomer.getBoundingClientRect();
+            animateZoom(zoomer,transitionStart,transitionEnd)
+            animateZoomBackground(zoomer,zoomed[idx])
+        }
+
+        function animateZoom(zoomer,start,end) {
+            const dx = start.left - end.left;
+            const dy = start.top - end.top;
+            const sx = start.width / end.width;
+            const sy = start.height / end.height;
+
+            zoomer.animate(
+                [
+                    { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`},
+                    { transform: 'none' }
+                ],
+                { duration: 300, easing: 'ease' }
+            )
+        }
+
+        function animateZoomBackground(zoomer,zoomed) {
+            const overlay = document.getElementById('zoom-overlay');
+            const startOpacity = zoomed ? 0 : 1;
+            const endOpacity = zoomed ? 1 : 0;
+            const onFinish = zoomed ? () => {} : () => { overlay.style.display = 'none' };
+            if (zoomed) { overlay.style.display = 'block'; }
+            overlay.animate(
+                [{opacity: startOpacity}, {opacity: endOpacity}],
+                { duration: 300, easing: 'ease', fill: 'forwards' }
+            ).onfinish = onFinish;
+        }
+
+        function createZoomPlaceholder(size,idx,zoomer) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'zoom-placeholder';
+            placeholder.style.width = size.width+'px';
+            placeholder.style.height = size.height+'px';
+            placeholder.dataset.forIdx = idx;
+            zoomer.after(placeholder);
+        }
+
+        function removeZoomPlaceholder(idx) {
+            const placeholder = document.querySelector(
+                `.zoom-placeholder[data-for-idx="${idx}"]`
+            );
+            if (placeholder) placeholder.remove();
         }
     </script>
     <style>
@@ -67,6 +116,10 @@
         .dark .circles { stroke: #DDD; }
         .dark svg text { fill: #DDD }
 
+        .zoom-container {
+            transition: background-color 300ms ease;
+            transform-origin: top left;
+        }
         .zoom-container svg {
             width: 100%;
             height: 100%;
@@ -82,15 +135,23 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background:  rgba(255, 255, 255, 0.9);
             margin: 0;
             z-index: 9999;
         }
-        .dark .zoom-container.zoomed {
-            background: rgba(30, 30, 30, 0.9);
-        }
         .zoom-container.zoomed svg {
             padding:10%
+        }
+        #zoom-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(255,255,255,0.9);
+            z-index: 9900;
+            opacity: 0;
+            pointer-events: none;
+            display: none;
+        }
+        .dark #zoom-overlay {
+            background-color: rgba(30,30,30,0.9);
         }
 
         @media print {
@@ -257,5 +318,6 @@
             <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
     </div>
+    <div id="zoom-overlay"></div>
 </body>
 </html>
