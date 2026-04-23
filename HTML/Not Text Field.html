@@ -12,7 +12,7 @@
 
         addEventListener("DOMContentLoaded", addZoomersClickListeners)
 
-        let zoomers, zoomed
+        let zoomers, zoomed;
 
         function addZoomersClickListeners() {
             zoomers = document.getElementsByClassName('zoom-container');
@@ -38,23 +38,44 @@
                 zoomer.classList.remove('zoomed');
             }
             const transitionEnd = zoomer.getBoundingClientRect();
-            animateZoom(zoomer,transitionStart,transitionEnd)
+            animateZoom(zoomer,zoomed[idx],transitionStart,transitionEnd)
             animateZoomBackground(zoomer,zoomed[idx])
         }
 
-        function animateZoom(zoomer,start,end) {
-            const dx = start.left - end.left;
-            const dy = start.top - end.top;
-            const sx = start.width / end.width;
-            const sy = start.height / end.height;
-
+        function animateZoom(zoomer,zoomed,start,end) {
+            const scale = getAnimationScale(start,end);
+            const delta = getAnimationDeltaComponents(scale,start,end);
+            if (!zoomed) {
+                zoomer.style.zIndex = 8000;
+                zoomer.style.position = 'relative';
+            }
             zoomer.animate(
                 [
-                    { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`},
+                    { transform: `translate(${delta.dx}px, ${delta.dy}px) scale(${scale})`},
                     { transform: 'none' }
                 ],
                 { duration: 300, easing: 'ease' }
-            )
+            ).onfinish = () => {
+                zoomer.style.zIndex = '';
+                zoomer.style.position = '';
+            }
+        }
+
+        function getAnimationScale(start,end) {
+            const sx = start.width / end.width;
+            const sy = start.height / end.height;
+            return Math.min(sx,sy);
+        }
+
+        function getAnimationDeltaComponents(scale,start,end) {
+            const startCx = start.left + start.width / 2;
+            const startCy = start.top + start.height / 2;
+            const endCx = end.left + end.width / 2;
+            const endCy = end.top + end.height / 2;
+            return {
+                "dx": startCx - endCx - (end.width * (scale-1)) / 2,
+                "dy": startCy - endCy - (end.height * (scale-1)) / 2
+            };
         }
 
         function animateZoomBackground(zoomer,zoomed) {
@@ -136,7 +157,7 @@
             justify-content: center;
             align-items: center;
             margin: 0;
-            z-index: 9999;
+            z-index: 8000;
         }
         .zoom-container.zoomed svg {
             padding:10%
@@ -145,7 +166,7 @@
             position: fixed;
             inset: 0;
             background-color: rgba(255,255,255,0.9);
-            z-index: 9900;
+            z-index: 7000;
             opacity: 0;
             pointer-events: none;
             display: none;
