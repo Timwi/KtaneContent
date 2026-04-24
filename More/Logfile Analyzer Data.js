@@ -6493,6 +6493,53 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "FastPlayfairCipher",
+		loggingTag: "Fast Playfair Cipher",
+		matches: [
+			{
+				regex: /^[A-Z]{5}$/,
+				handler: function (matches, module) {
+					if(!module.playfairGrid) module.playfairGrid = [];
+					module.playfairGrid.push(matches[0]);
+					if(module.playfairGrid.length == 5){
+						let table = "<table class='fast-playfair-cipher'>";
+						for (let row = 0; row < 5; row++) {
+							table += "<tr>";
+							for (let col = 0; col < 5; col++)
+								table += `<td>${module.playfairGrid[row][col]}</td>`;
+							table += "</tr>";
+						}
+						module.push({ nobullet: true, obj: table });
+					}
+
+					return true;
+				}
+			},
+			{
+				regex: /<Stage (\d+)> (.+)/,
+				handler: function (matches, module) {
+					if(!module.currentStageNum || matches[1] != module.currentStageNum){
+						module.currentStageNum = matches[1];
+						module.currentStageDropdown = [`Stage ${matches[1]}`, []];
+						module.push(module.currentStageDropdown);
+					}
+					module.currentStageDropdown[1].push(matches[2]);
+					return true;
+				}
+			},
+			{
+				regex: /Let's go!|Answer incorrect! Strike and reset!|Timeout! Strike and reset!/,
+				handler: function (matches, module) {
+					module.currentStageDropdown[1].push(matches[0]);
+					if(matches[0] != "Let's go!")
+						module.currentStageNum = 0;
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Faulty Buttons",
 		moduleID: "GSFaultyButtons",
 		loggingTag: "Faulty Buttons",
