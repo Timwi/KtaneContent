@@ -19,17 +19,42 @@
         .footnote {
             font-size: 11pt;
         }
+
+        #zoom-container {
+            transition: background-color 300ms ease;
+            transform-origin: top left;
+        }
         #zoom-container.zoomed {
             position: fixed;
-            left: 5px;
-            top: 5px;
-            right: 5px;
-            bottom: 5px;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: auto;
+            height: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            z-index: 8000;
         }
             #zoom-container.zoomed #main-map {
                 width: 100%;
                 height: 100%;
+                padding: 5%;
             }
+        #zoom-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(255,255,255,0.9);
+            z-index: 7000;
+            opacity: 0;
+            pointer-events: none;
+            display: none;
+        }
+        .dark #zoom-overlay {
+            background-color: rgba(30,30,30,0.9);
+        }
 
         .dark table, table {
             margin: 1em 0;
@@ -200,6 +225,95 @@
         function setDefaultRules(rnd)
         {
             setRules(rnd);
+        }
+
+        // Zoom
+        addEventListener("DOMContentLoaded", addZoomerClickListener)
+
+        let zoomer, zoomed;
+
+        function addZoomerClickListener() {
+            zoomer = document.getElementById('zoom-container');
+            zoomed = false;
+            zoomer.onclick = zoomIn
+        }
+
+        function zoomIn(event) {
+            if (event.altKey)
+                return;
+            const transitionStart = zoomer.getBoundingClientRect();
+            zoomed = !zoomed;
+            if (zoomed) {
+                createZoomPlaceholder(transitionStart,zoomer);
+                zoomer.classList.add('zoomed');
+            } else {
+                removeZoomPlaceholder();
+                zoomer.classList.remove('zoomed');
+            }
+            const transitionEnd = zoomer.getBoundingClientRect();
+            animateZoom(zoomer,zoomed,transitionStart,transitionEnd);
+            animateZoomBackground(zoomer,zoomed)
+        }
+
+        function createZoomPlaceholder(size,zoomer) {
+            const placeholder = document.createElement('div');
+            placeholder.id = 'zoom-placeholder';
+            placeholder.style.width = size.width+'px';
+            placeholder.style.height = size.height+'px';
+            zoomer.after(placeholder);
+        }
+
+        function removeZoomPlaceholder() {
+            const placeholder = document.getElementById("zoom-placeholder")
+            if (placeholder) placeholder.remove();
+        }
+
+        function animateZoom(zoomer,zoomed,start,end) {
+            const scale = getAnimationScale(start,end);
+            const delta = getAnimationDeltaComponents(scale,start,end);
+            if (!zoomed) {
+                zoomer.style.zIndex = 8000;
+                zoomer.style.position = 'relative';
+            }
+            zoomer.animate(
+                [
+                    { transform: `translate(${delta.dx}px, ${delta.dy}px) scale(${scale})`},
+                    { transform: 'none' }
+                ],
+                { duration: 300, easing: 'ease' }
+            ).onfinish = () => {
+                zoomer.style.zIndex = '';
+                zoomer.style.position = '';
+            };
+        }
+
+        function getAnimationScale(start,end) {
+            const sx = start.width / end.width;
+            const sy = start.height / end.height;
+            return Math.min(sx,sy);
+        }
+
+        function getAnimationDeltaComponents(scale,start,end) {
+            const startCx = start.left + start.width / 2;
+            const startCy = start.top + start.height / 2;
+            const endCx = end.left + end.width / 2;
+            const endCy = end.top + end.height / 2;
+            return {
+                "dx": startCx - endCx - (end.width * (scale-1)) / 2,
+                "dy": startCy - endCy - (end.height * (scale-1)) / 2
+            };
+        }
+
+        function animateZoomBackground(zoomer,zoomed) {
+            const overlay = document.getElementById('zoom-overlay');
+            const startOpacity = zoomed ? 0 : 1;
+            const endOpacity = zoomed ? 1 : 0;
+            const onFinish = zoomed ? () => {} : () => { overlay.style.display = 'none' };
+            if (zoomed) { overlay.style.display = 'block'; }
+            overlay.animate(
+                [{opacity: startOpacity}, {opacity: endOpacity}],
+                { duration: 300, easing: 'ease', fill: 'forwards' }
+            ).onfinish = onFinish;
         }
     </script>
 </head>
@@ -608,17 +722,6 @@
             <div class="page-footer relative-footer">Page 2 of 2</div>
         </div>
     </div>
-    <script>
-        let zoomer = document.getElementById('zoom-container');
-        let zoomed = false;
-        zoomer.onclick = function()
-        {
-            zoomed = !zoomed;
-            if (zoomed)
-                zoomer.classList.add('zoomed');
-            else
-                zoomer.classList.remove('zoomed');
-        };
-    </script>
+    <div id="zoom-overlay"></div>
 </body>
 </html>
