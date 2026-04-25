@@ -3565,6 +3565,33 @@ let parseData = [
 
 	},
 	{
+		moduleID: "coffeebucks",
+		loggingTag: "Coffeebucks",
+		matches: [
+			{
+				regex: /Welcome to Coffeebucks! You currently have \$\d+\.\d+ in tips\./,
+				handler: function (matches, module) {
+					module.dropdown = [matches[0], []];
+					module.push(module.dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					const match = matches[0].match(/You have \$\d+\.\d+ in tips\. Module disarmed\./);
+					if(match) {
+						module.push(matches[0]);
+					}
+
+					else {
+						module.dropdown[1].push(matches[0])
+					}
+				}
+			}
+		]
+	},
+	{
 		moduleID: "colorGrid",
 		loggingTag: "Color Grid",
 		matches: [
