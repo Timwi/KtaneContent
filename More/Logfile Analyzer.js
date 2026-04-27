@@ -333,6 +333,17 @@ class BombGroup {
             .addCardClick(missionInfo).click();
 
         // Events
+        
+        // swap defusal and pass events when out of order
+        for (let i = 0; i < this.Events.length - 1; i++) {
+            const event = this.Events[i];
+            const nextEvent = this.Events[i + 1];
+            if (event.type === "BOMB_SOLVE" && nextEvent.type === "PASS" && event.realTime === nextEvent.realTime) {
+                this.Events[i] = nextEvent;
+                this.Events[i + 1] = event;
+            }
+        }
+
         var eventInfo = $("<div class='module-info'>").appendTo(info);
         $("<h3>").css("margin-top", "10px").text("Events").appendTo(eventInfo);
         $("<p>").css("font-weight", "bold").text(">>> Real time elapsed > Event").appendTo(eventInfo);
