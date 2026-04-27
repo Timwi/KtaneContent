@@ -7231,21 +7231,71 @@ let parseData = [
 			{
 				regex: /(Display|Solution): ([\d\s]+)/,
 				handler: function (matches, module) {
-					let nums = matches[2].replace(/\s+/g, '').split('');
-					let full = '';
-					let three = '';
-					let five = '';
+					//check to see se if this is FMN or FIN
+					linen--;
+					module.FMN = readLine().match(/\[Forget Me Not #\d+\]/) != null;
 
-					for (let i = 0; i < nums.length; i++) {
-						if (i % 3 == 0 && i != 0)
-							three += ' ';
-						if (i % 5 == 0 && i != 0)
-							five += ' ';
-						full += nums[i];
-						three += nums[i];
-						five += nums[i];
+					if(!module.getGroupedNumbers) {
+						module.displayNums = matches[2].replace(/\s+/g, '').split('');
+
+						module.groupSize = 3;
+						module.obj = $("<div class='fmn'>");
+						module.header = $("<div class='header'>").appendTo(module.obj);
+						module.body = $("<div class='body'>").appendTo(module.obj);
+
+						module.gridLabel = $("<div class='grid-label'>");
+						module.displayLabel = $("<p>");
+						module.solutionLabel = $("<p>");
+						module.getGroupedNumbers = (str, groupSize) => {
+							let formattedStr = str[0];
+							for (let i = 1; i < str.length; i++) {
+								if (i % groupSize == 0)
+									formattedStr += ' ';
+								formattedStr += str[i];
+							}					
+							return formattedStr;
+						}
+						module.updateGroupSize = () => {
+							module.gridLabel.text(`Group Size: ${module.groupSize}`);
+							module.displayLabel.text(module.getGroupedNumbers(module.displayNums, module.groupSize));
+							if(module.FMN) {
+								module.solutionLabel.text(module.getGroupedNumbers(module.solutionNums, module.groupSize));
+							}
+						}
+						let leftArrow = $("<span class='arrow-button left'>").text("< Prev").click(function () {
+							module.groupSize = Math.max(1, module.groupSize - 1);
+							module.updateGroupSize();
+						}).appendTo(module.header);
+
+						module.header.append(module.gridLabel);
+					
+
+						let rightArrow = $("<span class='arrow-button'>").text("Next >").click(function () {
+							module.groupSize = Math.min(module.displayNums.length, module.groupSize + 1);
+							module.updateGroupSize();
+						}).appendTo(module.header);
+
+
+						module.body.append($("<p>").text("Display:"));
+						module.body.append(module.displayLabel);
+						if(module.FMN) {
+							module.body.append($("<p>").text("Solution:"));
+							module.body.append(module.solutionLabel);
+						}
+
+						else {
+							module.updateGroupSize();
+						}
+
+						module.push({ obj: module.obj, nobullet: true });
 					}
-					module.push([matches[1] + ": (in different group sizes)", [pre(full), pre(three), pre(five)]]);
+
+					else {
+						module.solutionNums = matches[2].replace(/\s+/g, '').split('');
+						module.updateGroupSize();
+
+					}
+
 					return true;
 				}
 			},
