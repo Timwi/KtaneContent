@@ -590,8 +590,7 @@ let parseData = [
 							const mod = lastBombGroup.GetMod(eventInfo.moduleID, eventInfo.loggingID);
 							mod.Events.push(eventInfo);
 
-							if (bombgroup != null) bombgroup.Events.push(eventInfo);
-							else lastBombGroup.Events.splice(lastBombGroup.Events.length - 1, 0, eventInfo);
+							(bombgroup ?? lastBombGroup).Events.push(eventInfo);
 
 							if (eventInfo.type == "PASS" && bombgroup != null && bombgroup.isSingleBomb && !mod.moduleData.needy)
 								bombgroup.loggedBombs[0].Solved++;
