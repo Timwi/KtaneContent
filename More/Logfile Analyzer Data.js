@@ -3263,10 +3263,11 @@ let parseData = [
 			{
 				regex: /^The appearing characters on stage (\d+) are : (.+)/,
 				handler: function (matches, module) {
+					module.stageDropDown = [matches[0], []]
 					module.currentDropdown = ["Attempt 1", []];
 					module.attemptNum = 1;
-					module.push($(`<span class="character-slots-underline">`).text(matches[0]));
-					module.push(module.currentDropdown);
+					module.push(module.stageDropDown);
+					module.stageDropDown[1].push(module.currentDropdown);
 					return true;
 				}
 			},
@@ -3286,11 +3287,11 @@ let parseData = [
 			{
 				regex: /^Your answer for this character is incorrect\. Strike!|All keep states are correct\. Stage \d+ done!$/,
 				handler: function (matches, module) {
-					module.push(matches[0]);
+					module.currentDropdown[1].push(matches[0]);
 					if (matches[0] == "Your answer for this character is incorrect. Strike!") {
 						module.attemptNum++;
 						module.currentDropdown = [`Attempt ${module.attemptNum}`, []];
-						module.push(module.currentDropdown);
+						module.stageDropDown[1].push(module.currentDropdown);
 					}
 					return true;
 				}
