@@ -7410,12 +7410,16 @@ let parseData = [
 						module.gridLabel = $("<div class='grid-label'>");
 						module.displayLabel = $("<p>");
 						module.solutionLabel = $("<p>");
-						module.getGroupedNumbers = (str, groupSize) => {
-							let formattedStr = str[0];
-							for (let i = 1; i < str.length; i++) {
+						module.getGroupedNumbers = (strArr, groupSize) => {
+							if(groupSize == 0) {
+								return strArr.join('');
+							}
+
+							let formattedStr = strArr[0];
+							for (let i = 1; i < strArr.length; i++) {
 								if (i % groupSize == 0)
 									formattedStr += ' ';
-								formattedStr += str[i];
+								formattedStr += strArr[i];
 							}					
 							return formattedStr;
 						}
@@ -7427,7 +7431,7 @@ let parseData = [
 							}
 						}
 						let leftArrow = $("<span class='arrow-button left'>").text("< Prev").click(function () {
-							module.groupSize = Math.max(1, module.groupSize - 1);
+							module.groupSize = Math.max(0, module.groupSize - 1);
 							module.updateGroupSize();
 						}).appendTo(module.header);
 
