@@ -2095,6 +2095,170 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "bamboozlingButtonGrid",
+		loggingTag: "Bamboozling Button Grid",
+		matches: [
+			{
+				regex: /The grid has the buttons:/,
+				handler: function (match, module) {
+					if(!module.attemptNum){ module.attemptNum = 0; }
+					module.attemptNum++;
+					module.currentDropdown = [`Attempt ${module.attemptNum}`, []];
+					
+					var stageDataLines = readTaggedLines(14);
+					var buttonStates = [];
+					var displayText = [];
+					var displayClr = [];
+					var currentDisplayIndex = 0;
+
+					for(var n = 0; n < 5; n++){
+						buttonStates[n] = [];
+						displayText[n] = [];
+						displayClr[n] = [];
+
+						for(var r = 0; r < 4; r++){
+							for(var c = 0; c < 4; c++){
+								buttonStates[n].push(stageDataLines[r][c*6 + n])
+							}
+						}
+
+						if(n == 4){
+							displayText[n] = ["",""];
+							displayClr[n] = ["",""];
+						} else {
+							displayText[n] = [
+								stageDataLines[4].match(/The .+ screen reads (.+) - (.+) - (.+) - (.+)$/)[n+1],
+								stageDataLines[9].match(/The .+ screen reads (.+) - (.+) - (.+) - (.+)$/)[n+1]
+							];
+							displayClr[n] = [
+								stageDataLines[6].match(/The .+ screen has the text colours: (.+), (.+), (.+), (.+)$/)[n+1],
+								stageDataLines[11].match(/The .+ screen has the text colours: (.+), (.+), (.+), (.+)$/)[n+1]
+							]
+						}
+					}
+
+					const topDiv = $('<div>').addClass("bbg-top");
+
+					const leftButton = $('<button>')
+					.text("◀")
+					.attr("type", "button")
+					.addClass("bbg-button")
+					.addClass("bbg-left")
+					.appendTo(topDiv);
+
+					const rightButton = $('<button>')
+					.text("▶")
+					.attr("type", "button")
+					.addClass("bbg-button")
+					.addClass("bbg-right")
+					.appendTo(topDiv);
+
+					var label = $('<div>')
+					.addClass("bbg-label")
+					.appendTo(topDiv);
+
+					const bottomDiv = $('<div>').addClass("bbg-bottom");
+
+					function makeBBGSVG(buClr, txt, txtClr, dispNum) {
+						bottomDiv.empty();
+						const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -15 100 70'>`)
+						.appendTo(bottomDiv);
+						
+						label.text(`Display ${dispNum+1}`);
+
+						for(var r = 0; r < 4; r++){
+							for(var c = 0; c < 4; c++){
+								$SVG("<path>")
+								.attr("d", `m${0 + c*13},${3 + r*13}l-3.5,3.5v5l3.5,3.5h5l3.5,-3.5v-5l-3.5,-3.5z`)
+								.addClass(`bbg-${buClr[r*4 + c].toLowerCase()}`)
+								.addClass(`bbg-button`)
+								.appendTo(svg);
+							}
+						}
+
+						$SVG("<rect>")
+						.attr("x", -3.5)
+						.attr("y", -9)
+						.attr("width", 52)
+						.attr("height", 10)
+						.attr("fill", "#000")
+						.appendTo(svg);
+						
+						$SVG("<rect>")
+						.attr("x", 50)
+						.attr("y", 2.5)
+						.attr("width", 10)
+						.attr("height", 52 )
+						.attr("fill", "#000")
+						.appendTo(svg);
+
+						$SVG(`<text>${txt[0]}`)
+						.attr("x", 22.5)
+						.attr("y", -3.5)
+						.addClass(`bbg-display`)
+						.addClass(`bbg-display-${txtClr[0].toLowerCase()}`)
+						.appendTo(svg);
+
+						$SVG(`<text>${txt[1]}`)
+						.attr("x", 28.5)
+						.attr("y", -54.5)
+						.attr("style", "transform: rotate(90deg);")
+						.addClass(`bbg-display`)
+						.addClass(`bbg-display-${txtClr[1].toLowerCase()}`)
+						.appendTo(svg);
+
+						$SVG(`<text>${txtClr[0]}`)
+						.attr("x", 22.5)
+						.attr("y", -11)
+						.addClass(`bbg-display`)
+						.addClass(`bbg-display-colourblind`)
+						.appendTo(svg);
+
+						$SVG(`<text>${txtClr[1]}`)
+						.attr("x", 28.5)
+						.attr("y", -62)
+						.attr("style", "transform: rotate(90deg);")
+						.addClass(`bbg-display`)
+						.addClass(`bbg-display-colourblind`)
+						.appendTo(svg);
+					};
+
+
+					makeBBGSVG(buttonStates[0], displayText[0], displayClr[0], 0);
+
+					leftButton.on("click", function () {
+						currentDisplayIndex = (currentDisplayIndex+4)%5;
+						makeBBGSVG(buttonStates[currentDisplayIndex], displayText[currentDisplayIndex], displayClr[currentDisplayIndex], currentDisplayIndex);
+					});
+					
+					rightButton.on("click", function () {
+						currentDisplayIndex = (currentDisplayIndex+1)%5;
+						makeBBGSVG(buttonStates[currentDisplayIndex], displayText[currentDisplayIndex], displayClr[currentDisplayIndex], currentDisplayIndex);
+					});
+
+					module.push(module.currentDropdown);
+					module.currentDropdown[1].push({ obj: topDiv, nobullet: true });
+					module.currentDropdown[1].push("The module shows the following:");
+					module.currentDropdown[1].push({ obj: bottomDiv, nobullet: true });
+					module.currentDropdown[1].push(stageDataLines[5]);
+					module.currentDropdown[1].push(stageDataLines[7]);
+					module.currentDropdown[1].push(stageDataLines[8]);
+					module.currentDropdown[1].push(stageDataLines[10]);
+					module.currentDropdown[1].push(stageDataLines[12]);
+					module.currentDropdown[1].push(stageDataLines[13]);
+					return true;
+				}
+			},
+			{
+				regex: /Button .+|Error: .+/,
+				handler: function (match, module){
+					module.currentDropdown[1].push(match[0]);
+					return true;
+				}
+			}
+		]
+	},
+	{
 		moduleID: "bamboozlingTimeKeeper",
 		loggingTag: "Bamboozling Time Keeper",
 		matches: [
