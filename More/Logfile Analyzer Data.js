@@ -19112,7 +19112,11 @@ let parseData = [
 						const getTranslation = function (x, y) {
 							return `translate(${xOffset * x}, ${yOffset * y + columnOffsets[x]})`;
 						}
-						const coords = pattern.split(', ').map(c => ({ x: "ABCDE".indexOf(c[0]), y: parseInt(c[1]) - 1 }));
+						var coords;
+						if(pattern == "")
+							coords = [];
+						else
+							coords = pattern.split(', ').map(c => ({ x: "ABCDE".indexOf(c[0]), y: parseInt(c[1]) - 1 }));
 						const svg = $("<svg viewbox='0 -2 58 65'>").addClass("simon-stacks");
 						for (const coord of coords) {
 							$SVG("<polygon>").attr("points", hexPoints)
@@ -19151,9 +19155,9 @@ let parseData = [
 				}
 			},
 			{
-				regex: /You Submitted \((.+?)\)(, Which is right)?/,
+				regex: /You Submitted \((.*)\), (.+)$/,
 				handler: function (matches, module) {
-					module.addToCurrentStage(`You ${matches[2] ? '' : 'in'}correctly submitted:`, module.generateSVG(matches[1], 'gray'));
+					module.addToCurrentStage(`You ${matches[2] == "Which is right!" ? '' : 'in'}correctly submitted:`, module.generateSVG(matches[1], 'gray'));
 				}
 			}
 		]
@@ -22756,7 +22760,6 @@ let parseData = [
 				handler: function (matches, module){
 					var moveList = matches[1].split(", ");
 					for(var i = 1; i <= 4; i++){
-						console.log(module.currentPosition);
 						switch(moveList[i-1]){
 							case "Up":
 								module.currentPosition[1] -= i;
