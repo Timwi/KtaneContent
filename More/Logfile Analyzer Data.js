@@ -18855,8 +18855,31 @@ let parseData = [
 					return true;
 				}
 			},
+			{
+				regex: /Time for the shape!/,
+				handler: function (matches, module) {
+					module.shapeSubmissionDropdown = [matches[0], []];
+					module.push(module.shapeSubmissionDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /The possible shapes are:|----------------------/,
+				handler: function (matches, module) {
+					var shape = readTaggedLines(3);
+					var isSecondaryOpt = matches[0] == "----------------------";
+					module.shapeSubmissionDropdown[1].push({ label: isSecondaryOpt ? "" : matches[0], obj: pre(shape.join("\n")), nobullet : !isSecondaryOpt });
+					return true;
+				}
+			},
+			{
+				regex: /Pressed .+|You pressed .+/,
+				handler: function (matches, module) {
+					module.shapeSubmissionDropdown[1].push(matches[0]);
+					return true;
+				}
+			},
 			{ regex: /.+/ }
-
 		]
 	},
 	{
