@@ -15187,7 +15187,7 @@ let parseData = [
 						}
 					}
 					var tAngle = (72 * startPeg - 90) / 180 * Math.PI;
-					svg2 += "<text x='‹x›' y='‹y›' font-size='.3' text-anchor='middle'>START</text>"
+					svg2 += "<text x='‹x›' y='‹y›' font-size='.3' text-anchor='middle' class='perspective-pegs-start'>START</text>"
 						.replace('‹x›', 3 * Math.cos(tAngle))
 						.replace('‹y›', 3 * Math.sin(tAngle) + .1);
 					module.PegsSvg = svg1 + svg2;
@@ -20888,21 +20888,21 @@ let parseData = [
 							}
 						}
 					}
-					svg += `<line x1='35' x2='400' y1='-100' y2='-100' stroke='#000' stroke-width='15'/>
-							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(400, -100) rotate(90)'/>
-							<text x='0' y='-100' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>X</text>
+					svg += `<line x1='35' x2='400' y1='-100' y2='-100' class='tesseractivity'/>
+							<path d='${arrowHead}' class='tesseractivity' transform='translate(400, -100) rotate(90)'/>
+							<text x='0' y='-100' class='tesseractivity'>X</text>
 
-							<line x1='45' x2='1825' y1='-175' y2='-175' stroke='#000' stroke-width='15'/>
-							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(1825, -175) rotate(90)'/>
-							<text x='0' y='-175' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Y</text>
+							<line x1='45' x2='1825' y1='-175' y2='-175' class='tesseractivity'/>
+							<path d='${arrowHead}' class='tesseractivity' transform='translate(1825, -175) rotate(90)'/>
+							<text x='0' y='-175' class='tesseractivity'>Y</text>
 
-							<line x1='-100' x2='-100' y1='45' y2='400' stroke='#000' stroke-width='15'/>
-							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-100, 400) rotate(180)'/>
-							<text x='-100' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>Z</text>
+							<line x1='-100' x2='-100' y1='45' y2='400' class='tesseractivity'/>
+							<path d='${arrowHead}' class='tesseractivity' transform='translate(-100, 400) rotate(180)'/>
+							<text x='-100' y='0' class='tesseractivity'>Z</text>
 
-							<line x1='-175' x2='-175' y1='45' y2='1825' stroke='#000' stroke-width='15'/>
-							<path d='${arrowHead}' stroke='#000' stroke-width='15' transform='translate(-175, 1825) rotate(180)'/>
-							<text x='-175' y='0' style='font-size: 100' font-style='italic' text-anchor='middle' dominant-baseline='central'>W</text>`;
+							<line x1='-175' x2='-175' y1='45' y2='1825' class='tesseractivity'/>
+							<path d='${arrowHead}' class='tesseractivity' transform='translate(-175, 1825) rotate(180)'/>
+							<text x='-175' y='0' class='tesseractivity'>W</text>`;
 					module.push({ label: 'Grid', obj: svg + '</svg>' });
 					return true;
 				}
