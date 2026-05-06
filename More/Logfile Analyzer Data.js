@@ -7036,6 +7036,111 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "foaboruModule",
+		loggingTag: "Foaboru",
+		matches: [
+			{
+				regex: /A (\d+) by (\d+) board has been configured to be generated./,
+				handler: function (matches, module) {
+					module.cols = matches[1];
+					module.rows = matches[2];
+					if(!module.attemptNum) module.attemptNum = 1;
+
+					module.currentAttempt = [`Attempt ${module.attemptNum}`, [matches[0]]];
+					module.push(module.currentAttempt);
+					
+					module.buildSVG = function(grid, postRegion){
+						const gridSVG = $(`<svg xmlns='http://www.w3.org/2000/svg' style='width: 50%' viewbox='-10 -10 ${module.cols*10+10} ${module.rows*10+10}'>`);
+						const clrChart = {
+							'O': "#000",
+							'W': "#FFF",
+							'A': "#888",
+							'K': "#000",
+							'-': "transparent",
+							'X': "transparent",
+							'!': "#800"
+						}
+						
+						$SVG("<rect>")
+						.attr("x", -6)
+						.attr("y", -6)
+						.attr("width", module.cols*10 +2)
+						.attr("height", module.rows*10 +2)
+						.attr("fill", "#024")
+						.appendTo(gridSVG);
+
+						for(var r = 0; r < module.rows; r++){
+							for(var c = 0; c < module.cols; c++){
+								$SVG(`<circle>`)
+								.attr('cx', c*10)
+								.attr('cy', r*10)
+								.attr('r', 5)
+								.attr("fill", clrChart[grid[r][c]])
+								.appendTo(gridSVG);
+							}
+						}
+
+						postRegion.push({ obj: gridSVG, nobullet: true });
+					}
+
+					return true;
+				}
+			},
+			{
+				regex: /Generated board:|One possible solution:|Submitted:/,
+				handler: function (matches, module) {					
+					const grid = readTaggedLines(module.rows);
+					module.currentAttempt[1].push(matches[0]);
+					module.buildSVG(grid, module.currentAttempt[1]);
+
+					if(matches[0] == "Submitted:"){
+						module.submitted = grid;
+						module.invalidGroups = [];
+					}
+					return true;
+				}
+			},
+			{
+				regex: /Detected invalid group: (.+)/,
+				handler: function (matches, module) {
+					if(!module.currentInvalids){
+						module.currentInvalids = ["Invalid submission, invalid regions are as follows:", []];
+						module.currentAttempt[1].push(module.currentInvalids);
+					}
+
+					const invalidCoords = matches[1].split(',');
+					var invalidGrid = module.submitted.map(x => x);
+					
+					for(var r = 0; r < module.rows; r++){
+						for(var c = 0; c < module.cols; c++){
+							if(invalidCoords.includes("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[c]+(r+1))){
+								invalidGrid[r] = invalidGrid[r].substring(0, c) + '!' + invalidGrid[r].substring(c + 1);
+							}
+						}
+					}
+
+					module.buildSVG(invalidGrid, module.currentInvalids[1]);
+					return true;
+				}
+			},
+			{
+				regex: /Invalid submission\. Resetting\.\.\.|Submission valid\./,
+				handler: function (matches, module) {
+					module.currentInvalids = null;
+					module.attemptNum++;
+					module.currentAttempt[1].push(matches[0] == "Invalid submission. Resetting..." ? "Reseting..." : matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module){
+					module.currentAttempt[1].push(matches[0]);
+				}
+			}
+		]
+	},
+	{
 		displayName: "Follow Me",
 		moduleID: "FollowMe",
 		loggingTag: "Follow Me",
