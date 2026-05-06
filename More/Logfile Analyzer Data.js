@@ -7773,6 +7773,247 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "fractalMaze",
+		loggingTag: "Fractal Maze",
+		matches: [
+			{
+				regex: /Starting seed is ([RBGYMCKWX]{4})\./,
+				handler: function (matches, module) {
+					module.push(matches[0]);
+
+					applyTransformation = (matrix, color) => {
+						
+						let trasformedMatrix = matrix.map(innerArray => [...innerArray]);
+
+						if(color == "X") {
+							return trasformedMatrix.map(arr => arr.map(el => el = 'X'));
+						}
+
+						//Apply red transformation
+						if(("RYMW").includes(color)) {
+							trasformedMatrix = trasformedMatrix.reverse();
+						}
+
+						//Apply green transformation
+						if(("GYCW").includes(color)) {
+							trasformedMatrix = trasformedMatrix.map(x => x.reverse());
+						}
+
+						//Apply blue transformation
+						if(("BCMW").includes(color)) {
+							trasformedMatrix = trasformedMatrix.map((val, index) => trasformedMatrix.map(row => row[index]).reverse());
+						}
+
+						return trasformedMatrix;
+					}
+
+					makeMatrix = (oldMatrix, transformations) => {
+
+						//get 4 pieces of the matrix peices by applying the 4 transformations
+						let matrixPieces = [];
+
+						for(transformation of transformations) {
+							matrixPieces.push(applyTransformation(oldMatrix, transformation));
+						}
+
+						//Get the new matrix size
+						let newMatrix = [];
+						for(let i = 0; i < oldMatrix.length * 2; i++) {
+							newMatrix.push([]);
+						}
+
+						//combine the matrix pieces together
+						const offset = [
+							{x: 0, y: 0},
+							{x: oldMatrix.length, y: 0},
+							{x: 0, y: oldMatrix.length},
+							{x: oldMatrix.length, y: oldMatrix.length}
+						]
+
+
+						//top left, top right, bottom left, bottom right
+						for(let r = 0; r < matrixPieces[0].length; r++) {
+							for(let c = 0; c < matrixPieces[0][0].length; c++) {
+								for(let i = 0; i < 4; i++) {
+									newMatrix[r + offset[i].y][c + offset[i].x] = matrixPieces[i][r][c];
+								}
+							}
+						}
+						return newMatrix;
+					}
+
+					makeSVG = (matrix, rectDimension, svgDimension, showText = true) => {
+						const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 ${svgDimension + 20} ${svgDimension + 20}'>`)
+						.addClass("fractal-maze");
+						for(let r = 0; r < matrix.length; r++) {
+							for(let c = 0; c < matrix.length; c++) {
+								let color = matrix[r][c];
+
+								if(color == "X") {
+									continue;
+								}
+
+								const colorObj = {
+									"R": "red",
+									"G": "#0F0",
+									"B": "blue",
+									"Y": "yellow",
+									"M": "magenta",
+									"C": "cyan",
+									"W": "white",
+									"K": "black"
+								}
+
+								$SVG("<rect>")
+								.attr("width",  rectDimension)
+								.attr("height", rectDimension)
+								.attr("x", c * rectDimension)
+								.attr("y", r * rectDimension)
+								.attr("fill", colorObj[color])
+								.appendTo(svg)
+
+								if(showText) {
+									$SVG("<text>")
+									.text(color[0])
+									.attr("x", c * rectDimension + (rectDimension / 2))
+									.attr("y", r * rectDimension + (rectDimension / 2))
+									.attr("fill", ["B", "K"].includes(color[0]) ? "white" : "black")
+									.appendTo(svg)
+								}
+							}
+						}
+
+						return svg;
+					}
+
+					const matrix0 = [
+						[matches[1][0], matches[1][1]],
+						[matches[1][2], matches[1][3]]
+					]
+
+					const transformations = matrix0.flat();
+
+					module.layers = [];
+					module.pages = [];
+					const svgDimension = 425;
+
+
+					addLayer = (matrix) => {
+						const rectDimension = svgDimension / matrix.length;
+						const svg = makeSVG(matrix, rectDimension, svgDimension);
+						const svgWihoutText = makeSVG(matrix, rectDimension, svgDimension, false);
+
+						module.layers.push({
+							newMatrix: matrix,
+							svg,
+							svgWihoutText,
+							rectDimension
+						});
+
+					}
+
+					//create the matricies, svgs, and push them
+					let currentMatrix = matrix0;
+					addLayer(currentMatrix);
+
+					for (let i = 0; i < 3; i++) {
+						currentMatrix = makeMatrix(currentMatrix, transformations);
+						addLayer(currentMatrix);
+					}
+
+					module.layers.forEach((layer, index) => {
+						module.pages.push({ label: `Layer ${index}`, svg: module.layers[index].svg })
+					});
+
+					return true;
+				}
+			},
+			{
+				regex: /\(Top left = 1,1\) Starting at \[(\d+), (\d+)\], and ending at \[(\d+), (\d+)\]\./,
+				handler: function (matches, module) {
+					if(module.count == null){
+						module.count = 0;
+					}
+					else {
+						module.count++;
+					}
+					const startCoordinate = {x: matches[1] - 1, y: matches[2] - 1};
+					const endCoordinate = {x: matches[3] - 1, y: matches[4] - 1};
+					const layer = module.layers[3 - module.count];
+					
+					const matrix = layer.newMatrix;
+					const svg = layer.svgWihoutText.clone();
+					const rectDimension = layer.rectDimension;
+
+					applyText = (text, coordinate) => {
+						$SVG("<text>")
+						.text(text)
+						.attr("x", coordinate.x * rectDimension + (rectDimension / 2))
+						.attr("y", coordinate.y * rectDimension + (rectDimension / 2))
+						.attr("fill", ["B", "K"].includes(matrix[coordinate.y][coordinate.x]) ? "white" : "black")
+						.appendTo(svg)
+
+					}
+
+					//show the start / end coordinates
+					applyText("S", startCoordinate);
+					applyText("E", endCoordinate);
+
+					module.pages.push({ label: matches[0], svg })
+
+					if(module.count == 3) {
+						const topDiv = $('<div>').addClass("mister-softee-top");
+						const leftButton = $('<button>')
+						.text("◀")
+						.attr("type", "button")
+						.addClass("mister-softee")
+						.addClass("mister-softee-left")
+						.appendTo(topDiv)
+
+						const rightButton = $('<button>')
+						.text("▶")
+						.attr("type", "button")
+						.addClass("mister-softee")
+						.addClass("mister-softee-right")
+						.appendTo(topDiv)
+
+						const label = $('<div>')
+						.text("label test")
+						.addClass("mister-softee-label")
+						.appendTo(topDiv);
+
+						const bottomDiv = $('<div>').addClass("mister-softee-bottom")
+
+						let curPage = 0;
+
+						function setPage() {
+							label.text(module.pages[curPage].label);
+							bottomDiv.empty();
+							bottomDiv.append(module.pages[curPage].svg);
+						}
+
+						leftButton.on("click", function () {
+							curPage = Math.max(curPage - 1, 0);
+							setPage();
+						});
+
+						rightButton.on("click", function () {
+							curPage = Math.min(curPage + 1, module.pages.length - 1);
+							setPage();
+						});
+
+						module.push({obj: topDiv, nobullet: true});
+						module.push({obj: bottomDiv, nobullet: true});
+						setPage();
+					}
+
+
+					return true;
+				}
+			}
+		]
+	},
+	{
 		moduleID: "freeParking",
 		loggingTag: "Free Parking",
 		matches: [
@@ -19819,7 +20060,6 @@ let parseData = [
 					module.encrypted += matches[2];
 					if(module.words.includes(module.decrypted)) {
 						module.push(`Decrypted word: ${module.decrypted}`);
-						console.log(module.answers)
 						for(let a of module.answers) {
 							module.push(a)
 						}
@@ -20516,8 +20756,6 @@ let parseData = [
 					];
 
 					let div = $('<div>').addClass("symbolic-password").addClass("symbolic-password-big");
-
-					console.log(module.position)
 					for(let i = 0; i < grid.length; i++) {
 						let symbol = grid[i];
 						const x = i % 7;
@@ -24126,7 +24364,7 @@ let parseData = [
 			{
 				regex: /(.+Exception)(?:: (.+))?/,
 				handler: function (matches) {
-					const start = linen;
+				const start = linen;
 
 					let stacktrace = [];
 					while (true) {
