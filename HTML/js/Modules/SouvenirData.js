@@ -296,7 +296,7 @@ let SouvenirModuleData = [
 	{ name: "Ladder Lottery",	id: "ladderLottery",	questions: ["Which light was on?"] },
 	{ name: "Ladders",	id: "ladders",	questions: ["Which colors were present on the second ladder?", "What color was missing on the third ladder?"] },
 	{ name: "Langton’s Anteater",	id: "GSLangtonsAnteater",	questions: ["What was the initial state of the grid?"] },
-	{ name: "LED Encryption",	id: "LEDEnc",	questions: ["Which letters were present at each stage"] },
+	{ name: "LED Encryption",	id: "LEDEnc",	questions: ["Which letters were present at each stage?"] },
 	{ name: "LED Grid",	id: "ledGrid",	questions: ["How many LEDs were unlit?"] },
 	{ name: "LED Math",	id: "lgndLEDMath",	questions: ["What were the LED colors?"] },
 	{ name: "LEDs",	id: "leds",	questions: ["What was the initial color of the changed LED?"] },
