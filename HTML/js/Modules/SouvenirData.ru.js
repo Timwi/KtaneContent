@@ -410,7 +410,7 @@ let SouvenirModuleData = [
 	{ original: "Ladder Lottery",	name: "Ladder Lottery",	id: "ladderLottery",	questions: ["Какая лампочка горела?"] },
 	{ original: "Ladders",	name: "Ladders",	id: "ladders",	questions: ["Какие были цвета на второй лестнице?", "Какой цвет отсутствовал на третьей лестнице?"] },
 	{ original: "Langton’s Anteater",	name: "Langton’s Anteater",	id: "GSLangtonsAnteater",	questions: ["Какое было исходное состояние поля?"] },
-	{ original: "LED Encryption",	name: "LED Encryption",	id: "LEDEnc",	questions: ["Which letters were present at each stage"] },
+	{ original: "LED Encryption",	name: "LED Encryption",	id: "LEDEnc",	questions: ["Which letters were present at each stage?"] },
 	{ original: "LED Math",	name: "LED Math",	id: "lgndLEDMath",	questions: ["Какие цвета были у светодиодов?"] },
 	{ original: "LEDs",	name: "LEDs",	id: "leds",	questions: ["Какой был исходный цвет у изменённого светодиода?"] },
 	{ original: "LEGOs",	name: "LEGOs",	id: "LEGOModule",	questions: ["Каких размеров и какого цвета была каждая деталь?"] },
