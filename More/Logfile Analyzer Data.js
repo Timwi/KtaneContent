@@ -2173,6 +2173,12 @@ let parseData = [
 								.addClass(`bbg-${buClr[r*4 + c].toLowerCase()}`)
 								.addClass(`bbg-button`)
 								.appendTo(svg);
+								$SVG(`<text>${buClr[r*4 + c]}`)
+								.attr("x", `${2.5 + c*13}`)
+								.attr("y", `${9.5 + r*13}`)
+								.addClass("bbg-button-colour")
+								.addClass(buClr[r*4 + c] == "B" ? "dark" : "")
+								.appendTo(svg);
 							}
 						}
 
