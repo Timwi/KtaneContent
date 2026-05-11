@@ -7952,7 +7952,7 @@ let parseData = [
 
 						const bottomDiv = $('<div>').addClass("mister-softee-bottom")
 
-						curPage = 0;
+						let curPage = 0;
 
 						function setPage() {
 							label.text(module.pages[curPage].label);
@@ -7962,7 +7962,7 @@ let parseData = [
 
 						leftButton.on("click", function () {
 							curPage = Math.max(curPage - 1, 0);
-							setPage(module.curPage);
+							setPage(curPage);
 						});
 
 						rightButton.on("click", function () {
