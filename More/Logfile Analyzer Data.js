@@ -7056,8 +7056,6 @@ let parseData = [
 							'W': "#FFF",
 							'A': "#888",
 							'K': "#000",
-							'-': "transparent",
-							'X': "transparent",
 							'!': "#800"
 						}
 						
@@ -7066,11 +7064,14 @@ let parseData = [
 						.attr("y", -6)
 						.attr("width", module.cols*10 +2)
 						.attr("height", module.rows*10 +2)
-						.attr("fill", "#024")
+						.attr("fill", "#033166")
 						.appendTo(gridSVG);
 
 						for(var r = 0; r < module.rows; r++){
 							for(var c = 0; c < module.cols; c++){
+								if(grid[r][c] == '-' || grid[r][c] == 'X') 
+									continue;
+
 								$SVG(`<circle>`)
 								.attr('cx', c*10)
 								.attr('cy', r*10)
