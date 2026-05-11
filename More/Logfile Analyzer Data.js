@@ -7931,57 +7931,50 @@ let parseData = [
 					});
 
 					const topDiv = $('<div>').addClass("mister-softee-top");
-						module.leftButton = $('<button>')
+						const leftButton = $('<button>')
 						.text("◀")
 						.attr("type", "button")
 						.addClass("mister-softee")
 						.addClass("mister-softee-left")
 						.appendTo(topDiv)
 
-						module.rightButton = $('<button>')
+						const rightButton = $('<button>')
 						.text("▶")
 						.attr("type", "button")
 						.addClass("mister-softee")
 						.addClass("mister-softee-right")
 						.appendTo(topDiv)
 
-						module.label = $('<div>')
+						const label = $('<div>')
 						.text("label test")
 						.addClass("mister-softee-label")
 						.appendTo(topDiv);
 
 						const bottomDiv = $('<div>').addClass("mister-softee-bottom")
 
-						module.curPage = 0;
+						curPage = 0;
 
-						setPage = (curPage) => {
-
-							console.log(`Set page current page ${curPage}`);
-							console.log(module.pages)
-							module.label.text(module.pages[curPage].label);
+						function setPage() {
+							label.text(module.pages[curPage].label);
 							bottomDiv.empty();
 							bottomDiv.append(module.pages[curPage].svg);
 						}
 
-						module.leftButton.on("click", function () {
-							module.curPage = Math.max(module.curPage - 1, 0);
-							console.log(`button current page ${module.curPage}`);
-							console.log(`Length: ${module.pages.length}`);
+						leftButton.on("click", function () {
+							curPage = Math.max(curPage - 1, 0);
 							setPage(module.curPage);
 						});
 
-						module.rightButton.on("click", function () {
-							module.curPage = Math.min(module.curPage + 1, module.pages.length - 1);
-							console.log(`button current page ${module.curPage}`);
-							console.log(`Length: ${module.pages.length}`);
-							setPage(module.curPage);
+						rightButton.on("click", function () {
+							curPage = Math.min(curPage + 1, module.pages.length - 1);
+							setPage(curPage);
 						});
 
-						setPage(module.curPage);
+						setPage();
 
 						module.push({obj: topDiv, nobullet: true});
 						module.push({obj: bottomDiv, nobullet: true});
-						
+
 					return true;
 				}
 			},
