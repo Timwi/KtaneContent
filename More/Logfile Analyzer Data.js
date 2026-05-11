@@ -7903,7 +7903,6 @@ let parseData = [
 					module.pages = [];
 					const svgDimension = 425;
 
-
 					addLayer = (matrix) => {
 						const rectDimension = svgDimension / matrix.length;
 						const svg = makeSVG(matrix, rectDimension, svgDimension);
@@ -7931,6 +7930,58 @@ let parseData = [
 						module.pages.push({ label: `Layer ${index}`, svg: module.layers[index].svg })
 					});
 
+					const topDiv = $('<div>').addClass("mister-softee-top");
+						module.leftButton = $('<button>')
+						.text("◀")
+						.attr("type", "button")
+						.addClass("mister-softee")
+						.addClass("mister-softee-left")
+						.appendTo(topDiv)
+
+						module.rightButton = $('<button>')
+						.text("▶")
+						.attr("type", "button")
+						.addClass("mister-softee")
+						.addClass("mister-softee-right")
+						.appendTo(topDiv)
+
+						module.label = $('<div>')
+						.text("label test")
+						.addClass("mister-softee-label")
+						.appendTo(topDiv);
+
+						const bottomDiv = $('<div>').addClass("mister-softee-bottom")
+
+						module.curPage = 0;
+
+						setPage = (curPage) => {
+
+							console.log(`Set page current page ${curPage}`);
+							console.log(module.pages)
+							module.label.text(module.pages[curPage].label);
+							bottomDiv.empty();
+							bottomDiv.append(module.pages[curPage].svg);
+						}
+
+						module.leftButton.on("click", function () {
+							module.curPage = Math.max(module.curPage - 1, 0);
+							console.log(`button current page ${module.curPage}`);
+							console.log(`Length: ${module.pages.length}`);
+							setPage(module.curPage);
+						});
+
+						module.rightButton.on("click", function () {
+							module.curPage = Math.min(module.curPage + 1, module.pages.length - 1);
+							console.log(`button current page ${module.curPage}`);
+							console.log(`Length: ${module.pages.length}`);
+							setPage(module.curPage);
+						});
+
+						setPage(module.curPage);
+
+						module.push({obj: topDiv, nobullet: true});
+						module.push({obj: bottomDiv, nobullet: true});
+						
 					return true;
 				}
 			},
@@ -7966,54 +8017,6 @@ let parseData = [
 					applyText("E", endCoordinate);
 
 					module.pages.push({ label: matches[0], svg })
-
-					if(module.count == 3) {
-						const topDiv = $('<div>').addClass("mister-softee-top");
-						const leftButton = $('<button>')
-						.text("◀")
-						.attr("type", "button")
-						.addClass("mister-softee")
-						.addClass("mister-softee-left")
-						.appendTo(topDiv)
-
-						const rightButton = $('<button>')
-						.text("▶")
-						.attr("type", "button")
-						.addClass("mister-softee")
-						.addClass("mister-softee-right")
-						.appendTo(topDiv)
-
-						const label = $('<div>')
-						.text("label test")
-						.addClass("mister-softee-label")
-						.appendTo(topDiv);
-
-						const bottomDiv = $('<div>').addClass("mister-softee-bottom")
-
-						let curPage = 0;
-
-						function setPage() {
-							label.text(module.pages[curPage].label);
-							bottomDiv.empty();
-							bottomDiv.append(module.pages[curPage].svg);
-						}
-
-						leftButton.on("click", function () {
-							curPage = Math.max(curPage - 1, 0);
-							setPage();
-						});
-
-						rightButton.on("click", function () {
-							curPage = Math.min(curPage + 1, module.pages.length - 1);
-							setPage();
-						});
-
-						module.push({obj: topDiv, nobullet: true});
-						module.push({obj: bottomDiv, nobullet: true});
-						setPage();
-					}
-
-
 					return true;
 				}
 			}
