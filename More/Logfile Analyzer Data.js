@@ -7050,12 +7050,12 @@ let parseData = [
 				handler: function (matches, module) {
 					module.cols = matches[1];
 					module.rows = matches[2];
-					if(!module.attemptNum) module.attemptNum = 1;
+					if(!module.attemptNum) module.attemptNum = 0;
 
-					module.currentAttempt = [`Attempt ${module.attemptNum}`, [matches[0]]];
+					module.currentAttempt = [`Attempt ${module.attemptNum+1}`, [matches[0]]];
 					module.push(module.currentAttempt);
 					
-					module.buildSVG = function(grid, postRegion){
+					module.buildSVG = function(grid, postRegion, txt = null){
 						const gridSVG = $(`<svg xmlns='http://www.w3.org/2000/svg' style='width: 50%' viewbox='-10 -10 ${module.cols*10+10} ${module.rows*10+10}'>`);
 						const clrChart = {
 							'O': "#000",
@@ -7087,7 +7087,7 @@ let parseData = [
 							}
 						}
 
-						postRegion.push({ obj: gridSVG, nobullet: true });
+						postRegion.push({ obj: gridSVG, nobullet: true , label: txt});
 					}
 
 					return true;
@@ -7100,42 +7100,41 @@ let parseData = [
 					module.currentAttempt[1].push(matches[0]);
 					module.buildSVG(grid, module.currentAttempt[1]);
 
-					if(matches[0] == "Submitted:"){
-						module.submitted = grid;
-						module.invalidGroups = [];
-					}
+					if(matches[0] == "Submitted:") module.submitted = grid;
 					return true;
 				}
 			},
 			{
 				regex: /Detected invalid group: (.+)/,
 				handler: function (matches, module) {
-					if(!module.currentInvalids){
-						module.currentInvalids = ["Invalid submission, invalid regions are as follows:", []];
-						module.currentAttempt[1].push(module.currentInvalids);
+					var allInvalidRegions = [matches[1]];
+					var slideshow = [];
+
+					while(true){
+						var nextLine = readTaggedLine();
+						if(nextLine == "Invalid submission. Resetting...") break;
+						allInvalidRegions.push(nextLine.match(/Detected invalid group: (.+)/)[1]);
 					}
 
-					const invalidCoords = matches[1].split(',');
-					var invalidGrid = module.submitted.map(x => x);
-					
-					for(var r = 0; r < module.rows; r++){
-						for(var c = 0; c < module.cols; c++){
-							if(invalidCoords.includes("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[c]+(r+1))){
-								invalidGrid[r] = invalidGrid[r].substring(0, c) + '!' + invalidGrid[r].substring(c + 1);
+					for(var i = 0; i < allInvalidRegions.length; i++){
+						const invalidCoords = allInvalidRegions[i].split(',');
+						var invalidGrid = module.submitted.map(x => x);
+						
+						for(var r = 0; r < module.rows; r++){
+							for(var c = 0; c < module.cols; c++){
+								if(invalidCoords.includes("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[c]+(r+1))){
+									invalidGrid[r] = invalidGrid[r].substring(0, c) + '!' + invalidGrid[r].substring(c + 1);
+								}
 							}
 						}
+						module.buildSVG(invalidGrid, slideshow, `Invalid region #${i+1} of ${allInvalidRegions.length}`);
 					}
 
-					module.buildSVG(invalidGrid, module.currentInvalids[1]);
-					return true;
-				}
-			},
-			{
-				regex: /Invalid submission\. Resetting\.\.\.|Submission valid\./,
-				handler: function (matches, module) {
-					module.currentInvalids = null;
+					module.currentAttempt[1].push("Invalid submision. Invalid regions are as follows:");
+					changeNameLater(slideshow, module.currentAttempt[1], true);
+					module.currentAttempt[1].push("Reseting...");
+
 					module.attemptNum++;
-					module.currentAttempt[1].push(matches[0] == "Invalid submission. Resetting..." ? "Reseting..." : matches[0]);
 					return true;
 				}
 			},
@@ -8072,6 +8071,7 @@ let parseData = [
 					applyText("E", endCoordinate);
 
 					module.pages.push({ label: matches[0], obj: svg })
+					module.tempPages.push({ label: matches[0], obj: svg })
 					return true;
 				}
 			}
@@ -13081,8 +13081,8 @@ let parseData = [
 			{
 				regex: /Drove (down|left|right|up), now facing (down|left|right|up)\./,
 				handler: function (matches, module) {
-					if (!module.misterSofteePages) {
-						module.misterSofteePages = [];
+					if (!module.pages) {
+						module.pages = [];
 					}
 
 					const lastPosition = module.positions[module.positions.length - 1];
@@ -13092,7 +13092,7 @@ let parseData = [
 					const endX = direction == "right" ? lastPosition.x + 4 : direction == "left" ? lastPosition.x - 4 : lastPosition.x;
 					const endY = direction == "up"    ? lastPosition.y - 4 : direction == "down" ? lastPosition.y + 4 : lastPosition.y;
 
-					module.misterSofteePages.push({ message: matches[0] });
+					module.pages.push({ label: matches[0] });
 					module.positions.push({x: endX, y: endY})
 					return true;
 				}
@@ -13106,9 +13106,9 @@ let parseData = [
 			{
 				regex: /(.+) ordered a (.+)\./,
 				handler: function (matches, module) {
-					const lastIndex = module.misterSofteePages.length - 1;
-					const text = module.misterSofteePages[lastIndex].message;
-					module.misterSofteePages[lastIndex].message = text + " " + matches[0];
+					const lastIndex = module.pages.length - 1;
+					const text = module.pages[lastIndex].label;
+					module.pages[lastIndex].label = text + " " + matches[0];
 					return true;
 				}
 			},
@@ -13122,7 +13122,7 @@ let parseData = [
 							.attr("y", y * rectDimension)
 							.text(text)
 							.addClass("mister-softee")
-							.appendTo(svg);
+							.appendTo(baseSVG);
 					}
 
 					function addLine(start, end, color, svg) {
@@ -13151,35 +13151,10 @@ let parseData = [
 							.appendTo(svg);
 					}
 
-					const topDiv = $('<div>').addClass("mister-softee-top");
-					const leftButton = $('<button>')
-					.text("◀")
-					.attr("type", "button")
-					.addClass("mister-softee")
-					.addClass("mister-softee-left")
-					.appendTo(topDiv)
-
-					const rightButton = $('<button>')
-					.text("▶")
-					.attr("type", "button")
-					.addClass("mister-softee")
-					.addClass("mister-softee-right")
-					.appendTo(topDiv)
-
-					const label = $('<div>')
-					.text("label test")
-					.addClass("mister-softee-label")
-					.appendTo(topDiv);
-
-					const bottomDiv = $('<div>').addClass("mister-softee-bottom")
-
-					let curPage = 0;
-
 					const rectDimension = 25;
 					const rows = 17;
 					const cols = 17;
-					const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 ${(cols + 1)*rectDimension} ${(rows + 1)*rectDimension}'>`)
-					.appendTo(bottomDiv);
+					const baseSVG = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 ${(cols + 1)*rectDimension} ${(rows + 1)*rectDimension}'>`);
 
 					//make the grid
 					for(let row = 0; row < rows; row++) {
@@ -13204,7 +13179,7 @@ let parseData = [
 								.attr("x", x)
 								.attr("y", y)
 								.attr("fill", fill)
-								.appendTo(svg);	
+								.appendTo(baseSVG);	
 							}
 						}
 					}
@@ -13246,37 +13221,28 @@ let parseData = [
 					makeText(13, 15, "L");
 					makeText(14, 16, "L");
 
-					const lines = $SVG("<g>").appendTo(svg);
+					const lines = $SVG("<g>").appendTo(baseSVG);
 
-					function setPage() {
-						label.text(module.misterSofteePages[curPage].message);
-						lines.empty();
-
-						for(let i = 0; i <= curPage; i++) {
-							
+					//todo set up the pages for each movment
+					for(let curPage = 0; curPage < module.pages.length; curPage++) {
+						//todo get a clone of the svg
+						const svgClone = baseSVG.clone();
+						
+						//todo add the lines for each movment up to the current page
+						for(let j = 0; j <= curPage; j++) {
 							// green: latest movement, red: previous movements
-							const color = i == curPage ? "#0f0" : "#f00";
-							const start = {x: module.positions[i].x * rectDimension + rectDimension / 2, y: module.positions[i].y * rectDimension + rectDimension / 2};
-							const end = {x: module.positions[i + 1].x * rectDimension + rectDimension / 2, y: module.positions[i + 1].y * rectDimension + rectDimension / 2};
-							addLine(start, end, color, lines);
+							const color = j == curPage ? "#0f0" : "#f00";
+							const start = {x: module.positions[j].x * rectDimension + rectDimension / 2, y: module.positions[j].y * rectDimension + rectDimension / 2};
+							const end = {x: module.positions[j + 1].x * rectDimension + rectDimension / 2, y: module.positions[j + 1].y * rectDimension + rectDimension / 2};
+							addLine(start, end, color, svgClone);
 						}
+
+						//todo add the svg to the page array
+						module.pages[curPage].obj = svgClone;
+						console.log(module.pages[curPage])
 					}
 
-
-					leftButton.on("click", function () {
-						curPage = Math.max(curPage - 1, 0);
-						setPage();
-					});
-
-					rightButton.on("click", function () {
-						curPage = Math.min(curPage + 1, module.misterSofteePages.length - 1);
-						setPage();
-					});
-
-					module.push({ obj: topDiv, nobullet: true });
-					module.push({ obj: bottomDiv, nobullet: true });
-
-					setPage();
+					changeNameLater(module.pages, module)
 					return true;
 				}
 			},

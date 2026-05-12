@@ -1354,7 +1354,9 @@ function GetBomb() {
 // @params pages: An array of objects with the following properties:
 //      label: The label to show above the object
 //      obj: An object to show in the bottom div (can be a jQuery object, svg, etc.)
-function changeNameLater(pages, module) {
+// @params module: The module obj used to tell which specific module we are in. Helps to deal with duplicates of the same module
+// @params loopDisplays: If true, allows the user to wrap around from the last display to the first and vice versa
+function changeNameLater(pages, module, loopDisplays = false) {
 
     const topDiv = $('<div>').addClass("mister-softee-top");
     const leftButton = $('<button>')
@@ -1387,12 +1389,12 @@ function changeNameLater(pages, module) {
     }
 
     leftButton.on("click", function () {
-        curPage = Math.max(curPage - 1, 0);
+        curPage = loopDisplays ? (curPage + pages.length - 1) % pages.length : Math.max(curPage - 1, 0);
         setPage(curPage);
     });
 
     rightButton.on("click", function () {
-        curPage = Math.min(curPage + 1, pages.length - 1);
+        curPage = loopDisplays ? (curPage + 1) % pages.length : Math.min(curPage + 1, pages.length - 1);
         setPage(curPage);
     });
 
