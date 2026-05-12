@@ -8007,7 +8007,6 @@ let parseData = [
 
 					module.layers = [];
 					module.pages = [];
-					module.tempPages = [];
 					const svgDimension = 425;
 
 					addLayer = (matrix) => {
@@ -8034,62 +8033,10 @@ let parseData = [
 					}
 
 					module.layers.forEach((layer, index) => {
-						module.pages.push({ label: `Layer ${index}`, svg: module.layers[index].svg })
-						module.tempPages.push({ label: `Layer ${index}`, obj: module.layers[index].svg })
+						module.pages.push({ label: `Layer ${index}`, obj: module.layers[index].svg })
 					});
 
-					const topDiv = $('<div>').addClass("mister-softee-top");
-						const leftButton = $('<button>')
-						.text("◀")
-						.attr("type", "button")
-						.addClass("mister-softee")
-						.addClass("mister-softee-left")
-						.appendTo(topDiv)
-
-						const rightButton = $('<button>')
-						.text("▶")
-						.attr("type", "button")
-						.addClass("mister-softee")
-						.addClass("mister-softee-right")
-						.appendTo(topDiv)
-
-						const label = $('<div>')
-						.text("label test")
-						.addClass("mister-softee-label")
-						.appendTo(topDiv);
-
-						const bottomDiv = $('<div>').addClass("mister-softee-bottom")
-
-						let curPage = 0;
-
-						function setPage() {
-							label.text(module.pages[curPage].label);
-							bottomDiv.empty();
-							bottomDiv.append(module.pages[curPage].svg);
-						}
-
-						leftButton.on("click", function () {
-							curPage = Math.max(curPage - 1, 0);
-							setPage(curPage);
-						});
-
-						rightButton.on("click", function () {
-							curPage = Math.min(curPage + 1, module.pages.length - 1);
-							setPage(curPage);
-						});
-
-						setPage();
-
-						module.push({obj: topDiv, nobullet: true});
-						module.push({obj: bottomDiv, nobullet: true});
-
-						const a = changeNameLater(module.tempPages)
-
-						module.push({obj: a.topDiv, nobullet: true});
-						module.push({obj: a.bottomDiv, nobullet: true});
-
-						
-
+					changeNameLater(module.pages, module)
 					return true;
 				}
 			},
@@ -8124,8 +8071,7 @@ let parseData = [
 					applyText("S", startCoordinate);
 					applyText("E", endCoordinate);
 
-					module.pages.push({ label: matches[0], svg })
-					module.tempPages.push({ label: matches[0], obj: svg })
+					module.pages.push({ label: matches[0], obj: svg })
 					return true;
 				}
 			}

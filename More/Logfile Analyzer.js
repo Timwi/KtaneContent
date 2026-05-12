@@ -1354,7 +1354,7 @@ function GetBomb() {
 // @params pages: An array of objects with the following properties:
 //      label: The label to show above the object
 //      obj: An object to show in the bottom div (can be a jQuery object, svg, etc.)
-function changeNameLater(pages) {
+function changeNameLater(pages, module) {
 
     const topDiv = $('<div>').addClass("mister-softee-top");
     const leftButton = $('<button>')
@@ -1378,6 +1378,8 @@ function changeNameLater(pages) {
 
     const bottomDiv = $('<div>').addClass("mister-softee-bottom")
 
+    var curPage = 0;
+
     function setPage() {
         label.text(pages[curPage].label);
         bottomDiv.empty();
@@ -1396,7 +1398,8 @@ function changeNameLater(pages) {
 
     setPage();
 
-    return {topDiv, bottomDiv};
+    module.push({obj: topDiv, nobullet: true});
+    module.push({obj: bottomDiv, nobullet: true});
 }
 
 function pre(line) {
