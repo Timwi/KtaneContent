@@ -8007,6 +8007,7 @@ let parseData = [
 
 					module.layers = [];
 					module.pages = [];
+					module.tempPages = [];
 					const svgDimension = 425;
 
 					addLayer = (matrix) => {
@@ -8034,6 +8035,7 @@ let parseData = [
 
 					module.layers.forEach((layer, index) => {
 						module.pages.push({ label: `Layer ${index}`, svg: module.layers[index].svg })
+						module.tempPages.push({ label: `Layer ${index}`, obj: module.layers[index].svg })
 					});
 
 					const topDiv = $('<div>').addClass("mister-softee-top");
@@ -8081,6 +8083,13 @@ let parseData = [
 						module.push({obj: topDiv, nobullet: true});
 						module.push({obj: bottomDiv, nobullet: true});
 
+						const a = changeNameLater(module.tempPages)
+
+						module.push({obj: a.topDiv, nobullet: true});
+						module.push({obj: a.bottomDiv, nobullet: true});
+
+						
+
 					return true;
 				}
 			},
@@ -8116,6 +8125,7 @@ let parseData = [
 					applyText("E", endCoordinate);
 
 					module.pages.push({ label: matches[0], svg })
+					module.tempPages.push({ label: matches[0], obj: svg })
 					return true;
 				}
 			}
