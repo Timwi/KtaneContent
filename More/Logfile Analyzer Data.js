@@ -2106,65 +2106,39 @@ let parseData = [
 					module.currentDropdown = [`Attempt ${module.attemptNum}`, []];
 					
 					var stageDataLines = readTaggedLines(14);
-					var buttonStates = [];
-					var displayText = [];
-					var displayClr = [];
+					var pages = [];
 					var currentDisplayIndex = 0;
 
 					for(var n = 0; n < 5; n++){
-						buttonStates[n] = [];
-						displayText[n] = [];
-						displayClr[n] = [];
+						var buttonStates = [];
+						var displayText = [];
+						var displayClr = [];
 
 						for(var r = 0; r < 4; r++){
 							for(var c = 0; c < 4; c++){
-								buttonStates[n].push(stageDataLines[r][c*6 + n])
+								buttonStates.push(stageDataLines[r][c*6 + n])
 							}
 						}
 
 						if(n == 4){
-							displayText[n] = ["",""];
-							displayClr[n] = ["",""];
+							displayText = ["",""];
+							displayClr = ["",""];
 						} else {
-							displayText[n] = [
+							displayText = [
 								stageDataLines[4].match(/The .+ screen reads (.+) - (.+) - (.+) - (.+)$/)[n+1],
 								stageDataLines[9].match(/The .+ screen reads (.+) - (.+) - (.+) - (.+)$/)[n+1]
 							];
-							displayClr[n] = [
+							displayClr = [
 								stageDataLines[6].match(/The .+ screen has the text colours: (.+), (.+), (.+), (.+)$/)[n+1],
 								stageDataLines[11].match(/The .+ screen has the text colours: (.+), (.+), (.+), (.+)$/)[n+1]
 							]
 						}
+
+						pages.push({obj: makeBBGSVG(buttonStates, displayText, displayClr), label: `Display ${n+1}`})
 					}
 
-					const topDiv = $('<div>').addClass("bbg-top");
-
-					const leftButton = $('<button>')
-					.text("◀")
-					.attr("type", "button")
-					.addClass("bbg-button")
-					.addClass("bbg-left")
-					.appendTo(topDiv);
-
-					const rightButton = $('<button>')
-					.text("▶")
-					.attr("type", "button")
-					.addClass("bbg-button")
-					.addClass("bbg-right")
-					.appendTo(topDiv);
-
-					var label = $('<div>')
-					.addClass("bbg-label")
-					.appendTo(topDiv);
-
-					const bottomDiv = $('<div>').addClass("bbg-bottom");
-
-					function makeBBGSVG(buClr, txt, txtClr, dispNum) {
-						bottomDiv.empty();
+					function makeBBGSVG(buClr, txt, txtClr) {
 						const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -15 100 70'>`)
-						.appendTo(bottomDiv);
-						
-						label.text(`Display ${dispNum+1}`);
 
 						for(var r = 0; r < 4; r++){
 							for(var c = 0; c < 4; c++){
@@ -2227,31 +2201,14 @@ let parseData = [
 						.addClass(`bbg-display`)
 						.addClass(`bbg-display-colourblind`)
 						.appendTo(svg);
+
+						return svg;
 					};
 
-
-					makeBBGSVG(buttonStates[0], displayText[0], displayClr[0], 0);
-
-					leftButton.on("click", function () {
-						currentDisplayIndex = (currentDisplayIndex+4)%5;
-						makeBBGSVG(buttonStates[currentDisplayIndex], displayText[currentDisplayIndex], displayClr[currentDisplayIndex], currentDisplayIndex);
-					});
-					
-					rightButton.on("click", function () {
-						currentDisplayIndex = (currentDisplayIndex+1)%5;
-						makeBBGSVG(buttonStates[currentDisplayIndex], displayText[currentDisplayIndex], displayClr[currentDisplayIndex], currentDisplayIndex);
-					});
-
 					module.push(module.currentDropdown);
-					module.currentDropdown[1].push({ obj: topDiv, nobullet: true });
 					module.currentDropdown[1].push("The module shows the following:");
-					module.currentDropdown[1].push({ obj: bottomDiv, nobullet: true });
-					module.currentDropdown[1].push(stageDataLines[5]);
-					module.currentDropdown[1].push(stageDataLines[7]);
-					module.currentDropdown[1].push(stageDataLines[8]);
-					module.currentDropdown[1].push(stageDataLines[10]);
-					module.currentDropdown[1].push(stageDataLines[12]);
-					module.currentDropdown[1].push(stageDataLines[13]);
+					changeNameLater(pages, module.currentDropdown[1], true);
+					module.currentDropdown[1].push(stageDataLines[5], stageDataLines[7], stageDataLines[8], stageDataLines[10], stageDataLines[12], stageDataLines[13]);
 					return true;
 				}
 			},

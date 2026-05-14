@@ -1358,27 +1358,48 @@ function GetBomb() {
 // @params loopDisplays: If true, allows the user to wrap around from the last display to the first and vice versa
 function changeNameLater(pages, module, loopDisplays = false) {
 
+<<<<<<< HEAD
     const topDiv = $('<div>').addClass("mister-softee-top");
     const leftButton = $('<button>')
     .text("◀")
     .attr("type", "button")
     .addClass("mister-softee")
     .addClass("mister-softee-left")
+=======
+    const topDiv = $('<div>').addClass("cyclable-disp-top");
+    const leftButton = $('<button>')
+    .text("◀")
+    .attr("type", "button")
+    .addClass("cyclable-disp-button")
+    .addClass("cyclable-disp-left")
+>>>>>>> 35b58fef9 (BBG lfa refactor + Restylize cyclable displays)
     .appendTo(topDiv)
 
     const rightButton = $('<button>')
     .text("▶")
     .attr("type", "button")
+<<<<<<< HEAD
     .addClass("mister-softee")
     .addClass("mister-softee-right")
+=======
+    .addClass("cyclable-disp-button")
+    .addClass("cyclable-disp-right")
+>>>>>>> 35b58fef9 (BBG lfa refactor + Restylize cyclable displays)
     .appendTo(topDiv)
 
     const label = $('<div>')
     .text("label test")
+<<<<<<< HEAD
     .addClass("mister-softee-label")
     .appendTo(topDiv);
 
     const bottomDiv = $('<div>').addClass("mister-softee-bottom")
+=======
+    .addClass("cyclable-disp-label")
+    .appendTo(topDiv);
+
+    const bottomDiv = $('<div>').addClass("cyclable-disp-bottom")
+>>>>>>> 35b58fef9 (BBG lfa refactor + Restylize cyclable displays)
 
     var curPage = 0;
 
