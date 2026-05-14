@@ -1356,7 +1356,7 @@ function GetBomb() {
 //      obj: An object to show in the bottom div (can be a jQuery object, svg, etc.)
 // @params module: The module obj used to tell which specific module we are in. Helps to deal with duplicates of the same module
 // @params loopDisplays: If true, allows the user to wrap around from the last display to the first and vice versa
-function changeNameLater(pages, module, loopDisplays = false) {
+function makeCycleableDisplays(pages, module, loopDisplays = false) {
 
     const topDiv = $('<div>').addClass("cyclable-disp-top");
     const leftButton = $('<button>')

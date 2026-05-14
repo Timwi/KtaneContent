@@ -2207,7 +2207,7 @@ let parseData = [
 
 					module.push(module.currentDropdown);
 					module.currentDropdown[1].push("The module shows the following:");
-					changeNameLater(pages, module.currentDropdown[1], true);
+					makeCycleableDisplays(pages, module.currentDropdown[1], true);
 					module.currentDropdown[1].push(stageDataLines[5], stageDataLines[7], stageDataLines[8], stageDataLines[10], stageDataLines[12], stageDataLines[13]);
 					return true;
 				}
@@ -7088,7 +7088,7 @@ let parseData = [
 					}
 
 					module.currentAttempt[1].push("Invalid submision. Invalid regions are as follows:");
-					changeNameLater(slideshow, module.currentAttempt[1], true);
+					makeCycleableDisplays(slideshow, module.currentAttempt[1], true);
 					module.currentAttempt[1].push("Reseting...");
 
 					module.attemptNum++;
@@ -7992,7 +7992,7 @@ let parseData = [
 						module.pages.push({ label: `Layer ${index}`, obj: module.layers[index].svg })
 					});
 
-					changeNameLater(module.pages, module)
+					makeCycleableDisplays(module.pages, module)
 					return true;
 				}
 			},
@@ -13199,7 +13199,7 @@ let parseData = [
 						console.log(module.pages[curPage])
 					}
 
-					changeNameLater(module.pages, module)
+					makeCycleableDisplays(module.pages, module)
 					return true;
 				}
 			},
