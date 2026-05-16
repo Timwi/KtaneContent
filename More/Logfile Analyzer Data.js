@@ -9782,6 +9782,20 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "karnaugh",
+		loggingTag: "Karnaugh Map",
+		matches: [
+			{
+				regex: /Generated map: (.+)/,
+				handler: function (matches, module) {
+					module.push({ label: "Generated map:", obj: pre(matches[1].replaceAll("| ", "\n"))});
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "keepClicking",
 		loggingTag: "Keep Clicking",
 		matches: [
