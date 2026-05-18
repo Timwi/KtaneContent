@@ -15366,6 +15366,64 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "PerspecticoloredSquaresModule",
+		loggingTag: "Perspecticolored Squares",
+		matches: [
+			{
+				regex: /Placing a knight, bishop, and rook at (..), (..), (..) respectively\./,
+				handler: function (matches, module) {
+					//setup
+					module.pieceCoords = [matches[1], matches[2], matches[3]];
+					return false;
+				}
+			},
+			{
+				regex: /Initial Board:|Board state after \d iteration\(s\):/,
+				handler: function (matches, module) {
+					
+					const clrDict = {
+						"R": "red",
+						"G": "green",
+						"B": "blue",
+						"M": "magenta",						
+						"Y": "yellow"						
+					}
+					
+					function makeSVG(data){
+						const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -10 220 115'>`);
+						for(var r = 0; r < 4; r++){
+							for(var c = 0; c < 4; c++){
+								$SVG("<rect>")
+								.attr("width", 25)
+								.attr("height", 25)
+								.addClass("discolored-squares")
+								.attr("x", c*25).attr("y", r*25)
+								.addClass(`discolored-squares-${clrDict[grid[r][c]]}`)
+								.appendTo(svg);
+
+								$SVG("<text>")
+								.attr("x", c*25+7.5)
+								.attr("y", r*25+17.5)
+								.text(grid[r][c])
+								.addClass("discolored-squares-color-blind")
+								.appendTo(svg);
+								
+							}	
+						}
+
+						return svg;
+					}
+					
+					var grid = readTaggedLines(4).map(x => x.split(" "));
+					module.push(makeSVG(grid));
+					
+					return true;
+				}		
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "spwizPerspectivePegs",
 		loggingTag: "Perspective Pegs",
 		matches: [
