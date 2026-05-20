@@ -8748,6 +8748,140 @@ let parseData = [
 		icon: "Guess Who",
 	},
 	{
+		displayName: "Hand Turkey",
+		moduleID: "handTurkey",
+		loggingTag: "Hand Turkey",
+		initData: function (module) {
+			if (module.htReady)
+				return;
+			module.htReady = true;
+			module.htFingers = {};
+			module.htOrder = ["pinky", "ring", "middle", "index"];
+			module.htColors = [
+				["brown", "yellow", "blue", "yellow", "brown", "green", "pink"],
+				["green", "pink", "green", "yellow", "brown", "brown", "red"],
+				["red", "green", "brown", "blue", "red", "blue", "yellow"],
+				["red", "orange", "red", "pink", "orange", "orange", "yellow"],
+				["brown", "orange", "yellow", "red", "orange", "brown", "green"],
+				["blue", "blue", "orange", "blue", "orange", "pink", "green"],
+				["red", "blue", "yellow", "pink", "pink", "green", "pink"],
+			];
+			module.htTable = $("<table class='ht-fingers'>");
+			module.htPages = [];
+			module.htRule = null;
+			module.htRender = function () {
+				module.htTable.empty();
+				let fingerRow = $("<tr><th>Finger</th></tr>").appendTo(module.htTable);
+				let colorRow = $("<tr><th>Feather</th></tr>").appendTo(module.htTable);
+				let itemRow = $("<tr><th>Grabbed</th></tr>").appendTo(module.htTable);
+				for (let finger of module.htOrder) {
+					const data = module.htFingers[finger];
+					$("<th>").text(finger[0].toUpperCase() + finger.slice(1)).appendTo(fingerRow);
+					if (data) {
+						$("<td>").addClass(`ht-${data.color.toLowerCase()}`).text(data.color).appendTo(colorRow);
+						$("<td>").text(data.item).appendTo(itemRow);
+					} else {
+						$("<td>").appendTo(colorRow);
+						$("<td>").appendTo(itemRow);
+					}
+				}
+			};
+			module.htCoord = function (pos) {
+				const match = /^([A-G])([1-7])$/.exec(pos);
+				return match && { col: match[1].charCodeAt(0) - 65, row: parseInt(match[2]) - 1 };
+			};
+			module.htGrid = function (pos) {
+				const coord = module.htCoord(pos);
+				let table = $("<table class='ht-grid'>");
+				let header = $("<tr><th></th></tr>").appendTo(table);
+				for (let col = 0; col < 7; col++)
+					$("<th>").text(String.fromCharCode(65 + col)).appendTo(header);
+				for (let row = 0; row < 7; row++) {
+					let tr = $("<tr>").appendTo(table);
+					$("<th>").text(row + 1).appendTo(tr);
+					for (let col = 0; col < 7; col++) {
+						const color = module.htColors[row][col];
+						let td = $("<td>").addClass(`ht-${color}`).attr("title", `${String.fromCharCode(65 + col)}${row + 1}: ${color[0].toUpperCase() + color.slice(1)}`).appendTo(tr);
+						if (coord && coord.row == row && coord.col == col)
+							td.addClass("ht-current").text(pos);
+					}
+				}
+				return table;
+			};
+			module.htAddPos = function (note, pos) {
+				module.htPages.push({ note, pos, obj: module.htGrid(pos) });
+				if (!module.htPosObj) {
+					let obj = $("<div class='ht-pos'>");
+					let displayLabel = $("<div class='ht-pos-label'>").appendTo(obj);
+					let gridContainer = $("<div class='ht-pos-grid'>").appendTo(obj);
+					let controls = $("<div class='ht-pos-ctrl'>").appendTo(obj);
+					let leftArrow = $("<button type='button' class='ht-pos-btn'>").text("◀ Prev").appendTo(controls);
+					let rightArrow = $("<button type='button' class='ht-pos-btn'>").text("Next ▶").appendTo(controls);
+					module.htPage = 0;
+					module.htPosObj = obj;
+					module.htShow = function (newPage) {
+						let pages = module.htPages;
+						module.htPage = Math.max(0, Math.min(newPage, pages.length - 1));
+						let page = pages[module.htPage];
+						displayLabel.empty().append($("<div>").text(`${module.htPage + 1} of ${pages.length}:`));
+						if (page.note)
+							displayLabel.append($("<div>").text(page.note));
+						displayLabel.append($("<div>").text(`Current position: ${page.pos}`));
+						gridContainer.empty().append(page.obj);
+					};
+					leftArrow.click(function () {
+						module.htShow(module.htPage - 1);
+					});
+					rightArrow.click(function () {
+						module.htShow(module.htPage + 1);
+					});
+					module.push({ label: "Moves:" });
+					module.push({ label: "", obj, nobullet: true });
+				}
+				module.htShow(module.htPage);
+			};
+			module.htRender();
+			module.push({ label: "Finger colors and grabbed items:", obj: module.htTable });
+		},
+		matches: [
+			{
+				regex: /The feather on the (pinky|ring|middle|index|thumb) finger is (\w+)\. You grabbed (.+)\./,
+				handler: function (matches, module, moduleInfo) {
+					moduleInfo.moduleData.initData(module);
+					module.htFingers[matches[1]] = { color: matches[2], item: matches[3] };
+					module.htRender();
+					return true;
+				}
+			},
+			{
+				regex: /Your starting position is ([A-G][1-7])\./,
+				handler: function (matches, module, moduleInfo) {
+					moduleInfo.moduleData.initData(module);
+					module.push({ label: `Starting position: ${matches[1]}`, obj: module.htGrid(matches[1]) });
+					return true;
+				}
+			},
+			{
+				regex: /^(?=.*(?:Move|move|Divide|Find|Consider|Starting with|diametrically opposite|closest corner)).+\.$/,
+				handler: function (matches, module, moduleInfo) {
+					moduleInfo.moduleData.initData(module);
+					module.htRule = matches[0];
+					return false;
+				}
+			},
+			{
+				regex: /You are now at ([A-G][1-7])\./,
+				handler: function (matches, module, moduleInfo) {
+					moduleInfo.moduleData.initData(module);
+					module.htAddPos(module.htRule, matches[1]);
+					module.htRule = null;
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Hereditary Base Notation",
 		moduleID: "hereditaryBaseNotationModule",
 		loggingTag: "Hereditary Base Notation",
