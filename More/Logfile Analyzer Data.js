@@ -8866,7 +8866,7 @@ let parseData = [
 				handler: function (matches, module, moduleInfo) {
 					moduleInfo.moduleData.initData(module);
 					module.htRule = matches[0];
-					return false;
+					return true;
 				}
 			},
 			{
