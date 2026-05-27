@@ -19245,6 +19245,33 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "simonSaidModule",
+		loggingTag: "Simon Said",
+		matches: [
+			{
+				regex: /==== STAGE (\d) ====/,
+				handler: function (matches, module) {
+					if(matches[1] == "1"){
+						if(!module.attemptNum) module.attemptNum = 0;
+						module.attemptNum++;
+						module.currentAttempt = [`Attempt ${module.attemptNum}`, []];
+						module.push(module.currentAttempt);
+					}
+					module.currentStage = [`Stage ${matches[1]}`, []];
+					module.currentAttempt[1].push(module.currentStage);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					if(!module.currentStage) module.push(matches[0]);
+					else module.currentStage[1].push(matches[0]);
+				}
+			}
+		]
+	},
+	{
 		moduleID: "SimonScreamsModule",
 		loggingTag: "Simon Screams",
 		matches: [
@@ -19356,6 +19383,26 @@ let parseData = [
 				handler: function (matches, module) {
 					module.currentDropdown[1].push(matches[0])
 					return true;
+				}
+			}
+		]
+	},
+	{
+		moduleID: "GSSimonShuffles",
+		loggingTag: "Simon Shuffles",
+		matches: [
+			{
+				regex: /In stage (\d), the flashing sequence is: (.+)\./,
+				handler: function (matches, module) {
+					module.currentStage = [`Stage ${matches[1]}`, [`The flashing sequence is: ${matches[2]}.`]];
+					module.push(module.currentStage);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function (matches, module) {
+					module.currentStage[1].push(matches[0]);
 				}
 			}
 		]
