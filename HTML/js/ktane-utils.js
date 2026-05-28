@@ -73,6 +73,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 </div>
                 <div class='option-group'>
                     <h3>Freeform Drawing</h3>
+                    <div id='freeform-drawing-disabled-notice' style='display: none; color: red;'>Due to this manual's size, the freeform drawing<br>canvas can't be enabled.</div>
                     <div><input type='checkbox' id='freeform-drawing-enabled'>&nbsp;<label for='freeform-drawing-enabled'>Enabled</label> (Alt-D)</div>
                     <div>Brush size: (Alt-Minus / Alt-Plus)</div>
                     <div><input type='range' id='draw-width' min='5' max='50' step='5' value='20'></div>
@@ -256,7 +257,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     $('#developer-mode-enabled').click();
                 }
                 // Alt-D: Toggle freeform drawing mode
-                else if (k == "d" || event.keyCode == 68) {
+                else if ((k == "d" || event.keyCode == 68) && !($('#freeform-drawing-enabled').prop('disabled'))) {
                     $('#freeform-drawing-enabled').prop('checked', !drawEnabled())
                     .trigger('change');
                 }
@@ -371,6 +372,8 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 {
                     let newMode = $(this).data('mode');
                     const drawingCheckbox = $('#freeform-drawing-enabled');
+                    if (drawingCheckbox.prop('disabled'))
+                        return
                     const uncheckAllTools = () => {
                         $('.ktane-highlight-btn').removeClass('selected');
                         if (drawingCheckbox.prop('checked')) {
@@ -722,8 +725,14 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                 redrawStrokes();
             }
 
+            function disableCanvas() {
+                $('#freeform-drawing-enabled').prop('disabled',true);
+                $('#draw-width').prop('disabled',true);
+                $('#freeform-drawing-disabled-notice').show();
+            }
+
             function drawEnabled() {
-                return $('#freeform-drawing-enabled').prop('checked');
+                return $('#freeform-drawing-enabled').prop('checked') && !($('#freeform-drawing-enabled').prop('disabled'));
             }
 
             function drawMove(e) {
@@ -794,11 +803,19 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
             }
 
             function sizeCanvas() {
+                const root = document.documentElement; 
+
+                // Disables the canvas if it exceeds a certain limit
+                const Y_LIMIT = 8192
+                if (root.scrollHeight > Y_LIMIT) {
+                    disableCanvas()
+                    return
+                }
+
                 // For initial canvas sizing, and for when the window resizes.
                 if (sizingCanvas) return;
                 sizingCanvas = true;
                 drawCanvas.style.display = 'none';
-                const root = document.documentElement; 
                 const margin = 1; // It needs a non-zero margin to not show additional scrolls
                 const w = Math.max(root.scrollWidth, root.clientWidth)-margin;
                 const h = Math.max(root.scrollHeight, root.clientHeight)-margin;
