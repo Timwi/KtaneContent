@@ -502,7 +502,7 @@ let SouvenirModuleData = [
 	{ original: "The Samsung",	name: "The Samsung",	id: "theSamsung",	questions: ["各アプリはどこ？"] },
 	{ original: "Saturn",	name: "土星",	id: "saturn",	questions: ["ゴールの位置は？"] },
 	{ original: "Sbemail Songs",	name: "Sbemail Songs",	id: "sbemailsongs",	questions: ["各ステージで表示された歌は？"] },
-	{ original: "Scavenger Hunt",	name: "宝探し",	id: "scavengerHunt",	questions: ["最初のステージで正しく送信したタイルは？", "最初のステージで赤、緑、青のタイルは何処にあった？"] },
+	{ original: "Scavenger Hunt",	name: "宝探し",	id: "scavengerHunt",	questions: ["Which tiles gave relevant clues in each stage?"] },
 	{ original: "Schlag den Bomb",	name: "シュラグ・デン・ボム",	id: "qSchlagDenBomb",	questions: ["出演者の名前と二人のスコアは？"] },
 	{ original: "Scorching Alchemist",	name: "Scorching Alchemist",	id: "ScorchingAlchemist",	questions: ["Which sword was present on the ground?"] },
 	{ original: "Scramboozled Eggain",	name: "再卵炒",	id: "ScramboozledEggainModule",	questions: ["暗号化された単語は？"] },
