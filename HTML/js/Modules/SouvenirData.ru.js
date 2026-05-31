@@ -369,7 +369,7 @@ let SouvenirModuleData = [
 	{ original: "The Samsung",	name: "The Samsung",	id: "theSamsung",	questions: ["Where was each app?"] },
 	{ original: "Saturn",	name: "Saturn",	id: "saturn",	questions: ["Где была цель?"] },
 	{ original: "Sbemail Songs",	name: "Sbemail Songs",	id: "sbemailsongs",	questions: ["Какие песни были показаны на каждом этапе?"] },
-	{ original: "Scavenger Hunt",	name: "Scavenger Hunt",	id: "scavengerHunt",	questions: ["Какая плитка была правильно выбрана на первом этапе?", "Где была красная, зелёная и синяя плитка на первом этапе?"] },
+	{ original: "Scavenger Hunt",	name: "Scavenger Hunt",	id: "scavengerHunt",	questions: ["Which tiles gave relevant clues in each stage?"] },
 	{ original: "Schlag den Bomb",	name: "Schlag den Bomb",	id: "qSchlagDenBomb",	questions: ["Какие были имена участников и их счёт?"] },
 	{ original: "Hickory Dickory Dock",	name: "Hickory Dickory Dock",	id: "hickoryDickoryDockModule",	questions: ["What times were shown when the clock struck?"] },
 	{ original: "Hidden Colors",	name: "Hidden Colors",	id: "lgndHiddenColors",	questions: ["Какой цвет был у главного светодиода?"] },

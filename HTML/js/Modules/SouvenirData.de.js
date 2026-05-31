@@ -476,7 +476,7 @@ let SouvenirModuleData = [
 	{ original: "Keywords",	name: "Schlüsselwörter",	id: "xtrkeywords",	questions: ["Welche Buchstaben waren auf dem Display?"] },
 	{ original: "Snowflakes",	name: "Schneeflocken",	id: "snowflakes",	questions: ["Welche Schneeflocken waren zu sehen?"] },
 	{ original: "Quick Arithmetic",	name: "Schnellarithmetik",	id: "QuickArithmetic",	questions: ["Welche der zwei Folgen enthielt welche Ziffern und Farben?"] },
-	{ original: "Scavenger Hunt",	name: "Schnitzeljagd",	id: "scavengerHunt",	questions: ["Welches Feld wurde in der ersten Stufe korrekt eingegeben?", "Wo waren in der ersten Stufe die roten/grünen/blauen Felder?"] },
+	{ original: "Scavenger Hunt",	name: "Schnitzeljagd",	id: "scavengerHunt",	questions: ["Auf welchen Feldern waren relevante Hinweise für welche Stufe?"] },
 	{ original: "Creation",	name: "Schöpfung",	id: "CreationModule",	questions: ["Wie war das Wetter am ersten Tag?"] },
 	{ original: "Not The Screw",	name: "DieSchraube Mal Anders",	id: "notTheScrew",	questions: ["Wo war die Startposition?"] },
 	{ original: "Black Cipher",	name: "Schwarze Geheimschrift",	id: "blackCipher",	questions: ["Was stand auf welchem Display?"] },

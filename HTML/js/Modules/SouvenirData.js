@@ -502,7 +502,7 @@ let SouvenirModuleData = [
 	{ name: "The Samsung",	id: "theSamsung",	questions: ["Where was each app?"] },
 	{ name: "Saturn",	id: "saturn",	questions: ["Where was the goal?"] },
 	{ name: "Sbemail Songs",	id: "sbemailsongs",	questions: ["What were the displayed songs in each stage?"] },
-	{ name: "Scavenger Hunt",	id: "scavengerHunt",	questions: ["Which tile was correctly submitted in the first stage?", "Where were the red, green, and blue tiles in the first stage?"] },
+	{ name: "Scavenger Hunt",	id: "scavengerHunt",	questions: ["Which tiles gave relevant clues in each stage?"] },
 	{ name: "Schlag den Bomb",	id: "qSchlagDenBomb",	questions: ["What were the contestant’s name and both scores?"] },
 	{ name: "Scorching Alchemist",	id: "ScorchingAlchemist",	questions: ["Which sword was present on the ground?"] },
 	{ name: "Scramboozled Eggain",	id: "ScramboozledEggainModule",	questions: ["What were the encrypted words?"] },
