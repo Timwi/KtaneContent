@@ -1,0 +1,574 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Non-Euclidean Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script src="js/Utilities/set-utils.js"></script>
+    <script src="js/Utilities/array-utils.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <style>
+        .maze {
+            display: inline-grid;
+            grid-template-columns: repeat(7, 96px); 
+            grid-template-rows: repeat(7, 96px);
+        }
+        .maze div {
+            display: contents;
+        }
+        .maze div div {
+            box-sizing: border-box; 
+            display: inline-grid;
+            grid-template-columns: 1fr 56px 1fr;
+            grid-template-rows: 1fr 56px 1fr;
+        }
+        .maze div div div {
+            display: contents;
+            user-select: none; 
+        }
+        .example {
+            display: inline-grid;
+            grid-template-columns: repeat(7, 20px); 
+            grid-template-rows: repeat(8, 20px);
+            float: right;
+            margin-left: 30px;
+            margin-bottom: 45px;
+        }
+        .example div {
+            display: contents;
+        }
+        .example div div {
+            display: inline-grid;
+        }
+        .example2 {
+            display: inline-grid;
+            grid-template-columns: repeat(5, 20px); 
+            grid-template-rows: repeat(5, 20px);
+            float: right;
+            margin-left: 25px;
+            margin-bottom: 10px;
+        }
+        .example2 div {
+            display: contents;
+        }
+        .example2 div div {
+            display: inline-grid;
+        }
+        .d {
+            font-size: 12px !important;
+            word-break: break-all;
+            text-align: center;
+            writing-mode: vertical-lr;;
+            text-orientation: upright;
+        }
+        .maze div div div div {
+            box-sizing: border-box; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .options {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+        }
+        .hexNum {
+            width: 50px;
+            height: 50px;
+            user-select: none; 
+            text-align: center;
+            font-size: 40px;
+            border: 1px solid black;
+            box-sizing: border-box;
+        }
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 2'; }
+    </style>
+    <script>
+    $(function() {
+        let maze = $('.maze');
+        let example = $('.example');
+        let example2 = $('.example2');
+        let options = $('.options');
+        let saveStates = [];
+        let hexSelected = 0;
+        let optionSelected = 1;
+
+        $(".hex").click(function() { if (!clicked && optionSelected != 0) Hexominoes(); });
+        $(".portals").click(function() { if (!clicked && optionSelected != 1) Portals(); });
+        $(".corrupt").click(function() { if (!clicked && optionSelected != 2) Corruption(); });
+        $(".movement").click(function() { if (!clicked && optionSelected != 3)  Movement(); });
+
+        const exampleMap = [
+            "#FF0000", "#FF0000", "#FF0000", "#00AFE0", "#8700FE", "#8700FE", "#8700FE",
+            "#FF0000", "#FF0000", "#00AFE0", "#00AFE0", "#00AFE0", "#00AFE0", "#8700FE",
+            "#FF0000", "#FFFF00", "#FFFF00", "#00AFE0", "#00FF00", "#8700FE", "#8700FE",
+            "#FFFF00", "#FFFF00", "#FE00FE", "#FFFFFF", "#00FF00", "#00FF00", "#00FF00",
+            "#FFFF00", "#FE00FE", "#FE00FE", "#00FF00", "#00FF00", "#FF7F00", "#FF7F00",
+            "#FFFF00", "#FE00FE", "#0000FE", "#0000FE", "#FF7F00", "#FF7F00", "#FF7F00",
+            "#FE00FE", "#FE00FE", "#0000FE", "#0000FE", "#0000FE", "#0000FE", "#FF7F00"
+        ]
+
+        const example2Map = [
+             "none", "none", "silver", "none", "none", 
+             "none", "silver", "gray", "silver", "none", 
+             "silver", "gray", "black", "gray", "silver",
+             "none", "silver", "gray", "silver", "none", 
+             "none", "none", "silver", "none",  "none"
+        ]
+
+        const colors = [
+            "#890000", "#991900", "#A53100", "#A85100", "#AF7200", "#B79900", "#C4C400",
+            "#930049", "#FF0000", "#FE5300", "#FE7F00", "#FEC400", "#FFFF00", "#99B500",
+            "#A0007B", "#FE0093", "#FF9999", "#FFCC99", "#FFFF93", "#C2FE00", "#57AF00",
+            "#AF00AF", "#FE00FE", "#FF8CFF", "#FFFFFF", "#B2FFB2", "#00FF00", "#00A500",
+            "#9200B7", "#BE00FE", "#CA8CFF", "#9DAAFF", "#8EE6FF", "#00E5A8", "#009648",
+            "#6F00B5", "#8700FF", "#5C00FE", "#0000FE", "#0069ED", "#00AFE0", "#00826A",
+            "#4E00AD", "#3800A0", "#1E0096", "#000089", "#001E99", "#004896", "#006987",
+        ];
+
+        const labelColors = [
+            "white", "white", "white", "white", "black", "black", "black", 
+            "white", "black", "black", "black", "black", "black", "black", 
+            "white", "black", "black", "black", "black", "black", "black", 
+            "white", "black", "black", "black", "black", "black", "black", 
+            "white", "white", "black", "black", "black", "black", "black", 
+            "white", "white", "white", "white", "white", "black", "white", 
+            "white", "white", "white", "white", "white", "white", "white"
+        ];
+
+        const labels = [
+            "RK","ROK1","ROK2","OK","OYK2","OYK1","YK",
+            "RMK1","R","RO","O","OY","Y","YGK1",
+            "RMK2","RM","RW","OW","YW","YG","YGK2",
+            "MK","M","MW","W","GW","G","GK",
+            "MVK2","MV","VW","BW","TW","GT","GTK2",
+            "MVK1","V","VB","B","BT","T","GTK1",
+            "VK","VBK1","VBK2","BK","BTK2","BTK1","TK",
+        ];
+
+        const universeMaze = [];
+        const hexes = [];
+        const dead = [];
+
+        for (let i = 0; i < 8; i++){
+            let hex_cells = [];
+            hexes.push(hex_cells);
+        }
+
+        for (let r = 0; r < 8; r++){
+            let row = $("<div>").appendTo(example);
+            if (r != 7)
+                for (let c = 0; c < 7; c++) {
+                    let num = (r * 7) + c;
+                    let cell = $("<div>").css("background-color", exampleMap[num]).appendTo(row);
+                }
+            else row.text("Example of a possible layout.")
+                .css("display", "flex")
+                .css("margin-top", "5px")
+                .css("flex-direction", "row")
+                .css("width", "160px");
+        }
+
+        for (let r = 0; r < 5; r++){
+            let row = $("<div>").appendTo(example2);
+            for (let c = 0; c < 5; c++) {
+                let num = (r * 5) + c;
+                let cell = $("<div>").css("background-color", example2Map[num]).appendTo(row);
+            }
+        }
+
+        CreateMaze();
+        function CreateMaze(){
+            universeMaze.length = 0;
+            for (let i = 0; i < 49; i++){
+                let cell_walls = [-1,-1,-1,-1];
+                universeMaze.push(cell_walls);
+            }
+        }
+
+        let clicked = false;
+        let cellClicked = "";
+        let cellClickedNum = 0;
+        let cellClickedDir = 0;
+        for (let r = 0; r < 7; r++) {
+            let row = $("<div>").appendTo(maze);
+            for (let c = 0; c < 7; c++) {
+                let num = (r * 7) + c;
+                let cell = $("<div>").addClass("c" + num).css("background-color",colors[(r * 7) + c]).appendTo(row);
+
+                for (let r1 = 0; r1 < 3; r1++){
+                    let cellrow = $("<div>").appendTo(cell);
+                    for (let c1 = 0; c1 < 3; c1++){
+                        let dir = (r1 * 3) + c1;
+                        let cellcell = $("<div>").addClass("c" + num + "c" + dir).appendTo(cellrow);
+                        if (dir % 2 == 1){
+                            cellcell.click(function(){
+                                if (cellcell[0].classList.length == 2 && (optionSelected == 1 || optionSelected == 3)){
+                                    let clickedPortal = universeMaze[num][(dir - 1) / 2]
+                                    if (clicked){
+                                        if (clickedPortal == -1){
+                                            if (cellClicked == cellcell[0].classList[0]){
+                                                cellcell.css("background-color", "black");
+                                            }
+                                            else {
+                                                cellcell.css("background-color", colors[cellClickedNum]).text(labels[cellClickedNum]).css("color",labelColors[cellClickedNum]);;
+                                                $("." + cellClicked).css("background-color", colors[num]).text(labels[num]).css("color",labelColors[num]);;
+                                            
+                                                universeMaze[num][(dir - 1) / 2] = cellClickedNum;
+                                                universeMaze[cellClickedNum][(cellClickedDir - 1) / 2] = num;
+                                            }
+                                            cellClicked = ""; cellClickedDir = 0; cellClickedNum = 0;
+                                            clicked = false;
+                                        }
+                                    }
+                                    else {
+                                        if (clickedPortal != -1){
+                                            for (let d1 = 0; d1 < 4; d1++)
+                                                if (universeMaze[clickedPortal][d1] == num){
+                                                    universeMaze[clickedPortal][d1] = -1;
+                                                    cellClickedDir = (d1 * 2) + 1;
+                                                }
+                                            
+                                            cellClicked = "c" + clickedPortal + "c" + cellClickedDir;
+                                            cellClickedNum = clickedPortal;
+
+                                            universeMaze[num][(dir - 1) / 2] = -1;
+
+                                            cellcell.css("background-color", "black").text("");
+                                            $("." + cellClicked).css("background-color", "#555555").text("");;
+                                        }
+                                        else {
+                                            cellClicked = cellcell[0].classList[0];
+                                            cellClickedNum = num;
+                                            cellClickedDir = dir;
+                                            cellcell.css("background-color", "#555555");
+                                        } clicked = true;
+                                    }
+                                }
+                            })
+                        }
+
+                        if (r1 == 1 && c1 == 1) {
+                            cellcell.text(labels[num]).css("color",labelColors[num]);
+                        }
+                    }
+                }
+                cell.click(function(){
+                    switch(optionSelected){
+                        case 0:
+                            let portaled = false;
+                            universeMaze[num].forEach(function(d){
+                                if (d != -1)
+                                    portaled = true;
+                                
+                            })
+                            if (!portaled) {
+                                let adj = GetAdjacentCells(num);
+                                for (let d1 = 0; d1 < 4; d1++)
+                                    if (adj[d1] != -1)
+                                        for (let d2 = 0; d2 < 4; d2++)
+                                            if (universeMaze[adj[d1]][d2] != -1 && 
+                                                adj[3 - d2] == adj[d1] && 
+                                                hexes[hexSelected].includes(adj[d1])){
+                                                portaled = true;
+                                            }
+                            }
+
+                            if (!portaled) {
+                                let curhex = hexes[hexSelected];
+                                if (curhex.includes(num)){
+                                    curhex.splice(curhex.indexOf(num),1);
+                                    cell.removeClass("h" + hexSelected);
+                                    for (let i = 0; i < 9; i++){
+                                        $(".c" + num + "c" + i).css("background-color","transparent").removeClass("d");
+                                    } 
+                                }
+                                else {
+                                    curhex.push(num);
+                                    if (cell[0].classList.length == 2){
+                                        let oldhexNum = cell[0].classList[1][1];
+                                        let oldhex = hexes[oldhexNum];
+                                        cell.removeClass("h" + oldhexNum);
+                                        oldhex.splice(oldhex.indexOf(num), 1);
+                                        ReaffirmHexes(oldhex, "black");
+                                    }
+                                    for (let i = 0; i < 9; i++)
+                                        if (i != 4)
+                                            $(".c" + num + "c" + i).css("background-color","#555555");
+                                    cell.addClass("h" + hexSelected);
+                                }
+                                ReaffirmHexes(hexes[hexSelected], "#555555");
+                                ReaffirmPortals();
+                            }
+
+                            break;
+                        case 2:
+                            if (dead.includes(num)){
+                                cell.css("background-color", colors[num]);
+                                $(".c" + num + "c4").css("color", labelColors[num]);
+                                dead.splice(dead.indexOf(num),1);
+                            }
+                            else {
+                                cell.css("background-color", "black");
+                                $(".c" + num + "c4").css("color", "white");
+                                dead.push(num);
+                            }
+                            break;
+                    }
+                });
+            }
+        }
+
+        function Hexominoes(){
+            options.empty();
+            optionSelected = 0;
+            document.querySelector(".c" + cellSelected).style.removeProperty('box-shadow');
+
+            ReaffirmHexes(hexes[hexSelected], "#555555");
+            for (let h = 0; h < 8; h++){
+                let hexNum = $("<div>").text(h + 1).addClass("hexNum").addClass("hh" + h).css("background-color", "white").css("color","black")
+                .appendTo(options).click(function(){
+                    if (hexSelected != h) {
+                        ReaffirmHexes(hexes[hexSelected], "black");
+                        hexNum.css("background-color", "black").css("color","white");
+                        $(".hh" + hexSelected).css("background-color", "white").css("color","black");
+                        hexSelected = h;
+                        ReaffirmHexes(hexes[hexSelected], "#555555");
+                        ReaffirmPortals();
+                    }
+                });
+                if (hexSelected == h)
+                    hexNum.css("background-color", "black").css("color","white");
+            }
+            ReaffirmPortals();
+            let des = $("<div>").text('Click cells to add them to the selected hex.')
+                .css("width","200px")
+                .css("height","50px")
+                .css("line-height", "25px")
+                .css("font-size", "16px").appendTo(options);
+        }
+
+        function ReaffirmHexes(lis, color) {
+            let temp = []
+            lis.forEach(function(c) { 
+                for (let i = 0; i < 9; i++) 
+                    if (i != 4) 
+                        $(".c" + c + "c" + i).css("background-color", color).addClass("d");
+
+                temp = GetAdjacentCells(c);
+                for (let d = 0; d < 4; d++)
+                    if (lis.includes(temp[d]))
+                        $(".c" + c + "c" + ((d * 2) + 1)).css("background-color","transparent").removeClass("d");
+            });
+        }
+
+        function GetAdjacentCells(cell){
+            let adj = [];
+            if (cell - 7 > -1){ adj.push(cell - 7); } else { adj.push(-1); }
+            if (Math.floor((cell - 1) / 7) == Math.floor(cell / 7)){ adj.push(cell - 1); } else { adj.push(-1); }
+            if (Math.floor((cell + 1) / 7) == Math.floor(cell / 7)){ adj.push(cell + 1); } else { adj.push(-1); }
+            if (cell + 7 < 49){ adj.push(cell + 7); } else { adj.push(-1); }
+            return adj;
+        }
+        function ReaffirmPortals(){
+            for (let c = 0; c < 49; c++) {
+                for (let d = 0; d < 4; d++){
+                    if (universeMaze[c][d] != -1){
+                        let to = universeMaze[c][d];
+                        let realD = (d * 2) + 1;
+                        $(".c" + c + "c" + realD).css("background-color",colors[to]).text(labels[to]);
+                    }
+                }
+            }
+        }
+        function Portals(){
+            options.empty();
+            optionSelected = 1;
+            document.querySelector(".c" + cellSelected).style.removeProperty('box-shadow');
+
+            ReaffirmHexes(hexes[hexSelected], "black");
+            ReaffirmPortals();
+            let des = $("<div>").text("Place a portal between two cells by selecting each cell's inner walls. Two walls must be selected before leaving Portal mode.")
+                    .css({"width": "670px", "height": "50px", "text-align": "left", "font-size": "18px"}).appendTo(options);
+
+        }
+        function Corruption(){
+            options.empty();
+            optionSelected = 2;
+            document.querySelector(".c" + cellSelected).style.removeProperty('box-shadow');
+
+            ReaffirmHexes(hexes[hexSelected], "black");
+            ReaffirmPortals();
+            let des = $("<div>").text("Select/deselect cells to corrupt them.")
+                .css({"width": "670px", "height": "50px", "text-align": "left", "line-height": "50px", "font-size": "18px"}).appendTo(options);
+            
+        }
+        function Movement(){
+            options.empty();
+            optionSelected = 3;
+            SelectCell(cellSelected);
+
+            ReaffirmHexes(hexes[hexSelected], lastHighlight);
+            ReaffirmPortals();
+            let des = $("<div>").text("Digits 1-8 to assign cells to hexes. '9' to toggle hex-highlight. \n'0' to corrupt. Shift + ArrowKey to place portal on wall.")
+                    .css({"width": "670px", "height": "50px", "text-align": "left", "font-size": "18px", "white-space": "pre-wrap"}).appendTo(options);
+
+        }
+
+        lastHighlight = "#555555";
+        window.addEventListener('keydown', (event) => {
+            if (optionSelected == 3){
+                if (event.shiftKey){
+                    switch (event.key) {
+                        case 'ArrowUp':
+                            event.preventDefault();
+                            $(".c" + cellSelected + "c1").click();
+                            break;
+                        case 'ArrowLeft':
+                            event.preventDefault();
+                            $(".c" + cellSelected + "c3").click();
+                            break;
+                        case 'ArrowRight':
+                            event.preventDefault();
+                            $(".c" + cellSelected + "c5").click();
+                            break;
+                        case 'ArrowDown':
+                            event.preventDefault();
+                            $(".c" + cellSelected + "c7").click();
+                            break;
+                    }
+                }
+                else {
+                    let digits = ['1', '2', '3', '4', '5', '6', '7', '8'];
+                    if (digits.includes(event.key)){
+                        /*console.log(`Digit ${event.key} pressed`);*/
+                        $(".hex").click(); $(".hh" + digits.indexOf(event.key)).click();
+                        $(".c" + cellSelected).click(); $(".movement").click();
+                    }
+                    else if (event.key == '9'){
+                        if (lastHighlight == "black") lastHighlight = "#555555";
+                        else lastHighlight = "black"; 
+                        ReaffirmHexes(hexes[hexSelected], lastHighlight);
+                        ReaffirmPortals();
+                    }
+                    else if (event.key == '0'){
+                        optionSelected = 2; $(".c" + cellSelected).click(); optionSelected = 3;
+                    }
+                    else {
+                        switch (event.key) {
+                            case 'ArrowUp':
+                                event.preventDefault();
+                                if (cellSelected - 7 > -1) SelectCell(cellSelected - 7);
+                                else SelectCell(cellSelected + 42);
+                                break;
+                            case 'ArrowLeft':
+                                event.preventDefault();
+                                if (Math.floor((cellSelected - 1) / 7) == Math.floor(cellSelected / 7)) SelectCell(cellSelected - 1);
+                                else SelectCell(cellSelected + 6);
+                                break;
+                            case 'ArrowRight':
+                                event.preventDefault();
+                                if (Math.floor((cellSelected + 1) / 7) == Math.floor(cellSelected / 7)) SelectCell(cellSelected + 1);
+                                else SelectCell(cellSelected - 6);
+                                break;
+                            case 'ArrowDown':
+                                event.preventDefault();
+                                if (cellSelected + 7 < 49) SelectCell(cellSelected + 7);
+                                else SelectCell(cellSelected - 42);
+                                break;
+                        }
+                    }
+                }
+            }
+        });
+
+        function SelectCell(num){
+            document.querySelector(".c" + cellSelected).style.removeProperty('box-shadow');
+            cellSelected = num;
+            $(".c" + cellSelected).css("box-shadow","inset 0 0 0 25px #9F9F9F");
+        }
+
+        cellSelected = 0;
+        $(".hex").click();
+        $(".hh1").click();
+        $(".hh0").click();
+        optionSelected = 0;
+
+        window.onbeforeunload = function() { return true; };
+    })
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Non-Euclidean Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Non-Euclidean Maze.svg" class="diagram">
+                <h2>On the Subject of Non-Euclidean Maze</h2>
+                <p class="flavour-text">A choice may be as simple as going left or going right. Oh- or forward. I guess...
+
+                <p>The screen displays a first-person view inside of a 7x7-cell maze. 
+                If a wall is not in the way, the cells to your left, right, or front may be visible.
+                <br>Refer to the board on <u>Page 2</u> to see how each cell is labelled, colored, and positioned. 
+                Each cell’s label appears above their entryway.</p>
+
+                <div class="example"></div>
+                <p>Every cell of the maze is divided into eight 6-celled polyominoes (or hexominoes) except for the central cell labelled “W”. This is the exit of the maze.</p> 
+                <p>Within a hexomino, doors connect orthogonally-adjacent cells, whereas any other door is actually a portal that will lead you to any NON-adjacent cell on the board.
+                <br>Doors and portals look identical to one another.</p>
+                
+                <p>The labels of three cells (without a "K" in them) will be Caesar-shifted slightly. 
+                Corrupted cells will grow from these three points across three stages.</p>
+                <div class="example2"></div> 
+                <p>One cell will be deactivated each stage, while the other two will corrupt the 12 cells around them (not including "W"). 
+                <br>Cells are deactivated in the order of their Caeser-shift offsets from least to greatest. 
+                <br>Their offsets may be between -5 to 5, but never 0.</p>
+
+                <p>For three stages, a portal to the exit will open up onto any empty wall of the maze. 
+                You will be placed in one of the farthest points from the exit (in steps), and must find it without entering a corrupted cell.
+                Entering a corrupted cell will incur a strike, return the module to its initial state, and alter the corruption point's positions and offsets.</p>
+
+                <p>The first stage does not begin until the label above any door is pressed.
+                <br><u>Page 2</u> is also interactive. Use this initial state to explore the maze freely and:</p>
+                <ul>
+                    <li>Divide the layout into the eight hexominoes.</li>
+                    <li>Mark the placement of any/all portals to see how hexominoes connect.</li>
+                    <li>And mark corrupted cells while updating them across the three stages.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Non-Euclidean Maze</span>
+            </div>
+            <div class="page-content">
+                <div>
+                    <button class="hex">Hexominoes</button>
+                    <button class="portals">Portals</button>
+                    <button class="corrupt">Corruption</button>
+                    <button class="movement">Keyboard Controls ←↑→↓</button>
+                </div>
+                <hr>
+                <div class="options"> </div>
+                <hr>
+                <div class="maze"></div>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+    </div>
+</body>
+</html>
