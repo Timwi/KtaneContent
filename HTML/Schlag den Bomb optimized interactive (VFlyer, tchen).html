@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Schlag den Bomb optimized by VFlyer — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        td {
+            padding: .2em .6em .1em;
+            text-align: center;
+        }
+        li {
+            margin: 1.4em 0;
+        }
+
+        .interactive li, .interactive ul {
+            margin: 0
+        }
+        .interactive p {
+            margin: .5em 0;
+        }
+        .section-interactive .interactive {
+            grid-row: 5;
+            border: 1px solid #222;
+            box-shadow: #222 0em 0em 0.6em;
+            background-color: #FFF;
+            width: 300px;
+            justify-self: center;
+            margin: .25in .25in 0;
+            padding: 16px
+        }
+        .dark .section-interactive .interactive {
+            background-color: #232323;
+        }
+            
+        .section.section-interactive {
+            display: grid;
+            justify-content: center;
+            grid-template-columns: auto;
+            column-gap: 12px;
+            margin: 0 16px;
+        }
+            
+        body.multipage .section.section-interactive {
+            display: grid;
+            justify-content: center;
+            column-gap: 12px;
+            margin: 0 16px;
+        }
+        @media screen and (width >= 900px) {
+            
+            body.multipage .section.section-interactive {
+                grid-template-columns: auto minmax(auto, 900px);
+            }
+            body.multipage .section-interactive .interactive {
+                position: sticky;
+                top: 10%;
+                grid-row: 1/-1;
+                grid-column: 1;
+                border: 1px solid #222;
+                box-shadow: #222 0em 0em 0.6em;
+                align-self: start;
+            }
+            body.multipage .section-interactive .page {
+                grid-column: 2;
+                justify-self: stretch;
+                max-width: 8.5in;
+                width: 100%;
+            }
+        }
+
+        @media screen and (width < 900px) {
+            
+            .section-interactive .interactive {
+                box-shadow: none;
+                border-style: none;
+            }
+            body.multipage .section-interactive .interactive {
+                justify-self: center;
+            }
+        }
+
+        label[for="bomb"] {
+            color: blue;
+        }
+
+        label[for="cont"] {
+            color: red;
+        }
+        
+        label[for="unplayed"] {
+            color: #666;
+        }
+        .dark label[for="unplayed"] {
+            color: #AAA
+        }
+
+        .table {
+            display: grid;
+            grid-template-columns: repeat(5,1fr);
+            grid-template-rows: repeat(3,60px);
+            column-gap: 8px;
+            row-gap: 8px;
+            margin-bottom: 16px;
+        }
+        .table > div[id^="gamecell-"] {
+            border: 1px solid #222;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .dark .table > div[id^="gamecell-"] {
+            border-color: #DDD;
+        }
+        .table > div[id^="gamecell-"].bomb {
+            background-color: #bbbbff99;
+        }
+        .table > div[id^="gamecell-"].cont {
+            background-color: #ffbbbb99;
+        }
+        .table > div[id^="gamecell-"].unplayed {
+            background-color: #aaa9;
+        }
+        .table div[id^="game-"] {
+            text-align: center;
+            font-size: 1.5em;
+        }
+    </style>
+    <script>
+
+        const COUNTER_MAX = {
+            oddball : 6,
+            physical: 3,
+            mental: 3,
+            quiz: 3
+        }
+
+        class Interactive {
+            constructor() {
+                this.cells = []
+                this.games = []
+                this.gameinfo = []
+                this.counts = {
+                    oddball : 1,
+                    physical: 1,
+                    mental: 1,
+                    quiz: 1
+                }
+                this.mode = "oddball";
+                for (let i = 1; i <= 15; i++) {
+                    this.cells[i] = document.getElementById(`gamecell-${i}`);
+                    this.games[i] = document.getElementById(`game-${i}`);
+                    
+                    this.cells[i].addEventListener("click", e => {
+                        this.clickCell(i);
+                        this.draw();
+                    });
+                    this.cells[i].addEventListener("contextmenu", e => {
+                        this.resetCell(i);
+                        this.draw();
+                        e.preventDefault();
+                    });
+                }
+                this.counters = {}
+                this.increaseCounter = {}
+                this.decreaseCounter = {}
+                for(let type in this.counts) {
+                    this.counters[type] = document.getElementById(`${type}-counter`);
+                    this.increaseCounter[type] = document.getElementById(`${type}-increase`);
+                    this.decreaseCounter[type] = document.getElementById(`${type}-decrease`);
+                    this.increaseCounter[type].addEventListener("click", () => {
+                        this.changeCounter(type, 1);
+                        this.draw();
+                    })
+                    this.decreaseCounter[type].addEventListener("click", () => {
+                        this.changeCounter(type, -1);
+                        this.draw();
+                    })
+                }
+                for(let $el of document.getElementsByName("mode")) {
+                    $el.addEventListener("change", e => {
+                        if($el.checked) {
+                            this.mode = $el.value;
+                        }
+                    })
+                }
+                this.draw();
+            }
+
+            draw() {
+                for(let type in this.counts) {
+                    this.counters[type].textContent = this.counts[type];
+                    if(this.counts[type] === 1) {
+                        this.decreaseCounter[type].setAttribute("disabled", "true");
+                    } else {
+                        this.decreaseCounter[type].removeAttribute("disabled");
+                    }
+                    if(this.counts[type] === COUNTER_MAX[type]) {
+                        this.increaseCounter[type].setAttribute("disabled", "true");
+                    } else {
+                        this.increaseCounter[type].removeAttribute("disabled");
+                    }
+                }
+                for (let i = 1; i <= 15; i++) { 
+                    this.cells[i].setAttribute("class", this.gameinfo[i]?.color ?? "");
+                    this.games[i].textContent = (this.gameinfo[i]?.type?.charAt(0).toUpperCase() ?? "") + (this.gameinfo[i]?.count ?? "");
+                }
+            }
+
+            changeCounter(type, dx) {
+                if(this.counts[type] + dx > COUNTER_MAX[type] || this.counts[type] + dx <= 0) return;
+                this.counts[type] += dx;
+            }
+            clickCell(i) {
+                if(!this.gameinfo[i]) this.gameinfo[i] = {}
+                if(this.mode in this.counts) {
+                    this.gameinfo[i].type = this.mode;
+                    this.gameinfo[i].count = this.counts[this.mode];
+                    this.changeCounter(this.mode, 1);
+                } else {
+                    this.gameinfo[i].color = this.mode;
+                }
+            }
+            resetCell(i) {
+                if(!this.gameinfo[i]) this.gameinfo[i] = {}
+                if(this.mode in this.counts) {
+                    this.gameinfo[i].type = null;
+                    this.gameinfo[i].count = null;
+                } else {
+                    this.gameinfo[i].color = null;
+                }
+            }
+        }
+
+        window.addEventListener("load", () => {
+            const interactive = new Interactive();
+        })
+        
+    </script>
+</head>
+<body>
+    <div class="section section-interactive">
+        <div class="interactive">
+            <h4>Interactive</h4>
+            <p>
+                Left click: Mark the cell with selected game type and count. / Highlight cell with selected color. <br>
+                Right click: Remove game / highlight. 
+            </p>
+            <p>
+                <label for="oddball">Oddball(O):</label>
+                <input name="mode" id="oddball" value="oddball" type="radio" checked>
+                <label for="physical">Physical(P):</label>
+                <input name="mode" id="physical" value="physical" type="radio"><br>
+                <label for="mental">Mental(M):</label>
+                <input name="mode" id="mental" value="mental" type="radio">
+                <label for="quiz">Quiz(Q):</label>
+                <input name="mode" id="quiz" value="quiz" type="radio">
+            </p>
+            <p>
+                <label for="bomb">Bomb:</label>
+                <input name="mode" id="bomb" value="bomb" type="radio">
+                <label for="cont">Cont.:</label>
+                <input name="mode" id="cont" value="cont" type="radio">
+                <label for="unplayed">Unplayed:</label>
+                <input name="mode" id="unplayed" value="unplayed" type="radio">
+            </p>
+            <div class="table">
+                <div id="gamecell-1"><div class="index">1</div><div id="game-1">O1</div></div>
+                <div id="gamecell-2" class=" bomb"><div class="index">2</div><div id="game-2"></div></div>
+                <div id="gamecell-3" class=" comp"><div class="index">3</div><div id="game-3"></div></div>
+                <div id="gamecell-4"><div class="index">4</div><div id="game-4"></div></div>
+                <div id="gamecell-5"><div class="index">5</div><div id="game-5"></div></div>
+                <div id="gamecell-6"><div class="index">6</div><div id="game-6"></div></div>
+                <div id="gamecell-7"><div class="index">7</div><div id="game-7"></div></div>
+                <div id="gamecell-8"><div class="index">8</div><div id="game-8"></div></div>
+                <div id="gamecell-9"><div class="index">9</div><div id="game-9"></div></div>
+                <div id="gamecell-10"><div class="index">10</div><div id="game-10"></div></div>
+                <div id="gamecell-11"><div class="index">11</div><div id="game-11"></div></div>
+                <div id="gamecell-12"><div class="index">12</div><div id="game-12"></div></div>
+                <div id="gamecell-13"><div class="index">13</div><div id="game-13"></div></div>
+                <div id="gamecell-14"><div class="index">14</div><div id="game-14"></div></div>
+                <div id="gamecell-15"><div class="index">15</div><div id="game-15"></div></div>
+            </div>
+            Counts:
+            <p>oddball  <button id="oddball-decrease">←</button> <span id="oddball-counter"></span> <button id="oddball-increase">→</button></p>
+            <p>Physical <button id="physical-decrease">←</button> <span id="physical-counter"></span> <button id="physical-increase">→</button></p>
+            <p>Mental   <button id="mental-decrease">←</button> <span id="mental-counter"></span> <button id="mental-increase">→</button></p>
+            <p>Quiz     <button id="quiz-decrease">←</button> <span id="quiz-counter"></span> <button id="quiz-increase">→</button></p>
+            
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Schlag den Bomb</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Schlag den Bomb.svg" class="diagram">
+                <h2>On the Subject of Schlag den Bomb</h2>
+                <p class="flavour-text">I’m not sure if this is easier or harder than adding hundred-digit numbers...</p>
+                <ul>
+                <li>In Schlag den Bomb, games are played by the bomb and a contestant in numerical order, starting with 1, regardless of the order in which their categories are determined, and are worth the number of points equal to their game number. The first player to reach 61 points wins; games after that remain unplayed.</li>
+                <li>Translate each letter in the bomb’s serial number to its position in the alphabet to obtain six numbers from 0 to 26.</li>
+                <li>Determine which six games are Oddball games. The first Oddball game is played in the position equal to the first number of the six, wrapping back to 1 if the number is greater than 15. If the first number is a 0, then game 15 is the first Oddball game.</li>
+                <li>Advance games equal to the second number, wrapping around if needed and skipping games already assigned a category. (If you encounter a 0, go to the next unassigned game and assign it as an Oddball game.) Then proceed likewise with the remaining numbers.</li>
+                <li>Determine which three games are Physical games by using the number of ports to determine three more numbers from the table below, then advancing in the same way as you did for Oddball games. Assign a win to the contestant for the first N Physical games in the order that you determined them to be Physical games, where N is the contestant’s Physical rating.</li>
+                <li>Do the same for Mental games, then Quiz games, as you did for Physical games, but with batteries and indicators, respectively. Remember: games are played in numerical order, <em>not</em> the order categories were determined.</li>
+                <li>Mark contestant wins on the contestant’s scoreboard by pressing the appropriate button such that the button’s background turns white. Mark Oddball games such that the games marked as contestant wins match the total number of points the contestant has. Finally, mark unplayed games, then press the “!” submit button.</li></ul>
+            </div>
+           <div class="page-footer relative-footer">Page 1 of 4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Schlag den Bomb</span>
+            </div>
+            <div class="page-content">
+                <div style="float:left; margin-right: 2em">
+                <h3>Table 1: Contestant profiles</h3>
+                <table><tr>
+                <th>Contestant<br>name</th><th>Physical<br>rating</th><th>Mental<br>rating</th><th>Quiz<br>rating</th></tr><tr>
+                <td>Albert</td><td>1</td><td>2</td><td>0</td></tr><tr>
+                <td>Cori</td><td>1</td><td>0</td><td>2</td></tr><tr>
+                <td>Cory</td><td>0</td><td>1</td><td>0</td></tr><tr>
+                <td>Daniel</td><td>1</td><td>1</td><td>2</td></tr><tr>
+                <td>Don</td><td>0</td><td>0</td><td>1</td></tr><tr>
+                <td>Edgar</td><td>2</td><td>1</td><td>0</td></tr><tr>
+                <td>Elsa</td><td>1</td><td>0</td><td>1</td></tr><tr>
+                <td>Eris</td><td>2</td><td>2</td><td>2</td></tr><tr>
+                <td>Gale</td><td>1</td><td>1</td><td>1</td></tr><tr>
+                <td>Greg</td><td>0</td><td>1</td><td>1</td></tr><tr>
+                <td>Greta</td><td>2</td><td>0</td><td>0</td></tr><tr>
+                <td>Harry</td><td>1</td><td>1</td><td>0</td></tr><tr>
+                <td>Isolde</td><td>2</td><td>2</td><td>1</td></tr><tr>
+                <td>Julia</td><td>0</td><td>0</td><td>2</td></tr><tr>
+                <td>Julie</td><td>2</td><td>1</td><td>1</td></tr><tr>
+                <td>Lisa</td><td>0</td><td>2</td><td>1</td></tr><tr>
+                <td>Millie</td><td>2</td><td>2</td><td>0</td></tr><tr>
+                <td>Ozy</td><td>0</td><td>2</td><td>2</td></tr><tr>
+                <td>Ozzy</td><td>1</td><td>0</td><td>0</td></tr><tr>
+                <td>Paula</td><td>0</td><td>1</td><td>2</td></tr><tr>
+                <td>Peter</td><td>2</td><td>1</td><td>2</td></tr><tr>
+                <td>Rob</td><td>2</td><td>0</td><td>2</td></tr><tr>
+                <td>Ron</td><td>0</td><td>0</td><td>0</td></tr><tr>
+                <td>Spike</td><td>1</td><td>2</td><td>1</td></tr><tr>
+                <td>Tina</td><td>2</td><td>0</td><td>1</td></tr><tr>
+                <td>Tommy</td><td>1</td><td>2</td><td>2</td></tr><tr>
+                <td>Val</td><td>0</td><td>2</td><td>0</td></tr></table>
+                </div>
+                <h3>Table 2P: Physical numbers</h3>
+                <table><tr>
+                <th>Ports</th><th>Phys.<br>Numbers</th></tr><tr>
+                <td>0</td><td>2, 19, 7</td></tr><tr>
+                <td>1</td><td>3, 12, 4</td></tr><tr>
+                <td>2</td><td>11, 1, 6</td></tr><tr>
+                <td>3</td><td>3, 3, 3</td></tr><tr>
+                <td>4</td><td>11, 9, 10</td></tr><tr>
+                <td>5</td><td>7, 2, 9</td></tr><tr>
+                <td>6+</td><td>6, 14, 3</td></tr></table>
+                <h3>Table 2M: Mental numbers</h3>
+                <table><tr>
+                <th>Batteries</th><th>Mental<br>Numbers</th></tr><tr>
+                <td>0</td><td>11, 3, 4</td></tr><tr>
+                <td>1</td><td>6, 2, 8</td></tr><tr>
+                <td>2</td><td>3, 7, 1</td></tr><tr>
+                <td>3</td><td>4, 9, 1</td></tr><tr>
+                <td>4</td><td>11, 9, 2</td></tr><tr>
+                <td>5+</td><td>7, 11, 4</td></tr></table>
+                <h3>Table 2Q: Quiz numbers</h3>
+                <table><tr>
+                <th>Indicators</th><th>Quiz<br>Numbers</th></tr><tr>
+                <td>0</td><td>1, 1, 15</td></tr><tr>
+                <td>1</td><td>1, 2, 29</td></tr><tr>
+                <td>2</td><td>1, 1, 48</td></tr><tr>
+                <td>3+</td><td>1, 2, 173</td></tr></table>
+                <p>This page contains the standard tables for Schlag den Bomb. The next pages contain optimized sections for each of the steps excluding the contestant portion.</p>
+            </div>
+
+           <div class="page-footer relative-footer">Page 2 of 4</div>
+        </div>
+        <div class="page page-bg-02">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Schlag den Bomb</span>
+                </div>
+                <div class="page-content">
+                    <h3>Table 1Opt: Unassigned Games Check, Oddball</h3>
+                    <p>Cells overlapping any given column for the specified assignable game will have the same procedure.<br>Zero in the serial number is refered to “-0-” in this manual.<br>Start on the leftmost character in the serial number, then progress to the next serial character to the right. Repeat until all of the characters from the serial number are used.<br>OB1, OB2, OB3, OB4, OB5, OB6 refer to Oddball games 1, 2, 3, 4, 5 and 6 respectively.</p>
+                    <strong>
+                    <table><tr>
+                    <th rowspan="2">Letter/Digit<br>in Serial No.</th><th colspan="6">Unassigned Games to Count For</th></tr>
+                    <tr><th>OB1</th><th>OB2</th><th>OB3</th><th>OB4</th><th>OB5</th><th>OB6</th></tr>
+                    <tr><td>-0-</td><td>15</td><td colspan="5">1</td></tr>
+                    <tr><td>1, A</td><td colspan="6">1</td></tr>
+                    <tr><td>2, B</td><td colspan="6">2</td></tr>
+                    <tr><td>3, C</td><td colspan="6">3</td></tr>
+                    <tr><td>4, D</td><td colspan="6">4</td></tr>
+                    <tr><td>5, E</td><td colspan="6">5</td></tr>
+                    <tr><td>6, F</td><td colspan="6">6</td></tr>
+                    <tr><td>7, G</td><td colspan="6">7</td></tr>
+                    <tr><td>8, H</td><td colspan="6">8</td></tr>
+                    <tr><td>9, I</td><td colspan="6">9</td></tr>
+                    <tr><td>J</td><td colspan="6">10</td></tr>
+                    <tr><td>K</td><td colspan="5">11</td><td>1</td></tr>
+                    <tr><td>L</td><td colspan="4">12</td><td>1</td><td>2</td></tr>
+                    <tr><td>M</td><td colspan="3">13</td><td>1</td><td>2</td><td>3</td></tr>
+                    <tr><td>N</td><td colspan="2">14</td><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+                    <tr><td>O</td><td>15</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+                    <tr><td>P</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td></tr>
+                    <tr><td>Q</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr>
+                    <tr><td>R</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td></tr>
+                    <tr><td>S</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td></tr>
+                    <tr><td>T</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td></tr>
+                    <tr><td>U</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>1</td></tr>
+                    <tr><td>V</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>2</td></tr>
+                    <tr><td>W</td><td>8</td><td>9</td><td>10</td><td>11</td><td>1</td><td>3</td></tr>
+                    <tr><td>X</td><td>9</td><td>10</td><td>11</td><td>12</td><td>2</td><td>4</td></tr>
+                    <tr><td>Y</td><td>10</td><td>11</td><td>12</td><td>1</td><td>3</td><td>5</td></tr>
+                    <tr><td>Z</td><td>11</td><td>12</td><td>13</td><td>2</td><td>4</td><td>6</td></tr>
+                    </table>
+                    </strong>
+                </div>
+               <div class="page-footer relative-footer">Page 3 of 4</div>
+            </div>
+            <div class="page page-bg-02">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Schlag den Bomb</span>
+                </div>
+                <div class="page-content">
+                <h3>Table 2POpt: Unassigned Games Check, Physical</h3>
+                <p>P1, P2, P3 refer to Physical Games 1, 2, and 3 respectively.</p>
+                <strong>
+                <table><tr>
+                <th rowspan="2">Number of Ports<br>on the Bomb</th><th colspan="3">Unassigned Games to Count For</th></tr>
+                    <tr><th>P1</th><th>P2</th><th>P3</th></tr>
+                    <tr><td>0</td><td>2</td><td>3</td><td>7</td></tr>
+                    <tr><td>1</td><td>3</td><td>4</td><td>4</td></tr>
+                    <tr><td>2</td><td>2</td><td>1</td><td>6</td></tr>
+                    <tr><td>3</td><td>3</td><td>3</td><td>3</td></tr>
+                    <tr><td>4</td><td>2</td><td>1</td><td>3</td></tr>
+                    <tr><td>5</td><td>7</td><td>2</td><td>2</td></tr>
+                    <tr><td>6+</td><td>6</td><td>6</td><td>3</td></tr></table>
+                </strong>
+                <h3>Table 2MOpt: Unassigned Games Check, Mental</h3>
+                <p>M1, M2, M3 refer to Mental Games 1, 2, and 3 respectively.</p>
+                <strong>
+                <table><tr>
+                <th rowspan="2">Number of Batteries<br>on the Bomb</th><th colspan="3">Unassigned Games to Count For</th></tr>
+                    <tr><th>M1</th><th>M2</th><th>M3</th></tr>
+                    <tr><td>0</td><td>5</td><td>3</td><td>4</td></tr>
+                    <tr><td>1</td><td>6</td><td>2</td><td>4</td></tr>
+                    <tr><td>2</td><td>3</td><td>2</td><td>1</td></tr>
+                    <tr><td>3</td><td>4</td><td>4</td><td>1</td></tr>
+                    <tr><td>4</td><td>5</td><td>4</td><td>2</td></tr>
+                    <tr><td>5+</td><td>1</td><td>1</td><td>4</td></tr></table>
+                </strong>
+                <h3>Table 2QOpt: Unassigned Games Check, Quiz</h3>
+                <p>Quiz 1, Quiz 2, Quiz 3 refer to Quiz Games 1, 2, and 3 respectively.</p>
+                <strong>
+                <table>
+                    <tr><th rowspan="2">Number of Indicators<br>on the Bomb</th><th colspan="3">Unassigned Games to count For</th></tr>
+                    <tr><th>Quiz 1</th><th>Quiz 2</th><th>Quiz 3</th></tr>
+                    <tr><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+                    <tr><td>1</td><td>1</td><td>2</td><td>1</td></tr>
+                    <tr><td>2</td><td>1</td><td>1</td><td>1</td></tr>
+                    <tr><td>3+</td><td>1</td><td>2</td><td>1</td></tr>
+                    </table>
+                </strong>
+                   <div class="page-footer relative-footer">Page 4 of 4</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
