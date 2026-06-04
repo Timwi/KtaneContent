@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>XO — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .alpha-shift-wrapper {
+            margin: 15px auto;
+        }
+        .alpha-shift-wrapper td {
+            border-collapse: collapse;
+            border: none;
+        }
+        .alpha-shift-wrapper {
+            border: none
+        }
+        .alpha-shift-wrapper .button-stack button {
+            display: block;
+            margin-bottom: 8px;
+            min-width: 150px;
+            padding: 8px 0.75px;
+        }
+        .alpha-table td {
+            width: 2.8rem;
+            height: 2.8rem;
+            text-align: center;
+            font-family: monospace;
+            white-space: nowrap;
+            border: 1px solid #444;
+            font-size: 18pt;
+        }
+        .win-table {
+            margin: 10px auto;
+            font-size: 18pt;
+
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">XO</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/XO.svg" class="diagram">
+                <h2>On the Subject of XO</h2>
+                <p class="flavour-text">Kisses from XO.</p>
+                <p>For those familiar with the <a href="XO.html">original manual</a>.</p>
+
+                <p>The boards are ordered top to bottom according to the word, but the first board may not be the first letter
+                    in the word. The bottom right space in submission mode can be used as a backspace.</p>
+
+                <h4>Creating the key</h4>
+                <ul>
+                    <li>Caesar shift the fourth serial number character backwards by the sum of serial number digits.</li>
+                    <li>Place the resulting letter in the middlemost slot using the shift buttons.</li>
+                </ul>
+                
+                <table class="center alpha-shift-wrapper">
+                    <tr>
+                        <td>
+                            <table id="alphabetTable" class="center alpha-table">
+                                <tr><td>ABC</td><td>DEF</td><td>GHI</td></tr>
+                                <tr><td>JKL</td><td>MNO</td><td>PQR</td></tr>
+                                <tr><td>STU</td><td>VWX</td><td>YZ&nbsp;</td></tr>
+                            </table>
+                        </td>
+                        <td class="button-stack">
+                            <button id="alphaShiftLeft" type="button">Shift ←</button>
+                            <button id="alphaShiftRight" type="button">Shift →</button>
+                        </td>
+                    </tr>
+                </table>
+
+                <h4>Game rules</h4>
+                <p>Determine the final state of each board using the following rules.</p>
+                <ul>
+                    <li>X and O players alternate, with X being the first player.</li>
+                    <li>If a player can get 3 pieces in a row, column, or diagonal, they must do so.</li>
+                    <li>Otherwise, if a player can block their opponent from completing a tic-tac-toe, they must do so. 
+                        If there are multiple tic-tac-toes to be blocked, they must block using the first space in reading order.</li>
+                    <li>Otherwise, gameplay freezes and the board state is final.</li>
+                </ul>
+
+                <h4>Obtaining a word</h4>
+                <p>The position of the highlighted space in each board corresponds to a position in the key grid above. The diagram below
+                    shows which letter to use within each cell, based on what piece is played in the highlighted cell.</p>
+                <table class="win-table">
+                    <tr><td>X</td><td>Empty</td><td>O</td></tr>
+                </table>
+                 
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ ';
+            let offset = 0;
+            const table = document.getElementById('alphabetTable');
+            const rows = Array.from(table.querySelectorAll('tr'));
+
+            function draw() {
+                const rotated = alphabet.slice(offset) + alphabet.slice(0, offset);
+                let index = 0;
+                rows.forEach(row => {
+                    row.querySelectorAll('td').forEach(cell => {
+                        const chunk = rotated.substr(index * 3, 3).replace(/ /g, '&nbsp;');
+                        cell.innerHTML = chunk;
+                        if (index == 4) {
+                            cell.innerHTML = chunk[0] + '<u>' + chunk[1] + '</u>' + chunk[2]; // Highlight the middle character
+                        }
+                        index += 1;
+                    });
+                });
+            }
+
+            document.getElementById('alphaShiftLeft').onclick = function() {
+                offset = (offset + 1) % alphabet.length;
+                draw();
+            };
+
+            document.getElementById('alphaShiftRight').onclick = function() {
+                offset = (offset - 1 + alphabet.length) % alphabet.length;
+                draw();
+            };
+
+            draw();
+        })();
+    </script>
+</body>
+</html>
