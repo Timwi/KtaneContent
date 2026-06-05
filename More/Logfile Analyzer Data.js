@@ -3201,6 +3201,131 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Cartinese",
+		moduleID: "cartinese",
+		loggingTag: "Cartinese",
+		initData: function (module) {
+			if (module.cartineseReady)
+				return;
+			module.cartineseReady = true;
+			const positions = module.cartinesePositions = ["up", "right", "down", "left"];
+			const symbols = { up: "▲", right: "▶", down: "▼", left: "◀" };
+			const conditionRows = [
+				[1, "red", "The button is red."],
+				[2, "yellow", "The button is yellow."],
+				[3, "green", "The button is green."],
+				[1, "bottom", "The button is on the bottom."],
+				[2, "left", "The button is on the left."],
+				[3, "right", "The button is on the right."],
+				[1, "even position", "The lyric is in an even position."],
+				[2, "odd position", "The lyric is in an odd position."],
+				[3, "unique stanza", "The lyric is the only one present in its stanza."],
+				[1, "10 or more letters", "The lyric has 10 or more letters."],
+				[2, "even vowel count", "The line has an even number of vowels."],
+				[3, "ends in consonant", "The line ends in a consonant."]
+			];
+			Object.assign(module, {
+				cartineseColors: [],
+				cartineseLyrics: [],
+				cartineseConditions: {},
+				cartineseScores: [],
+				cartineseAssignedDirections: [],
+				cartineseStartingLocation: null,
+				cartineseEndingLocation: null
+			});
+			module.cartineseIcon = function (position) {
+				const index = positions.indexOf(position);
+				return $("<span>").addClass("cartinese-button-symbol").addClass(`cartinese-${module.cartineseColors[index] || "unknown"}`)
+					.attr("title", `${position} button: ${module.cartineseColors[index] || "unknown"}`)
+					.text(symbols[position]);
+			};
+			const matchingIcons = function (condition) {
+				return positions.reduce((icons, position) => {
+					if ((module.cartineseConditions[position] || []).includes(condition))
+						icons.append(module.cartineseIcon(position));
+					return icons;
+				}, $("<span>").addClass("cartinese-matching-buttons"));
+			};
+			const resultCell = function (values) {
+				const td = $("<td>").addClass("matches");
+				for (let i = 0; i < positions.length; i++)
+					$("<span>").addClass("cartinese-result").append(module.cartineseIcon(positions[i]))
+						.append($("<span>").addClass("cartinese-result-text").text(values[i] || ""))
+						.appendTo(td);
+				return td;
+			};
+			const addHeader = function (table, cells) {
+				const tr = $("<tr>").appendTo(table);
+				cells.forEach(cell => $("<th>").text(cell).appendTo(tr));
+				return tr;
+			};
+			module.cartineseRender = function () {
+				module.length = 0;
+
+				const buttonTable = $("<table>").addClass("cartinese buttons");
+				addHeader(buttonTable, ["", ...positions.map(position => position[0].toUpperCase() + position.substring(1))]);
+				let tr = $("<tr><th>Button</th></tr>").appendTo(buttonTable);
+				positions.forEach(position => $("<td>").append(module.cartineseIcon(position)).appendTo(tr));
+				tr = $("<tr><th>Lyrics</th></tr>").appendTo(buttonTable);
+				for (let i = 0; i < positions.length; i++)
+					$("<td>").text(module.cartineseLyrics[i] || "").appendTo(tr);
+				module.push({ label: "Buttons:", obj: buttonTable });
+
+				const conditionTable = $("<table>").addClass("cartinese conditions");
+				addHeader(conditionTable, ["Score", "Condition", "Buttons"]);
+				for (const row of conditionRows) {
+					tr = $("<tr>").appendTo(conditionTable);
+					$("<th>").addClass(`score score-${row[0]}`).text(`+${row[0]}`).appendTo(tr);
+					$("<td>").addClass("condition").text(row[2]).appendTo(tr);
+					$("<td>").addClass("matches").append(matchingIcons(row[1])).appendTo(tr);
+				}
+				tr = $("<tr>").addClass("result-row").appendTo(conditionTable);
+				$("<th>").attr("colspan", 2).text("Total score").appendTo(tr);
+				tr.append(resultCell(module.cartineseScores));
+				tr = $("<tr>").addClass("result-row").appendTo(conditionTable);
+				$("<th>").attr("colspan", 2).text("Assigned direction").appendTo(tr);
+				tr.append(resultCell(module.cartineseAssignedDirections));
+				module.push({ label: "Conditions, scores, and assigned directions:", obj: conditionTable });
+
+				if (module.cartineseStartingLocation || module.cartineseEndingLocation) {
+					module.push(`Movement: ${module.cartineseStartingLocation || "?"} → ${module.cartineseEndingLocation || "?"}`);
+				}
+			};
+			module.cartineseSet = function (key, value) {
+				module[key] = value;
+				module.cartineseRender();
+				return true;
+			};
+		},
+		matches: [
+			{
+				regex: /^(Button Colors|Lyrics played by each button|Scores for each button|Direction assigned to each button|Starting location|Ending location): (.+)$/,
+				handler: function (matches, module, moduleInfo) {
+					moduleInfo.moduleData.initData(module);
+					const fields = {
+						"Button Colors": ["cartineseColors", matches[2].toLowerCase().split(/,\s*/)],
+						"Lyrics played by each button": ["cartineseLyrics", matches[2].split(/,\s*/)],
+						"Scores for each button": ["cartineseScores", matches[2].split(/,\s*/)],
+						"Direction assigned to each button": ["cartineseAssignedDirections", matches[2].split(/,\s*/)],
+						"Starting location": ["cartineseStartingLocation", matches[2]],
+						"Ending location": ["cartineseEndingLocation", matches[2]]
+					};
+					return module.cartineseSet(...fields[matches[1]]);
+				}
+			},
+			{
+				regex: /^Conditions for the (up|right|down|left) button: (.+)$/,
+				handler: function (matches, module, moduleInfo) {
+					moduleInfo.moduleData.initData(module);
+					module.cartineseConditions[matches[1]] = matches[2].toLowerCase().split(/,\s*/);
+					module.cartineseRender();
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "CaesarCipherModule",
 		loggingTag: "CaesarCipher"
 	},
