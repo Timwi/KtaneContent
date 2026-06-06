@@ -2104,7 +2104,7 @@ let parseData = [
 					if(!module.attemptNum){ module.attemptNum = 0; }
 					module.attemptNum++;
 					module.currentDropdown = [`Attempt ${module.attemptNum}`, []];
-					
+
 					var stageDataLines = readTaggedLines(14);
 					var pages = [];
 					var currentDisplayIndex = 0;
@@ -2163,7 +2163,7 @@ let parseData = [
 						.attr("height", 10)
 						.attr("fill", "#000")
 						.appendTo(svg);
-						
+
 						$SVG("<rect>")
 						.attr("x", 50)
 						.attr("y", 2.5)
@@ -2667,10 +2667,10 @@ let parseData = [
 					}
 
 					else {
-						module.currentStage = [matches[0], [matches[2]]]; 
+						module.currentStage = [matches[0], [matches[2]]];
 						module.push(module.currentStage);
 					}
-					
+
 					return true;
 				}
 			},
@@ -3399,86 +3399,6 @@ let parseData = [
 				}
 			},
 			{ regex: /.+/ }
-		]
-	},
-	{
-		moduleID: "kataCheatCheckout",
-		loggingTag: "Cheat Checkout",
-		matches: [
-			{
-				regex: /Raw hack data for hack (\d): (Site: [^\s]+) \((Security Value: \d+), (Website Type: [A-Z]+)\), (Hack Method: [^,]+), (.+)/,
-				handler: function (matches, module) {
-					const firstHack = matches[1] == 1
-					//make a new attempt
-					if(!module.attempt) {
-						module.attempt = 0;
-					}
-					if (firstHack) {
-						module.attempt++;
-						module.dropdown = [[`Attempt ${module.attempt}`], []]
-						module.push(module.dropdown)
-					}
-
-					const website = `${matches[2]} (${matches[3]}, ${matches[4]})`
-					const hackData = [website, matches[5]].concat(matches[6].split(","))
-					module.dropdown[1].push([`Hack ${matches[1]}`, hackData])
-					return true;
-				}
-			},
-			{
-				regex: /The chosen crypto currency is ([A-Za-z]+) \(priced at ([\d.]+)\)\./,
-				handler: function (matches, module) {
-					module.dropdown[1].push(`Crypto currency: ${matches[1]} (${matches[2]})`)
-					return true;
-				}
-			},
-			{
-				regex: /The subtotals for each hack \(in order, taking the percentage if it failed and first rounding to third decimal\): \s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)/,
-				handler: function (matches, module) {
-					const nums = [matches[1], matches[2], matches[3], matches[4], matches[5]]
-					const dropdown = [`Hack subtotal before discount: ${nums.reduce((acc, val) => acc + Number(val) , 0)}`, nums]
-					module.dropdown[1].push(dropdown)
-					return true;
-				}
-			},
-			{
-				regex: /The totals \(After applying discounts, for (?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), and second rounding to third decimal\) for each hack: \s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)/,
-				handler: function (matches, module) {
-					const nums = [matches[1], matches[2], matches[3], matches[4], matches[5]]
-					const total = Math.floor(nums.reduce((acc, val) => acc + Number(val) , 0) * 1000) / 1000;
-					const dropdown = [`Hack subtotal after discount: ${total}`, nums]
-					module.dropdown[1].push(dropdown)
-					return true;
-				}
-			},
-			{
-				regex: /The total price for the hacks in crypto \([a-zA-Z]+ priced at: \d+(?:\.\d+)\) is (\d+(?:\.\d+)) \(Apply the final rounding to third decimal\)/,
-				handler: function (matches, module) {
-					module.dropdown[1].push(`Total price in crypto: ${matches[1]}`)
-					return true;
-				}
-			},
-			{
-				regex: /The total before converting to crypto is \d+(?:\.\d+)\./,
-				handler: function (matches, module) {
-					return true;
-				}
-			},
-			{
-				regex: /Module solved!/,
-				handler: function (matches, module) {
-					module.push(matches[0])
-					return true;
-				}
-			},
-			{
-				regex: /.+/,
-				handler: function (matches, module) {
-					module.dropdown[1].push(matches[0])
-					return true;
-				}
-
-			 }
 		]
 	},
 	{
@@ -4556,7 +4476,7 @@ let parseData = [
 		moduleID: "CruelBooleanWires",
 		loggingTag: "Cruel Boolean Wires",
 		matches: [
-			{ 
+			{
 				regex: /<<<< (Attempt (\d) \(Stage \d\/\d\)) >>>>/,
 				handler: function (matches, module) {
 					if (matches[2] == "1") {
@@ -4646,7 +4566,7 @@ let parseData = [
 						"m32 373 431 285",
 						"M928 373 497 657"
 					];
-	
+
 					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 960 720' class='cruel-boolean-wires'>");
 					let g = $SVG("<g>")
 						.attr("stroke", wireColorDict[module.wireColor]).attr("stroke-linecap", "round")
@@ -4660,7 +4580,7 @@ let parseData = [
 						}
 						path.appendTo(g);
 					}
-					
+
 					module.attemptDropdown[1].push({ obj: svg, nobullet: true });
 					return true;
 				}
@@ -7136,7 +7056,7 @@ let parseData = [
 
 					module.currentAttempt = [`Attempt ${module.attemptNum+1}`, [matches[0]]];
 					module.push(module.currentAttempt);
-					
+
 					module.buildSVG = function(grid, postRegion, txt = null){
 						const gridSVG = $(`<svg xmlns='http://www.w3.org/2000/svg' style='width: 50%' viewbox='-10 -10 ${module.cols*10+10} ${module.rows*10+10}'>`);
 						const clrChart = {
@@ -7146,7 +7066,7 @@ let parseData = [
 							'K': "#000",
 							'!': "#800"
 						}
-						
+
 						$SVG("<rect>")
 						.attr("x", -6)
 						.attr("y", -6)
@@ -7157,7 +7077,7 @@ let parseData = [
 
 						for(var r = 0; r < module.rows; r++){
 							for(var c = 0; c < module.cols; c++){
-								if(grid[r][c] == '-' || grid[r][c] == 'X') 
+								if(grid[r][c] == '-' || grid[r][c] == 'X')
 									continue;
 
 								$SVG(`<circle>`)
@@ -7177,7 +7097,7 @@ let parseData = [
 			},
 			{
 				regex: /Generated board:|One possible solution:|Submitted:/,
-				handler: function (matches, module) {					
+				handler: function (matches, module) {
 					const grid = readTaggedLines(module.rows);
 					module.currentAttempt[1].push(matches[0]);
 					module.buildSVG(grid, module.currentAttempt[1]);
@@ -7201,7 +7121,7 @@ let parseData = [
 					for(var i = 0; i < allInvalidRegions.length; i++){
 						const invalidCoords = allInvalidRegions[i].split(',');
 						var invalidGrid = module.submitted.map(x => x);
-						
+
 						for(var r = 0; r < module.rows; r++){
 							for(var c = 0; c < module.cols; c++){
 								if(invalidCoords.includes("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[c]+(r+1))){
@@ -7614,7 +7534,7 @@ let parseData = [
 								if (i % groupSize == 0)
 									formattedStr += ' ';
 								formattedStr += strArr[i];
-							}					
+							}
 							return formattedStr;
 						}
 						module.updateGroupSize = () => {
@@ -7630,7 +7550,7 @@ let parseData = [
 						}).appendTo(module.header);
 
 						module.header.append(module.gridLabel);
-					
+
 
 						let rightArrow = $("<span class='arrow-button'>").text("Next >").click(function () {
 							module.groupSize = Math.min(module.displayNums.length, module.groupSize + 1);
@@ -7975,7 +7895,7 @@ let parseData = [
 					module.push(matches[0]);
 
 					applyTransformation = (matrix, color) => {
-						
+
 						let trasformedMatrix = matrix.map(innerArray => [...innerArray]);
 
 						if(color == "X") {
@@ -8133,7 +8053,7 @@ let parseData = [
 					const startCoordinate = {x: matches[1] - 1, y: matches[2] - 1};
 					const endCoordinate = {x: matches[3] - 1, y: matches[4] - 1};
 					const layer = module.layers[3 - module.count];
-					
+
 					const matrix = layer.newMatrix;
 					const svg = layer.svgWihoutText.clone();
 					const rectDimension = layer.rectDimension;
@@ -9705,9 +9625,9 @@ let parseData = [
 						: "\n--+-----+-----+-----+-----+-----+\n");
 					for(let i = 0; i < 3; i++) {
 						let regex = /\d ((?:\|(?:\d+|\*):(?:\d+|\*))+)/
-						let m = readTaggedLine().match(regex);						
+						let m = readTaggedLine().match(regex);
 						function formatGrid(m1, m2) {
-							if(m1 == "*") 
+							if(m1 == "*")
 								return "**:**"
 							return `q${m1}:y${m2}`
 						}
@@ -9731,7 +9651,7 @@ let parseData = [
 				let line = `A possible answer for ${matches[1]} is ${matches[2]}`.replaceAll("_", "-").replaceAll("|", "!");
 				if(!module.objs[3]) {
 					module.objs[3] = [line]
-				}				
+				}
 				else {
 					module.objs[3].push(line)
 				}
@@ -9748,10 +9668,10 @@ let parseData = [
 				.map(s => s.replaceAll("-", ""))
 				.filter(s => s.length > 0)
 				.map(s => s.padStart(3).padEnd(oneChar ? 4 : 5))
-				
+
 				grid = `   | ${nums.join("| ")}|`;
 				grid += `\n---${nums.map(_ => `+-----${oneChar ? "" : "-"}`).join("")}+\n`
-				
+
 				for(let i = 0; i < 3; i++) {
 					lines[i] = lines[i] + "|"
 				}
@@ -9778,7 +9698,7 @@ let parseData = [
 			 },
 			{ regex: /.+/ }
 		]
-		
+
 	},
 	{
 		moduleID: "inupiaqNumerals",
@@ -13409,7 +13329,7 @@ let parseData = [
 								.attr("x", x)
 								.attr("y", y)
 								.attr("fill", fill)
-								.appendTo(baseSVG);	
+								.appendTo(baseSVG);
 							}
 						}
 					}
@@ -13457,7 +13377,7 @@ let parseData = [
 					for(let curPage = 0; curPage < module.pages.length; curPage++) {
 						//todo get a clone of the svg
 						const svgClone = baseSVG.clone();
-						
+
 						//todo add the lines for each movment up to the current page
 						for(let j = 0; j <= curPage; j++) {
 							// green: latest movement, red: previous movements
@@ -14773,7 +14693,7 @@ let parseData = [
 				}
 			},
 
-			
+
 			{ regex: /.+/ }
 		]
 	},
@@ -15078,7 +14998,7 @@ let parseData = [
 					module.dropdown[1].push(`Displayed Value: ${matches[1].padStart(2, "0")}`);
 					module.dropdown[1].push(`Bonus: ${matches[4]}`);
 					module.dropdown[1].push(`Total sum after multiplier: ${matches[6]}`);
-					const isKilo = !matches[7].includes("Isnt"); 
+					const isKilo = !matches[7].includes("Isnt");
 					module.dropdown[1].push(isKilo ?  "This is over kilo. Press the OK button" : "This is not over kilo" );
 
 					if(!isKilo) {
@@ -15091,7 +15011,7 @@ let parseData = [
 							module.dropdown[1].push("This is the first slide, press either round button.");
 						}
 					}
-					
+
 					module.push(module.dropdown);
 				}
 			}
@@ -15457,7 +15377,7 @@ let parseData = [
 				regex: /The missing color from the grid is: (.+). The correct vertex to use is: \[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\]/,
 				handler: function (matches, module){
 					const vertexSVG = $("<svg xmlns='http://www.w3.org/2000/svg' style='width: 20%' viewbox='0 0 70 70'>");
-					
+
 					const vertexPaths = [
 						"M 30.914392,2.2200195 3.5357015,17.987533 30.914392,33.754529 58.293083,17.987533 Z",
 						"M 3.0974854,18.738908 3.1321086,50.332845 30.476176,66.159786 30.441553,34.565849 Z",
@@ -15480,14 +15400,14 @@ let parseData = [
 						.attr("x", textPlacement[index][0])
 						.attr("y", textPlacement[index][1])
 						.addClass(`painting-cube`)
-						.appendTo(vertexSVG);						
+						.appendTo(vertexSVG);
 					}
-					
+
 					for(var i = 0; i < 3; i++){ addToVertex(i, matches[i+2]); }
-					
+
 					module.push(`The missing color from the grid is: ${matches[1]}`);
 					module.push("The correct vertex to use is as follows:");
-					module.push({ obj: vertexSVG, nobullet: true });					
+					module.push({ obj: vertexSVG, nobullet: true });
 					return true;
 				}
 			},
@@ -15497,7 +15417,7 @@ let parseData = [
 					var grid = (matches[1].split(';')).map(x => x.split(']')).map(r => r.map(x => x.replace(/\[/g, "")));
 
 					module.gridSVG = $("<svg xmlns='http://www.w3.org/2000/svg' style='width: 50%' viewbox='-2 -2 104 104'>");
-					
+
 					function addToGrid(row, col, colour){
 						$SVG("<path>")
 						.attr("d", `M ${col*25},${row*25} H ${(col+1)*25} V ${(row+1)*25} H ${col*25} Z`)
@@ -15508,7 +15428,7 @@ let parseData = [
 						.attr("x", col*25 +12.5)
 						.attr("y", row*25 +16.5)
 						.addClass(`painting-cube`)
-						.appendTo(module.gridSVG);	
+						.appendTo(module.gridSVG);
 					}
 
 					for(var r = 0; r < 4; r++)
@@ -15536,8 +15456,8 @@ let parseData = [
 					.attr("y", col*25 +13.5)
 					.addClass(`painting-cube`)
 					.addClass(`painting-cube-start`)
-					.appendTo(module.gridSVG);	
-					
+					.appendTo(module.gridSVG);
+
 					module.push({ obj: module.gridSVG, nobullet: true });
 					return true;
 				}
@@ -15690,12 +15610,12 @@ let parseData = [
 								.attr("d", getPath(pieceIndex, r, c))
 								.addClass("perspecticolored-squares")
 								.appendTo(svg);
-							}	
+							}
 						}
 
 						return svg;
 					}
-					
+
 					const grid = readTaggedLines(4).map(x => x.split(" "));
 					const label = (module.pages.length == 0) ? "Initial board:" : `After ${module.pages.length} move${module.pages.length == 1 ? "" : "s"}:`
 					module.pages.push({ obj: makeSVG(grid), label: label});
@@ -15703,7 +15623,7 @@ let parseData = [
 
 					makeCycleableDisplays(module.pages, module, false);
 					return true;
-				}		
+				}
 			},
 			{
 				regex: /(Rook|Bishop|Knight) moved to (\w\d), swapping with (\w\d)\./,
@@ -17319,7 +17239,7 @@ let parseData = [
 		matches: [
 			{
 				regex: /The word "(.+)" is split into (.) groups of (.)\./,
-				handler: function (matches, module) {					
+				handler: function (matches, module) {
 					let obj = document.createElement('span');
 					obj.innerHTML = `The word <span class="rbtl">${matches[1].toUpperCase()}</span> is split into ${matches[2]} groups of ${matches[3]}.`;
 					module.push({obj : obj});
@@ -20480,7 +20400,7 @@ let parseData = [
 
 			},
 
-			
+
 
 			{ regex: /.+/ }
 		]
@@ -21154,14 +21074,14 @@ let parseData = [
 			{
 				regex: /Solution/,
 				handler: function (matches, module) {
-					const grid = 
+					const grid =
 					[
-					 'Ϙ', 'Ӭ', '©', 'Ϭ', 'Ψ', 'Ϭ', '¿', 
-					 'Ѧ', 'Ϙ', 'Ѽ', '¶', 'ټ', 'Ӭ', '☆', 
-					 'ƛ', 'Ͽ', 'Ҩ', 'Ѣ', 'Ѣ', '҂', 'Ϙ', 
-					 'Ϟ', 'Ҩ', 'Җ', 'Ѭ', 'Ͼ', 'æ', 'ƛ', 
-					 'Ѭ', '☆', 'Ԇ', 'Җ', '¶', 'Ψ', 'Ҩ', 
-					 'ϗ', 'ϗ', 'ƛ', '¿', 'Ѯ', 'Ҋ', 'Ӭ', 
+					 'Ϙ', 'Ӭ', '©', 'Ϭ', 'Ψ', 'Ϭ', '¿',
+					 'Ѧ', 'Ϙ', 'Ѽ', '¶', 'ټ', 'Ӭ', '☆',
+					 'ƛ', 'Ͽ', 'Ҩ', 'Ѣ', 'Ѣ', '҂', 'Ϙ',
+					 'Ϟ', 'Ҩ', 'Җ', 'Ѭ', 'Ͼ', 'æ', 'ƛ',
+					 'Ѭ', '☆', 'Ԇ', 'Җ', '¶', 'Ψ', 'Ҩ',
+					 'ϗ', 'ϗ', 'ƛ', '¿', 'Ѯ', 'Ҋ', 'Ӭ',
 					 'Ͽ', '¿', '☆', 'ټ', '★', 'Ω', 'Ѽ'
 					];
 
@@ -23454,17 +23374,17 @@ let parseData = [
 						.attr("x", col*12 +6)
 						.attr("y", row*12 +7.5)
 						.addClass(`vcf`)
-						.appendTo(module.gridSVG);						
+						.appendTo(module.gridSVG);
 					}
-					
+
 					for(var row = 0; row < 12; row++)
 						for(var col = 0; col < 12; col++)
 							populateGrid(col, row, ["RGBMYW"[Math.floor(grid[row][col]/6)], "RGBMYW"[grid[row][col]%6]]);
-					
+
 					$SVG("<path>")
 					.attr("d", `M ${(module.currentPosition[0]-1)*12},${(module.currentPosition[1]-1)*12} H ${(module.currentPosition[0]+3)*12} V ${(module.currentPosition[1]+3)*12} H ${(module.currentPosition[0]-1)*12} Z`)
 					.addClass(`vcf-subgrid`)
-					.appendTo(module.gridSVG);			
+					.appendTo(module.gridSVG);
 
 
 					module.stageDropDown[1].push(`The${matches[1]}subgrid is as follows:`);
@@ -23477,7 +23397,7 @@ let parseData = [
 				handler: function (matches, module){
 					module.stageDropDown[1].push(matches[0]);
 					return true;
-				}	
+				}
 			}
 		]
 	},
@@ -24491,40 +24411,40 @@ let parseData = [
 						.addClass(`worse-venn`)
 						.appendTo(svg);
 					}
-					
+
 					const namesToPaths = {
 						"O" : "m 147.78025,9.8199524 a 13.47,13.47 0 0 0 -13.47036,13.4698486 13.47,13.47 0 0 0 13.47036,13.470366 13.47,13.47 0 0 0 13.46985,-13.46003 v -0.01034 A 13.47,13.47 0 0 0 147.78025,9.8199524 Z",
 						"c" : "m 118.35701,45.937297 a 48.47,48.47 0 0 1 0.10284,3.062832 48.47,48.47 0 0 1 -2.08875,14.06929 34.24,34.24 0 0 1 9.019,22.97047 34.24,34.24 0 0 1 -34.239953,34.239961 34.24,34.24 0 0 1 -7.210859,-0.82113 48.47,48.47 0 0 1 -13.755618,10.09179 48.47,48.47 0 0 0 20.966477,4.96967 48.47,48.47 0 0 0 48.479783,-48.480291 48.47,48.47 0 0 0 -21.27292,-40.102592 z",
 						"C" : "m 116.3711,63.069419 a 48.47,48.47 0 0 1 -19.174351,26.036403 48.47,48.47 0 0 1 -13.257461,30.352898 34.24,34.24 0 0 0 7.210859,0.82113 34.24,34.24 0 0 0 34.239953,-34.239961 34.24,34.24 0 0 0 -9.019,-22.97047 z",
-						
+
 						"b" : "M 23.711503,62.931961 A 48.47,48.47 0 0 1 21.499773,49.000129 48.47,48.47 0 0 1 21.759186,46.035481 48.47,48.47 0 0 0 0.34002765,86.039889 48.47,48.47 0 0 0 48.819806,134.52018 48.47,48.47 0 0 0 70.18367,129.55051 48.47,48.47 0 0 1 56.218249,119.40394 34.24,34.24 0 0 1 48.819806,120.27985 34.24,34.24 0 0 1 14.579848,86.039889 34.24,34.24 0 0 1 23.711503,62.931961 Z",
 						"bc" : "m 56.218249,119.40394 a 48.47,48.47 0 0 0 13.965421,10.14657 48.47,48.47 0 0 0 13.755618,-10.09179 34.24,34.24 0 0 1 -13.949402,-6.71116 34.24,34.24 0 0 1 -13.771637,6.65638 z",
 						"bC" : "M 97.196749,89.105822 A 48.47,48.47 0 0 1 81.370994,96.11928 34.24,34.24 0 0 1 69.989886,112.74756 34.24,34.24 0 0 0 83.939288,119.45872 48.47,48.47 0 0 0 97.196749,89.105822 Z",
-						
+
 						"B" : "M 42.941151,89.029342 A 48.47,48.47 0 0 1 23.711503,62.931961 34.24,34.24 0 0 0 14.579848,86.039889 34.24,34.24 0 0 0 48.819806,120.27985 34.24,34.24 0 0 0 56.218249,119.40394 48.47,48.47 0 0 1 42.941151,89.029342 Z",
 						"Bc" : "M 58.554518,95.939448 A 48.47,48.47 0 0 1 42.941151,89.029342 48.47,48.47 0 0 0 56.218249,119.40394 34.24,34.24 0 0 0 69.989886,112.74756 34.24,34.24 0 0 1 58.554518,95.939448 Z",
 						"BC" : "M 81.370994,96.11928 A 48.47,48.47 0 0 1 70.000221,97.479907 48.47,48.47 0 0 1 58.554518,95.939448 34.24,34.24 0 0 0 69.989886,112.74756 34.24,34.24 0 0 0 81.370994,96.11928 Z",
-						
+
 						"a" : "M 70.000221,0.53016962 A 48.47,48.47 0 0 0 21.759186,46.035481 48.47,48.47 0 0 1 37.380304,39.114006 34.24,34.24 0 0 1 69.989886,14.760172 34.24,34.24 0 0 1 102.70024,38.973964 48.47,48.47 0 0 1 118.35701,45.937297 48.47,48.47 0 0 0 70.000221,0.53016962 Z",
 						"ac" : "m 118.35701,45.937297 a 48.47,48.47 0 0 0 -15.65677,-6.963333 34.24,34.24 0 0 1 1.51978,10.026165 34.24,34.24 0 0 1 -0.42477,5.27663 34.24,34.24 0 0 1 12.57585,8.79266 48.47,48.47 0 0 0 2.08875,-14.06929 48.47,48.47 0 0 0 -0.10284,-3.062832 z",
 						"aC" : "m 116.3711,63.069419 a 34.24,34.24 0 0 0 -12.57585,-8.79266 34.24,34.24 0 0 1 -8.554436,17.822513 48.47,48.47 0 0 1 2.048951,13.940617 H 97.3001 A 48.47,48.47 0 0 1 97.196749,89.105822 48.47,48.47 0 0 0 116.3711,63.069419 Z",
-						
+
 						"ab" : "m 23.711503,62.931961 a 34.24,34.24 0 0 1 12.555701,-8.68259 34.24,34.24 0 0 1 -0.517276,-5.249242 34.24,34.24 0 0 1 1.630376,-9.886123 48.47,48.47 0 0 0 -15.621118,6.921475 48.47,48.47 0 0 0 -0.259413,2.964648 48.47,48.47 0 0 0 2.21173,13.931832 z",
 						"abc" : "M 147.88981,0.45989035 A 22.72,22.72 0 0 0 125.17978,23.180248 22.72,22.72 0 0 0 147.90014,45.90009 22.72,22.72 0 0 0 170.59983,23.180248 h 0.0103 A 22.72,22.72 0 0 0 147.88981,0.45989035 Z M 147.78025,9.8199524 A 13.47,13.47 0 0 1 161.2501,23.289801 v 0.01034 A 13.47,13.47 0 0 1 147.78025,36.760167 13.47,13.47 0 0 1 134.30989,23.289801 13.47,13.47 0 0 1 147.78025,9.8199524 Z",
 						"abC" : "M 97.196749,89.105822 A 48.47,48.47 0 0 0 97.3001,86.039889 h -0.01033 a 48.47,48.47 0 0 0 -2.048951,-13.940617 34.24,34.24 0 0 1 -12.695226,8.730132 34.24,34.24 0 0 1 0.514175,5.210485 34.24,34.24 0 0 1 -1.688769,10.079391 48.47,48.47 0 0 0 15.825755,-7.013458 z",
-						
+
 						"aB" : "M 42.941151,89.029342 A 48.47,48.47 0 0 1 42.680188,86.039889 48.47,48.47 0 0 1 44.889334,72.12666 34.24,34.24 0 0 1 36.267204,54.249371 34.24,34.24 0 0 0 23.711503,62.931961 48.47,48.47 0 0 0 42.941151,89.029342 Z",
 						"aBc" : "m 58.554518,95.939448 a 34.24,34.24 0 0 1 -1.63451,-9.899559 34.24,34.24 0 0 1 0.517276,-5.23839 34.24,34.24 0 0 1 -12.54795,-8.674839 48.47,48.47 0 0 0 -2.209146,13.913229 48.47,48.47 0 0 0 0.260963,2.989453 48.47,48.47 0 0 0 15.613367,6.910106 z",
 						"aBC" : "m 81.370994,96.11928 a 34.24,34.24 0 0 0 1.688769,-10.079391 34.24,34.24 0 0 0 -0.514175,-5.210485 34.24,34.24 0 0 1 -12.545367,2.410683 34.24,34.24 0 0 1 -12.562937,-2.438588 34.24,34.24 0 0 0 -0.517276,5.23839 34.24,34.24 0 0 0 1.63451,9.899559 48.47,48.47 0 0 0 11.445703,1.540459 48.47,48.47 0 0 0 11.370773,-1.360627 z",
-						
+
 						"A" : "M 37.380304,39.114006 A 48.47,48.47 0 0 1 48.819806,37.569929 48.47,48.47 0 0 1 70.17902,42.541671 48.47,48.47 0 0 1 91.150147,37.569929 48.47,48.47 0 0 1 102.70024,38.973964 34.24,34.24 0 0 0 69.989886,14.760172 34.24,34.24 0 0 0 37.380304,39.114006 Z",
 						"Ac" : "m 70.17902,42.541671 a 48.47,48.47 0 0 1 13.752516,10.091793 34.24,34.24 0 0 1 7.218611,-0.823714 34.24,34.24 0 0 1 12.645103,2.467009 34.24,34.24 0 0 0 0.42477,-5.27663 34.24,34.24 0 0 0 -1.51978,-10.026165 48.47,48.47 0 0 0 -11.550093,-1.404035 48.47,48.47 0 0 0 -20.971127,4.971742 z",
 						"AC" : "M 83.931536,52.633464 A 48.47,48.47 0 0 1 95.240814,72.099272 34.24,34.24 0 0 0 103.79525,54.276759 34.24,34.24 0 0 0 91.150147,51.80975 34.24,34.24 0 0 0 83.931536,52.633464 Z",
-						
+
 						"Ab" : "m 37.380304,39.114006 a 34.24,34.24 0 0 0 -1.630376,9.886123 34.24,34.24 0 0 0 0.517276,5.249242 34.24,34.24 0 0 1 12.552602,-2.439621 34.24,34.24 0 0 1 7.398443,0.875907 A 48.47,48.47 0 0 1 70.17902,42.541671 48.47,48.47 0 0 0 48.819806,37.569929 48.47,48.47 0 0 0 37.380304,39.114006 Z",
 						"Abc": "M 70.17902,42.541671 A 48.47,48.47 0 0 0 56.218249,52.685657 34.24,34.24 0 0 1 69.989886,59.342551 34.24,34.24 0 0 1 83.931536,52.633464 48.47,48.47 0 0 0 70.17902,42.541671 Z",
 						"AbC" : "M 83.931536,52.633464 A 34.24,34.24 0 0 0 69.989886,59.342551 34.24,34.24 0 0 1 82.545588,80.829404 34.24,34.24 0 0 0 95.240814,72.099272 48.47,48.47 0 0 0 83.931536,52.633464 Z",
-						
+
 						"AB" : "M 44.889334,72.12666 A 48.47,48.47 0 0 1 56.218249,52.685657 34.24,34.24 0 0 0 48.819806,51.80975 34.24,34.24 0 0 0 36.267204,54.249371 34.24,34.24 0 0 0 44.889334,72.12666 Z",
 						"ABc" : "M 57.437284,80.801499 A 34.24,34.24 0 0 1 69.989886,59.342551 34.24,34.24 0 0 0 56.218249,52.685657 48.47,48.47 0 0 0 44.889334,72.12666 a 34.24,34.24 0 0 0 12.54795,8.674839 z",
 						"ABC" : "M 82.545588,80.829404 A 34.24,34.24 0 0 0 69.989886,59.342551 34.24,34.24 0 0 0 57.437284,80.801499 34.24,34.24 0 0 0 70.000221,83.240087 34.24,34.24 0 0 0 82.545588,80.829404 Z",
@@ -24569,8 +24489,8 @@ let parseData = [
 					}
 
 					const valueToColour = {
-						"False" : "red", 
-						"Unknown" : "blue", 
+						"False" : "red",
+						"Unknown" : "blue",
 						"True" : "green",
 					}
 
@@ -24583,7 +24503,7 @@ let parseData = [
 							renamedCorrectRegions.push(module.namesToManualNames[name]);
 						} else addPath(namesToPaths[name], "none");
 					}
-					
+
 					module.push({ label: `Select the areas to return ${matches[1]}: ${renamedCorrectRegions.join(", ")}`, obj: svg });
 					return true;
 				}
@@ -24591,7 +24511,7 @@ let parseData = [
 			{
 				regex: /Incorrect area selected: (.+)/,
 				handler: function (matches, module) {
-			
+
 					module.push(`Incorrect area selected: ${module.namesToManualNames[matches[1]]}`)
 					return true;
 				}
@@ -24716,7 +24636,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{ 
+			{
 				regex: /.+/,
 				handler: function (matches, module) {
 					if(matches[0].match(/Version: (.+)/) || matches[0] == "Module solved.") {
