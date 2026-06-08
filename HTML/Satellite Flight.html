@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Satellite Flight — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .fleft {
+            float: left;
+        }
+
+        .fright {
+            float: right;
+        }
+
+        .caption-small {
+            text-align: center;
+        }
+
+        .page-footer::before { content: "Page "; }
+        .page-footer::after { content: " of 2"; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Satellite Flight</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Satellite Flight.svg" class="diagram">
+                <h2>On the Subject of Satellite Flight</h2>
+                <p class="flavour-text">We would have picked someone else, but our original pick is playing harmonica god knows where.</p>
+                <p>As part of the Keep Launching space program, you are tasked with launching a satellite for research. Considering your marvellous skill at not exploding, we are hoping that you may achieve similarly preferable results in this endeavour.</p>
+
+                <p>Initially, the module will display the target planet alongside its coordinate in a 10×10 hexagonal grid. In this state, the left and right buttons can be pressed to cycle through the list of other celestial bodies present, each being a planet or a star, and their corresponding coordinates.</p>
+                <p>The coordinates present are in the following coordinate system: a coordinate (x,y,z) denotes taking x steps right, y steps up-left, and z steps down-left from the origin, located at the center of the grid.</p>
+                <p>After noting down all bodies present on the grid, press the up button. The display will now show some information about the satellite and the current mission. In order, it shows: its current position, orientation, remaining fuel, elapsed time, and research progress.</p>
+                <p>To solve the module, reach the required research quota by facing the target planet from exactly one step away for the indicated number of timesteps. The research progress does not reset upon leaving the target planet, but will if the satellite crashes, leaves the grid, or the elapsed time exceeds the expected lifetime of the satellite. Unfortunately, funding for this mission has left us with rather brittle satellites.</p>
+                <p>The satellite starts at the origin, facing right, with a single unit of rightward velocity, and no angular velocity. The up button adds one unit of velocity in the direction the satellite is facing, while the left and right buttons add one unit of angular momentum in the counterclockwise or clockwise directions respectively. Each of these actions costs one unit of fuel. The middle button idles the satellite, neither costing fuel nor changing velocity or angular momentum. After each action or idle, the sum of acceleration is applied to velocity, then the new velocity and angular momentum is applied to the satellite. Then, one timestep will elapse.</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Satellite Flight</span>
+            </div>
+            <div class="page-content">
+                <h2>Appendix: Useful figures</h2>
+
+                <figure class="fleft">
+                    <img class="invertible gravity" src="img/Satellite Flight/GravityPlanet.svg" alt="Gravity of a planet" height="270">
+                    <figcaption class="caption-small">Figure 1. Gravity of a planet</figcaption>
+                </figure>
+                <figure class="fright">
+                    <img class="invertible gravity" src="img/Satellite Flight/GravityStar.svg" alt="Gravity of a star" height="270">
+                    <figcaption class="caption-small">Figure 2. Gravity of a star</figcaption>
+                </figure>
+                <figure>
+                    <svg id="hex-grid" width="680" height="555" viewBox="0 0 680 555" class="invertible"></svg>
+                    <figcaption class="caption-small">Figure 3. A highlightable map template</figcaption>
+                </figure>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+    </div>
+    <script>
+        const config = {
+            radius: 18.25,
+            columns: 19,
+            rows: 19,
+            svgId: 'hex-grid'
+        }
+
+        const width = Math.sqrt(3) * config.radius;
+        const height = 2 * config.radius;
+        const hSpace = width;
+        const vSpace = 1.5 * config.radius;
+
+        function hexVertices(r) {
+            const points = [];
+            for (let i = 0; i < 6; i++) {
+                const angle = Math.PI / 180 * (60 * i - 30);
+                const x = r * Math.cos(angle);
+                const y = r * Math.sin(angle);
+                points.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+            }
+
+            return points.join(' ');
+        }
+
+        function createGrid() {
+            const svg = document.getElementById(config.svgId);
+            const baseVertices = hexVertices(config.radius);
+
+            for (let r = 0; r < config.rows; r++) {
+                for (let c = 0; c < config.columns; c++) {
+                    if (r + c < 9 || r + c > 27) {
+                        continue;
+                    }
+
+                    let x = c * hSpace;
+                    let y = r * vSpace;
+
+                    x += hSpace / 2 * r;
+
+                    x += width / 2 - 103;
+                    y += config.radius + 20;
+
+                    if (r < 9 && c == 9) {
+                        svg.innerHTML += `<text x="${x-5}" y="${y+5}">${9 - r}</text>`
+                    } else if (r == 9 && c > 8) {
+                        svg.innerHTML += `<text x="${x-5}" y="${y+5}">${c - 9}</text>`
+                    } else if (r > 9 && c == 18 - r) {
+                        svg.innerHTML += `<text x="${x-5}" y="${y+5}">${r - 9}</text>`
+                    }
+
+                    svg.innerHTML += `<polygon points="${baseVertices}" transform="translate(${x},${y})" fill="#00000000" stroke="#222" stroke-width="1.5px" class="highlightable"></polygon>`;
+                }
+            }
+        }
+
+        createGrid();
+    </script>
+</body>
+</html>
