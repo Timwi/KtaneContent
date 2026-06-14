@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Set Connections — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table#grid {
+            width: 100%;
+            aspect-ratio: 2;
+            border: 1.5mm solid;
+            background-color: lightgray;
+
+            tr { height: calc(100%/9); }
+            td {
+                width: calc(100%/9);
+                padding: 0;
+            }
+
+            tr:nth-child(3n) td { border-bottom: 1.5mm solid; }
+            td:nth-child(3n) { border-right: 1.5mm solid; }
+            svg {
+                margin-left: .1em;
+                width: 1rem;
+                height: 2rem;
+                stroke: gray;
+                fill: url("#none-none");
+            }
+        }
+
+        .cell {
+            width: 100%;
+            height: 100%;
+            font-size: 2rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            gap: 0.1em;
+            user-select: none;
+        }
+
+        .striped {
+            fill: url("#striped-none");
+            &.red { fill: url("#striped-red"); }
+            &.blue { fill: url("#striped-blue"); }
+            &.yellow { fill: url("#striped-yellow"); }
+        }
+        .empty { fill: none; }
+        .filled { 
+            fill: gray; 
+            &.red { fill: red; }
+            &.blue { fill: blue; }
+            &.yellow { fill: yellow; }
+        }
+
+        .red:not(.striped,.filled,.empty) { fill: url("#none-red"); }
+        .blue:not(.striped,.filled,.empty) { fill: url("#none-blue"); }
+        .yellow:not(.striped,.filled,.empty) { fill: url("#none-yellow"); }
+
+        .red { stroke: red; }
+        .blue { stroke: blue; }
+        .yellow { stroke: yellow; }
+
+        .selected { border: 0.2em solid #0080ff; }
+
+        .dark table#grid {
+            border-color: #222;
+            td {
+                color: #222;
+                border-color: #222;
+            }
+        }
+    </style>
+    <script>
+        const SVGs = ["M0 0h10v20h-10z",
+                      "M0 5a1 1 0 0110 0v10a1 1 0 01-10 0z",
+                      "M5 0l5 10-5 10-5-10z",
+                      "M5.7 20s-9.1 0-3.6-11.9c1.1-2.6-5-8.1 1.6-8.1 0 0 9.1 0 3.6 11.9-1.1 2.6 5 8.1-1.6 8.1z"];
+
+        let setButton, toggleButton;
+
+        let cells = Array(9);
+        let cellsPaths = Array(9);
+        let cellsDivs = Array(9);
+        let placementMode = 0;
+        let buttonConfig = [0,0,0,0];
+        let buttons = Array(4);
+        let cellConfig = Array(9);
+        function init(){
+
+            const gridElement = document.getElementById('grid');
+            const rows = Array(9);
+            for (let i = 0; i < 9; i++) {
+                rows[i] = document.createElement("tr");
+                gridElement.appendChild(rows[i]);
+                cells[i] = Array(9);
+                cellsDivs[i] = Array(9);
+                cellsPaths[i] = Array(9);
+                cellConfig[i]= Array(9);
+                for (let j = 0; j < 9; j++) {
+                    cells[i][j] = document.createElement("td");
+                    rows[i].appendChild(cells[i][j]);
+                    cellsDivs[i][j] = document.createElement("div");
+                    cellsDivs[i][j].classList = "cell";
+                    cells[i][j].appendChild(cellsDivs[i][j]);
+                    cells[i][j].addEventListener("click", () => pressCell(i,j));
+                    cellConfig[i][j]=[0,0,0,0];
+                }
+            }
+
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    cellsDivs[i][j].innerText = "?";
+                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    svg.setAttribute("viewBox", "-1 -1 11 21");
+
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    path.setAttribute("d", SVGs[0]);
+                    path.classList = "capsule";
+                    svg.appendChild(path);
+                    cellsPaths[i][j] = path;
+                    cellsDivs[i][j].appendChild(svg);
+                }
+            }
+
+            const buttonTableElement = document.getElementById("buttonTable");
+            for (let i = 0; i < 4; i++) {
+                let buttonRow = document.createElement("tr");
+                buttonTableElement.appendChild(buttonRow);
+                buttons[i]=Array(4);
+                for (let j = 0; j < 4; j++) {
+                    let buttonCell = document.createElement("td");
+                    let button = document.createElement("button");
+                    button.setAttribute("class","button"+i.toString()+j.toString());
+                    buttonCell.appendChild(button);
+                    buttonRow.appendChild(buttonCell);
+                    button.setAttribute("onclick","pressButton("+i.toString()+","+j.toString()+");");
+                    button.innerText = "?123?RYB?ELF?CDS"[i*4+j].toString();
+                    buttons[i][j]=button;
+                }
+            }
+            setButton = document.getElementById("setButton");
+            toggleButton = document.getElementById("toggleButton");
+            updateButtons();
+        }
+        function mode(s){
+            placementMode=s;
+            updateButtons();
+        }
+        function pressButton(r,c){
+            buttonConfig[r]=c;
+            updateButtons();
+        }
+        function pressCell(r,c){
+            for (let i=0; i<4; i++)
+                if (cellConfig[r][c][i]===buttonConfig[i]){
+                    if (placementMode===1)
+                        cellConfig[r][c][i] = 0;
+                }
+                else cellConfig[r][c][i] = buttonConfig[i];
+            updateCell(r,c);
+        }
+        function updateCell(r,c){
+            cellsDivs[r][c].firstChild.textContent = "?123"[cellConfig[r][c][0]].toString();
+            cellsPaths[r][c].setAttribute("d", SVGs[cellConfig[r][c][3]]);
+            let colors = ["red","yellow","blue"];
+            let fills = ["empty","striped","filled"];
+            for (let i=0; i<3; i++) if (cellConfig[r][c][1]===i+1) cellsPaths[r][c].classList.add(colors[i]); else cellsPaths[r][c].classList.remove(colors[i]);
+            for (let i=0; i<3; i++) if (cellConfig[r][c][2]===i+1) cellsPaths[r][c].classList.add(fills[i]); else cellsPaths[r][c].classList.remove(fills[i]);
+        }
+        function updateButtons(){
+            if (placementMode===0) {
+                setButton.classList.add("selected");
+                toggleButton.classList.remove("selected");
+            }
+            else{
+                setButton.classList.remove("selected");
+                toggleButton.classList.add("selected");
+            }
+            for (let i=0; i<4; i++) {
+                for (let j=0; j<4; j++) {
+                    if (buttonConfig[i] === j) buttons[i][j].classList.add("selected");
+                    else buttons[i][j].classList.remove("selected");
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Set Connections</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Set Connections.svg" class="diagram">
+                <h2>On the Subject of Set Connections</h2>
+                <p class="flavour-text">Not to be confused with S.E.T. in four dimensions, although this is S.E.T. in four dimensions.</p>
+
+                <p>This module contains a 3×3×3×3 S.E.T. puzzle. Each card will show an image with 4 varying traits: shape, fill, color, and number. No cards are repeated in the puzzle.</p>
+                <p>
+                    To solve the module, solve the S.E.T. puzzle by selecting your desired traits, then pressing the card you want to have that trait.
+                    The module will solve once 54 cards (two thirds) of the puzzle are completed.
+                </p>
+                <p>For any solved S.E.T. puzzle, each 3×3 group has to have a unique set on each row, column, and diagonal. 3×3 groups wrap around on themselves.</p>
+                <p>Additionally, all directions from a point that moves across ranks and/or stacks have to make a unique set.</p>
+                <p>
+                    When moving across ranks and stacks, represented as rows and columns of 3×3 boards, you can move orthogonally or diagonally to another 3×3 group,
+                    in which you will be in the same position in the group before you moved in the group you’re currently in.
+                    From there, you can either move in another direction in the 3×3 group with wrap-around, or choose to stay in the same location.
+                    Afterwards, you repeat the directions you went in. The 3 cards you pass must make a unique set.
+                </p>
+                <p>To input cards, select the traits you want using the top buttons, which will have a yellow outline when selected, then press the card you want to have those traits.</p>
+                <p>Upon a correct input, the card will flip over to show the traits you selected. Upon an incorrect input, the card will flip over, strike, and flip back.</p>
+                <p>A set is a triplet of cards that satisfy the following conditions:</p>
+                <ul>
+                    <li>They all have the same number or have all different numbers of symbols (one, two, or three).</li>
+                    <li>They all are the same or are all different colors (red, yellow, or blue).</li>
+                    <li>They all have the same or all different shadings (empty, striped, or filled).</li>
+                    <li>They all are the same or all different shapes (capsules, diamonds, or squiggles).</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Set Connections</span>
+            </div>
+            <div class="page-content">
+                <svg style="height:0">
+                    <defs>
+                        <pattern id="striped-none" width="1" height="2" patternUnits="userSpaceOnUse">
+                            <rect x="0" y="0" width="1" height="1" fill="gray"/>
+                        </pattern>
+                        <pattern id="striped-red" width="1" height="2" patternUnits="userSpaceOnUse">
+                            <rect x="0" y="0" width="1" height="1" fill="red"/>
+                        </pattern>
+                        <pattern id="striped-blue" width="1" height="2" patternUnits="userSpaceOnUse">
+                            <rect x="0" y="0" width="1" height="1" fill="blue"/>
+                        </pattern>
+                        <pattern id="striped-yellow" width="1" height="2" patternUnits="userSpaceOnUse">
+                            <rect x="0" y="0" width="1" height="1" fill="yellow"/>
+                        </pattern>
+                        <pattern id="none-none" width="3" height="3" patternUnits="userSpaceOnUse">
+                            <rect x="0" y="0" width="1" height="1" fill="gray"/>
+                        </pattern>
+                        <pattern id="none-red" width="3" height="3" patternUnits="userSpaceOnUse">
+                            <rect x="0" y="0" width="1" height="1" fill="red"/>
+                        </pattern>
+                        <pattern id="none-blue" width="3" height="3" patternUnits="userSpaceOnUse">
+                            <rect x="0" y="0" width="1" height="1" fill="blue"/>
+                        </pattern>
+                        <pattern id="none-yellow" width="3" height="3" patternUnits="userSpaceOnUse">
+                            <rect x="0" y="0" width="1" height="1" fill="yellow"/>
+                        </pattern>
+                    </defs>
+                </svg>
+                <table id="grid"></table>
+                <div style="margin-top: 1em">
+                    <table id="buttonTable" class="centered">
+                        <tr>
+                            <td colspan="2"><button onclick="mode(0)" class="centered-img" id="setButton">Set</button></td>
+                            <td colspan="2"><button onclick="mode(1)" class="centered-img" id="toggleButton">Toggle</button></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <script>init();</script>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
