@@ -8,49 +8,105 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <style>
         .dark table, table {
             margin: 1em auto;
             border: none;
         }
 
-        .red {
-            background-color: #FAA;
-        }
-
-        .orange {
-            background-color: #FCA;
-        }
-
-        .yellow {
-            background-color: #FFA;
-        }
-
-        .green {
-            background-color: #AFA;
-        }
-
-        .cyan {
-            background-color: #AFF;
-        }
-
-        .blue {
-            background-color: #AAF;
-        }
-
-        .purple {
-            background-color: #CAF;
-        }
-
-        .white {
-            background-color: #EEE;
-        }
-
-        .black {
-            background-color: #000;
-        }
+        .red { background-color: #FAA; }
+        .orange { background-color: #FCA; }
+        .yellow { background-color: #FFA; }
+        .green { background-color: #AFA; }
+        .cyan { background-color: #AFF; }
+        .blue { background-color: #AAF; }
+        .purple { background-color: #CAF; }
+        .white { background-color: #EEE; }
+        .black { background-color: #000; }
         tr.black { color: black; }
     </style>
+    <script>
+        const sin2Element = document.getElementById("sin2");
+        const cos2Element = document.getElementById("cos2");
+
+        const sin2AnsElement = document.getElementById("sin2Ans");
+        const cos2AnsElement = document.getElementById("cos2Ans");
+
+        const tableLengths = [24, 8];
+
+        function update() {
+            const sin2 = parseInt(sin2Element.value) ? parseInt(sin2Element.value) : 0;
+            const cos2 = parseInt(cos2Element.value) ? parseInt(cos2Element.value) : 0;
+
+            const sin2Ans = parseFloat(sin2AnsElement.value = (Math.trunc(Math.sin(sin2 * Math.PI / 180) * 100000) / 100000) % 1);
+            const cos2Ans = parseFloat(cos2AnsElement.value = (Math.trunc(Math.cos(cos2 * Math.PI / 180) * 100000) / 100000) % 1);
+
+            const sinNeg = sin2Ans.toString()[0] === '-' ? 1 : 0;
+            const cosNeg = cos2Ans.toString()[0] === '-' ? 1 : 0;
+
+            if ((Math.abs(sin2Ans) * 100000) % 1000 === 999)
+                sin2AnsElement.value = sin2Ans > 0 ? (sin2Ans + 0.00001) % 1 : (sin2Ans - 0.00001) % 1;
+
+            if ((Math.abs(cos2Ans) * 100000) % 1000 === 999)
+                cos2AnsElement.value = cos2Ans > 0 ? (cos2Ans + 0.00001) % 1 : (cos2Ans - 0.00001) % 1;
+
+            while (sin2AnsElement.value.length != 1 && sin2AnsElement.value.length < 7 + sinNeg)
+                sin2AnsElement.value += '0';
+
+            while (cos2AnsElement.value.length != 1 && cos2AnsElement.value.length < 7 + cosNeg)
+                cos2AnsElement.value += '0';
+        }
+
+        let defaultRules = null;
+
+        function getDefaultRules() {
+            if (defaultRules !== null)
+                return;
+
+            defaultRules = {};
+
+            for (let instruction = 1; instruction <= tableLengths[0]; instruction++)
+                defaultRules[`rule-3-${instruction}`] = document.getElementById(`rule-3-${instruction}`).innerText;
+
+            for (let instruction = 1; instruction <= tableLengths[1]; instruction++)
+                defaultRules[`rule-4-${instruction}`] = document.getElementById(`rule-4-${instruction}`).innerText;
+        }
+
+        function setDefaultRules() {
+            getDefaultRules();
+
+            for (let instruction = 1; instruction <= tableLengths[0]; instruction++)
+                document.getElementById(`rule-3-${instruction}`).innerText = defaultRules[`rule-3-${instruction}`];
+
+            for (let instruction = 1; instruction <= tableLengths[1]; instruction++)
+                document.getElementById(`rule-4-${instruction}`).innerText = defaultRules[`rule-4-${instruction}`];
+        }
+
+        function setRules(rnd) {
+            getDefaultRules();
+
+            const edgework = ['Batteries', 'AA batteries', 'D batteries', 'Battery holders',
+                'Indicators', 'Lit indicators', 'Unlit indicators',
+                'Port plates', 'Unique ports', 'Duplicate ports', 'Ports',
+                "First digit of serial number", "Last digit of serial number", "Digits in serial number", "Letteres in serial number",
+                'Solved modules', 'Non-ignored modules', 'Modules', 'Unsolved modules', 'Ignored modules',
+                'Left nixie', 'Right nixie', 'Gear number', 'Current stage',
+                "Display’s 1st digit", "Display’s 2nd digit", "Display’s 3rd digit", "Display’s 4th digit", "Display’s 5th digit", "Display’s 6th digit"];
+
+            for (let instruction = 0; instruction < tableLengths[0]; instruction++) {
+                const span = document.getElementById(`rule-3-${instruction + 1}`);
+                const rule = { type: rnd.nextMax(10) };
+                span.innerText = rule.type
+            }
+
+            for (let instruction = 0; instruction < tableLengths[1]; instruction++) {
+                const span = document.getElementById(`rule-4-${instruction + 1}`);
+                const rule = { type: rnd.nextMax(edgework.length) };
+                span.innerText = edgework[rule.type]
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="section">
@@ -90,28 +146,28 @@
                 <table>
                     <tr class="black">
                         <th class="red">Red</th>
-                        <td class="red">Batteries</td>
+                        <td class="red rule" id='rule-4-1'>Batteries</td>
                         <td class="black" rowspan=4></td>
                         <th class="orange">Orange</th>
-                        <td class="orange">Indicators</td>
+                        <td class="orange rule" id='rule-4-2'>Indicators</td>
                     </tr>
                     <tr class="black">
                         <th class="yellow">Yellow</th>
-                        <td class="yellow">Port plates</td>
+                        <td class="yellow rule" id='rule-4-3'>Port plates</td>
                         <th class="green">Green</th>
-                        <td class="green">First digit of serial number</td>
+                        <td class="green rule" id='rule-4-4'>First digit of serial number</td>
                     </tr>
                     <tr class="black">
                         <th class="cyan">Cyan</th>
-                        <td class="cyan">Battery holders</td>
+                        <td class="cyan rule" id='rule-4-5'>Battery holders</td>
                         <th class="blue">Blue</th>
-                        <td class="blue">Unlit indicators</td>
+                        <td class="blue rule" id='rule-4-6'>Unlit indicators</td>
                     </tr>
                     <tr class="black">
                         <th class="purple">Purple</th>
-                        <td class="purple">Ports</td>
+                        <td class="purple rule" id='rule-4-7'>Ports</td>
                         <th class="white">White</th>
-                        <td class="white">Letters in serial number</td>
+                        <td class="white rule" id='rule-4-8'>Letters in serial number</td>
                     </tr>
                 </table>
 
@@ -145,43 +201,43 @@
                     </tr>
                     <tr class="black">
                         <th class="red">Red</th>
-                        <td class="red">1</td>
-                        <td class="red">7</td>
-                        <td class="red">3</td>
+                        <td class="red rule" id='rule-3-1'>1</td>
+                        <td class="red rule" id='rule-3-9'>7</td>
+                        <td class="red rule" id='rule-3-17'>3</td>
                         <th class="orange">Orange</th>
-                        <td class="orange">6</td>
-                        <td class="orange">2</td>
-                        <td class="orange">8</td>
+                        <td class="orange rule" id='rule-3-2'>6</td>
+                        <td class="orange rule" id='rule-3-10'>2</td>
+                        <td class="orange rule" id='rule-3-18'>8</td>
                     </tr>
                     <tr class="black">
                         <th class="yellow">Yellow</th>
-                        <td class="yellow">8</td>
-                        <td class="yellow">5</td>
-                        <td class="yellow">1</td>
+                        <td class="yellow rule" id='rule-3-3'>8</td>
+                        <td class="yellow rule" id='rule-3-11'>5</td>
+                        <td class="yellow rule" id='rule-3-19'>1</td>
                         <th class="green">Green</th>
-                        <td class="green">5</td>
-                        <td class="green">4</td>
-                        <td class="green">6</td>
+                        <td class="green rule" id='rule-3-4'>5</td>
+                        <td class="green rule" id='rule-3-12'>4</td>
+                        <td class="green rule" id='rule-3-20'>6</td>
                     </tr>
                     <tr class="black">
                         <th class="cyan">Cyan</th>
-                        <td class="cyan">2</td>
-                        <td class="cyan">6</td>
-                        <td class="cyan">4</td>
+                        <td class="cyan rule" id='rule-3-5'>2</td>
+                        <td class="cyan rule" id='rule-3-13'>6</td>
+                        <td class="cyan rule" id='rule-3-21'>4</td>
                         <th class="blue">Blue</th>
-                        <td class="blue">7</td>
-                        <td class="blue">3</td>
-                        <td class="blue">5</td>
+                        <td class="blue rule" id='rule-3-6'>7</td>
+                        <td class="blue rule" id='rule-3-14'>3</td>
+                        <td class="blue rule" id='rule-3-22'>5</td>
                     </tr>
                     <tr class="black">
                         <th class="purple">Purple</th>
-                        <td class="purple">3</td>
-                        <td class="purple">1</td>
-                        <td class="purple">7</td>
+                        <td class="purple rule" id='rule-3-7'>3</td>
+                        <td class="purple rule" id='rule-3-15'>1</td>
+                        <td class="purple rule" id='rule-3-23'>7</td>
                         <th class="white">White</th>
-                        <td class="white">4</td>
-                        <td class="white">8</td>
-                        <td class="white">2</td>
+                        <td class="white rule" id='rule-3-8'>4</td>
+                        <td class="white rule" id='rule-3-16'>8</td>
+                        <td class="white rule" id='rule-3-24'>2</td>
                     </tr>
                 </table>
 
@@ -196,53 +252,14 @@
                 </ol>
 
                 <table style="text-align:center;">
-                    <tr>
-                        <th rowspan="2" class="corner"></th>
-                        <th colspan="5">5-digit number</th>
-                    </tr>
-                    <tr>
-                        <th>1</th>
-                        <th>2</th>
-                        <th>3</th>
-                        <th>4</th>
-                        <th>5</th>
-                    </tr>
-                    <tr>
-                        <th>A</th>
-                        <td colspan="3">L</td>
-                        <td>M</td>
-                        <td>R</td>
-                    </tr>
-                    <tr>
-                        <th>B</th>
-                        <td>L</td>
-                        <td colspan="3">M</td>
-                        <td>R</td>
-                    </tr>
-                    <tr>
-                        <th>C</th>
-                        <td>L</td>
-                        <td>M</td>
-                        <td colspan="3">R</td>
-                    </tr>
-                    <tr>
-                        <th>D</th>
-                        <td>L</td>
-                        <td colspan="2">M</td>
-                        <td colspan="2">R</td>
-                    </tr>
-                    <tr>
-                        <th>E</th>
-                        <td colspan="2">L</td>
-                        <td>M</td>
-                        <td colspan="2">R</td>
-                    </tr>
-                    <tr>
-                        <th>F</th>
-                        <td colspan="2">L</td>
-                        <td colspan="2">M</td>
-                        <td>R</td>
-                    </tr>
+                    <tr><th rowspan="2" class="corner"></th><th colspan="5">5-digit number</th></tr>
+                    <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+                    <tr><th>A</th><td colspan="3">L</td><td>M</td><td>R</td></tr>
+                    <tr><th>B</th><td>L</td><td colspan="3">M</td><td>R</td></tr>
+                    <tr><th>C</th><td>L</td><td>M</td><td colspan="3">R</td></tr>
+                    <tr><th>D</th><td>L</td><td colspan="2">M</td><td colspan="2">R</td></tr>
+                    <tr><th>E</th><td colspan="2">L</td><td>M</td><td colspan="2">R</td></tr>
+                    <tr><th>F</th><td colspan="2">L</td><td colspan="2">M</td><td>R</td></tr>
                 </table>
 
                 <ol start="5">
