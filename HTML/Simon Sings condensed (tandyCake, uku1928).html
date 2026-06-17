@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Simon Sings Condensed — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        .dark table, table {
+            border: none;
+            text-align: left;
+        }
+        li {
+            margin: .75em 0;
+        }
+        h3 {
+            margin: 1.5em 0 .5em;
+        }
+        table.binary td:nth-child(3n+1):not(:first-child), table.binary th:nth-child(3n+1):not(:first-child) {
+            border-left: 3px solid;
+        }
+    </style>
+    <script>
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+
+        function setRules(rnd)
+        {
+            var candidateFallbacks = rnd.shuffleFisherYates([
+                "Batteries odd",
+                "Indicators odd",
+                "Ports odd",
+                "SN letters odd",
+                "Port plates odd",
+                "First SN digit is odd",
+                "Port types odd",
+                "Last SN is odd",
+                "Lit indicators odd",
+                "Unlit indicators odd",
+                "Battery holders odd",
+                "Batteries even",
+                "Last SN is even",
+                "First SN digit is even",
+                "Port plates even",
+                "Indicators even",
+                "Ports even",
+                "Port types even",
+                "SN letters even",
+                "Lit indicators even",
+                "Unlit indicators even",
+                "Battery holders even",
+            ]);
+
+            var candidateRules = rnd.shuffleFisherYates([
+                "Stage number = {stage}.",
+                "If {digit} in number: {fallback}.\nElse: This number’s {digit} key was {flavour}.",
+                "If first of all: {fallback}.\nElse: Previous bit was {0or1}.",
+                "If indicators = 0: {fallback}.\nOtherwise: Position = max(lit indicators, unlit indicators).",
+                "Position = port plates.",
+                "If first stage: {fallback}.\nElse: Exactly {3to5} keys in previous stage were {flavour}.",
+                "If plates = 0: {fallback}.\nElse: Position = ports on greatest plate.",
+                "Stage number = {element}.",
+                "Battery holders = 0: {fallback}.\nElse: Position = batteries.",
+                "{first} or {second} bit.",
+                "Another key in this number is {key1} or {key2}.",
+                "If number would be prime if this key is a 1.",
+                "If first stage: {fallback}.\nElse: {operator} numbers in previous stage < 5.",
+                "Stage number is not {stage}.",
+                "If first stage: {fallback}.\nElse: Two consecutive keys in previous stage were {flavour}.",
+                "A key in the other number is {key3} or {key4}.",
+                "Other number’s {digit} key was {flavour}.",
+                "{third} or {fourth} bit.",
+            ]);
+
+            var candidateElements = rnd.shuffleFisherYates([
+                "Batteries",
+                "Battery holders",
+                "Indicators",
+                "SN letters - 1",
+                "Unlit indicators",
+                "Ports",
+                "Port types",
+                "Port plates",
+                "SN digits - 1",
+                "Lit indicators",
+            ]);
+
+            var fallbackIx = 0;
+            var elementIx = 0;
+            var digitOrder = rnd.shuffleFisherYates(["Last", "Second", "First", "Third"]);
+            var keys = rnd.shuffleFisherYates("C,C♯,F♯,D♯,E,A♯,D,G,G♯,A,F,B".split(','));
+            var operator = rnd.next(0, 4);
+
+            var tds = document.getElementsByClassName('rule');
+            for (var i = 0; i < 12; i++)
+            {
+                var digit = ["third", "second", "first", "fourth"][rnd.next(0, 4)];
+                tds[i].innerText = candidateRules[i].replace(/\{(.*?)\}/g, (_, varName) => {
+                    switch (varName)
+                    {
+                        case "first": return digitOrder[0];
+                        case "second": return digitOrder[1];
+                        case "third": return digitOrder[2];
+                        case "fourth": return digitOrder[3];
+
+                        case "digit": return digit;
+                        case "0or1": return 1-rnd.next(0, 2);
+                        case "element": return candidateElements[elementIx++];
+                        case "stage": return ["1", "3", "2"][rnd.next(0, 3)];
+                        case "flavour": return ["sharp", "natural (not sharp)"][rnd.next(0, 2)];
+                        case "3to5": return rnd.next(3, 6);
+                        case "operator": return ["Neither", "Exactly one of two", "One or both", "Both"][operator];
+                        case "key1": return keys[0];
+                        case "key2": return keys[1];
+                        case "key3": return keys[2];
+                        case "key4": return keys[3];
+
+                        case "fallback": return candidateFallbacks[fallbackIx++];
+                    }
+                    return "INVALID";
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Simon Sings</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Simon Sings.svg">
+                <h2>On the Subject of Simon Sings</h2>
+                <p class="flavour-text">
+                This manual’s wordy, but you’re too shy to say it.
+                <p>See the original manual for the original instructions.</p>
+                <p>Vowel = start left, No vowel = start right.</p>
+                <table>
+                    <tr><th>C</th><td class='rule'>First or Last bit.</td></tr>
+                    <tr><th>C♯</th><td class='rule'>Second or Third bit.</td></tr>
+                    <tr><th>D</th><td class='rule'>If first of all: Last SN is odd. <br>Else: Previous bit was 0.</td></tr>
+                    <tr><th>D♯</th><td class='rule'>Position = port plates.</td></tr>
+                    <tr><th>E</th><td class='rule'>If plates = 0: Batteries odd. <br>Else: Position = ports on greatest plate.</td></tr>
+                    <tr><th>F</th><td class='rule'>Stage number = 3.</td></tr>
+                    <tr><th>F♯</th><td class='rule'>Stage number = SN letters - 1.</td></tr>
+                    <tr><th>G</th><td class='rule'>If first in number: Indicators odd. <br>Else: This number’s first key was sharp.</td></tr>
+                    <tr><th>G♯</th><td class='rule'>If first stage: Ports odd. <br>Else: Two consecutive keys in previous stage were sharp.</td></tr>
+                    <tr><th>A</th><td class='rule'>If first stage: Indicators even. <br>Else: One or both numbers in previous stage &lt;     5.</td></tr>
+                    <tr><th>A♯</th><td class='rule'>Another key in this number is F or F♯</td></tr>
+                    <tr><th>B</th><td class='rule'>If number would be prime if this key is a 1.</td></tr>
+                </table>
+                <br>
+                <table class='binary'>
+                    <tr><th>Binary</th><th>#</th><th>Key</th><th>Binary</th><th>#</th><th>Key</th><th>Binary</th><th>#</th><th>Meaning</th></tr>
+                    <tr><td>0000</td><td>0</td><td>C</td><td>0110</td><td>6</td><td>F♯</td><td>1100</td><td>12</td><td>1st </td></tr>
+                    <tr><td>0001</td><td>1</td><td>C♯</td><td>0111</td><td>7</td><td>G</td><td>1101</td><td>13</td><td>2nd </td></tr>
+                    <tr><td>0010</td><td>2</td><td>D</td><td>1000</td><td>8</td><td>G♯</td><td>1110</td><td>14</td><td>3rd </td></tr>
+                    <tr><td>0011</td><td>3</td><td>D♯</td><td>1001</td><td>9</td><td>A</td><td>1111</td><td>15</td><td>4th </td></tr>
+                    <tr><td>0100</td><td>4</td><td>E</td><td>1010</td><td>10</td><td>A♯</td><td class='corner'></td><td class='corner'></td></tr>
+                    <tr><td>0101</td><td>5</td><td>F</td><td>1011</td><td>11</td><td>B</td><td class='corner'></td><td class='corner'></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
