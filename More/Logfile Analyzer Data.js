@@ -24023,6 +24023,457 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "wanderlust",
+		loggingTag: "Wanderlust",
+		matches: [
+			//todo log strikes
+			{
+				regex: /Status Light is in the .+ corner\./,
+				handler: function(match, module) {
+					module.pages = [];
+
+					if(module.attemptNum == undefined) {
+						module.attemptNum = 0;
+					}
+					module.attemptNum++;
+					module.attemptDropdown = [`Attempt ${module.attemptNum}`, []];
+					module.push(module.attemptDropdown);
+					module.attemptNum = 1;
+					module.getCurrentCubeOrientationLines = () => { return ["Current Cube Orientation", readLines(6)] }
+					module.readLine = () => { return readLine().replace(/^\[Wanderlust #\d+\]\s*/, "") }
+					module.readLines = (num) => { return readLines(2).map(l => l.replace(/^\[Wanderlust #\d+\]\s*/, "")) }
+					module.dimension = 300;
+					module.attemptDropdown[1].push(match[0])
+					return true;
+
+				}
+			},
+			{
+				regex: /Letter Pair \d: .+, .+/,
+				handler: function(match, module) {
+					module.attemptDropdown[1].push([match[0], module.readLines(2)]);
+					return true;
+				}
+			},
+			{
+				regex: /Current Cube Orientation/,
+				handler: function(match, module) {
+					//read the next 6 lines as they are children to this one
+					module.attemptDropdown[1].push(module.getCurrentCubeOrientationLines());
+					return true;
+				}
+			},
+			{
+				regex: /.+ key is in the maze .+ at .+|Going back to starting position which is in maze .+/,
+				handler: function(match, module) {
+					module.keyDropdown = [match[0], []];
+					module.attemptDropdown[1].push(module.keyDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Status light was held for 5 seconds\. Resetting the module\.\.\./,
+				handler: function (match, module) {
+					module.attemptDropdown[1].push(match[0])
+					return true;
+				}
+			},
+			{
+				regex: /Starting in maze (\d+) at ([A-F][1-6])/,
+				handler: function (match, module) {
+
+					module.currentMaze = Number.parseInt(match[1]);
+					module.currentPath = [];
+
+					const mazeLayout = [
+						[
+							["R","R*","D","","D","D*"],
+							["R","R","","RD","D*",""],
+							["","RD","D","D","RD*",""],
+							["R","D","","","RD",""],
+							["D","RD*","R","RD*","",""],
+							["*","","R","","R","*"]
+						],
+						[
+							["D","D","R","D*","D",""],
+							["R*","D*","R","","RD*",""],
+							["","RD","D","RD","D",""],
+							["R","D*","D","","R",""],
+							["","D","RD*","R","R",""],
+							["","R","","R","R*","*"]
+						],
+						[
+							["","D","","RD*","D",""],
+							["R","R*","R","","",""],
+							["RD*","R","RD","RD*","R","D*"],
+							["","D","RD","R*","D","D"],
+							["","R","","D","D",""],
+							["R","R*","","","R*",""]
+						],
+						[
+							["","D","R","","D",""],
+							["D","R","RD*","D","R","D*"],
+							["D*","D","RD","D","D","D*"],
+							["","D","R","","",""],
+							["D","R","RD*","RD*","R","D*"],
+							["*","","R","","",""]
+						],
+						[
+							["","D","D","","D",""],
+							["RD*","","RD*","RD*","R","D"],
+							["","","D","RD","R","*"],
+							["RD*","R","D","D","","D"],
+							["R","RD","R*","D*","RD","*"],
+							["","","","","",""]
+						],
+						[
+							["R","","D","","D","D*"],
+							["R","D","RD*","R","R*",""],
+							["R","D*","R","RD","D",""],
+							["","RD*","","D","RD*",""],
+							["R","D","D","R","",""],
+							["","","R*","R","R*",""]
+						],
+						[
+							["D","D","","RD*","","D*"],
+							["D*","R","D","D","RD",""],
+							["","D","RD","R*","",""],
+							["R","D*","R","R","RD*",""],
+							["R","D","R","R","",""],
+							["","R*","","R","R","*"]
+						],
+						[
+							["D","","D","RD*","R","*"],
+							["","D","RD","D","D",""],
+							["D","RD*","R*","D","R",""],
+							["","D","RD","","R",""],
+							["R","","RD*","R","RD*",""],
+							["","R","*","","R","*"]
+						],
+						[
+							["D","","D","D","RD*","*"],
+							["R*","R","","RD*R","D",""],
+							["D","RD","D","D","D","D"],
+							["","R","","D","D",""],
+							["R","RD*","D","RD*","D",""],
+							["","","","","R*","*"]
+						],
+						[
+							["","","R","R*","R",""],
+							["R","R","R","R","D",""],
+							["RD*","RD","RD*","R","D*",""],
+							["D*","D","D","","RD",""],
+							["D","D","R","RD","R*",""],
+							["*","","","","R","*"]
+						],
+						[
+							["D","D","","D","","D*"],
+							["","RD*","R","R*","RD",""],
+							["","RD","RD*","","D",""],
+							["R","D*","D","RD","R*","D"],
+							["","R","","D","RD","*"],
+							["R*","R","","","",""]
+						],
+						[
+							["R","R*","D","","D","D*"],
+							["","RD","R","R","","D*"],
+							["","D","RD","D","RD",""],
+							["RD*","","R","D*","","D"],
+							["","RD","","RD","R","*"],
+							["R*","*","R","","",""]
+						],
+						[
+							["","","D","D","RD*",""],
+							["R","R","D*","D","","D"],
+							["RD*","RD","","RD*","R","*"],
+							["","","RD","R*","D","D"],
+							["R","R","","","R","*"],
+							["R","R*","R","R","",""]
+						]
+					]
+
+					module.makeLine = (start, end) => {
+						let line =
+						$SVG("<line>")
+						.attr("x1", start.x)
+						.attr("y1", start.y)
+						.attr("x2", end.x)
+						.attr("y2", end.y)
+
+						return line;
+					}
+
+					module.convertBattleshipCoords = (coord) => {
+						return {
+								row: (Number.parseInt(coord[1]) - 1),
+								col: "ABCDEF".indexOf(coord[0]),
+							}
+					} 
+
+					module.applyMazePosition = ({row, col}) => {
+						const cellWidth = module.dimension / 6;
+						return {row: (row * cellWidth) + cellWidth / 2, 
+							    col: (col * cellWidth) + cellWidth / 2}
+					}
+
+					module.getNewMaze = (newMazeIndex, startingBattleshipCoord) => {
+						//get the new svg
+						module.currentSVG = module.mazeSVGs[newMazeIndex].clone();
+
+						//get the new page
+						module.pages.push({label: `Maze ${newMazeIndex}`, obj: module.currentSVG, messages: []});
+
+						//draw circle to mark starting location
+						let startingPosition = module.convertBattleshipCoords(startingBattleshipCoord)
+						let convertedPosition = module.applyMazePosition(startingPosition)
+						module.currentPath.push(startingPosition);
+						drawCircle(convertedPosition.row, convertedPosition.col, "red", module.currentSVG);						
+					}
+
+					function drawCircle(row, col, color, svg) {
+						$SVG("<circle>")
+							.attr("cx", col)
+							.attr("cy", row)
+							.attr("r", 10)
+							.attr("fill", color)
+							.appendTo(svg);
+					}
+
+					function makeWall (start, end, svg) {
+						let line = module.makeLine(start, end);
+						line
+						.attr("stroke", "black")
+						.attr("stroke-width", 5)
+						.attr("stroke-linecap", "round")
+						.appendTo(svg)
+					}
+
+					function makeBell(row, col, cellSize, svg)
+					{
+						const BELL_PATH = "M0,0h-24v-340c0,-141.1,-104.3,-257.8,-240,-277.2v-38.8c0,-22.1,-17.9,-40,-40,-40s-40,17.9,-40,40v38.8c-135.7,19.4,-240,136.1,-240,277.2v340h-24c-17.7,0,-32,14.3,-32,32v32c0,4.4,3.6,8,8,8h216c0,61.8,50.2,112,112,112s112,-50.2,112,-112h216c4.4,0,8,-3.6,8,-8v-32c0,-17.7,-14.3,-32,-32,-32zm-304,120c-26.5,0,-48,-21.5,-48,-48h96c0,26.5,-21.5,48,-48,48z";
+
+						//viewbox dimension for original bell path 
+						const BELL_VIEWBOX_WIDTH = 624;
+						const BELL_VIEWBOX_HEIGHT = 818;
+
+						// padding as percentage of cell size
+						const paddingX = cellSize * -0.02;
+						const paddingY = cellSize * 0.05;
+
+						//find the size of cell with padding
+						const innerSize = cellSize - Math.max(paddingX * 2, paddingY * 2);
+						
+						// find the position the cell needs to be at
+						const x = (col + 1) * cellSize + paddingX;
+						const y = (row + 1) * cellSize + paddingY;
+
+
+						// scale to fit cell
+						const scale = innerSize / BELL_VIEWBOX_HEIGHT * 0.7;
+
+						//Order of transfomration
+						//1. Set the bell to the center of its origin
+						//2. Scale it
+						//3. Move to center of cell
+						const g = $SVG("<g>")
+							.attr("transform", `translate(${x},${y}) scale(${scale})`);
+
+						$SVG("<path>")
+							.attr("d", BELL_PATH)
+							.attr("fill", "black")
+							.attr("transform", `translate(${-BELL_VIEWBOX_WIDTH/2},${-BELL_VIEWBOX_HEIGHT/2})`)
+							.appendTo(g);
+
+						g.appendTo(svg);
+					}
+
+					function makeSVGBase(mazeIndex) {
+						const cellSize = module.dimension / 6;
+
+						let baseSVG = $(`<svg xmlns='http://www.w3.org/2000/svg' style="width: 80%" viewbox='0 0 ${module.dimension} ${module.dimension}'>`)
+						let maze = mazeLayout[mazeIndex];
+
+						$SVG("<rect>")
+							.attr("width", module.dimension)
+							.attr("height", module.dimension)
+							.attr("stroke", "black")
+							.attr("stroke-width", 10)
+							.attr("fill", "none")
+							.appendTo(baseSVG);
+
+						for(let r = 0; r < 6; r++) {
+							for(let c = 0; c < 6; c++) {
+								const tl = {x: c * cellSize, y: r * cellSize};
+								const tr = {x: (c+1) * cellSize, y: r * cellSize};
+								const bl = {x: c * cellSize, y: (r+1) * cellSize};
+								const br = {x: (c+1) * cellSize, y: (r+1) * cellSize};
+
+								if(maze[r][c].includes("R")) {
+									makeWall(tr, br, baseSVG)
+								}
+								if(maze[r][c].includes("D")) {
+									makeWall(bl, br, baseSVG)
+								}
+
+								if(maze[r][c].includes("*")) {
+									makeBell(r, c, cellSize, baseSVG)
+								}
+							}
+						}
+
+						return baseSVG
+					}
+					module.mazeSVGs = mazeLayout.map((_, i) => makeSVGBase(i));
+					module.getNewMaze(Number.parseInt(match[1]), match[2]);
+					module.pages[module.pages.length - 1].messages.push(match[0]);
+					
+					return true;
+				}
+			},
+			{
+				regex: /One path to the key:|One path to the start:/,
+				handler: function (match, module) {
+					let globalPath = module.readLine();
+					let localPaths = readLines(2).map(l => l.match(/Local path for .+ solved modules: (.+)/)[1]);
+					module.keyDropdown[1].push([match[0], [globalPath, ["Local Paths", [`Even solved modules: ${localPaths[0]}`, `Odd solved modules: ${localPaths[1]}`]]]])
+					makeCycleableDisplays(module.pages, module.keyDropdown[1]);
+					return true;
+				}
+			},
+			{
+				regex: /Local (?:left|right|up|down|front|back) pressed which equates to global (left|right|up|down|front|back)/,
+				handler: function (match, module) {
+					function getNewPosition()
+					{
+						//calculate the new position
+						const lastPos = module.currentPath[module.currentPath.length - 1];
+						let nextPos;
+						switch(match[1])
+						{
+							case "left":
+								return {row: lastPos.row, col: lastPos.col - 1};
+							break;
+							case "right":
+								return {row: lastPos.row, col: lastPos.col + 1};
+							break;
+							case "up":
+								return {row: lastPos.row - 1, col: lastPos.col};
+							break;
+							case "down":
+								return {row: lastPos.row + 1, col: lastPos.col};
+							break;
+						}
+					}
+					let pageIndex = module.pages.length - 1;
+					module.pages[pageIndex].messages.push(match[0]);
+					const lastPos = module.currentPath[module.currentPath.length - 1];
+
+					//if this moves causes a strike, move on
+					let nextLine = module.readLine();
+
+					if(nextLine.includes("Strike!"))
+					{
+						module.pages[pageIndex].messages.push(nextLine);
+						return true;
+					}
+					else
+					{
+						linen--;
+					}
+
+					//if global back, make a new page/path for the new maze
+					if(match[1] == "back")
+					{
+						const regex = /Now in maze (\d+)/;
+						let found;
+						let pageIndex = module.pages.length - 1;
+						nextLine = module.readLine();
+						while(found == null)
+						{
+							let currentCubeLog = (line) => {return line == "Current Cube Orientation"};
+
+							if(!currentCubeLog(nextLine)) {
+								module.pages[pageIndex].messages.push(nextLine);
+							}
+
+							
+							nextLine = module.readLine();
+
+							//if next line is current cube orientation, print next lines
+							//todo fix this to work within maze dropdown (maybe it's make cycleable display problem)
+							if(currentCubeLog(nextLine)) {
+								module.pages[pageIndex].messages.push(module.getCurrentCubeOrientationLines());
+							}
+
+							found = nextLine.match(regex);
+						}
+
+						module.pages[pageIndex].messages.push(found[0])
+
+						module.currentMaze = Number.parseInt(found[1])
+						module.getNewMaze(module.currentMaze, `${"ABCDEF"[lastPos.col]}${Number.parseInt([lastPos.row]) + 1}`);
+					}
+
+					//if not global front or back, draw line on current svg
+					else if(match[1] != "front")
+					{
+						//calculate the new position
+						let newPos = getNewPosition();
+
+						module.currentPath.push(newPos);
+
+						//draw a line from the old position to the new one
+						let start = module.applyMazePosition(lastPos);
+						let end = module.applyMazePosition(newPos);
+						let line = module.makeLine({x: start.col, y: start.row}, {x: end.col, y: end.row});
+						line
+						.attr("stroke", "red")
+						.attr("stroke-width", 5)
+						.attr("stroke-linecap", "round")
+						.appendTo(module.currentSVG)
+
+					}
+					return true;
+				}
+			},
+			{
+				regex: /Rang the bell\. This is the .+ time/,
+				handler: function (match, module) {
+					let pageIndex = module.pages.length - 1;
+					module.pages[pageIndex].messages.push(match[0]);
+				}
+			},
+			{
+				regex: /Collected the (.+) key/,
+				handler: function (match, module) {
+					let pageIndex = module.pages.length - 1;
+					module.pages[pageIndex].messages.push(match[0])
+					if(match[1] != "3rd")
+					{
+						module.attemptDropdown[1].push(module.readLine())
+						linen++;
+						module.attemptDropdown[1].push(module.getCurrentCubeOrientationLines());
+					}
+					else
+					{
+						module.readLines(3).forEach(l => { module.attemptDropdown[1].push(l) });
+					}
+					module.pages = [];
+					const lastPos = module.currentPath[module.currentPath.length - 1];
+					module.getNewMaze(module.currentMaze, `${"ABCDEF"[lastPos.col]}${Number.parseInt([lastPos.row]) + 1}`);
+					return true;
+				}
+			},
+			{
+				regex: /Moule Solved/,
+				handler: function (match, module) {
+					module.attemptDropdown[1].push(match[0])
+					return true;
+				}
+			}
+		]
+	},
+	{
 		displayName: "Wavetapping",
 		moduleID: "Wavetapping",
 		loggingTag: "Wavetapping",
