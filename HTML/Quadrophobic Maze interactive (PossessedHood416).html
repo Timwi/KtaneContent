@@ -1,0 +1,460 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Quadrophobic Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+
+        .appendix-table, .dark .appendix-table {
+            text-align: center;
+            margin: auto;
+            border: 0;
+            background-color: #EEE;
+        }
+        .dark .appendix-table { background-color: #111; }
+
+        .dark .appendix-cell, .appendix-cell { border: 0; }
+        .appendix-cell {
+            min-width: 0.8em;
+            max-width: 0.8em;
+        }
+
+        .appendix-cell img {
+            width: 20px;
+            margin: -50%;
+        }
+
+        .border { padding: 0; }
+        .hb {
+            min-height: 5px;
+            height: 5px;
+        }
+        .vb {
+            min-width: 5px;
+            width: 5px;
+        }
+        .rkb {
+            min-width: 15px;
+            width: 15px;
+        }
+
+        .walkable_color { background-color: #CDF; }
+        .seen_color { background-color: #8AF; }
+        .inactive_border_color { background-color: #BBB; }
+        .active_border_color { background-color: #000; }
+
+        .dark .walkable_color { background-color: #001; }
+        .dark .seen_color { background-color: #239; }
+        .dark .inactive_border_color { background-color: #555; }
+        .dark .active_border_color { background-color: #FFF; }
+
+        .solvetable th {
+            font-size: 12px;
+            border: none;
+        }
+        .solvetable img { width: 30px; }
+        .solvetable td {
+            text-align: center;
+            font-size: 9px;
+        }
+
+        .green-bg {
+            background-color: #afa;
+            color: #000;
+        }
+
+        .dark .green-bg {
+            background-color: #050;
+            color: #DDD;
+        }
+
+        .tablescroller {
+            border: none;
+            width: 700px;
+            height: 800px;
+            padding-bottom: 8px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 4'; }
+    </style>
+    <script>
+        const imgNames = ["printer3","no_minors","question","mycomputer5","Error6","door2","sknife","call2","joystick4","skull4","mouse3","no_signal","newspaper","camera5","mycomputer6","fist","cross5","pin","monitor","mouth","mycomputer4","bear","driver","newspaper2","frog","app4","A","app_wait","help","skull","user2","update2","speaker3","cow","users4","folder5","app_package","keys3","bulb","file_cabinet","phone3","zipdisks","stylus","smile6","disk_blu_lbl","map2","cmd2","bomb_dynamite2","bomb","plug2","screw2","gift","bob","smile4","heart","e_orbit","music_notes","recycle","bubble_q3","smile11","noway","phone7","toilet","cloud","defrag4","mail2","Attention7","8ball","update3","printer","joystick3","spike_ball","recycle_bin3","laptop2","door","cd_drive2","microchip2","Error4","shield6","phone5","speaker","installer2","control_panel3","defrag","bell","flash_drive","bubble_s","app","tablet","cd2","clock","smile2","Error5","plant_leaf","smile","mac","control_panel4","app2","setup2","cmd","battery6","star","money","cd_drive3","chatbot","film_reel","Error7","microchip","mine2","recycle_bin6","question3","recycle_bin4","speaker2","run","file_cabinet4","cross4","keyboard","edge2","explosion","recycle2","folder","music_note","screw","smile5","mail","phone2","recycle_bin2","e_orbit2","film_reel4","installer","smile10","scanner","shield10","disk_skull","bluetooth2","keys2","noentry","fortunecookie","question2","battery_drained","shield5","joystick2","Attention4","padlock","earth2","shield9","file_cabinet3","noway4","e_orbit3","laptop","folder3","battery3","tux","garbage_empty","tv2","mail_deleted","bubble_q","camera6","setup_s","Attention8","question4","noway2","Attention2","padlock2","signal2","signal","defrag2","camera7","battery","neko","Error2","can","question6","bubble_q2","peripheral","shield2","cd_drive","check3","speaker_mute2","mycomputer","hub","users","earth","cross6","disk_blu","app_shortcut","mouse","camera","garbage_full","Attention6","smile9","uninstall","pair","J","disk_yel","skull2","disk_org","ic_a","edge","talkit","tip","camera3","find2","cross","car","mycomputer2","aol_icon","heart2","battery8","phone","Attention5","explosion2","disk_red_lbl","speech","Attention3","bubble_i3","app_basic","shield7","noentry2","cake","shield3","tv","app_run2","check","disk_red","butterfly","ups","mine","radiation","bubble_d","cross3","delete","info3","info","earth4","driver2","mycomputer3","cd","paper_plane","Error","update","file_cabinet2","umbrella","earth3","bubble_i2","star3","qmark","autoplay","shield","aim_guy","map","phone6","hand","call","control_panel2","keys4","keys","hourglass2","dos","camera2","hammer","plant_leaf2","bubble_i","joystick","smile8","film_reel3","cross2","users3","user","smile7","info2","control_panel5","construction","plug","defrag3","ladybug","battery5","shield4","printer2","picture","recycle_bin5","battery9","users2","labtec","battery10","mouse2","clapperboard","bomb_grenade","scissors","battery4","app3","bomb_dynamite","mailbox","battery7","speaker_mute","hourglass","trophy","palette","smile3","pixels","control_panel","bulb4","keys5","battery2","mail3","usb_plug","bulb3","check2","camera4","key","stop","signal3","joystick5","smile12","bluetooth","window","signal4","noway3","app_run","info4","app_run3","keyboard2","tablet2","question5","zipdisk","Error3","hand2","bulb2","circularsaw","exclamation","skull3","find","usb","phone4","e_orbit4","key2","recycle_bin","find3","app_locked","binocs","shield8","folder2","setup","bulb5","Attention","card","gear","star2","gun","speech2","gear2","doomguy","folder4","ram","fish","hwinfo","music_notes2","tux_config","scissors2","fingerprint"];
+
+        //Maze table
+        var currentCell;
+        var walkableCount = 0;
+
+        var hWallCount = 0;
+        var vWallCount = 0;
+        var rWallCount = 0;
+        var sWallCount = 0;
+        
+        const TABLE_ROWS = 4;
+        const TABLE_COLS = 4;
+        const TABLE_STACKS = 4;
+        const TABLE_RANKS = 4;
+
+        function createMaze(){
+            var container = document.getElementById('table-container');
+            var tbl = document.createElement('table');
+            tbl.className = "appendix-table";
+            
+            for(var rk = 0; rk < TABLE_RANKS*2; rk++) for(var r = 0; r < TABLE_ROWS*2+1; r++){
+                let tr = document.createElement('tr');
+                
+                for(var stk = 0; stk < TABLE_STACKS*2; stk++) for(var c = 0; c < TABLE_COLS*2+1; c++){
+                    if      (r%2==0 && c%2==0) appendCorner(tr);
+                    else if (r%2==0 && c%2==1) appendWall(tr, 'h', stk%2==1 || rk%2==1 || r==8);
+                    else if (r%2==1 && c%2==0) appendWall(tr, 'v', stk%2==1 || rk%2==1 || c==8);
+
+                    else if (stk%2==0 && rk%2==0) appendWalkable(tr);
+                    else if (stk%2==0 && rk%2==1) appendWall(tr, 's', false);
+                    else if (stk%2==1 && rk%2==0) appendWall(tr, 'r', false);
+                    else appendWall(tr, 'r', true);
+                }
+                tbl.appendChild(tr);
+            }
+            container.appendChild(tbl);
+        }
+
+        function appendCorner(row){
+            var t = document.createElement('td');
+            t.className = "appendix-cell border vb hb";
+            row.appendChild(t);
+        }
+
+        function appendWall(row, type, isSep = false){
+            let t = document.createElement('td');
+            t.className = `appendix-cell border`;
+            
+            if(!isSep){
+                t.classList.add("inactive_border_color");
+                t.isActive = false;
+                t.onclick = function(){ toggleWall(t); };
+            }
+            
+            if(type == 'v') t.classList.add("vb");            
+            if(type == 'h') t.classList.add("hb");            
+            if(type == 'r' || type == 's') {
+                t.innerHTML = "&nbsp;";
+                t.classList.remove("border");
+            }
+
+            if(isSep){
+                row.appendChild(t);
+                return;
+            }
+
+            if(type == 'h') t.id = `hwall_${(hWallCount++).toString(4).padStart(4, "0")}`;
+            if(type == 'v') t.id = `vwall_${(vWallCount++).toString(4).padStart(4, "0")}`;
+            if(type == 'r') t.id = `rwall_${(rWallCount++).toString(4).padStart(4, "0")}`;
+            if(type == 's') t.id = `swall_${(sWallCount++).toString(4).padStart(4, "0")}`;
+                        
+            row.appendChild(t);
+        }
+
+        function appendWalkable(row) {
+            var t = document.createElement('td');
+            t.className = `appendix-cell walkable_color`;
+            t.innerHTML = "&nbsp;";
+            t.id = `walkable_${(walkableCount++).toString(4).padStart(4, "0")}`;
+            t.onclick = function() { selectWalkable(t); };
+            t.ondblclick = function() { clearWalkable(t); };
+            row.appendChild(t);
+        }
+
+        function getWalkableByCoordinate(id) {
+            return document.getElementById(`walkable_${id.join('')}`);
+        }
+
+        function getCoordinateOfCell(cell) {
+            if(!cell) return [0,0,0,0];
+            return cell.id.match(/walkable_(\d{4})/)[1].split('').map(x => parseInt(x, 10));
+        }
+
+        function selectWalkable(target) {
+            if(currentCell != null){
+                currentCell.classList.remove("seen_color");
+                currentCell.classList.add("walkable_color");
+            }
+            currentCell = target;
+            currentCell.classList.add("seen_color");
+            currentCell.classList.remove("walkable_color");
+        }
+
+        function clearWalkable(target) {
+            if(target.firstChild) target.removeChild(target.firstChild);
+        }
+
+        function toggleWall(target) {
+            target.classList.remove(target.isActive ? "active_border_color" : "inactive_border_color");
+            target.classList.add(!target.isActive ? "active_border_color" : "inactive_border_color");
+            target.isActive = !target.isActive;
+            console.log(target.id);
+        }
+
+        //Solve table (icons)
+
+        function createSolveTable() {
+            var container = document.getElementById('solvetable');
+            var tbl = document.createElement('table');
+            tbl.className = "solvetable";
+            
+            for(var r = -1; r < 31; r++){
+                var row = document.createElement('tr');
+
+                for(var c = -1; c < 12; c++){
+                    var cell = document.createElement('td');
+                    if(r == -1 || r == 30){
+                        if(c == -1){
+                            cell.className = "corner";
+                        } else {
+                            cell = document.createElement('th');
+                            cell.innerHTML = `-${c}`;
+                        }
+                    } else {
+                        if(c == -1){
+                            cell = document.createElement('th');
+                            cell.innerHTML = `${r*12}-`;
+                        } else {
+                            cell.imgName = imgNames[c + r*12];
+                            cell.setAttribute("onclick", `sovleTableClick("${cell.imgName}")`);
+                            cell.innerHTML = `<img src="img/Quadrophobic Maze/${cell.imgName}.png"><br>${cell.imgName}`;
+                        }
+                    }
+                    
+                    row.appendChild(cell);
+                }
+                tbl.appendChild(row);
+            }
+            container.appendChild(tbl);
+        }
+
+        function sovleTableClick(imgName) {
+            if(currentCell == null) return;
+            var img = document.createElement("img");
+            img.setAttribute("src", `img/Quadrophobic Maze/${imgName}.png`)
+            
+            if(currentCell.firstChild) currentCell.removeChild(currentCell.firstChild);
+            currentCell.appendChild(img);
+        }
+
+        function sanitizeName(input){
+            return input.replace(/[^\w\d]|_/g, '').toLowerCase();
+        }
+
+        function highlightSearch(query) {
+            var skip = query == "";
+            var tbl = document.getElementById("solvetable").children[0].children;
+            var numOfFound = 0;
+            for(var c = 0; c < 12; c++) for(var r = 0; r < 30; r++) {
+                if(!skip && sanitizeName(imgNames[c + r*12]).includes(query)){
+                    tbl[r+1].children[c+1].classList.add("green-bg");
+                    numOfFound++;
+                } else {
+                    tbl[r+1].children[c+1].classList.remove("green-bg");
+                }
+            }
+
+            var foundText = document.getElementById("resultsFound");
+            foundText.innerHTML =  ` [Found ${numOfFound} result(s)]`;
+        }
+        
+        let change = (e) => highlightSearch(sanitizeName(searchBar.value));
+
+        //Keybinds
+
+        function handleKeyPress(e) {
+            var current = getCoordinateOfCell(currentCell);
+
+            if(!e.shiftKey){
+                switch(e.code) {
+                case "KeyA":
+                    current[3] = (current[3] + 3)%4
+                    selectWalkable(getWalkableByCoordinate(current));
+                    break;
+                case "KeyD":
+                    current[3] = (current[3] + 1)%4
+                    selectWalkable(getWalkableByCoordinate(current));
+                    break;
+                case "KeyW":
+                    current[1] = (current[1] + 3)%4
+                    selectWalkable(getWalkableByCoordinate(current));
+                    break;
+                case "KeyS":
+                    current[1] = (current[1] + 1)%4
+                    selectWalkable(getWalkableByCoordinate(current));
+                    break;
+                case "KeyQ":
+                    current[0] = (current[0] + 3)%4
+                    selectWalkable(getWalkableByCoordinate(current));
+                    break;
+                case "KeyC":
+                    current[0] = (current[0] + 1)%4
+                    selectWalkable(getWalkableByCoordinate(current));
+                    break;
+                case "KeyE":
+                    current[2] = (current[2] + 1)%4
+                    selectWalkable(getWalkableByCoordinate(current));
+                    break;
+                case "KeyZ":
+                    current[2] = (current[2] + 3)%4
+                    selectWalkable(getWalkableByCoordinate(current));
+                    break;
+
+                case "Backspace":
+                    if(currentCell) clearWalkable(currentCell);
+                    break;
+                }
+            } else {
+                switch(e.code) {
+                case "KeyW":
+                    toggleWall( document.getElementById(`hwall_${current.join('')}`) );
+                    break;
+                case "KeyS":
+                    current[1] = (current[1]+1)%4;
+                    toggleWall( document.getElementById(`hwall_${current.join('')}`) );
+                    break;
+                case "KeyA":
+                    toggleWall( document.getElementById(`vwall_${current.join('')}`) );
+                    break;
+                case "KeyD":
+                    current[3] = (current[3]+1)%4;
+                    toggleWall( document.getElementById(`vwall_${current.join('')}`) );
+                    break;
+                case "KeyQ":
+                    current[0] = (current[0]+3)%4;
+                    toggleWall( document.getElementById(`swall_${current.join('')}`) );
+                    break;
+                case "KeyC":
+                    toggleWall( document.getElementById(`swall_${current.join('')}`) );
+                    break;
+                case "KeyE":
+                    toggleWall( document.getElementById(`rwall_${current.join('')}`) );
+                    break;
+                case "KeyZ":
+                    current[2] = (current[2]+3)%4;
+                    toggleWall( document.getElementById(`rwall_${current.join('')}`) );
+                    break;
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Quadrophobic Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Quadrophobic Maze.svg" class="diagram">
+                <h2>On the Traversal of Quadrophobic Maze</h2>
+                <p class="flavour-text">I've been feeling like a little more-a MAZEGAMER.<br>You may be brave, but all my experts say that I'm braver.<br>Holdin' out the solves cuz we got a Forget Me Later.<br>Catch me on TP, we gonna be a Peanut Raider.</p>
+                <p>For those familiar with the <a href='Quadrophobic Maze.html'>original manual</a>.</p>
+                <h3>Creating the Solve Order</h3>
+                <ul>
+                    <li>Start with the starting location’s icon in the table below.</li>
+                    <li>Convert bomb’s serial number from base-36 to base-2, prepend leading zeroes until the binary string is 32 bits.</li>
+                    <li>
+                        Split the binary into two halves. Add both halves as if it’s ternary (1+1 ≠ 10).
+                        This will give you a 16 trit ternary string.
+                    </li>
+                    <li>Split the ternary string into 4-digit quarters, convert each string to base 10 and add 1.</li>
+                    <li>
+                        Move forward in reading order by the first number, add the icon you landed on to the solve order, looping around if necessary.
+                        Then do the same with the second number, as well as the third and fourth number.
+                    </li>
+                    <li>If an icon that has already been used or any icon that is not present on the module is landed on, advance one additional icon until you land on a icon that is present on the module that has not already been used.</li>
+                    <li>Once the solve order has been completed, navigate to each icon in the solve order from first to last, and press the dollar button, while avoiding the walls.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Quadrophobic Maze</span>
+            </div>
+            <div class="page-content">
+                <h3>Using the Interactive</h3>
+                <ul>
+                    <li>The use of side-by-side is heavily recommended (Alt-O).</li>
+                    <li>Clicking on a blue (walkable) cell in the table will highlight it.
+                        <ul>
+                            <li>Highlighted cells will be a different shade of blue to the rest of the cells.</li>
+                            <li>Only 1 cell can be highlighted at any time.</li>
+                            <li>Clicking on an icon in the icon table will put that icon in the selected cell.</li>
+                            <li>To clear the icon, double-click on the cell.</li>
+                        </ul>
+                    </li>
+                    <li>Evey non-blue cell is a potential wall.
+                        <ul>
+                            <li>This includes the groups of non-blue cells between group of blue cells.</li>
+                            <li>Click on these cell to toggle their wall presence status.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <p>Remember, the maze is 4x4x4x4 and it wraps around.</p>
+                <p>Keybinds are also supported, and will move the selected cell according to the directions below. Holding shift will toggle the wall in that direction instead.</p>
+                <table style="text-align: center;">
+                    <tr><th>Key</th><th>Direction</th><th>Screen Equivalence</th></tr>
+                    <tr><td>A</td><td>Left</td><td>Left</td></tr>
+                    <tr><td>D</td><td>Right</td><td>Right</td></tr>
+                    <tr><td>W</td><td>Up</td><td>Top</td></tr>
+                    <tr><td>S</td><td>Down</td><td>Bottom</td></tr>
+                    <tr><td>Q</td><td>Top</td><td>Top-Left</td></tr>
+                    <tr><td>C</td><td>Bottom</td><td>Bottom-Right</td></tr>
+                    <tr><td>E</td><td>Ana</td><td>Top-Right</td></tr>
+                    <tr><td>Z</td><td>Kata</td><td>Top-left</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Quadrophobic Maze</span>
+            </div>
+            <div class="page-content">
+                <div id="table-container" class="tablescroller"></div>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Quadrophobic Maze</span>
+            </div>
+            <div class="page-content">
+                <label for="search">Search: </label><input type="text" id="search" class="textbox" autocomplete="off"><span id="resultsFound"> [Found 0 result(s)]</span>
+                <div class="tablescroller" id="solvetable"></div>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+    </div>
+    <script>
+        createMaze();
+        createSolveTable();
+
+        let searchBar = document.getElementById("search");
+        searchBar.addEventListener("input", change);
+        document.addEventListener("keydown", handleKeyPress);
+
+        window.onbeforeunload = function() { return true; };
+    </script>
+</body>
+</html>
