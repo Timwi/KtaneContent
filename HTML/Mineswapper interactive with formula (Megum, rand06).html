@@ -18,7 +18,163 @@
             margin-left: 5mm;
             text-indent: -6mm;
         }
+        .interactive-cell{
+            font-size: 2em;
+            font-weight: bold;
+            background: #fff;
+            color: #000;
+        }
+        .interactive-cell.black{
+            background: #000;
+            color: #fff;
+        }
+        .interactive-cell:not(.highlighted){
+            border: 1px solid #000 !important;
+        }
+        .interactive-cell.black:not(.highlighted){
+            border: 1px solid #fff !important;
+        }
+        .interactive-cell.highlighted{
+            border: 3px solid #08f !important;
+        }
+
+        .centered2{
+            display: flex;
+            justify-content: center;
+        }
+        input{
+            width: 2ch;
+            min-width: 1ch;
+        }
     </style>
+    <script>
+        let table;
+        let cells = Array(6);
+        let highlighted = [-1,-1];
+        let solveMode = false;
+        let readsolveButton;
+        let buttonNumbers = Array(6);
+        let buttonColors = Array(6);
+        let inputting = false;
+
+        document.addEventListener('keydown', (event) =>{
+            if (![
+                "ArrowRight","ArrowLeft","ArrowUp","ArrowDown",
+                "0","1","2","3","4","5","6","7","8","9"
+            ].includes(event.key)) return;
+            if ([
+                "ArrowRight","ArrowLeft","ArrowUp","ArrowDown"
+            ].includes(event.key)) event.preventDefault();
+            if (highlighted[0]===-1 || solveMode || inputting) return;
+            cells[highlighted[0]][highlighted[1]].classList.remove("highlighted");
+            switch(event.key){
+                case "ArrowRight":
+                    highlighted[1]=(highlighted[1]+1)%6;
+                    break;
+                case "ArrowLeft":
+                    highlighted[1]=(highlighted[1]+5)%6;
+                    break;
+                case "ArrowUp":
+                    highlighted[0]=(highlighted[0]+5)%6;
+                    break;
+                case "ArrowDown":
+                    highlighted[0]=(highlighted[0]+1)%6;
+                    break;
+
+                default:
+                    buttonNumbers[highlighted[0]][highlighted[1]]=parseInt(event.key,10);
+                    cells[highlighted[0]][highlighted[1]].innerText=buttonNumbers[highlighted[0]][highlighted[1]];
+                    let pos = (6*highlighted[0] + highlighted[1]+1)%36;
+                    highlighted = [Math.trunc(pos/6),pos%6];
+            }
+            cells[highlighted[0]][highlighted[1]].classList.add("highlighted");
+        });
+
+        function init(){
+            readsolveButton = document.getElementById("read-solve");
+            table = document.getElementById("interactive-table");
+            for (let i=0; i<7; i++){
+                let row = document.createElement("tr");
+                cells[i] = Array(6);
+                buttonNumbers[i] = Array(6);
+                buttonColors[i] = Array(6);
+                for (let j=0; j<7; j++){
+                    let cell = document.createElement("td");
+                    row.appendChild(cell);
+                    if (i===0 || j===6){
+                        if (i===0 && j===6) continue;
+                        let input = document.createElement("input");
+                        input.addEventListener("focusin", (event) =>{inputting = true;});
+                        input.addEventListener("focusout", (event) =>{inputting = false;});
+                        cell.appendChild(input);
+                        continue;
+                    }
+                    cell.classList.add("interactive-cell");
+                    cell.innerHTML = 0;
+                    buttonNumbers[i-1][j] = 0;
+                    buttonColors[i-1][j] = false;
+                    cell.addEventListener("click", () => {pressCell(i-1,j)});
+                    cell.oncontextmenu = function(event){
+                        if (solveMode) return;
+                        event.preventDefault();
+                        cell.classList.toggle("black");
+                        buttonColors[i-1][j]=true;
+                    }
+                    row.appendChild(cell);
+                    cells[i-1][j] = cell;
+                }
+                table.appendChild(row);
+            }
+        }
+
+        function pressCell(r,c){
+            if (solveMode) {
+                if (highlighted[0] === -1) {
+                    highlighted = [r, c];
+                    cells[highlighted[0]][highlighted[1]].classList.add("highlighted");
+                }
+                else{
+                    let tempNumber = buttonNumbers[highlighted[0]][highlighted[1]];
+                    let tempColor = buttonColors[highlighted[0]][highlighted[1]];
+                    cells[highlighted[0]][highlighted[1]].classList.remove("highlighted");
+                    buttonNumbers[highlighted[0]][highlighted[1]] = buttonNumbers[r][c];
+                    buttonColors[highlighted[0]][highlighted[1]] = buttonColors[r][c];
+                    buttonNumbers[r][c] = tempNumber;
+                    buttonColors[r][c] = tempColor;
+                    cells[highlighted[0]][highlighted[1]].innerText = buttonNumbers[highlighted[0]][highlighted[1]];
+                    cells[r][c].innerText = buttonNumbers[r][c];
+                    if (buttonColors[highlighted[0]][highlighted[1]]){
+                        cells[highlighted[0]][highlighted[1]].classList.add("black");
+                    }
+                    else cells[highlighted[0]][highlighted[1]].classList.remove("black");
+                    if (buttonColors[r][c]){
+                        cells[r][c].classList.add("black")
+                    }
+                    else cells[r][c].classList.remove("black");
+                    highlighted = [-1,-1];
+                }
+            }
+            else {
+                if (highlighted[0] !== -1) {
+                    cells[highlighted[0]][highlighted[1]].classList.remove("highlighted");
+                }
+                highlighted = [r, c];
+                cells[highlighted[0]][highlighted[1]].classList.add("highlighted");
+            }
+        }
+
+        function readsolvepress(){
+            solveMode = !solveMode;
+            if (solveMode){
+                readsolveButton.innerText = "Solve";
+            }
+            else{
+                readsolveButton.innerText = "Read";
+            }
+            if (highlighted[0]!==-1) cells[highlighted[0]][highlighted[1]].classList.remove("highlighted");
+            highlighted = [-1, -1];
+        }
+    </script>
 </head>
 <body>
 <div class="section">
@@ -48,7 +204,7 @@
                 <li>If the space you stop at is already assigned, move down the board until you land on an unassigned space, wrapping around to the top of the board if necessary.</li>
                 <li>Assign the space to be a mine if the position of the character in the serial number is odd, or an empty space if it is even.</li></ul>
             </div>
-            <div class="page-footer relative-footer">Page 1 of 3</div>
+            <div class="page-footer relative-footer">Page 1 of 4</div>
         </div>
         <div class="page page-bg-02">
             <div class="page-header">
@@ -145,7 +301,7 @@
                     </tr>
                 </table>
             </div>
-            <div class="page-footer relative-footer">Page 2 of 3</div>
+            <div class="page-footer relative-footer">Page 2 of 4</div>
         </div>
         <div class="page page-bg-03">
             <div class="page-header">
@@ -265,8 +421,24 @@
                     </tr>
                 </table>
             </div>
-            <div class="page-footer relative-footer">Page 3 of 3</div>
+            <div class="page-footer relative-footer">Page 3 of 4</div>
         </div>
+    <div class="page page-bg-03">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Mineswapper</span>
+        </div>
+        <div class="page-content">
+            <table id="interactive-table" class="centered"></table>
+            <div class="centered2">
+                <div>
+                    <button id="read-solve" onclick="readsolvepress()">Read</button>
+                </div>
+            </div>
+        </div>
+        <div class="page-footer relative-footer">Page 4 of 4</div>
     </div>
+    </div>
+<script>init();</script>
     </body>
     </html>
