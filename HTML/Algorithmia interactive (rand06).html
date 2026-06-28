@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Algorithmia — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        table { margin: 1em auto; }
+        p, li { font-size: 11pt; }
+        .edgeDiag {
+            float: right;
+            margin-top: 0.75cm;
+            width: 150px;
+            height: 150px;
+        }
+        .dark .edgeDiag { filter: invert(87%); }
+        .diagram { margin-bottom: 0; }
+        .page-bg-01 ul, .page-bg-01 ol { margin-top: 0; }
+
+        .interactive-cell{
+            width: 5rem;
+            height: 5rem;
+            padding: 0;
+            text-align: center;
+            font-size: 3em;
+            font-weight: bold;
+            &.up {border-top: 8px solid black;}
+            &.left {border-left: 8px solid black;}
+            &.right {border-right: 8px solid black;}
+            &.down {border-bottom: 8px solid black;}
+            &.redup {border-top-color: red;}
+            &.redleft {border-left-color: red;}
+            &.redright {border-right-color: red;}
+            &.reddown {border-bottom-color: red;}
+            &.red {background: #F004;}
+        }
+        .dark .interactive-cell{
+            &.up {border-top: 8px solid white;}
+            &.left {border-left: 8px solid white;}
+            &.right {border-right: 8px solid white;}
+            &.down {border-bottom: 8px solid white;}
+            &.redup {border-top-color: red;}
+            &.redleft {border-left-color: red;}
+            &.redright {border-right-color: red;}
+            &.reddown {border-bottom-color: red;}
+        }
+        button.highlighted, .dark button.highlighted {border: 3px solid #08f;}
+        .interactive-cell.highlighted{
+            background: #08F6;
+            &.red {background: #F8F6;}
+        }
+    </style>
+    <script>
+        document.addEventListener('keydown', (event) =>{
+            if (![
+                "ArrowRight","ArrowLeft","ArrowUp","ArrowDown",
+                "0","1","2","3","4","5","6","7","8","9",
+                "Backspace","Delete"
+            ].includes(event.key)) return;
+            if ([
+                "ArrowRight","ArrowLeft","ArrowUp","ArrowDown"
+            ].includes(event.key)) event.preventDefault();
+            if (!highlighted) return;
+            switch(event.key){
+                case "ArrowRight":
+                    if (highlighted[1]===3) return;
+                    cells[highlighted[0]][highlighted[1]].classList.toggle(redMark+"right");
+                    cells[highlighted[0]][highlighted[1]+1].classList.toggle(redMark+"left");
+                    break;
+                case "ArrowLeft":
+                    if (highlighted[1]===0) return;
+                    cells[highlighted[0]][highlighted[1]].classList.toggle(redMark+"left");
+                    cells[highlighted[0]][highlighted[1]-1].classList.toggle(redMark+"right");
+                    break;
+                case "ArrowUp":
+                    if (highlighted[0]===0) return;
+                    cells[highlighted[0]][highlighted[1]].classList.toggle(redMark+"up");
+                    cells[highlighted[0]-1][highlighted[1]].classList.toggle(redMark+"down");
+                    break;
+                case "ArrowDown":
+                    if (highlighted[0]===3) return;
+                    cells[highlighted[0]][highlighted[1]].classList.toggle(redMark+"down");
+                    cells[highlighted[0]+1][highlighted[1]].classList.toggle(redMark+"up");
+                    break;
+                case "Backspace":
+                    if (cells[highlighted[0]][highlighted[1]].innerText === "") return;
+                    cells[highlighted[0]][highlighted[1]].innerText =
+                        cells[highlighted[0]][highlighted[1]].innerText
+                            .substring(0,cells[highlighted[0]][highlighted[1]].innerText.length-1);
+                    break;
+                case "Delete": cells[highlighted[0]][highlighted[1]].innerText = ""; break;
+                default:
+                    cells[highlighted[0]][highlighted[1]].innerText=
+                        (cells[highlighted[0]][highlighted[1]].innerText==="1"?
+                            cells[highlighted[0]][highlighted[1]].innerText:"")+
+                        parseInt(event.key,10);
+            }
+        });
+        
+        let table;
+        let cells = Array(4);
+        let highlighted;
+        let redMark = "";
+        function init(){
+            table = document.getElementById("interactive-table");
+            for (let i=0; i<4; i++){
+                cells[i]=Array(4);
+                let row = document.createElement("tr");
+                table.appendChild(row);
+                for (let j=0; j<4; j++){
+                    let cell = document.createElement("td");
+                    cell.classList.add("interactive-cell","up","left","right","down");
+                    cell.addEventListener("click", () =>{pressCell(i,j)});
+                    cell.oncontextmenu = (event) =>{
+                        event.preventDefault();
+                        cell.classList.toggle("red");
+                    }
+                    row.appendChild(cell);
+                    cells[i][j]=cell;
+                }
+            }
+        }
+
+        function pressCell(r,c){
+            if (highlighted){
+                cells[highlighted[0]][highlighted[1]].classList.remove("highlighted");
+                if (highlighted[0]===r && highlighted[1]===c){
+                    highlighted = null;
+                    return;
+                }
+            }
+            highlighted = [r,c];
+            cells[highlighted[0]][highlighted[1]].classList.add("highlighted");
+        }
+        function toggleRed(){
+            if (redMark==="") redMark="red"; else redMark="";
+            document.getElementById("markButton").classList.toggle("highlighted");
+        }
+        function turnOn(){
+            for (let i=0; i<4; i++){
+                for (let j=0; j<4; j++){
+                    cells[i][j].classList.add("up","left","right","down");
+                }
+            }
+        }
+        function turnOff(){
+            for (let i=0; i<4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    cells[i][j].classList.remove("up","left","right","down");
+                }
+            }
+            for (let i=0; i<4; i++){
+                cells[0][i].classList.add("up");
+                cells[3][i].classList.add("down");
+                cells[i][0].classList.add("left");
+                cells[i][3].classList.add("right");
+            }
+        }
+        function resetMarks(){
+            for (let i=0; i<4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    cells[i][j].classList.remove("redup","redleft","redright","reddown","red");
+                }
+            }
+        }
+        function clearNums(){
+            for (let i=0; i<4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    cells[i][j].innerText="";
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Algorithmia</span>
+            </div>
+            <div class="page-content">
+                <table id="interactive-table"></table>
+                <button onclick='toggleRed()' id="markButton">Mark Walls</button>
+                <button onclick='turnOn()'>Walls ON</button>
+                <button onclick='turnOff()'>Walls OFF</button>
+                <button onclick='resetMarks()'>Clear Marks</button>
+                <button onclick='clearNums()'>Clear Numbers</button>
+            </div>
+            <div class="page-footer relative-footer">Page 0 of 3</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Algorithmia</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Algorithmia.svg" class="diagram">
+                <h2>On the Subject of Algorithmia</h2>
+                <p class="flavour-text">There appears to have been an accident at the restaurant placemat factory.</p>
+
+                    <ul>
+                        <li>The screen at the top of the module cycles through 10 two-digit numbers. This sequence is the module’s <strong>seed</strong>, starting with the number in blue.</li>
+                        <li>The module will generate a 4×4 maze, where each cell is represented by a bulb in its corresponding position on  the module.</li>
+                        <li>Two of the bulbs will be lit. The white bulb represents your current position, while the colored bulb represents the goal. Use the bars on the sides of the grid to navigate to the goal without passing through a wall in the maze.</li>
+                    </ul>
+                    <h3>Determining the Walls of the Maze</h3>
+                    <ul>
+                        <li>The module generates its maze using a certain algorithm. The algorithm used is determined by the color of the non-white bulb.</li>
+                        <li>When generating the maze, the algorithm at many points requires the use of random numbers.
+                        <ul>
+                            <li>Place a “pointer” on the first number of the seed.</li>
+                            <li><strong>Any</strong> time the algorithm requests a random number, a number <var>n</var> will be supplied. Modulo the number the pointer is on by <var>n</var> to obtain the number used for the calculation.</li>
+                            <li>Then, move the pointer to the next number of the seed, which wraps around from the end to the beginning.</li>
+                        </ul></li>
+                    </ul>
+                    <h3>Important things you probably shouldn’t forget</h3>
+                    <ul>
+                        <li>The edges of the 4×4 grid are <strong>not</strong> classified as “edges” in the following algorithms. You still cannot pass through them on the module.</li>
+                        <li>All counting is <strong>zero-indexed</strong>: The first entry of a sequence is index 0, the second is index 1, the third is index 2, etc.</li>
+                        <li>Unless stated otherwise, all edges begin in an impassable state.</li>
+                    </ul>
+
+                <h3>Red Bulb: Kruskal’s Algorithm:</h3>
+                <img class="edgeDiag" src="img/Algorithmia/KruskalEdgeDiagram.svg">
+                <ol>
+                    <li>Begin with 16 independent “groups” representing each cell in the maze.</li>
+                    <li>Let <var>L</var> be the list of all edges on the module in the order depicted to the right.</li>
+                    <li>Generate a random number with <var>n</var>= the number of edges in <var>L</var>. Count this many entries into <var>L</var>.</li>
+                    <li>Remove the edge at this position from the list, make this edge passable, and unify the two groups connected by this edge into one group.</li>
+                    <li>Remove any edges from <var>L</var> which connect a group to itself.</li>
+                    <li>Repeat steps 3–5 until there is only one group on the module.</li>
+                </ol>
+
+           </div>
+            <div class="page-footer relative-footer">Page 1 of 3</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Algorithmia</span>
+            </div>
+            <div class="page-content">
+
+                <h3>Green Bulb: Prim’s Algorithm:</h3>
+                <ol>
+                    <li>Generate a random number using <var>n</var>= 16. This is the index of the starting cell.</li>
+                    <li>Let <var>A</var> be the list of every unvisited cell which is adjacent to an already-visited cell ordered in reading order.</li>
+                    <li>Generate a random number using <var>n</var>= the number of cells in <var>A</var>. Count this many entries into <var>A</var> and let this cell be called <var>C</var>.</li>
+                    <li>Generate a random number using <var>n</var>= the number of visited cells adjacent to <var>C</var>. Number these cells starting from north going clockwise, and use the cell with that number. The edge between this cell and <var>C</var> is passable.</li>
+                    <li>Repeat steps 2–4 until every cell has been visited.</li>
+                </ol>
+
+                <h3>Blue Bulb: Recursive Backtracker:</h3>
+                <ol>
+                    <li>Generate a random number using <var>n</var>= 16. This is the index of the starting cell.</li>
+                    <li>Let <var>A</var> be the list of unvisited cells adjacent to the current cell, ordered starting from north going clockwise.</li>
+                    <li>If <var>A</var> is empty, back up to the previously visited cell until you have reached a cell such that <var>A</var> is not empty.</li>
+                    <li>Generate a random number with <var>n</var>= the number of cells in <var>A</var>. Count this many entries into <var>A</var>. Let this cell be called <var>D</var>.</li>
+                    <li>The edge between <var>D</var> and the current cell is passable. Mark <var>D</var> as visited. <var>D</var> becomes the current position.</li>
+                    <li>Repeat steps 2–5 until every cell has been visited.</li>
+                </ol>
+
+                <h3>Cyan Bulb: Hunt-and-Kill:</h3>
+                <ol>
+                    <li>Generate a random number using <var>n</var>= 16. This is the index of the starting cell.</li>
+                    <li>Let <var>A</var> be the list of unvisited cells adjacent to the current cell, ordered starting from north going clockwise.</li>
+                    <li>If <var>A</var> is empty, set the current position to the first unvisited cell in reading order which is adjacent to an already-visited cell. Then:
+                    <ul>
+                        <li>Let <var>V</var> be the list of visited cells adjacent to this new cell, ordered starting from north going clockwise.</li>
+                        <li>Generate a random number with <var>n</var>= the number of cells in <var>V</var>. Count this many entries into <var>V</var>. The edge between this cell and the new cell is passable.</li>
+                        <li>Return to step 2.</li>
+                    </ul></li>
+                    <li>Generate a random number with <var>n</var>= the number of cells in <var>A</var>. Count this many entries into <var>A</var>, and let this cell be called <var>D</var>.</li>
+                    <li>The edge between the current cell and <var>D</var> is passable. Mark <var>D</var> as visited. <var>D</var> becomes the current position.</li>
+                    <li>Repeat steps 2–5 until every cell has been visited.</li>
+                </ol>
+
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Algorithmia</span>
+            </div>
+            <div class="page-content">
+
+                <h3>Magenta Bulb: Sidewinder:</h3>
+                <ol>
+                    <li>Begin with every edge impassable <strong>except</strong> for the three edges connecting the cells of the top row to each other.</li>
+                    <li>Let <var>R</var> be an initially empty list of cells.</li>
+                    <li>Start at the leftmost cell of the second row and proceed in reading order. Perform the following steps on each cell, which will be called <var>C</var>.</li>
+                    <li>Add <var>C</var> to <var>R</var>.</li>
+                    <li>If <var>C</var> is not the rightmost cell of its row, generate a random number with <var>n</var>= 2. If this number is <strong>0</strong>, make the <strong>right</strong> edge of <var>C</var> passable.</li>
+                    <li>Otherwise, if <var>C</var> is the rightmost cell of its row, or the generated number is <strong>1</strong>, generate a random number with <var>n</var>= the number of cells in <var>R</var>. Count this many entries into <var>R</var>, and make the <strong>top</strong> edge of that cell passable. Then, empty <var>R</var>’s contents.</li>
+                    <li>Repeat steps 3–6 until every cell has been processed.</li>
+                </ol>
+
+                <h3>Yellow Bulb: Recursive Division:</h3>
+                <ol>
+                    <li>Begin with all edges in a <strong>passable</strong> state. All 16 cells are initially one “group”. Groups are always rectangular. A partition is a line which divides a group into two others. A partition’s direction is the way its line points.</li>
+                    <li>Let group <var>G</var> be the first group in reading order whose width and height are both not equal to 1.</li>
+                        <li>Use the following rules to obtain a direction of partitioning <var>G</var>:
+                        <ul>
+                            <li>If <var>G</var> is wider than it is tall, partition it <strong>vertically</strong>.</li>
+                            <li>If <var>G</var> is taller than it is wide, partition it <strong>horizontally</strong>.</li>
+                            <li>If <var>G</var> is square, generate a random number with <var>n</var>= 2. If this number is 0, partition it <strong>vertically</strong>, otherwise partition it <strong>horizontally</strong>.</li>
+                        </ul></li>
+                    <li>Generate a random number with <var>n</var>= the number of ways <var>G</var> can be partitioned using the obtained direction. Count this many into the list of possible partitions in top-down and left-right order, and call this partition <var>P</var>.</li>
+                    <li>Every edge along <var>P</var> becomes <strong>impassable</strong>, and the sections of <var>G</var> segmented by <var>P</var> become two new groups.</li>
+                    <li>Generate a random number with <var>n</var>= the length of <var>P</var>’s line. Make the edge in that position of <var>P</var> passable, counting in top-down and left-right order.</li>
+                    <li>Repeat steps 2–6 until all groups have a width or height of 1.</li>
+                </ol>
+
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+
+    </div>
+<script>init();</script>
+</body>
+</html>
