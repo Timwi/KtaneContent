@@ -550,6 +550,31 @@ const allQuizzes = {
 				]
 			]
 		},
+        'Face Recognition Positions': {
+            'CSS': 'flags',
+            'RandomizeRight': true,
+            'Groups': ['positions', 'faces'],
+            'Items': [
+                [
+                    ['A1', '<img src="../HTML/img/Face Recognition/Glen.svg">'],
+                    ['B1', '<img src="../HTML/img/Face Recognition/Bill.svg">'],
+                    ['C1', '<img src="../HTML/img/Face Recognition/Mary.svg">'],
+                    ['D1', '<img src="../HTML/img/Face Recognition/Ben.svg">'],
+                    ['A2', '<img src="../HTML/img/Face Recognition/Clem.svg">'],
+                    ['B2', '<img src="../HTML/img/Face Recognition/Gary.svg">'],
+                    ['C2', '<img src="../HTML/img/Face Recognition/Jen.svg">'],
+                    ['D2', '<img src="../HTML/img/Face Recognition/Mel.svg">'],
+                    ['A3', '<img src="../HTML/img/Face Recognition/Phil.svg">'],
+                    ['B3', '<img src="../HTML/img/Face Recognition/Larry.svg">'],
+                    ['C3', '<img src="../HTML/img/Face Recognition/Len.svg">'],
+                    ['D3', '<img src="../HTML/img/Face Recognition/Jill.svg">'],
+                    ['A4', '<img src="../HTML/img/Face Recognition/Perry.svg">'],
+                    ['B4', '<img src="../HTML/img/Face Recognition/Del.svg">'],
+                    ['C4', '<img src="../HTML/img/Face Recognition/Harry.svg">'],
+                    ['D4', '<img src="../HTML/img/Face Recognition/Teri.svg">']
+                ]
+            ]
+        },
 		'Flags': {
 			'CSS': 'flags',
 			'RandomizeRight': true,
@@ -733,6 +758,23 @@ const allQuizzes = {
 				]
 			]
 		},
+        'Gridlock Shapes':{
+            'CSS': 'textonly gridlock-shapes',
+            'RandomizeRight': true,
+            'Groups': ['directions', 'shapes'],
+            'Items': [
+                [
+                    ['⬆️', 'Green ◇', 'Blue ⎔'],
+                    ['↗️', 'Green △', 'Blue ☆'],
+                    ['➡️', 'Red △', 'Red ☆'],
+                    ['↘️', 'Green ☆', 'Yellow ☆'],
+                    ['⬇️', 'Yellow ⎔', 'Yellow △'],
+                    ['↙️', 'Blue △', 'Blue ◇'],
+                    ['⬅️', 'Red ⎔', 'Yellow ◇'],
+                    ['↖️', 'Green ⎔', 'Red ◇'],
+                ]
+            ]
+        },
 		'Guitar Chords': {
 			'CSS': 'textonly flags whitesvg guitar',
 			'RandomizeRight': true,
@@ -1494,7 +1536,7 @@ const allQuizzes = {
 				]
 			]
 		},
-		'Fontanta Lower': {
+		'Fontana Lower': {
 			'CSS': 'textonly fontana',
 			'RandomizeLeft': true,
 			'Groups': ['letters', 'symbols'],
@@ -2026,7 +2068,181 @@ const allQuizzes = {
 					['Z3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20Z.svg">']
 				]
 			]
-		}
+		},
+        'Cryptic Cycle Set 1': {
+            'CSS': 'boozleglyphs',
+            'RandomizeRight': true,
+            'Groups': ['letters', 'glyphs'],
+            'Items': [
+                [
+                    ['A', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20A.svg">'],
+                    ['B', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20B.svg">'],
+                    ['C', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20C.svg">'],
+                    ['D', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20D.svg">'],
+                    ['E', '<img src="../HTML/img/Boozleglyphs/Set%201.5%20-%20E.svg">'],
+                    ['F', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20F.svg">'],
+                    ['G', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20G.svg">'],
+                    ['H', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20H.svg">'],
+                    ['I', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20I.svg">'],
+                    ['J', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20J.svg">'],
+                    ['K', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20K.svg">'],
+                    ['L', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20L.svg">'],
+                    ['M', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20M.svg">'],
+                    ['N', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20N.svg">'],
+                    ['O', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20O.svg">'],
+                    ['P', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20P.svg">'],
+                    ['Q', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20Q.svg">'],
+                    ['R', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20R.svg">'],
+                    ['S', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20S.svg">'],
+                    ['T', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20T.svg">'],
+                    ['U', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20U.svg">'],
+                    ['V', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20V.svg">'],
+                    ['W', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20W.svg">'],
+                    ['X', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20X.svg">'],
+                    ['Y', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20Y.svg">'],
+                    ['Z', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20Z.svg">']
+                ]
+            ]
+        },
+        'Cryptic Cycle Set 2': {
+            'CSS': 'boozleglyphs',
+            'RandomizeRight': true,
+            'Groups': ['letters', 'glyphs'],
+            'Items': [
+                [
+                    ['A', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20A.svg">'],
+                    ['B', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20B.svg">'],
+                    ['C', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20C.svg">'],
+                    ['D', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20D.svg">'],
+                    ['E', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20E.svg">'],
+                    ['F', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20F.svg">'],
+                    ['G', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20G.svg">'],
+                    ['H', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20H.svg">'],
+                    ['I', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20I.svg">'],
+                    ['J', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20J.svg">'],
+                    ['K', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20K.svg">'],
+                    ['L', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20L.svg">'],
+                    ['M', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20M.svg">'],
+                    ['N', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20N.svg">'],
+                    ['O', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20O.svg">'],
+                    ['P', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20P.svg">'],
+                    ['Q', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20Q.svg">'],
+                    ['R', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20R.svg">'],
+                    ['S', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20S.svg">'],
+                    ['T', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20T.svg">'],
+                    ['U', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20U.svg">'],
+                    ['V', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20V.svg">'],
+                    ['W', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20W.svg">'],
+                    ['X', '<img src="../HTML/img/Boozleglyphs/Set%202.5%20-%20X.svg">'],
+                    ['Y', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20Y.svg">'],
+                    ['Z', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20Z.svg">']
+                ]
+            ]
+        },
+        'Cryptic Cycle All Sets': {
+            'CSS': 'boozleglyphs',
+            'RandomizeRight': true,
+            'Groups': ['letters', 'glyphs'],
+            'Items': [
+                [
+                    ['A1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20A.svg">'],
+                    ['B1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20B.svg">'],
+                    ['C1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20C.svg">'],
+                    ['D1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20D.svg">'],
+                    ['E1', '<img src="../HTML/img/Boozleglyphs/Set%201.5%20-%20E.svg">'],
+                    ['F1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20F.svg">'],
+                    ['G1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20G.svg">'],
+                    ['H1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20H.svg">'],
+                    ['I1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20I.svg">'],
+                    ['J1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20J.svg">'],
+                    ['K1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20K.svg">'],
+                    ['L1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20L.svg">'],
+                    ['M1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20M.svg">'],
+                    ['N1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20N.svg">'],
+                    ['O1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20O.svg">'],
+                    ['P1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20P.svg">'],
+                    ['Q1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20Q.svg">'],
+                    ['R1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20R.svg">'],
+                    ['S1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20S.svg">'],
+                    ['T1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20T.svg">'],
+                    ['U1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20U.svg">'],
+                    ['V1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20V.svg">'],
+                    ['W1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20W.svg">'],
+                    ['X1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20X.svg">'],
+                    ['Y1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20Y.svg">'],
+                    ['Z1', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20Z.svg">'],
+                    ['A2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20A.svg">'],
+                    ['B2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20B.svg">'],
+                    ['C2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20C.svg">'],
+                    ['D2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20D.svg">'],
+                    ['E2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20E.svg">'],
+                    ['F2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20F.svg">'],
+                    ['G2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20G.svg">'],
+                    ['H2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20H.svg">'],
+                    ['I2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20I.svg">'],
+                    ['J2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20J.svg">'],
+                    ['K2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20K.svg">'],
+                    ['L2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20L.svg">'],
+                    ['M2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20M.svg">'],
+                    ['N2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20N.svg">'],
+                    ['O2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20O.svg">'],
+                    ['P2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20P.svg">'],
+                    ['Q2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20Q.svg">'],
+                    ['R2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20R.svg">'],
+                    ['S2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20S.svg">'],
+                    ['T2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20T.svg">'],
+                    ['U2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20U.svg">'],
+                    ['V2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20V.svg">'],
+                    ['W2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20W.svg">'],
+                    ['X2', '<img src="../HTML/img/Boozleglyphs/Set%202.5%20-%20X.svg">'],
+                    ['Y2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20Y.svg">'],
+                    ['Z2', '<img src="../HTML/img/Boozleglyphs/Set%202%20-%20Z.svg">'],
+                    ['A3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20A.svg">'],
+                    ['B3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20B.svg">'],
+                    ['C3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20C.svg">'],
+                    ['D3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20D.svg">'],
+                    ['E3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20E.svg">'],
+                    ['F3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20F.svg">'],
+                    ['G3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20G.svg">'],
+                    ['H3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20H.svg">'],
+                    ['I3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20I.svg">'],
+                    ['J3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20J.svg">'],
+                    ['K3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20K.svg">'],
+                    ['L3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20L.svg">'],
+                    ['M3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20M.svg">'],
+                    ['N3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20N.svg">'],
+                    ['O3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20O.svg">'],
+                    ['P3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20P.svg">'],
+                    ['Q3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20Q.svg">'],
+                    ['R3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20R.svg">'],
+                    ['S3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20S.svg">'],
+                    ['T3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20T.svg">'],
+                    ['U3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20U.svg">'],
+                    ['V3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20V.svg">'],
+                    ['W3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20W.svg">'],
+                    ['X3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20X.svg">'],
+                    ['Y3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20Y.svg">'],
+                    ['Z3', '<img src="../HTML/img/Boozleglyphs/Set%203%20-%20Z.svg">']
+                ]
+            ]
+        },
+        'Punctuation': {
+            'CSS': 'boozleglyphs',
+            'RandomizeRight': true,
+            'Groups': ['letters', 'glyphs'],
+            'Items': [
+                [
+                    ['Space', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20Space.svg">'],
+                    ["'", '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20%27.svg">'],
+                    ['"', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20%27%27.svg">'],
+                    ['?', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20Question%20mark.svg">'],
+                    ['-', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20-.svg">'],
+                    ['*', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20Asterisk.svg">'],
+                    ['~', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20Tilde.svg">'],
+                    ['!', '<img src="../HTML/img/Boozleglyphs/Set%201%20-%20!.svg">']
+                ]
+            ]
+        },
 	},
 	'Button Sequence': {
 		'Red': {
