@@ -8,17 +8,160 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <script>
+        $(function() {
+            let wallPaths = ["M300 2v100h200v-100", "M300 100v100h300", "M300 300h100v-100", "M600 100v200h200", "M4 400v-100h200", "M500 300v100h300", "M500 400v100", "M700 400v100h200", "M600 500h100v100", "M800 500v100h100", "M4 600h96v-100h100v-100", "M100 400h300", "M300 500h100v300h-100v100", "M200 600h100v100h100", "M500 600v100h100", "M400 800h200v100", "M400 900v100h200", "M300 1000h100v200", "M500 1000v100h100", "M300 1100v100"];
+            let mazesvg = $(".mazesvg");
+
+            for (let r = 0; r < 12; r++) {
+                for (let c = 3; c < 6; c++) {
+                    let ring = MakeSvgElem("circle", {
+                        class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                        r:13.5, fill: "none", stroke: "#000", "stroke-width": 2
+                    });
+                    mazesvg.append(ring);
+                    if (c != 4 || r % 3 != 1) {
+                        let dot = MakeSvgElem("circle", {
+                            class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                            r:10.5, fill: "#000"
+                        });
+                        mazesvg.append(dot);
+                    }
+                }
+            }
+
+            for (let r = 3; r < 6; r++) {
+                for (let c = 0; c < 12; c++) {
+                    if (c >= 3 && c < 6) { continue; }
+                    let ring = MakeSvgElem("circle", {
+                        class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                        r:13.5, fill: "none", stroke: "#000", "stroke-width": 2
+                    });
+                    mazesvg.append(ring);
+                    if (r != 4 || c % 3 != 1) {
+                        let dot = MakeSvgElem("circle", {
+                            class: "dot", cx:(50 + c*100), cy:(50 + r*100),
+                            r:10.5, fill: "#000"
+                        });
+                        mazesvg.append(dot);
+                    }
+                }
+            }
+
+            mazesvg.append(MakeSvgElem("path", { class:"maze-fold", "stroke-dasharray":"4,4", d:"M300 4v1194h300V4z"}));
+            mazesvg.append(MakeSvgElem("path", { class:"maze-fold", "stroke-dasharray":"4,4", d:"M4 300h894v300H4z"}));
+            mazesvg.append(MakeSvgElem("path", { class:"maze-fold", "stroke-dasharray":"4,4", d:"M300 900h300"}));
+
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#F80", d:"m300 1v5h300v-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#FF0", d:"m297 1h5v300h-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#0F0", d:"m597 1h5v300h-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#00F", d:"m0 297v5h300v-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#F0F", d:"m5 597v5h295v-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#F80", d:"m1 302h5v300h-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#00F", d:"m600 297v5h300v-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#F0F", d:"m600 597v5h300v-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#F80", d:"m895 302h5v300h-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#FF0", d:"m297 600h5v300h-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#0F0", d:"m597 600h5v300h-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#00F", d:"m300 1195v5h300v-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#FF0", d:"m297 900h5v300h-5"}));
+            mazesvg.append(MakeSvgElem("path", { class:"colored-wall", fill:"#0F0", d:"m597 900h5v300h-5"}));
+            
+            mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:450, cy:150, r:11, fill: "#00F" }));
+            mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:150, cy:450, r:11, fill: "#FF0" }));
+            mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:450, cy:450, r:11, fill: "#F00" }));
+            mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:750, cy:450, r:11, fill: "#0F0" }));
+            mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:450, cy:750, r:11, fill: "#F0F" }));
+            mazesvg.append(MakeSvgElem("circle", { class: "cdot", cx:450, cy:1050, r:11, fill: "#F70" }));
+
+            for (let r = 0; r < 12; r++) {
+                for (let c = 3; c < 6; c++) {
+                    let cell = MakeSvgElem("rect", {
+                        class: "highlightable mcell", x:(c*100), y:(r*100 + (r == 0 ? 2 : 0)),
+                        width:100, height:(r == 0 ? 98 : 100), fill:"transparent"
+                    });
+                    mazesvg.append(cell);
+                }
+            }
+            for (let r = 3; r < 6; r++) {
+                for (let c = 0; c < 12; c++) {
+                    if (c >= 3 && c < 6) { continue; }
+                    let cell = MakeSvgElem("rect", {
+                        class: "highlightable mcell", x:(c*100 + (c == 0 ? 2 : 0)),
+                        y:(r*100),
+                        width:(c == 0 ? 98 : 100), height:100, fill:"transparent"
+                    });
+                    mazesvg.append(cell);
+                }
+            }
+            
+            for(let n = 0; n < wallPaths.length; n++){
+                mazesvg.append(MakeSvgElem("path", {class:"maze-wall", d:wallPaths[n]}));
+            }
+
+        });
+    </script>
     <style>
-        table {
+        .dark table, table {
             margin: 1em auto;
             border: none;
         }
 
-        img:not(.diagram) { width: 75%; }
+        td {
+            width: 25%;
+            text-align: center;
+        }
 
-        img.rot-clock-90 { transform:rotate(90deg); }
-        img.rot-180 { transform:rotate(180deg); }
-        img.rot-counter-90 { transform:rotate(270deg); }
+        .dark svg path:not(.colored-wall), .dark circle.dot {
+            filter: invert(100%) contrast(90%);
+        }
+
+        .mazeimg {
+            width: 90%;
+            margin: 0 auto;
+            display: block;
+            margin-top: .5cm;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+        .italics {
+            font-style: italic;
+        }
+
+        img.center {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        img.example-image {
+            width: 60%;
+        }
+        .appendix-reference {
+            font-style: italic;
+        }
+
+        .maze-wall {
+            fill: none;
+            stroke: #000;
+            stroke-width: 6;
+        }
+        .maze-fold {
+            fill: none;
+            stroke: #000;
+            stroke-width: 3;
+        }
+        
+        .mazesvg { width: 75%; }
+        svg.rot-clock-90 { transform:rotate(90deg); }
+        svg.rot-180 { transform:rotate(180deg); }
+        svg.rot-counter-90 { transform:rotate(270deg); }
 
         .nets {
             display: grid;
@@ -38,20 +181,20 @@
                 <img src="img/Component/Maze³.svg" class="diagram">
                 <h2>On the Subject of Mazes³</h2>
                 <p class="flavour-text">There's like one path anyways, but take this. I will not explain how it works.</p>
-
                 <table>
-                    <tr><td class="corner"></td><th>1 OR LESS</th><th>2, 3 or 4</th><th>5 OR MORE</th></tr>
+                    <tr><td class="corner"></td><th>1 OR LESS</th><th>2, 3 or 4</th><th>5 OR MORE </th></tr>
                     <tr><th>Batteries</th><td>Magenta</td><td>Orange</td><td>Blue</td></tr>
                     <tr><th>Indicators</th><td>Red</td><td>Yellow</td><td>Green</td></tr>
                     <tr><th>Ports</th><td>Blue</td><td>Magenta</td><td>Orange</td></tr>
                 </table>
-
                 <div class="nets">
-                    <img src="img/Maze³/maze.jpg" width="300"><img src="img/Maze³/maze.jpg" width="300" class="rot-clock-90">
-                    <img src="img/Maze³/maze.jpg" width="300" class="rot-180"><img src="img/Maze³/maze.jpg" width="300" class="rot-counter-90">
+                    <div><svg class="mazesvg" viewbox="0 0 900 1200" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-miterlimit="5.5"></svg></div>
+                    <div><svg class="mazesvg rot-clock-90" viewbox="0 0 900 1200" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-miterlimit="5.5"></svg></div>
+                    <div><svg class="mazesvg rot-180" viewbox="0 0 900 1200" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-miterlimit="5.5"></svg></div>
+                    <div><svg class="mazesvg rot-counter-90" viewbox="0 0 900 1200" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-miterlimit="5.5"></svg></div>
                 </div>
             </div>
-            <div class="page-footer relative-footer">Page 1 of 1</div>
+           <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
     </div>
 </body>
