@@ -8568,6 +8568,51 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "GSGameOfLife3D",
+		loggingTag: "Game of Life 3D",
+		matches: [
+			{
+				regex: /The grid is as follows, starting with the front-top-left cell and moving in reading order, looking perpendicular to the module \(0 = dead, 1 = alive\): (.+)\./,
+				handler: function(matches, module) {
+					module.buildSVG = function(input) {
+						let gridString = input.split(", ");
+						gridString.splice(13, 0, "-"); 
+						const svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-2 -2 112 32'>");
+						for(var i = 0; i < 27; i++){
+							let x = (i%3) | 0;
+							let y = ((i/3)%3) | 0;
+							let z = (i/9) | 0;
+
+							$SVG("<rect>")
+							.attr("width", 9)
+							.attr("height", 9)
+							.attr("stroke", "#000")
+							.attr("stroke-width", gridString[i] == "-" ? "0" : "0.5")
+							.attr("x", 10*(x+4*z))
+							.attr("y", 10*y)
+							.attr("fill", gridString[i] == "1" ? "#FFF" : gridString[i] == "0" ? "#000" : "transparent")
+							.appendTo(svg);
+						}
+						return svg;
+					}
+
+					module.push("The module starts as follows, where the grids left-to-right represent the module's layers, front-to-back:")
+					module.push({ obj: module.buildSVG(matches[1]), nobullet: true });
+					return true;
+				}
+			},
+			{
+				regex: /(.+:) (.+)\./,
+				handler: function(matches, module){
+					module.push(matches[1])
+					module.push({ obj: module.buildSVG(matches[2]), nobullet: true });
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Gerrymandering",
 		moduleID: "gerrymandering",
 		loggingTag: "Gerrymandering",
