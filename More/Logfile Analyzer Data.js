@@ -12896,18 +12896,18 @@ let parseData = [
 					}
 
 					if (module.prev == null) {
-						module.prev = { type: "craft", material: matches[2], count: cparseInt(matches[1]) };
+						module.prev = { type: "craft", material: matches[3] ? `${matches[3]} Armor` : matches[2], count: matches[3] ? 1 : cparseInt(matches[1]) };
 					}
 					else if (module.prev.type === "craft" && module.prev.material === matches[2]) {
-						module.prev = { type: "craft", material: matches[2], count: module.prev.count + cparseInt(matches[1]) };
+						module.prev = { type: "craft", material: matches[3] ? `${matches[3]} Armor` : matches[2], count: module.prev.count + cparseInt(matches[1]) };
 					}
 					else if (module.prev.type === "craft") {
 						module.push($(`<span class='mc-survival crafting'>Crafting: ${module.prev.material}: ${module.prev.count}</span>`));
-						module.prev = { type: "craft", material: matches[2], count: cparseInt(matches[1]) };
+						module.prev = { type: "craft", material: matches[3] ? `${matches[3]} Armor` : matches[2], count: matches[3] ? 1 : cparseInt(matches[1]) };
 					}
 					else if (module.prev.type === "gather") {
 						module.push($(`<span class='mc-survival gather'>Gathering: ${module.prev.material}: ${module.prev.count}</span>`));
-						module.prev = { type: "craft", material: matches[2], count: cparseInt(matches[1]) };
+						module.prev = { type: "craft", material: matches[3] ? `${matches[3]} Armor` : matches[2], count: matches[3] ? 1 : cparseInt(matches[1]) };
 					}
 					return true;
 				}
