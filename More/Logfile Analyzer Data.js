@@ -24155,7 +24155,40 @@ let parseData = [
 			{ regex: /.+/ }
 		]
 	},
-
+	{
+		moduleID: "WhiteArrows",
+		loggingTag: "White Arrows",
+		matches: [
+			{
+				regex: /Ruleseed Number: \d+/,
+				handler: function(matches, module){
+					module.push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /Current Stage: (\d+)/,
+				handler: function(matches, module){
+					if(!module.attemptCount) module.attemptCount = 0;
+					if(matches[1] == "1"){
+						module.attemptCount++;
+						module.currentAttempt = [`Attempt ${module.attemptCount}:`, []];
+						module.push(module.currentAttempt);
+					}
+					module.currentStage = [`Stage ${matches[1]}:`, []];
+					module.currentAttempt[1].push(module.currentStage);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function(matches, module){
+					module.currentStage[1].push(matches[0]);
+					return true;
+				}
+			}
+		]
+	},
 	{
 		displayName: "Who’s on First",
 		moduleID: "WhosOnFirst",
