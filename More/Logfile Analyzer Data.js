@@ -1532,7 +1532,95 @@ let parseData = [
 			{
 				regex: /(Up|Right|Down|Left) maze:/,
 				handler: function (matches, module) {
-					module.push({ label: matches[0], obj: pre(readTaggedLines(11).join('\n')) });
+					if(!module.mazes) module.mazes = [];
+					let mazeData = readTaggedLines(11);
+					const svg = $("<svg xmlns='http://www.w3.org/2000/svg' class='abm-svg' viewbox='0 0 52 52'>");
+					
+					for(var r = 0; r < 11; r++) for(var c = 0; c < 11; c++) {
+						if(r%2 == c%2) continue;
+						if(c%2 == 1){
+							//horiz wall
+							if(mazeData[r][c] != '#') continue;
+							$SVG("<rect>")
+							.attr("x", (c-1)*5)
+							.attr("y", (r)*5)
+							.attr("width", 12)
+							.attr("height", 2)
+							.addClass("abm-wall")
+							.appendTo(svg);
+						} else {
+							//vert wall
+							if(mazeData[r][c] != '#') continue;
+							$SVG("<rect>")
+							.attr("x", (c)*5)
+							.attr("y", (r-1)*5)
+							.attr("width", 2)
+							.attr("height", 12)
+							.addClass("abm-wall")
+							.appendTo(svg);
+						}
+					}
+					for(var r = 0; r < 11; r++) for(var c = 0; c < 11; c++) {
+						if(r%2 != c%2 || mazeData[r][c] != 'X') continue;
+						$SVG("<text>x")
+						.attr("x", c*5 +1)
+						.attr("y", r*5 +1)
+						.addClass("abm-marker")
+						.appendTo(svg);
+					}
+
+					module.mazes.push(svg);
+					return true;
+				}
+			},
+			{
+				regex: /(.+) positions: U = (\w\d), R = (\w\d), D = (\w\d), L = (\w\d)/,
+				handler: function(matches, module) {
+					for(var i = 0; i < 4; i++){
+						var r = matches[i+2][1] - '0';
+						var c = "ABCDE".indexOf(matches[i+2][0]);
+						$SVG("<circle>")
+						.attr("cx", 6 + 10*c)
+						.attr("cy", 6 + 10*(r-1))
+						.attr("r", 2)
+						.attr("fill", matches[1] == "Goal" ? "#F00" : "#FFF")
+						.appendTo(module.mazes[i]);
+						
+						if(matches[1] == "Start") {
+							if(i == 0) module.push("The mazes are as the following, where white is the starting position, red is the goal:");
+							module.push(["North", "East", "South", "West"][i] + " maze:");
+							module.push({obj: module.mazes[i], nobullet: true});
+						}
+					}
+					return true; 
+				}
+			},
+			{
+				regex: /(.+) selected. Displaying (.+)\./,
+				handler: function(matches, module){
+					module.currentButtonPress = [`Pressing ${matches[1]}.`, [`Displayed color is ${matches[2].toLowerCase()}.`]];
+					module.push(module.currentButtonPress);
+					return true;
+				}
+			},
+			{
+				regex: /Released at .+\./,
+				handler: function(matches, module){
+					module.currentButtonPress[1].push(matches[0]);
+					return true;
+				}
+			},
+			{
+				regex: /Moved to .+ in the (.+) maze.|Hit wall .+ in the (.+) maze./,
+				handler: function(matches, module){
+					const dirToCardinal = {
+						"Up" : "north",
+						"Right" : "east",
+						"Left" : "west",
+						"Down" : "south"
+					};
+					if(!matches[1]) matches[1] = matches[2];
+					module.currentButtonPress[1].push(matches[0].replace(matches[1], dirToCardinal[matches[1]]));
 					return true;
 				}
 			},
