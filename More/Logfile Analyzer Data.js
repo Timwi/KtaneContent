@@ -8664,7 +8664,7 @@ let parseData = [
 				handler: function(matches, module) {
 					module.buildSVG = function(input) {
 						let gridString = input.split(", ");
-						gridString.splice(13, 0, "-"); 
+						gridString.splice(13, 0, "-");
 						const svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='-2 -2 112 32'>");
 						for(var i = 0; i < 27; i++){
 							let x = (i%3) | 0;
@@ -13506,12 +13506,12 @@ let parseData = [
 
 					const lines = $SVG("<g>").appendTo(baseSVG);
 
-					//todo set up the pages for each movment
+					// set up the pages for each movment
 					for(let curPage = 0; curPage < module.pages.length; curPage++) {
-						//todo get a clone of the svg
+						// get a clone of the svg
 						const svgClone = baseSVG.clone();
 
-						//todo add the lines for each movment up to the current page
+						// add the lines for each movment up to the current page
 						for(let j = 0; j <= curPage; j++) {
 							// green: latest movement, red: previous movements
 							const color = j == curPage ? "#0f0" : "#f00";
@@ -13520,9 +13520,8 @@ let parseData = [
 							addLine(start, end, color, svgClone);
 						}
 
-						//todo add the svg to the page array
+						// add the svg to the page array
 						module.pages[curPage].obj = svgClone;
-						console.log(module.pages[curPage])
 					}
 
 					makeCycleableDisplays(module.pages, module)
