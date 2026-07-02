@@ -2498,6 +2498,42 @@ let parseData = [
 			{ regex: /.+/ }
 		]
 	},
+		{
+		moduleID: "BinaryJuggle",
+		loggingTag: "Binary Juggle",
+		matches: [
+			{
+				regex: /(Stage \d):/,
+				handler: function (matches, module) {
+					module.currentDropdown = [matches[1], []];
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /(Ball \d+) \|\| (Color: .+), (Symbol: .+), (Rotation: .+), (Direction: .+)/,
+				handler: function (matches, module) {
+					const arr = [matches[1], matches.slice(2)];
+					module.currentDropdown[1].push(arr);
+					return true;
+				}
+			},
+			{
+				regex: /Binary: (\d.+)/,
+				handler: function (matches, module) {
+					for(let i = 0; i < matches[1].length; i++) {
+						module.currentDropdown[1][i][0] = `${module.currentDropdown[1][i][0]}: ${matches[1][i]}` 
+					}
+				}
+			},
+			{ 
+				regex: /.+/,
+				handler: function (matches, module) {
+					module.currentDropdown[1].push(matches[0]);
+				}
+			}
+		]
+	},
 	{
 		displayName: "Binary Puzzle",
 		moduleID: "BinaryPuzzleModule",
