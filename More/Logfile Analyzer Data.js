@@ -20609,15 +20609,14 @@ let parseData = [
 						answerSpan.html(answer.replaceAll(" ", "&nbsp;")).appendTo(module.answers);
 						module.answers.html(module.answers.html() + " ");
 					});
-					
-
 					module.push({ label: matches[1], obj: module.answers, expanded: true });
 					return true;
 				}
 			},
 			{
-				regex: /Clicked answer .+ \((.+)\).+/,
+				regex: /Clicked answer .+ \((.+)\)\. Wrong\./,
 				handler: function (matches, module) {
+					console.log(matches[0])
 					module.push(matches[0])
 					//find the span with the incorrect answer
 					module.answers.children().each(function() {
