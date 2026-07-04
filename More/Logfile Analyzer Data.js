@@ -20599,18 +20599,32 @@ let parseData = [
 			{
 				regex: /Asking question: (.+) — (.+)/,
 				handler: function (matches, module) {
-					var answers = $("<div>").addClass("souvenir-answer-set");
+					module.answers = $("<div>").addClass("souvenir-answer-set");
 					matches[2].split(" | ").forEach(function (answer) {
 						var answerSpan = $("<span>").addClass("souvenir-answer");
 						if (answer.substr(0, 2) == "[_") {
 							answer = answer.substr(2, answer.length - 4);
 							answerSpan.addClass("souvenir-correct-answer");
 						}
-						answerSpan.html(answer.replaceAll(" ", "&nbsp;")).appendTo(answers);
-						answers.html(answers.html() + " ");
+						answerSpan.html(answer.replaceAll(" ", "&nbsp;")).appendTo(module.answers);
+						module.answers.html(module.answers.html() + " ");
 					});
+					
 
-					module.push({ label: matches[1], obj: answers, expanded: true });
+					module.push({ label: matches[1], obj: module.answers, expanded: true });
+					return true;
+				}
+			},
+			{
+				regex: /Clicked answer .+ \((.+)\).+/,
+				handler: function (matches, module) {
+					module.push(matches[0])
+					//find the span with the incorrect answer
+					module.answers.children().each(function() {
+						if($(this).html() == matches[1]) {
+							$(this).addClass("souvenir-incorrect-answer");
+						}
+					});
 					return true;
 				}
 			},
