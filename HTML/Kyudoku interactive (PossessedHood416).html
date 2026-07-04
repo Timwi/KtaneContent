@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Kyudoku — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        $(function() {
+            table = document.getElementById("kyu-table");
+            buildTable();
+            document.addEventListener("keydown", handleKeyPress);
+        });
+
+        var solving = false;
+        var table;
+        var cells = [[],[],[],[],[],[]];
+        var selectedCell;
+        var saveStates = [];
+
+        function buildTable() {
+            for(var r = 0; r < 6; r++){
+                let tr = document.createElement("tr");
+                table.append(tr);
+
+                for(var c = 0; c < 6; c++) {
+                    let cell = document.createElement("th");
+                    cell.classList.add("kyu-cell");
+                    cell.r = r;
+                    cell.c = c;
+                    cell.mark = 0;
+                    cell.onclick = function(){
+                        if(!solving){
+                            selectCell(cell);
+                            return;
+                        }
+
+                        cell.mark = (cell.mark+1)%3;
+                        updateCellVisuals(cell);
+                    };
+                    tr.append(cell);
+                    cells[r][c] = cell;
+                }
+            }
+        }
+
+        function selectCell(target = null) {
+            if(solving || target == null) {
+                if(selectedCell) selectedCell.classList.remove("selected");
+                selectedCell = null;
+                return;
+            }
+            if(selectedCell) selectedCell.classList.remove("selected");
+            selectedCell = target;
+            selectedCell.classList.add("selected");
+        }
+        
+        function selectCellByOffset(dx, dy, readingOrder = false) {
+            if(!selectedCell){
+                selectCell(cells[0][0]);
+                return;
+            }
+
+            var newC = selectedCell.c + dx;
+            var newR = selectedCell.r + dy;
+            if(readingOrder){
+                if(newC > 5) newR++;
+                if(newC < 0) newR--;
+            }
+            newC = (newC + 6) % 6;
+            newR = (newR + 6) % 6;
+            selectCell(cells[newR][newC]);
+        }
+
+        function setCellText(txt, cell = selectedCell) {
+            if(cell == null){
+                selectCell(cells[0][0]);
+                cell = cells[0][0];
+            }
+
+            if(cell.firstChild) cell.removeChild(cell.firstChild);
+            let p = document.createElement("p");
+            p.classList.add("kyu-text");
+            p.innerHTML = txt;
+            cell.append(p);
+        }
+
+        function updateCellVisuals(cell) {
+            cell.classList.remove("selected", "none", "crossed", "circled");
+            cell.classList.add( ["none","circled","crossed"][cell.mark]);
+        }
+
+        function clearInteractive() {
+            table.innerHTML = "";
+            buildTable();
+            selectCell();
+            toggleGamemode(false);
+        }
+
+        function toggleGamemode(forceMode = null) {
+            if(forceMode == null){
+                solving = !solving;
+            } else {
+                solving = forceMode;
+            }
+
+            document.getElementById("toggle").innerHTML = solving ? "Solve" : "Read";
+            if(solving) {
+                selectCell();
+            }
+        }
+        
+        function save(){
+            var saveData = [[],[],[],[],[],[]];
+            for(var r = 0; r < 6; r++) for(var c = 0; c < 6; c++) {
+                var celldata = {text: cells[r][c].innerHTML, mark: cells[r][c].mark};
+                saveData[r][c] = celldata;
+            }
+            saveStates.push(saveData);
+
+            var button = document.createElement("button");
+            button.innerHTML = saveStates.length -1;
+            button.setAttribute("onclick", `loadSave(${saveStates.length -1});`);
+            document.getElementById("saveDiv").append(button);
+        }
+
+        function loadSave(i) {
+            for(var r = 0; r < 6; r++) for(var c = 0; c < 6; c++) {
+                cells[r][c].innerHTML = saveStates[i][r][c].text;
+                cells[r][c].mark = saveStates[i][r][c].mark;
+                updateCellVisuals(cells[r][c]);
+            }
+        }
+
+        function clearSaves(){
+            saveStates = [];
+            var saveDiv = document.getElementById("saveDiv");
+            while(saveDiv.childElementCount != 1){
+                saveDiv.removeChild(saveDiv.lastChild);
+            }
+        }
+
+        function handleKeyPress(e) {
+            switch(e.code) {
+                case "KeyW":
+                case "ArrowUp":
+                    selectCellByOffset(0,-1);
+                    break;
+                case "KeyA":
+                case "ArrowLeft":
+                    selectCellByOffset(-1,0);
+                    break;
+                case "KeyS":
+                case "ArrowDown":
+                    selectCellByOffset(0,1);
+                    break;
+                case "KeyD":
+                case "ArrowRight":
+                    selectCellByOffset(1,0);
+                    break;
+                case "Numpad1":
+                case "Digit1":
+                    if(solving) return;
+                    setCellText("1");
+                    selectCellByOffset(1,0, true);
+                    break;
+                case "Numpad2":
+                case "Digit2":
+                    if(solving) return;
+                    setCellText("2");
+                    selectCellByOffset(1,0, true);
+                    break;
+                case "Numpad3":
+                case "Digit3":
+                    if(solving) return;
+                    setCellText("3");
+                    selectCellByOffset(1,0, true);
+                    break;
+                case "Numpad4":
+                case "Digit4":
+                    if(solving) return;
+                    setCellText("4");
+                    selectCellByOffset(1,0, true);
+                    break;
+                case "Numpad5":
+                case "Digit5":
+                    if(solving) return;
+                    setCellText("5");
+                    selectCellByOffset(1,0, true);
+                    break;
+                case "Numpad6":
+                case "Digit6":
+                    if(solving) return;
+                    setCellText("6");
+                    selectCellByOffset(1,0, true);
+                    break;
+                case "Numpad7":
+                case "Digit7":
+                    if(solving) return;
+                    setCellText("7");
+                    selectCellByOffset(1,0, true);
+                    break;
+                case "Numpad8":
+                case "Digit8":
+                    if(solving) return;
+                    setCellText("8");
+                    selectCellByOffset(1,0, true);
+                    break;
+                case "Numpad9":
+                case "Digit9":
+                    if(solving) return;
+                    setCellText("9");
+                    selectCellByOffset(1,0, true);
+                    break;
+                case "Numpad0":
+                case "Digit0":
+                case "Space":
+                case "Delete":
+                    if(solving) return;
+                    setCellText("");
+                    selectCellByOffset(1,0, true);
+                    break;
+                case "Backspace":
+                    if(solving) return;
+                    setCellText("");
+                    selectCellByOffset(-1,0, true);
+                    break;
+            }
+        }
+    </script>
+    <style>
+        table {
+            margin: 1em auto;
+            border: none;
+        }
+
+        .kyu-cell {
+            height: 80px;
+            width: 80px;
+            font-size: 40px;
+            padding: 0%;
+            background-color: transparent;
+        }
+
+        .kyu-text {
+            transform: translateY(6.5px);
+            margin: 0%;
+            padding: 0%;
+        }
+
+        .selected {
+            background-color: #00F4;
+        }
+
+        .circled {
+            background: repeating-radial-gradient(
+                transparent,
+                transparent 30px,
+                #0F0 30px,
+                #0F0 40px
+            );
+        }
+
+        .crossed {
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 45px,
+                #F00 45px,
+                #F00 65px,
+                transparent 65px,
+                transparent 95px
+            ),
+            repeating-linear-gradient(
+                -45deg,
+                transparent,
+                transparent 45px,
+                #F00 45px,
+                #F00 65px,
+                transparent 65px,
+                transparent 95px
+            );
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 2.5px;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Kyudoku</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Kyudoku.svg" class="diagram">
+                <h2>On the Subject of Kyudoku</h2>
+                <p class="flavour-text">“Ichi, ni, san. Ichi, ni, san. Ichi, ni, san. Ichi, ni, san. Ichi, ni, san, suu!”</p>
+                <p>This module shows a 6×6 grid with digits in each cell.</p>
+                <p>Whenever a digit is pressed, the digit toggles in this order: digit, crossed-out, circled.</p>
+                <p>Circle every digit from 1 to 9 exactly once in such a way that the sum of the circled digits in each row and column is equal to or less than 9.</p>
+                <p>After every correct digit has been circled, the module will solve.</p>
+                <table id="kyu-table"></table>
+                <div>
+                    <button onclick="toggleGamemode()" id="toggle">Read</button>
+                    <button onclick="clearInteractive()">Reset</button>
+                    <br>
+                    <div id="saveDiv">
+                        <button onclick="save()">Save</button>
+                    </div>
+                    <button onclick="clearSaves()">Reset saves</button>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
