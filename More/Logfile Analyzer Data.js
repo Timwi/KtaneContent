@@ -1535,7 +1535,7 @@ let parseData = [
 					if(!module.mazes) module.mazes = [];
 					let mazeData = readTaggedLines(11);
 					const svg = $("<svg xmlns='http://www.w3.org/2000/svg' class='abm-svg' viewbox='0 0 52 52'>");
-					
+
 					for(var r = 0; r < 11; r++) for(var c = 0; c < 11; c++) {
 						if(r%2 == c%2) continue;
 						if(c%2 == 1){
@@ -1585,14 +1585,14 @@ let parseData = [
 						.attr("r", 2)
 						.attr("fill", matches[1] == "Goal" ? "#F00" : "#FFF")
 						.appendTo(module.mazes[i]);
-						
+
 						if(matches[1] == "Start") {
 							if(i == 0) module.push("The mazes are as the following, where white is the starting position, red is the goal:");
 							module.push(["North", "East", "South", "West"][i] + " maze:");
 							module.push({obj: module.mazes[i], nobullet: true});
 						}
 					}
-					return true; 
+					return true;
 				}
 			},
 			{
@@ -2522,11 +2522,11 @@ let parseData = [
 				regex: /Binary: (\d.+)/,
 				handler: function (matches, module) {
 					for(let i = 0; i < matches[1].length; i++) {
-						module.currentDropdown[1][i][0] = `${module.currentDropdown[1][i][0]}: ${matches[1][i]}` 
+						module.currentDropdown[1][i][0] = `${module.currentDropdown[1][i][0]}: ${matches[1][i]}`
 					}
 				}
 			},
-			{ 
+			{
 				regex: /.+/,
 				handler: function (matches, module) {
 					module.currentDropdown[1].push(matches[0]);
@@ -20616,8 +20616,7 @@ let parseData = [
 			{
 				regex: /Clicked answer .+ \((.+)\)\. Wrong\./,
 				handler: function (matches, module) {
-					console.log(matches[0])
-					module.push(matches[0])
+					module.push(matches[0]);
 					//find the span with the incorrect answer
 					module.answers.children().each(function() {
 						if($(this).html() == matches[1]) {
