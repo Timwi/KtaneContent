@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Ghost Movement — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        const mazeData = [    "############################", //28 wide, 32 high
+                            "#.════.═════.##.═════.════.#",
+                            "#║####║#####║##║#####║####║#",
+                            "#║####║#####║##║#####║####║#",
+                            "#║####║#####║##║#####║####║#",
+                            "#.════.══.════════.══.════.#",
+                            "#║####║##║########║##║####║#",
+                            "#║####║##║########║##║####║#",
+                            "#.════.##.══.##.══.##.════.#",
+                            "######║#####║##║#####║######",
+                            "######║#####║##║#####║######",
+                            "######║##.══X══X══.##║######", //Xs at 320, 323, 656, 659
+                            "######║##║########║##║######",
+                            "######║##║########║##║######",
+                            "══════.══.########.══.══════", //the ends of this line are at 392, 419
+                            "######║##║########║##║######",
+                            "######║##║########║##║######",
+                            "######║##.════════.##║######",
+                            "######║##║########║##║######",
+                            "######║##║########║##║######",
+                            "#.════.══.══.##.══.══.════.#",
+                            "#║####║#####║##║#####║####║#",
+                            "#║####║#####║##║#####║####║#",
+                            "#.═.##.══.══X══X══.══.##.═.#",
+                            "###║##║##║########║##║##║###",
+                            "###║##║##║########║##║##║###",
+                            "#.═.══.##.══.##.══.##.══.═.#",
+                            "#║##########║##║##########║#",
+                            "#║##########║##║##########║#",
+                            "#.══════════.══.══════════.#",
+                            "############################",
+                            "############################"];
+
+        const colNames = ["45", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a"];
+        var charCells = [];
+        var targetCells = [];
+        var selectedCharIndex;
+        var isSelectingChars = true;
+        
+        $(function() {
+            buildMaze(document.getElementById("maze"));
+        });
+        
+        function buildMaze(tbl){
+            for(let r = 0; r < 32; r++){
+                let tr = document.createElement("tr");
+                for(let c = 0; c < 28; c++){
+                    let cell = document.createElement("td");
+                    cell.type = mazeData[r][c];
+
+                    cell.x = c;
+                    cell.y = r;
+
+                    cell.onclick = function(){
+                        if(selectedCharIndex == null) return;
+                        if(isSelectingChars) { //place char
+
+                            if(cell.type == '#' || cell.type == 'C') return;            
+                            
+                            if(cell.classList.contains(["pacman", "blinky", "pinky", "inky", "clyde"][selectedCharIndex])){
+                                cell.arrow = "↑←↓→"[("↑←↓→".indexOf(cell.innerHTML) +1 ) %4];
+                                cell.innerHTML = cell.arrow;
+                                return;         
+                            
+                            } else {
+                                //wipe the old cell
+                                if(charCells[selectedCharIndex] != null){
+                                    charCells[selectedCharIndex].innerHTML = charCells[selectedCharIndex].type == 'X' ? 'X' : charCells[selectedCharIndex].type == 'C' ? "<span class='clyde'>C</span>" : "";
+                                    charCells[selectedCharIndex].classList.remove("pacman", "blinky", "pinky", "inky", "clyde");
+                                    charCells[selectedCharIndex].arrow = null;
+                                }
+
+                                cell.classList.remove("pacman", "blinky", "pinky", "inky", "clyde");
+                                cell.classList.add(["pacman", "blinky", "pinky", "inky", "clyde"][selectedCharIndex]);
+                                cell.arrow = '↑';
+                                cell.innerHTML = cell.arrow;
+
+                                charCells[selectedCharIndex] = cell;    
+                            }
+                        } else { //place target
+                            //wipe the old cell
+                            if(targetCells[selectedCharIndex] != null){
+                                targetCells[selectedCharIndex].innerHTML = targetCells[selectedCharIndex].type == 'X' ? 'X' : targetCells[selectedCharIndex].type == 'C' ? "<span class='clyde'>C</span>" : "";
+                                if(targetCells[selectedCharIndex].arrow != null){
+                                    targetCells[selectedCharIndex].innerHTML = targetCells[selectedCharIndex].arrow;
+                                }
+                            }
+
+                            cell.innerHTML = `<span class='${["pacman", "blinky", "pinky", "inky", "clyde"][selectedCharIndex]}'>#</span>`;
+                            targetCells[selectedCharIndex] = cell;
+                        }
+
+                    };
+
+                    cell.addEventListener('mouseenter', () => {
+                        //calculate distance to selected char
+                        if(isSelectingChars){
+                            if(charCells[selectedCharIndex] == null){
+                                document.getElementById("coord-data").innerHTML = `${colNames[cell.x]}${cell.y}`;
+                                return;
+                            }
+                            let distData = {x: Math.abs(charCells[selectedCharIndex].x - cell.x), y: Math.abs(charCells[selectedCharIndex].y - cell.y)};
+                            document.getElementById("coord-data").innerHTML = `${colNames[cell.x]}${cell.y} (Distance to ${["Pacman", "Blinky", "Pinky", "Inky", "Clyde"][selectedCharIndex]}: X=${distData.x} Y=${distData.y})`;
+                        } else {
+                            if(targetCells[selectedCharIndex] == null){
+                                document.getElementById("coord-data").innerHTML = `${colNames[cell.x]}${cell.y}`;
+                                return;
+                            }
+                            let distData = {x: Math.abs(targetCells[selectedCharIndex].x - cell.x), y: Math.abs(targetCells[selectedCharIndex].y - cell.y)};
+                            document.getElementById("coord-data").innerHTML = `${colNames[cell.x]}${cell.y} (Distance to ${["Pacman", "Blinky", "Pinky", "Inky", "Clyde"][selectedCharIndex]}'s target: X=${distData.x} Y=${distData.y})`;
+                        }
+                    });
+
+                    if(cell.type == '#') cell.classList.add("wall");
+                    if(cell.type == 'X') cell.innerHTML = "X";
+                    if(cell.x == 0 && cell.y == 31) {
+                        cell.type = 'C';
+                        cell.innerHTML = "<span class='clyde'>C</span>";
+                    }
+                    tr.append(cell);
+                }
+
+                tbl.append(tr);
+            }
+        }
+
+        function selectCharacter(c) {
+            for(let i = 0; i < 5; i++){
+                document.getElementsByClassName(["pacman", "blinky", "pinky", "inky", "clyde"][i])[0].classList.remove("selected");
+            }
+            document.getElementsByClassName(["pacman", "blinky", "pinky", "inky", "clyde"][c])[0].classList.add("selected");
+            selectedCharIndex = c;
+        }
+
+        function togglePlaceStyle() {
+            isSelectingChars = !isSelectingChars;
+            document.getElementById("toggle-button").innerHTML = `Place ${isSelectingChars ? "Targets" : "Characters"}`
+        }
+    </script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+        td {
+            height: 23px;
+            width: 23px;
+            padding: 0%;
+            font-size: 80%;
+            font-family: monospace;
+            text-align: center;
+            border-color: #0005;
+            background-color: transparent;
+        }
+
+        .dark td {
+            border-color: #DDD5;
+        }
+
+        td:not(.wall):hover {
+            background-color: #888A;
+        }
+
+        .wall { background-color: #00FA; }
+        .wall:hover { background-color: #44FA; }
+
+        button.pacman, td.pacman { background-color: #FF0; color: #000;}
+        button.blinky, td.blinky { background-color: #F00; color: #000;}
+        button.pinky, td.pinky { background-color: pink; color: #000;}
+        button.inky, td.inky { background-color: #0FF; color: #000;}
+        button.clyde, td.clyde { background-color: #F80; color: #000;}
+
+        span.pacman { color: #FF0 }
+        span.blinky { color: #F00 }
+        span.pinky { color: #FBD }
+        span.inky { color: #0FF }
+        span.clyde { color: #FB4 }
+
+        .coord-data {
+            text-align: center;
+            font-size: 20px;
+            font-family: monospace;
+        }
+
+        button {
+            font-family: Special Elite;
+            background-color: #AAA;
+            color: black;
+            font-size: 14px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 9px;
+            transition: color 0.5s, background-color 0.5s;
+        }
+
+        button:hover:not(.selected) {
+            background-color: black;
+            color: white;
+        }
+
+        button.selected {
+            background-color: white;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Ghost Movement</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Ghost Movement.svg" class="diagram">
+                <h2>On the Schmovement of Ghost Movement</h2>
+                <p class="flavour-text">Waka waka, nerd.</p>
+                <p class="coord-data" id="coord-data">--</p>
+                <button class="pacman" onclick="selectCharacter(0)">Pac-Man</button>
+                <button class="blinky" onclick="selectCharacter(1)">Blinky</button>
+                <button class="pinky" onclick="selectCharacter(2)">Pinky</button>
+                <button class="inky" onclick="selectCharacter(3)">Inky</button>
+                <button class="clyde" onclick="selectCharacter(4)">Clyde</button>
+                <button id="toggle-button" onclick="togglePlaceStyle()">Place Targets</button>
+                <table id="maze"></table>
+                <p style="font-size: 9px;">To change the direction of a character, press that character's cell multiple times while that character is selected  while placing characters.</p>
+            </div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Ghost Movement</span>
+            </div>
+            <div class="page-content">
+                <h2>Appendix: GMM</h2>
+                <p class="comment">"Who knew controlling ghosts was so complicated?" The humble Poltergust 3000:</p>
+                <h3>Finding Target Tiles for each ghost</h3>
+                <p><span class='blinky'>Blinky</span>: The target tile is exactly where Pac-Man is located.</p>
+                <p><span class='pinky'>Pinky</span>: The target tile is exactly four tiles in front of Pac-Man, with the exception of when Pac-Man is facing up, in that case the target tile is four tiles up and four tiles to the left of Pac-Man.</p>
+                <p><span class='inky'>Inky</span>: Find the tile two tiles in front of Pac-Man (and like Pinky, if Pac-Man is facing up, go two tiles up and two tiles to the left), this will be point X. Then, find the tile where Blinky is located. Rotate the point where Blinky is located 180° about point X. This is Inky’s target tile.</p>
+                <p><span class='clyde'>Clyde</span>: If Clyde is more than eight tiles away from Pac-Man, the target is exactly where Pac-Man is located. Otherwise, The target is at tile 4531 (Marked with an orange <b>C</b> in the reference maze above).</p>
+                <p>If a target tile (that isn’t Clyde’s) or point X is outside the maze or in the bottom row, change the target to the tile in the maze (or above the bottom row) which is the closest using Manhattan distance, the smallest number of orthogonal (up, left, down, right) steps needed to move between the two points.</p>
+                <h3>Finding a direction to move depending on a target tile</h3>
+                <p>Remove all directions which are:<br>-Within a wall.<br>-Opposite to where the ghost is facing.</p>
+                <p>Of any remaining directions, the tiles which you can move to that’s closer to it linearly (using X<sup>2</sup> + Y<sup>2</sup>, where X is the number of tiles left or right from the ghost and Y being the number of tiles up or down from the ghost) is the one the ghost should move to.</p>
+                <p>If the remaining directions are the same distance away, use the priority order below, the leftmost one being the highest priority.</p>
+                <p class="centered">Up, Left, Down, Right</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
