@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Orientierungswürfel Mal Anders — Keep Talking and Nobody Explodes-Modul</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+        function removeAllChildNodes(parent) {
+            while (parent.firstChild) {
+                parent.removeChild(parent.firstChild);
+            }
+        }
+
+        function countUnique(iterable) {
+            return new Set(iterable).size;
+        }
+
+        function setRules(rnd)
+        {
+            let _size = 4;
+            let subtables = document.getElementsByClassName('subtable');
+            let grids = [];
+            let xs = [];
+            for (let gridIx = 0; gridIx < 12; gridIx++)
+            {
+                removeAllChildNodes(subtables[gridIx]);
+                for (let r = 0; r < _size; r++) {
+                    let tr = $("<tr>").appendTo(subtables[gridIx]);
+                    for (let c = 0; c < _size; c++)
+                        $("<td>").appendTo(tr);
+                }
+                let grid = [];
+
+                function findGrid()
+                {
+                    if (grid.length % _size == 0)
+                        for (let prevRow = 0; prevRow*_size < grid.length-_size; prevRow++)
+                            if (Array.from(Array(_size).keys()).every(x => grid[prevRow*_size + x] === grid[grid.length-_size + x]))
+                                return false;
+                    if (grid.length == _size * _size)
+                    {
+                        rnd.shuffleFisherYates(grid);
+                        for (let col = 0; col < _size; col++)
+                            for (let col2 = 0; col2 < col; col2++)
+                                if (Array.from(Array(_size).keys()).every(y => grid[y*_size + col] === grid[y*_size + col2]))
+                                    return false;
+
+                        if (grid.filter(i => i).length !== 10)
+                            return false;
+
+                        let rows = Array.from(Array(4).keys()).map(i => Array(4).fill(i * 4).map((x, y) => x + y));
+                        let cols = Array.from(Array(4).keys()).map(i => Array.from(Array(4).keys()).map(j => j * 4 + i));
+
+                        let gRows = rows.map(i => i.map(j => grid[j]));
+                        let gCols = cols.map(i => i.map(j => grid[j]));
+
+                        if (!gRows.every(x => x.includes(true) && x.includes(false)))
+                            return false;
+
+                        if (!gCols.every(x => x.includes(true) && x.includes(false)))
+                            return false;
+
+                        return grids.every(gr => {
+                            for (let j = 0; j < _size * _size; j++)
+                                if (gr[j] !== grid[j])
+                                    return true;
+                            return false;
+                        });
+                    }
+                    let pixel = rnd.next(0, 2) != 0;
+                    grid.push(pixel);
+                    let success = findGrid();
+                    if (success)
+                        return true;
+                    grid.pop();
+                    grid.push(!pixel);
+                    success = findGrid();
+                    if (success)
+                        return true;
+                    grid.pop();
+                    return false;
+                }
+                let gridSuccessful = findGrid();
+                if (!gridSuccessful)
+                {
+                    console.log("Fatal error: no grid!");
+                    return;
+                }
+
+                let whites = Array.from(Array(_size * _size).keys()).filter(i => !grid[i]);
+                xs[gridIx] = whites[rnd.next(0, 6)];
+
+                let tds = subtables[gridIx].getElementsByTagName('td');
+                for (let i = 0; i < 16; i++) {
+                    tds[i].className = grid[i] ? 'black' : 'white';
+                    if (i == xs[gridIx])
+                        tds[i].innerText = 'X';
+                }
+
+                for (let rot = 0; rot < 4; rot++)
+                {
+                    grids.push(grid);
+                    grid = grid.map((_, i) => grid[(i%_size)*_size + (_size - 1)-((i/_size)|0)]);
+                }
+            }
+        }
+    </script>
+    <style>
+        .dark.maintable, .maintable {
+            margin-left: auto;
+            margin-right: auto;
+            border: none !important;
+        }
+        .dark.maintablecell, .maintablecell {
+            border: none !important;
+        }
+		.maintable table { margin: 0 auto; }
+        .subtable td {
+			border-color: black;
+            width: 15px;
+            height: 20px;
+            text-align: center;
+			color: black;
+        }
+        .black { background-color: #333333; }
+        .white { background-color: #eeeeee; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Orientierungswürfel Mal Anders</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Orientation Cube.svg" class="diagram">
+                <h2>Betrifft: Orientierungswürfel Mal Anders</h2>
+                <p class="flavour-text">Ich glaub an dieser Stelle wäre mir eine Gehirnblutung fast lieber.</p>
+                <p>Aus den unten stehenden Karten wurde eine per Zufall ausgewählt. Die Startposition befindet sich irgendwo darin.</p>
+                <p>Mit den vier Bewegungstasten kann durch die Karte navigiert werden. Durch Drücken der runden Pfeiltasten wird die Ausrichtung des Betrachters im oder gegen den Uhrzeigersinn gedreht. Durch Drücken der Links- oder Rechts-Taste wird die Position relativ zur Ausrichtung nach links oder rechts verschoben.</p>
+                <p>Schwarze Zellen sind Wände. Das Auge zeigt der Reihe nach alle Wände, die die aktuelle Position umgeben, oder verschwindet, wenn keine Wände vorhanden sind. Die aktuelle Position ist niemals innerhalb einer Wand.</p>
+                <p>Beim Versuch, in eine schwarze Zelle zu laufen, wird sie stattdessen übersprungen und auf der anderen Seite der schwarzen Zelle (oder einer Gruppe von schwarzen Zellen) gelandet. Die Karte wiederholt sich unendlich in alle Richtungen mit einem einzelligen Spalt aus navigierbaren Zellen dazwischen.</p>
+                <p>Zum Entschärfen muss „SET“ gedrückt werden, wenn die aktuelle Position mit dem X auf der Karte übereinstimmt.</p>
+                <table class='maintable'>
+                    <tr>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                    </tr>
+                    <tr>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                    </tr>
+                    <tr>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                        <td class='maintablecell'><table class='subtable'></table></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Seite 1 von 1</div>
+        </div>
+    </div>
+</body>
+</html>
