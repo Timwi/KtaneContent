@@ -17671,6 +17671,200 @@ let parseData = [
 		loggingTag: "Queen’s War"
 	},
 	{
+		moduleID: "quilting",
+		loggingTag: "Quilting",
+		matches: [
+			{
+				regex: /Using quilt (\d)/,
+				handler: function (matches, module) {
+					module.index = matches[1] - 1;
+					const quiltPaths = [
+						[
+							{element: "path", d: "M22 0A22 22 0 0 0 0 22V0Z"}, //0
+							{element: "path", d: "M39.16 8.24 4.14 34.85A22 22 0 0 1 39.16 8.24Z"}, //1
+							{element: "path", d: "M50 0 39.16 8.24A22 22 0 0 0 22 0Z"}, //2
+							{element: "path", d: "M66 0v12.16L50 0Z"}, //3
+							{element: "path", d: "M73.93 18.18 66 12.16V0Z"}, //4
+							{element: "path", d: "M100 0v38L73.93 18.18 66 0Z"}, //5
+							{element: "path", d: "M4.14 34.85 0 38V22a22 22 0 0 0 4.14 12.85z"}, //6
+							{element: "path", d: "M44 22A22 22 0 0 1 4.14 34.85L39.16 8.24A22 22 0 0 1 44 22Z"}, //7
+							{element: "path", d: "M66 12v58L36.41 38.62a22 22 0 0 0 2.75-30.38L50 0Z"}, //8
+							{element: "path", d: "m73.93 18.18 18.65 42.8L87.1 78H66V12.16Z"}, //9
+							{element: "path", d: "m100 38-7.42 22.99-18.65-42.8Z"}, //10
+							{element: "path", d: "m100 78-7.42-17.01L100 38Z"}, //11
+							{element: "path", d: "M100 78H87.1l5.48-17.01z"}, //12
+							{element: "path", d: "M10.32 70H0V38Z"}, //13
+							{element: "path", d: "M22 44a22 22 0 0 0 14.41-5.38L66 70H10.32L0 38l4.14-3.15A22 22 0 0 0 22 44Z"}, //14
+							{element: "path", d: "M10.32 70 20 100H0V70Z"}, //15
+							{element: "path", d: "M20 70v30l-9.68-30Z"}, //16
+							{element: "path", d: "M20 70h46v30H20Z"}, //17
+							{element: "path", d: "M87.1 78 80 100H66V78Z"}, //18
+							{element: "path", d: "M100 78v22H80l7.1-22z"} //19
+						],
+						[
+							{element: "path", d: "M17.75 0C7.93.08 0 9 0 20V0Z"}, //0
+							{element: "path", d: "M17.88 0c9.87 0 17.87 8.95 17.87 20H0C0 9 7.93.08 17.75 0h.13z"}, //1
+							{element: "path", d: "M35.75 20c0 11.05-8 20-17.88 20h-.1c-1.3-6.26-3.46-10-5.77-10-1.76 0-3.45 2.17-4.74 6.09C2.69 32.32 0 26.35 0 20Z"}, //2
+							{element: "path", d: "M100 0 88.68 30v.01A37.58 37.58 0 0 0 61.34 18C49.9 18 39.06 23.37 31.7 32.66A21.51 21.51 0 0 0 35.75 20c0-11.05-8-20-17.88-20Z"}, //3
+							{element: "path", d: "M100 59a42.3 42.3 0 0 0-11.33-29h.01L100 0Z"}, //4
+							{element: "path", d: "M12 30c2.3 0 4.47 3.74 5.77 10a16.57 16.57 0 0 1-10.5-3.93C8.54 32.17 10.23 30 12 30Z"}, //5
+							{element: "path", d: "M7.26 36.07C5.82 40.42 5 46.57 5 53c0 2.66.14 5.3.41 7.8C2.15 64.67 0 71.15 0 78.5V20.14a20.78 20.78 0 0 0 7.26 15.93z"}, //6
+							{element: "path", d: "M17.77 40c.8 3.83 1.23 8.36 1.23 13 0 2.31-.1 4.61-.31 6.82C16.83 58.02 14.7 57 12.5 57c-2.63 0-5.07 1.4-7.09 3.8C5.14 58.3 5 55.66 5 53c0-6.44.82-12.58 2.26-16.93A16.57 16.57 0 0 0 17.77 40Z"}, //7
+							{element: "path", d: "M22.68 59c0 3.64.46 7.27 1.3 10.8-1.12-4.3-3-7.75-5.3-9.98.21-2.21.32-4.5.32-6.82 0-4.64-.43-9.17-1.23-13h.1c5.04 0 9.85-2.38 13.24-6.55A42.59 42.59 0 0 0 22.68 59Z"}, //8
+							{element: "path", d: "M12.5 57c2.17 0 4.3.97 6.19 2.82C17.78 69.44 15.07 76 12 76c-2.95 0-5.59-6.08-6.59-15.2 2.06-2.45 4.5-3.77 7-3.8h.09z"}, //9
+							{element: "path", d: "M25 78.5c0 11.87-5.6 21.5-12.5 21.5S0 90.37 0 78.5c0-7.08 2.03-13.7 5.41-17.7C6.41 69.91 9.05 76 12 76c3.07 0 5.78-6.56 6.69-16.18C22.59 63.64 25 70.77 25 78.5Z"}, //10
+							{element: "path", d: "M12.5 100H0V78.64C.05 90.46 5.63 100 12.5 100Z"}, //11
+							{element: "path", d: "M23.99 69.8C28.62 87.62 43.9 100 61.34 100H12.58C19.45 99.92 25 90.32 25 78.5c0-2.99-.36-5.94-1.01-8.7Z"}, //12
+							{element: "path", d: "M88.68 30 78 41.33A22.91 22.91 0 0 0 61.34 34h-.03a22.91 22.91 0 0 0-16.64 7.32L31.5 33l-.02-.05C38.84 23.48 49.8 18 61.34 18a37.58 37.58 0 0 1 27.34 12z"}, //13
+							{element: "path", d: "m31.5 32.99 13.17 8.33A25.79 25.79 0 0 0 37.77 59c0 6.63 2.48 12.99 6.9 17.68L34 87.99A42.3 42.3 0 0 1 22.68 59c0-9.5 3.11-18.72 8.81-26.06Z"}, //14
+							{element: "path", d: "M61.34 34C74.36 34 84.9 45.2 84.9 59S74.36 84 61.34 84 37.76 72.8 37.76 59 48.3 34.02 61.31 34ZM66 61.5a5.5 5.5 0 1 0 11 0 5.5 5.5 0 0 0-11 0Z"}, //15
+							{element: "path", d: "M77 61.5a5.5 5.5 0 0 1-5.5 5.5 5.5 5.5 0 0 1-5.5-5.5 5.5 5.5 0 0 1 5.5-5.5 5.5 5.5 0 0 1 5.5 5.5Z"}, //16
+							{element: "path", d: "M100 59a42.3 42.3 0 0 1-11.32 29L78 76.67A25.79 25.79 0 0 0 84.9 59c0-6.63-2.48-12.99-6.9-17.68l10.67-11.31A42.3 42.3 0 0 1 100 59Z"}, //17
+							{element: "path", d: "M61.34 84c6.25 0 12.25-2.63 16.67-7.32l10.67 11.31A37.58 37.58 0 0 1 61.34 100 37.58 37.58 0 0 1 34 88l10.67-11.32A22.91 22.91 0 0 0 61.34 84Z"}, //18
+							{element: "path", d: "M100 100H61.34C82.69 100 100 81.64 100 59Z"}, //19
+						],
+						[
+							{element: "path", d: "M0 0h86v14H0Z"}, //0
+							{element: "path", d: "M86 0h14v14H86Z"}, //1
+							{element: "path", d: "M22 14v4h-6L6 30h16v70H0V14Z"}, //2
+							{element: "path", d: "M22 18v12H6l10-12Z"}, //3
+							{element: "path", d: "M52 18 42 30H22V18Z"}, //4
+							{element: "path", d: "M100 14v20H22v-4h20l10-12H22v-4z"}, //5
+							{element: "path", d: "M44 34v12H32v6H22V34Z"}, //6
+							{element: "path", d: "M32 46h12v6H32Z"}, //7
+							{element: "path", d: "M100 34v18H88l-2-10H62l2 10H44V34Z"}, //8
+							{element: "path", d: "m86 42 2 10H64l-2-10Z"}, //9
+							{element: "path", d: "M32 52v20h12v28H22V52Z"}, //10
+							{element: "path", d: "M32 52h12v20H32Z"}, //11
+							{element: "path", d: "M60 52v5c-6.63 0-12 5.82-12 13s5.37 13 12 13v17H44V52Z"}, //12
+							{element: "path", d: "M60 83c-6.63 0-12-5.82-12-13s5.37-13 12-13Z"}, //13
+							{element: "path", d: "M76 52v10H66l-2-10Z"}, //14
+							{element: "path", d: "m64 52 2 10h10v20l-16 8v-7c6.63 0 12-5.82 12-13H60V52Z"}, //15
+							{element: "path", d: "M72 70c0 7.18-5.37 13-12 13V70Z"}, //16
+							{element: "path", d: "M76 100H60V90l16-8z"}, //17
+							{element: "path", d: "m88 52 2 10H76V52Z"}, //18
+							{element: "path", d: "M100 52v48H76V62h14l-2-10Z"}, //19
+						],
+						[
+							{element: "path", d: "M0 0h32v14H0Z"}, // 0
+							{element: "path", d: "M51.95 0C47.55.03 44 3.15 44 7c0 3.87 3.58 7 8 7H32V0Z"}, // 1
+							{element: "path", d: "M60 7c0 3.87-3.58 7-8 7s-8-3.13-8-7 3.58-7 8-7 8 3.13 8 7z"}, //2
+							{element: "path", d: "M96 0v14H52.05c4.4-.03 7.95-3.15 7.95-7 0-3.87-3.58-7-8-7Z"}, //3
+							{element: "path", d: "M96 0h4v14h-4z"}, //4
+							{element: "path", d: "M32 14c-12.15 0-22 10.84-22 24.21 0 3.37.64 6.7 1.88 9.79H0V14Z"}, //5
+							{element: "path", d: "M28 48H11.88A26.3 26.3 0 0 1 10 38.21C10 24.84 19.85 14 32 14Z"}, //6
+							{element: "path", d: "M54 38.21v.48a18.52 18.52 0 0 0-5-.69c-6.76 0-13.11 3.72-17.06 10H28l4-34c12.15 0 22 10.84 22 24.21z"}, //7
+							{element: "path", d: "M54 38.69c-.06 3.2-.7 6.37-1.88 9.31H31.94C35.9 41.72 42.24 38 49 38c1.68 0 3.36.23 5 .69z"}, //8
+							{element: "path", d: "M66.05 48H52.12A26.28 26.28 0 0 0 54 38.69 21.13 21.13 0 0 1 66.05 48z"}, //9
+							{element: "path", d: "M100 14v34H66.05A21.13 21.13 0 0 0 54 38.69l.01-.48C54 24.84 44.15 14 32 14Z"}, //10
+							{element: "path", d: "M11.88 48c2.92 7.29 8.92 12.52 16.03 14-11.92.05-13.95 8-27.91 8V48Z"}, //11
+							{element: "path", d: "M28 48v14.02c-7.15-1.45-13.18-6.7-16.12-14.02Z"}, //12
+							{element: "path", d: "M31.94 48A26.4 26.4 0 0 0 28 62V48Z"}, //13
+							{element: "path", d: "M52.12 48C48.6 56.77 40.72 62.43 32 62.43c-1.34 0-2.68-.14-4-.4V62a26.4 26.4 0 0 1 3.94-14z"}, //14
+							{element: "path", d: "M66.05 48A26.4 26.4 0 0 1 70 62c0 13.25-9.4 24-21 24-11.59 0-20.99-10.73-21-23.98 1.32.27 2.66.4 4 .4 8.71 0 16.6-5.65 20.12-14.42Z"}, //15
+							{element: "path", d: "M28 100H0V70c0 12 28 16 28 30z"}, //16
+							{element: "path", d: "M28 62.02V100C28 86 0 82 0 70c13.96 0 16-7.95 27.9-8l.1.02z"}, //17
+							{element: "path", d: "M100 48c0 22-22 28-22 52H28V62c0 13.25 9.4 24 21 24s21-10.75 21-24a26.4 26.4 0 0 0-3.95-14z"}, //18
+							{element: "path", d: "M100 100H78c0-24 22-30 22-52z"}, //19
+						],
+						[
+							
+							{element: "path", d: "m56 0 18 6.54V46l-13.77-4.13L46 16 35.8 34.54 4 25v27h12.29L6 68h14.5L4 92h22V68h18l-8.57-12H68l-2.2-4H94l-20-6h26v54l-12.6-6H96L80 66 69 85.24 58 80v20H0V0Z"}, // 0
+							{element: "path", d: "M74 0v6.54L56 0Z"}, //1
+							{element: "path", d: "M78.66 8.24 74 6.54V0Z"}, //2
+							{element: "path", d: "M100 0v16L78.66 8.24 74 0Z"}, //3
+							{element: "path", d: "M78.66 8.24 100 46H74V6.54Z"}, //4
+							{element: "path", d: "M78.66 8.24 100 16v30z"}, //5
+							{element: "path", d: "M60.23 41.87 35.8 34.54 46 16Z"}, //6
+							{element: "path", d: "m35.8 34.54-6.83 12.42L24 40l-7.71 12H4V25Z"}, //7
+							{element: "path", d: "M28.97 46.96 26.2 52H16.3L24 40Z"}, // 8
+							{element: "path", d: "M32.57 52H26.2l2.77-5.04z"}, //9
+							{element: "path", d: "M60.23 41.87 65.8 52H32.57l-3.6-5.04 6.83-12.42z"}, // 10
+							{element: "path", d: "M94 52H65.8l-5.57-10.13Z"}, //11
+							{element: "path", d: "M26.2 52 24 56h11.43L44 68H26v-8l-5.5 8H6l10.29-16Z"}, //12
+							{element: "path", d: "m32.57 52 2.86 4H24l2.2-4z"}, //13
+							{element: "path", d: "m65.8 52 2.2 4H35.43l-2.86-4z"}, //14
+							{element: "path", d: "m20.5 68 5.5-8v8z"}, //15
+							{element: "path", d: "M26 68v24H4l16.5-24Z"}, // 16
+							{element: "path", d: "M96 94h-8.6L69 85.24 80 66Z"}, //17
+							{element: "path", d: "M87.4 94H64l5-8.76z"}, //18
+							{element: "path", d: "M69 85.24 64 94h23.4l12.6 6H58V80Z"}, // 19
+						],
+					]
+					module.getQuiltSvg = function (index, fills) {
+						const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-2 -2 104 104'>`).addClass("quilting");
+						const paths = quiltPaths[index];
+
+						for(let i = 0; i < 20; i++) {
+							const path = paths[i];
+							const fill = fills[i];
+
+							switch(path.element) {
+								case "circle":
+									$SVG("<circle>")
+										.attr("cx", path.cx)
+										.attr("cy", path.cy)
+										.attr("r", path.r)
+										.addClass(fill)
+										.appendTo(svg);
+									break;
+
+								case "path":
+									$SVG("<path>")
+										.attr("d", path.d)
+										.addClass(fill)
+										.appendTo(svg);
+									break;
+								case "ellipse":
+									$SVG("<ellipse>")
+										.attr("cx", path.cx)
+										.attr("cy", path.cy)
+										.attr("rx", path.rx)
+										.attr("ry", path.ry)
+										.addClass(fill)
+										.appendTo(svg);
+									break;
+							}
+						}
+						return svg.clone()
+					}
+					module.push(matches[0])
+					return true;
+				}
+			},
+			{
+				regex: /Givens: (.+)/,
+				handler: function (matches, module) {
+					const givens = matches[1].split(', ').map(line => line.match(/(\d+)=(red|blue|yellow|green)/));
+
+					const whiteLine = readTaggedLine();
+					const whiteIndex = whiteLine.match(/The color of the white patch \((\d+)\) is .+/)[1];
+					
+					let fillArr = [];
+					
+					for(let i = 0; i < 20; i++) {
+						let line = givens.find(g => g[1] == i);
+						fillArr.push(i == whiteIndex ? "white" : line == undefined ? "none" : line[2]);
+					}
+					
+					module.push({label: "Given", obj: module.getQuiltSvg(module.index, fillArr)})
+					module.push(whiteLine)
+					return true;
+				}
+			},
+			{
+				regex: /Patch 0: .+/,
+				handler: function (matches, module) {
+					linen--
+					let fillArr = readTaggedLines(20).map(line => line.match(/Patch \d+: (.+)/)[1])
+					module.push({label: "Full grid", obj: module.getQuiltSvg(module.index, fillArr)})
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Quintuples",
 		moduleID: "quintuples",
 		loggingTag: "Quintuples",
