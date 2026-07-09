@@ -653,15 +653,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
 
             // FREEFORM DRAW
             // Setup canvas
-            const drawCanvas = $('<canvas id="draw-canvas">').css({
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                pointerEvents: 'none',
-                zIndex: 9000,
-                opacity: 0.4,
-                touchAction: 'none'
-            }).appendTo(document.body)[0];
+            const drawCanvas = $('<canvas class="draw-canvas">').appendTo(document.body)[0];
             drawCanvas.addEventListener('contextmenu', e => {
                 if (drawEnabled()) e.preventDefault();
             });
