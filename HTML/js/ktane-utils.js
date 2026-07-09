@@ -383,9 +383,7 @@ if (!new URLSearchParams(window.location.search).has("merger")) {
                     };
                     switch(newMode) {
                         case "theme":
-                            const darkModeCheckbox = $('#dark-mode-enabled');
-                            darkModeCheckbox.prop('checked', !darkModeCheckbox.prop('checked'));
-                            updateDarkMode();
+                            $('#dark-mode-enabled').click();
                             break;
                         case "color":
                             setColor((currentColor + 1) % colors.length);
