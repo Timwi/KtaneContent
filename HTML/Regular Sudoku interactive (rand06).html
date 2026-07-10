@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Regular Sudoku — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        td {
+            line-height: 3rem;
+            padding: 7px 4px 3px;
+            width: 3rem;
+            height: 3rem;
+            font-size: 3rem;
+            text-align: center;
+        }
+        .dark table, table { border-width: 4px; }
+        td:nth-child(3n) { border-right-width: 3px; }
+        tr:nth-child(3n) td { border-bottom-width: 3px; }
+        td.selected{
+            background-color: #08f8;
+        }
+        button.selected {
+            border: 3px solid #08f;
+        }
+        table.solved {
+            background-color: #0f04;
+        }
+        td.pencil{
+            font-size: .58rem;
+        }
+    </style>
+    <script>
+        document.addEventListener('keydown', (event) =>{
+            if (![
+                "ArrowRight","ArrowLeft","ArrowUp","ArrowDown",
+                "0","1","2","3","4","5","6","7","8","9","Delete"," "
+            ].includes(event.key)) return;
+            if (!selected) return;
+            if ([
+                "ArrowRight","ArrowLeft","ArrowUp","ArrowDown"," "
+            ].includes(event.key)) event.preventDefault();
+            switch(event.key){
+                case "ArrowRight":
+                    cells[selected[0]][selected[1]].classList.toggle("selected");
+                    selected[1] = (selected[1]+1)%9;
+                    cells[selected[0]][selected[1]].classList.toggle("selected");
+                    break;
+                case "ArrowLeft":
+                    cells[selected[0]][selected[1]].classList.toggle("selected");
+                    selected[1] = (selected[1]+8)%9;
+                    cells[selected[0]][selected[1]].classList.toggle("selected");
+                    break;
+                case "ArrowUp":
+                    cells[selected[0]][selected[1]].classList.toggle("selected");
+                    selected[0] = (selected[0]+8)%9;
+                    cells[selected[0]][selected[1]].classList.toggle("selected");
+                    break;
+                case "ArrowDown":
+                    cells[selected[0]][selected[1]].classList.toggle("selected");
+                    selected[0] = (selected[0]+1)%9;
+                    cells[selected[0]][selected[1]].classList.toggle("selected");
+                    break;
+                case "Delete":
+                    if (solveState && locked[selected[0]][selected[1]]) return;
+                    cells[selected[0]][selected[1]].innerText = " "; break;
+                default:
+                    if (solveState && locked[selected[0]][selected[1]]) return;
+                    if (solveState && pencilMode && !cells[selected[0]][selected[1]].classList.contains("pencil") &&
+                        cells[selected[0]][selected[1]].innerText !== "") return;
+                    if (!solveState) {
+                        if (event.key === " " || event.key === "0") {
+                            cells[selected[0]][selected[1]].innerText="";
+                        }
+                        else cells[selected[0]][selected[1]].innerText= parseInt(event.key,10);
+                        cells[selected[0]][selected[1]].classList.toggle("selected");
+                        selected = (selected[0]*9+selected[1]+1)%81;
+                        selected = [(selected-selected%9)/9,selected%9];
+                        cells[selected[0]][selected[1]].classList.toggle("selected");
+                        return;
+                    }
+                    if (solveState && pencilMode &&
+                        (
+                            cells[selected[0]][selected[1]].innerText === "" ||
+                            cells[selected[0]][selected[1]].classList.contains("pencil")
+                        )
+                    ){
+                        if (event.key === " " || event.key === "0") {
+                            cells[selected[0]][selected[1]].innerText="";
+                            return;
+                        }
+                        cells[selected[0]][selected[1]].classList.add("pencil");
+                        if (cells[selected[0]][selected[1]].innerText.includes(event.key)) {
+                            cells[selected[0]][selected[1]].innerText =
+                                cells[selected[0]][selected[1]].innerText.replace(event.key, "");
+                        }
+                        else cells[selected[0]][selected[1]].innerText += event.key;
+                        return;
+                    }
+                    if (!pencilMode && !cells[selected[0]][selected[1]].classList.contains("pencil") && cells[selected[0]][selected[1]].innerText === event.key) {
+                        cells[selected[0]][selected[1]].innerText = "";
+                        return;
+                    }
+                    cells[selected[0]][selected[1]].classList.remove("pencil");
+                    cells[selected[0]][selected[1]].innerText= event.key==="0" || event.key===" "?"":parseInt(event.key,10);
+                    if (getTable() === ans) table.classList.add("solved");
+            }
+        });
+
+        class RegularSudokuScript { // stolen from the source code
+            constructor() {
+                this.grid = Array.from({ length: 9 }, () => Array(9).fill(0));
+
+                this.cellToBoxIndex = [
+                    [0,0,0,1,1,1,2,2,2],
+                    [0,0,0,1,1,1,2,2,2],
+                    [0,0,0,1,1,1,2,2,2],
+                    [3,3,3,4,4,4,5,5,5],
+                    [3,3,3,4,4,4,5,5,5],
+                    [3,3,3,4,4,4,5,5,5],
+                    [6,6,6,7,7,7,8,8,8],
+                    [6,6,6,7,7,7,8,8,8],
+                    [6,6,6,7,7,7,8,8,8]
+                ];
+
+                this.boxCells = [
+                    [{x:0,y:0},{x:0,y:1},{x:0,y:2},{x:1,y:0},{x:1,y:1},{x:1,y:2},{x:2,y:0},{x:2,y:1},{x:2,y:2}],
+                    [{x:0,y:3},{x:0,y:4},{x:0,y:5},{x:1,y:3},{x:1,y:4},{x:1,y:5},{x:2,y:3},{x:2,y:4},{x:2,y:5}],
+                    [{x:0,y:6},{x:0,y:7},{x:0,y:8},{x:1,y:6},{x:1,y:7},{x:1,y:8},{x:2,y:6},{x:2,y:7},{x:2,y:8}],
+                    [{x:3,y:0},{x:3,y:1},{x:3,y:2},{x:4,y:0},{x:4,y:1},{x:4,y:2},{x:5,y:0},{x:5,y:1},{x:5,y:2}],
+                    [{x:3,y:3},{x:3,y:4},{x:3,y:5},{x:4,y:3},{x:4,y:4},{x:4,y:5},{x:5,y:3},{x:5,y:4},{x:5,y:5}],
+                    [{x:3,y:6},{x:3,y:7},{x:3,y:8},{x:4,y:6},{x:4,y:7},{x:4,y:8},{x:5,y:6},{x:5,y:7},{x:5,y:8}],
+                    [{x:6,y:0},{x:6,y:1},{x:6,y:2},{x:7,y:0},{x:7,y:1},{x:7,y:2},{x:8,y:0},{x:8,y:1},{x:8,y:2}],
+                    [{x:6,y:3},{x:6,y:4},{x:6,y:5},{x:7,y:3},{x:7,y:4},{x:7,y:5},{x:8,y:3},{x:8,y:4},{x:8,y:5}],
+                    [{x:6,y:6},{x:6,y:7},{x:6,y:8},{x:7,y:6},{x:7,y:7},{x:7,y:8},{x:8,y:6},{x:8,y:7},{x:8,y:8}]
+                ];
+
+                this.rnd = Math;
+            }
+
+            print(s) {
+                console.log(s);
+            }
+
+            Start() {
+                this.GeneratePuzzle(33);
+                let GenBoard = "", Answer = "";
+                //this.print("Initial board:");
+                for (let x = 0; x < 9; x++) {
+                    for (let y = 0; y < 9; y++) {
+                        GenBoard += this.grid[y][x] !== 0 ? this.grid[y][x].toString() : " ";
+                    }
+                }
+                //this.print(GenBoard);
+                while (!this.SolveBoard()) this.SolveBoard();
+                //this.print("--------------------------------------------------------");
+                //this.print("Answer:");
+                for (let x = 0; x < 9; x++) {
+                    for (let y = 0; y < 9; y++) {
+                        Answer += this.grid[y][x];
+                    }
+                }
+                //this.print(Answer);
+                return [GenBoard,Answer];
+            }
+
+            SolveBoard() {
+                let targetColumn = 0;
+                let targetRow = 0;
+                let bestCandidates = null;
+                let smallestCandidateCount = 10;
+
+                for (let y = 0; y < 9; y++) {
+                    for (let x = 0; x < 9; x++) {
+                        if (this.grid[y][x] === 0) {
+                            let candidateValues = [0,1,2,3,4,5,6,7,8,9];
+
+                            for (let row = 0; row < 9; row++)
+                                candidateValues[this.grid[row][x]] = 0;
+
+                            for (let col = 0; col < 9; col++)
+                                candidateValues[this.grid[y][col]] = 0;
+
+                            let boxIndex = this.cellToBoxIndex[y][x];
+                            for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
+                                let p = this.boxCells[boxIndex][cellIndex];
+                                candidateValues[this.grid[p.x][p.y]] = 0;
+                            }
+
+                            let candidateCount = 0;
+                            for (let digit = 1; digit < 10; digit++)
+                                candidateCount += candidateValues[digit] === 0 ? 0 : 1;
+
+                            if (candidateCount < smallestCandidateCount) {
+                                smallestCandidateCount = candidateCount;
+                                bestCandidates = candidateValues;
+                                targetColumn = x;
+                                targetRow = y;
+                            }
+                        }
+                    }
+                }
+
+                if (smallestCandidateCount === 10)
+                    return true;
+                if (smallestCandidateCount === 0)
+                    return false;
+
+                for (let i = 1; i < 10; i++) {
+                    if (bestCandidates[i] !== 0) {
+                        this.grid[targetRow][targetColumn] = bestCandidates[i];
+                        if (this.SolveBoard())
+                            return true;
+                    }
+                }
+
+                this.grid[targetRow][targetColumn] = 0;
+                return false;
+            }
+
+            GeneratePuzzle(initialFilledCells) {
+                let filledCellCount = this.CountFilledCells();
+
+                if (!this.IsBoardValid() || filledCellCount > initialFilledCells) {
+                    this.ClearBoard();
+                    filledCellCount = 0;
+                }
+                do {
+                    if (this.GenerateRandomClues(initialFilledCells - filledCellCount)) {
+                        if (this.HasUniqueSolution()) {
+                            return true;
+                        }
+                    }
+
+                    this.ClearBoard();
+                    filledCellCount = 0;
+                } while (true);
+            }
+
+            set Board(value) {
+                if (value.length === 9 && value[0].length === 9)
+                    this.grid = value;
+                else
+                    throw new Error("Array has wrong size");
+            }
+
+            IsBoardValid() {
+                for (let y = 0; y < 9; y++) {
+                    for (let x = 0; x < 9; x++) {
+                        let M = new Array(10).fill(0);
+
+                        for (let a = 0; a < 9; a++)
+                            M[this.grid[a][x]]++;
+                        if (!this.HasNoDuplicates(M))
+                            return false;
+
+                        M = new Array(10).fill(0);
+                        for (let b = 0; b < 9; b++)
+                            M[this.grid[y][b]]++;
+                        if (!this.HasNoDuplicates(M))
+                            return false;
+
+                        M = new Array(10).fill(0);
+                        let squareIndex = this.cellToBoxIndex[y][x];
+                        for (let c = 0; c < 9; c++) {
+                            let p = this.boxCells[squareIndex][c];
+                            if (p.x !== y && p.y !== x)
+                                M[this.grid[p.x][p.y]]++;
+                        }
+                        if (!this.HasNoDuplicates(M))
+                            return false;
+                    }
+                }
+
+                return true;
+            }
+
+            HasUniqueSolution() {
+                let boardBackup = this.CloneBoard();
+                let solutionCount = this.CountSolutions();
+                this.Board = boardBackup;
+                return solutionCount === 1;
+            }
+
+            HasNoDuplicates(digitOccurrences) {
+                for (let d = 1; d < 10; d++)
+                    if (digitOccurrences[d] > 1)
+                        return false;
+
+                return true;
+            }
+
+            CloneBoard() {
+                let copy = Array.from({ length: 9 }, () => Array(9).fill(0));
+                for (let x = 0; x < 9; x++)
+                    for (let y = 0; y < 9; y++)
+                        copy[y][x] = this.grid[y][x];
+
+                return copy;
+            }
+
+            ClearBoard() {
+                for (let y = 0; y < 9; y++)
+                    for (let x = 0; x < 9; x++)
+                        this.grid[y][x] = 0;
+            }
+
+            CountFilledCells() {
+                let num = 0;
+
+                for (let y = 0; y < 9; y++)
+                    for (let x = 0; x < 9; x++)
+                        num += this.grid[y][x] === 0 ? 0 : 1;
+
+                return num;
+            }
+
+            GenerateRandomClues(spots) {
+                for (let i = 0; i < spots; i++) {
+                    let randomColumn, randomRow;
+                    do {
+                        randomRow = Math.floor(this.rnd.random() * 9);
+                        randomColumn = Math.floor(this.rnd.random() * 9);
+                    } while (this.grid[randomRow][randomColumn] !== 0);
+
+                    let candidateValues = [0,1,2,3,4,5,6,7,8,9];
+
+                    for (let a = 0; a < 9; a++)
+                        candidateValues[this.grid[a][randomColumn]] = 0;
+
+                    for (let b = 0; b < 9; b++)
+                        candidateValues[this.grid[randomRow][b]] = 0;
+
+                    let squareIndex = this.cellToBoxIndex[randomRow][randomColumn];
+                    for (let c = 0; c < 9; c++) {
+                        let p = this.boxCells[squareIndex][c];
+                        candidateValues[this.grid[p.x][p.y]] = 0;
+                    }
+
+                    let candidateCount = 0;
+                    for (let d = 1; d < 10; d++)
+                        candidateCount += candidateValues[d] === 0 ? 0 : 1;
+
+                    if (candidateCount > 0) {
+                        let selectedDigit = 0;
+
+                        do {
+                            selectedDigit = Math.floor(this.rnd.random() * 9) + 1;
+                        } while (candidateValues[selectedDigit] === 0);
+
+                        this.grid[randomRow][randomColumn] = selectedDigit;
+                    } else {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            CountSolutions() {
+                let targetColumn = 0;
+                let targetRow = 0;
+                let bestCandidates = null;
+                let smallestCandidateCount = 10;
+
+                for (let y = 0; y < 9; y++) {
+                    for (let x = 0; x < 9; x++) {
+                        if (this.grid[y][x] === 0) {
+                            let candidateValues = [0,1,2,3,4,5,6,7,8,9];
+
+                            for (let a = 0; a < 9; a++)
+                                candidateValues[this.grid[a][x]] = 0;
+
+                            for (let b = 0; b < 9; b++)
+                                candidateValues[this.grid[y][b]] = 0;
+
+                            let squareIndex = this.cellToBoxIndex[y][x];
+                            for (let c = 0; c < 9; c++) {
+                                let p = this.boxCells[squareIndex][c];
+                                candidateValues[this.grid[p.x][p.y]] = 0;
+                            }
+
+                            let candidateCount = 0;
+                            for (let d = 1; d < 10; d++)
+                                candidateCount += candidateValues[d] === 0 ? 0 : 1;
+
+                            if (candidateCount < smallestCandidateCount) {
+                                smallestCandidateCount = candidateCount;
+                                bestCandidates = candidateValues;
+                                targetColumn = x;
+                                targetRow = y;
+                            }
+                        }
+                    }
+                }
+
+                if (smallestCandidateCount === 10)
+                    return 1;
+
+                if (smallestCandidateCount === 0)
+                    return 0;
+
+                let solutionCount = 0;
+                for (let i = 1; i < 10; i++) {
+                    if (bestCandidates[i] !== 0) {
+                        this.grid[targetRow][targetColumn] = bestCandidates[i];
+                        solutionCount += this.CountSolutions();
+
+                        this.grid[targetRow][targetColumn] = 0;
+
+                        if (solutionCount > 1)
+                            return 2;
+                    }
+                }
+
+                return solutionCount;
+            }
+        }
+        const script = new RegularSudokuScript();
+        let table;
+        let cells = Array(9);
+        let readSolveButton, manualGeneratedButton, pencilButton;
+        let solveState = false, generatedState = false, pencilMode = false;
+        let board, ans;
+        let selected;
+        let backup, locked = Array(9);
+
+        function init(){
+            table = document.getElementById("sudoku");
+            for (let i = 0; i<9; i++){
+                cells[i]=Array(9);
+                locked[i] = Array(9);
+                let row = document.createElement("tr");
+                table.appendChild(row);
+                for (let j=0;j<9; j++) {
+                    let cell = document.createElement("td");
+                    row.appendChild(cell);
+                    cells[i][j]=cell;
+                    cell.addEventListener("click", () => {
+                        if (selected) {
+                            cells[selected[0]][selected[1]].classList.remove("selected");
+                            if (selected[0] === i && selected[1] === j) {
+                                selected = null;
+                                return;
+                            }
+                        }
+                        selected = [i,j];
+                        cells[i][j].classList.add("selected");
+                    })
+                }
+            }
+            readSolveButton = document.getElementById('readSolve');
+            readSolveButton.onclick = function(){
+                if (generatedState) return;
+                solveState = !solveState;
+                readSolveButton.innerText = solveState?"Solve":"Read";
+                if (solveState){
+                    savePuzzle();
+                }
+                else setTable(backup);
+            }
+            manualGeneratedButton = document.getElementById('manualGenerated');
+            manualGeneratedButton.onclick = function(){
+                table.classList.remove("solved");
+                generatedState = !generatedState;
+                manualGeneratedButton.innerText = generatedState?"Generated":"Manual";
+                if (generatedState){
+                    newPuzzle();
+                    solveState = true;
+                    readSolveButton.innerText = "Solve";
+                }
+            }
+            pencilButton = document.getElementById('pencilMode');
+            pencilButton.onclick = function(){
+                pencilMode = !pencilMode;
+                pencilButton.classList.toggle("selected");
+            }
+            document.getElementById("restartButton").addEventListener("contextmenu", function(event){
+                event.preventDefault();
+                restartPuzzle();
+            })
+        }
+
+        function newPuzzle(){
+            table.classList.remove("solved");
+            [board, ans] = script.Start();
+            setTable(board);
+            savePuzzle();
+        }
+
+        function getTable(){
+            let ans = "";
+            for (let i = 0; i<9; i++)
+                for (let j=0;j<9; j++)
+                    ans += cells[i][j].classList.contains("pencil")?" ":
+                    (cells[i][j].innerText === ""? " ": cells[i][j].innerText);
+            return ans;
+        }
+        function setTable(board){
+            for (let i = 0; i<9; i++)
+                for (let j=0;j<9; j++)
+                    cells[i][j].innerText = board[i*9+j];
+        }
+
+        function savePuzzle(){
+            backup = getTable();
+            for (let i = 0; i<9; i++)
+                for (let j=0;j<9; j++)
+                    locked[i][j] = (backup[i*9+j] !== " ");
+        }
+        function restartPuzzle(){
+            if (backup) setTable(backup);
+        }
+        function printGrid(){
+            document.getElementById("solutionText").innerHTML = getTable();
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Regular Sudoku</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Regular Sudoku.svg" class="diagram">
+                <h2>On the Subject of Regular Sudoku</h2>
+                <p class="flavour-text">This is as basic as you can get with a puzzle</p>
+                <p>The module generates a sudoku puzzle.</p>
+                <p>To solve the module, fill the blank numbers so that each row, column, and 3 by 3 subgrid contains the number 1–9. There is only one unique solution on the given Sudoku board.</p>
+                <p>Clicking on a blank tile will change the tile to a <b>“1”</b>. Clicking on a tile that is not <b>“9”</b> will add 1 to the number shown. Clicking on a tile that is a <b>“9”</b> will turn the tile blank.</p>
+                <p>When the module is solved, all gray colored numbers will turn green.</p>
+                <div class="hstack gap wrap">
+                    <table id="sudoku"></table>
+                </div>
+                <div class="buttons" style="margin-top: 1em">
+                    <button id="readSolve">Read</button>
+                    <button id="manualGenerated">Manual</button>
+                    <button id="restartButton">Restart Puzzle</button>
+                    <button id="pencilMode">Pencil</button>
+                    <button onclick="printGrid()">Grid as string</button>
+                </div>
+                <p id="solutionText"></p>
+                <p>To restart the puzzle, <b>right-click</b> the Restart Puzzle button.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+<script>init();</script>
+</body>
+</html>
