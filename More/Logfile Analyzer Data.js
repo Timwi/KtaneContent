@@ -24023,10 +24023,9 @@ let parseData = [
 		]
 	},
 	{
-		moduleID: "wanderlust",
+		moduleID: "Wanderlust",
 		loggingTag: "Wanderlust",
 		matches: [
-			//todo log strikes
 			{
 				regex: /Status Light is in the .+ corner\./,
 				handler: function(match, module) {
