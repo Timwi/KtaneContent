@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Un-Complicated Wires — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/Modules/Complicated Wires.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var instructions = ["C", "D", "S", "P", "B"];
+
+        function GetWeightedRandomCutInstruction(rnd, weights) {
+            var totalWeight = 0;
+            for (var i = 0; i < instructions.length; i++) {
+                if (!(instructions[i] in weights))
+                    weights[instructions[i]] = 1;
+                totalWeight += weights[instructions[i]];
+            }
+
+            var prob = rnd.nextDouble() * totalWeight;
+            for (var i = 0; i < instructions.length; i++) {
+                var instr = instructions[i];
+                if (prob < weights[instr]) {
+                    weights[instr] = weights[instr] * .1;
+                    return instr;
+                }
+                prob -= weights[instr];
+            }
+            return instructions[rnd.next(0, instructions.length)];
+        }
+        
+        function getPrettyRule(rules, index) {
+            switch (rules.charAt(index)) {
+                case 'C': return ' -&gt; Cut</li>';
+                case 'D': return ' -&gt; Don’t cut</li>';
+                case 'S': return ' -&gt; Last SN digit is even</li>';
+                case 'P': return ' -&gt; Parallel port</li>';
+                case 'B': return ' -&gt; 2+ batteries</li>';
+            }
+        }
+
+        function displayRules(rules) {
+            rawColors = ['white', 'blue or blue + white', 'red or red + white', 'blue + red'];
+            for (var i = 0; i < 4; i++) {
+                var content = `<li>Only ${rawColors[i]}`;
+                if (rules.charAt(4*i) === rules.charAt(4*i+2)) {
+                    content = content.concat("/or with ")
+                } else {
+                    content = content.concat(`${getPrettyRule(rules, 4*i)}<li>`)
+                }
+                content = content.concat(`Star${getPrettyRule(rules, 4*i+2)}<li>`);
+                if (rules.charAt(4*i+1) === rules.charAt(4*i+3)) {
+                    content = content.concat("Any ")
+                } else {
+                    content = content.concat(`LED${getPrettyRule(rules, 4*i+1)}<li>Star + `)
+                }
+                content = content.concat(`LED${getPrettyRule(rules, 4*i+3)}`)
+                document.getElementById(`rule${i}`).innerHTML = content;
+            }
+        }
+
+        function setRules(rnd) {
+            var numCuts = 1;
+            var weights = {};
+            for (var i = 0; i < instructions.length; i++)
+                weights[instructions[i]] = 1;
+
+            function getInstr() {
+                var instr = GetWeightedRandomCutInstruction(rnd, weights);
+                if (instr === 'C')
+                    numCuts++;
+                return instr;
+            }
+
+            var str = '';
+            for (var i = 0; i < 15; i++) {
+                str = str.concat(getInstr());
+            }
+            str = (numCuts >= 2 ? getInstr() : 'C').concat(str);
+            displayRules(str);
+        }
+
+        function setDefaultRules() {
+            displayRules('CDCBSPDPSBCBSSPD');
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Un-Complicated Wires</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Complicated Wires.svg" class="diagram">
+                <h2>On the Subject of Uncomplicating Wires</h2>
+                <p class="flavour-text">Who would think that wires this complex could totally refrain from the Venn Diagram?</p>
+
+                <h3>White Wires</h3>
+                <ul id="rule0"></ul>
+                <h3>Red Wires</h3>
+                <ul id="rule2"></ul>
+                <h3>Blue Wires</h3>
+                <ul id="rule1"></ul>
+                <h3>Red + Blue Wires</h3>
+                <ul id="rule3"></ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>

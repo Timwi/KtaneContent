@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Complicated Wires — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/Modules/Complicated Wires.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var instructions = ["C", "D", "S", "P", "B"];
+
+        function GetWeightedRandomCutInstruction(rnd, weights) {
+            var totalWeight = 0;
+            for (var i = 0; i < instructions.length; i++) {
+                if (!(instructions[i] in weights))
+                    weights[instructions[i]] = 1;
+                totalWeight += weights[instructions[i]];
+            }
+
+            var prob = rnd.nextDouble() * totalWeight;
+            for (var i = 0; i < instructions.length; i++) {
+                var instr = instructions[i];
+                if (prob < weights[instr]) {
+                    weights[instr] = weights[instr] * .1;
+                    return instr;
+                }
+                prob -= weights[instr];
+            }
+            return instructions[rnd.next(0, instructions.length)];
+        }
+
+        function displayRules(rules) {
+            for (var i = 0; i < 16; i++) {
+                var instr = rules.charAt(i);
+                var prettyRule;
+                switch (instr) {
+                    case 'C':
+                        prettyRule = '<span style="color: #00FF00;">Cut</span>';
+                        break;
+                    case 'D':
+                        prettyRule = '<span style="color: #8B0000;">Don’t</span>';
+                        break;
+                    case 'S':
+                        prettyRule = 'Serial';
+                        break;
+                    case 'P':
+                        prettyRule = 'Parallel';
+                        break;
+                    case 'B':
+                        prettyRule = '≥ 2 Batt';
+                        break;
+                }
+                document.getElementById(`rule${i}`).innerHTML = prettyRule;
+            }
+        }
+
+        function setRules(rnd) {
+            var numCuts = 1;
+            var weights = {};
+            for (var i = 0; i < instructions.length; i++)
+                weights[instructions[i]] = 1;
+
+            function getInstr() {
+                var instr = GetWeightedRandomCutInstruction(rnd, weights);
+                if (instr === 'C')
+                    numCuts++;
+                return instr;
+            }
+
+            var str = '';
+            for (var i = 0; i < 15; i++) {
+                str = str.concat(getInstr());
+            }
+            str = (numCuts >= 2 ? getInstr() : 'C').concat(str);
+            displayRules(str);
+        }
+
+        function setDefaultRules() {
+            displayRules('CDCBSPDPSBCBSSPD');
+        }
+    </script>
+    <style>
+        table {
+            clear: right;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">LeGeND’s Cheat Sheet</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Complicated Wires.svg" class="diagram">
+                <h2>On the Subject of Complicated Wires</h2>
+                <p class="flavour-text">Complicated? Nah!</p>
+                <p>Use the table below to decide whether or not to cut the wire.</p>
+
+                <table class="borderless">
+                    <tr>
+                        <th class="corner" colspan="2"></th>
+                        <th>None</th>
+                        <th>LED</th>
+                        <th>Star</th>
+                        <th>Both</th>
+                    </tr>
+                    <tr>
+                        <th rowspan="4">Wire Colour is:</th>
+                        <th>White</th>
+                        <td id="rule0"></td>
+                        <td id="rule1"></td>
+                        <td id="rule2"></td>
+                        <td id="rule3"></td>
+                    </tr>
+                    <tr>
+                        <th style="color:#FF0000">Red</th>
+                        <td id="rule8"></td>
+                        <td id="rule9"></td>
+                        <td id="rule10"></td>
+                        <td id="rule11"></td>
+                    </tr>
+                    <tr>
+                        <th style="color:#0000FF">Blue</th>
+                        <td id="rule4"></td>
+                        <td id="rule5"></td>
+                        <td id="rule6"></td>
+                        <td id="rule7"></td>
+                    </tr>
+                    <tr>
+                        <th style="color:#FF00FF">Both</th>
+                        <td id="rule12"></td>
+                        <td id="rule13"></td>
+                        <td id="rule14"></td>
+                        <td id="rule15"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

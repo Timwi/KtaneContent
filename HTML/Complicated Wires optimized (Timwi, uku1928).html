@@ -9,6 +9,80 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="stylesheet" type="text/css" href="css/Modules/Complicated Wires.css">
     <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var instructions = ["C", "D", "S", "P", "B"];
+
+        function GetWeightedRandomCutInstruction(rnd, weights) {
+            var totalWeight = 0;
+            for (var i = 0; i < instructions.length; i++) {
+                if (!(instructions[i] in weights))
+                    weights[instructions[i]] = 1;
+                totalWeight += weights[instructions[i]];
+            }
+
+            var prob = rnd.nextDouble() * totalWeight;
+            for (var i = 0; i < instructions.length; i++) {
+                var instr = instructions[i];
+                if (prob < weights[instr]) {
+                    weights[instr] = weights[instr] * .1;
+                    return instr;
+                }
+                prob -= weights[instr];
+            }
+            return instructions[rnd.next(0, instructions.length)];
+        }
+
+        function displayRules(rules) {
+            for (var i = 0; i < 16; i++) {
+                var instr = rules.charAt(i);
+                var prettyRule;
+                switch (instr) {
+                    case 'C':
+                        prettyRule = '✓';
+                        break;
+                    case 'D':
+                        prettyRule = '✗';
+                        break;
+                    case 'S':
+                        prettyRule = 'even';
+                        break;
+                    case 'P':
+                        prettyRule = 'P';
+                        break;
+                    case 'B':
+                        prettyRule = '≥2B';
+                        break;
+                }
+                document.getElementById(`rule${i}`).textContent = prettyRule;
+            }
+        }
+
+        function setRules(rnd) {
+            var numCuts = 1;
+            var weights = {};
+            for (var i = 0; i < instructions.length; i++)
+                weights[instructions[i]] = 1;
+
+            function getInstr() {
+                var instr = GetWeightedRandomCutInstruction(rnd, weights);
+                if (instr === 'C')
+                    numCuts++;
+                return instr;
+            }
+
+            var str = '';
+            for (var i = 0; i < 15; i++) {
+                str = str.concat(getInstr());
+            }
+            str = (numCuts >= 2 ? getInstr() : 'C').concat(str);
+            displayRules(str);
+        }
+
+        function setDefaultRules() {
+            displayRules('CDCBSPDPSBCBSSPD');
+        }
+    </script>
     <style>
         table.complicated-wires {
             width: 100%;
@@ -47,14 +121,14 @@
                         <td class="nohighlight">
                             <table>
                                 <tr><td><th><th>red</tr>
-                                <tr><th><td>✓<td>even</tr>
-                                <tr><th>blue<td>even<td>even</tr>
+                                <tr><th><td id="rule0">✓<td id="rule8">even</tr>
+                                <tr><th>blue<td id="rule4">even<td id="rule12">even</tr>
                             </table>
                         <td class="nohighlight">
                             <table>
                                 <tr><td><th><th>red</tr>
-                                <tr><th><td>✗<td>≥2B</tr>
-                                <tr><th>blue<td>P<td>even</tr>
+                                <tr><th><td id="rule1">✗<td id="rule9">≥2B</tr>
+                                <tr><th>blue<td id="rule5">P<td id="rule13">even</tr>
                             </table>
                     </tr>
                     <tr><th>Star<th>LED & Star</tr>
@@ -62,14 +136,14 @@
                         <td class="nohighlight">
                             <table>
                                 <tr><td><th><th>red</tr>
-                                <tr><th><td>✓<td>✓</tr>
-                                <tr><th>blue<td>✗<td>P</tr>
+                                <tr><th><td id="rule2">✓<td id="rule10">✓</tr>
+                                <tr><th>blue<td id="rule6">✗<td id="rule14">P</tr>
                             </table>
                         <td class="nohighlight">
                             <table>
                                 <tr><td><th><th>red</tr>
-                                <tr><th><td>≥2B<td>≥2B</tr>
-                                <tr><th>blue<td>P<td>✗</tr>
+                                <tr><th><td id="rule3">≥2B<td id="rule11">≥2B</tr>
+                                <tr><th>blue<td id="rule7">P<td id="rule15">✗</tr>
                             </table>
                     </tr>
                 </table>
