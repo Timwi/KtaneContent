@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Complicated Wires — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/Modules/Complicated Wires.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var instructions = ["C", "D", "S", "P", "B"];
+
+        function GetWeightedRandomCutInstruction(rnd, weights) {
+            var totalWeight = 0;
+            for (var i = 0; i < instructions.length; i++) {
+                if (!(instructions[i] in weights))
+                    weights[instructions[i]] = 1;
+                totalWeight += weights[instructions[i]];
+            }
+
+            var prob = rnd.nextDouble() * totalWeight;
+            for (var i = 0; i < instructions.length; i++) {
+                var instr = instructions[i];
+                if (prob < weights[instr]) {
+                    weights[instr] = weights[instr] * .1;
+                    return instr;
+                }
+                prob -= weights[instr];
+            }
+            return instructions[rnd.next(0, instructions.length)];
+        }
+
+        function displayRules(rules) {
+            var colors = ['W', 'B', 'R', 'RB']
+            var properties = ['', 'L', '★', '★L']
+            var wires = ['', '', '', '', '']
+            for (var i = 0; i < 16; i++) {
+                var index;
+                switch (rules.charAt(i)) {
+                    case 'C': index = 0; break;
+                    case 'D': index = 1; break;
+                    case 'S': index = 2; break;
+                    case 'P': index = 3; break;
+                    case 'B': index = 4; break;
+                }
+                if (wires[index] != '')
+                    wires[index] = wires[index].concat(', ');
+                wires[index] = wires[index].concat(colors[i>>2], properties[i&3]);
+            }
+            for (var i = 0; i < 5; i++) {
+                document.getElementById(`rule${instructions[i]}`).textContent = wires[i];
+            }
+        }
+
+        function setRules(rnd) {
+            var numCuts = 1;
+            var weights = {};
+            for (var i = 0; i < instructions.length; i++)
+                weights[instructions[i]] = 1;
+
+            function getInstr() {
+                var instr = GetWeightedRandomCutInstruction(rnd, weights);
+                if (instr === 'C')
+                    numCuts++;
+                return instr;
+            }
+
+            var str = '';
+            for (var i = 0; i < 15; i++) {
+                str = str.concat(getInstr());
+            }
+            str = (numCuts >= 2 ? getInstr() : 'C').concat(str);
+            displayRules(str);
+            document.getElementsByClassName("flavour-text")[0].textContent = "Complicated? Nah! Soloable? Not with a ruleseed.";
+        }
+
+        function setDefaultRules() {
+            displayRules('CDCBSPDPSBCBSSPD');
+            document.getElementsByClassName("flavour-text")[0].textContent = "Complicated? Nah! Soloable? Yeah!";
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes</span>
+                <span class="page-header-section-title">Complicated Wires</span>
+            </div>
+            <div class="page-footer absolute-footer"></div>
+            <div class="page-content">
+                <img src="img/Component/Complicated Wires.svg" class="diagram">
+                <h2>On the Subject of Complicated Wires</h2>
+                <p class="flavour-text">Complicated? Nah. Soloable? Yeah.</p>
+                <p>Use the table below to decide which wires to cut. For each row with has their condition met, cut all wires with corresponding properties.</p>
+                <table>
+                    <tr><th>Condition</th><th>Cut if true</th></tr>
+                    <tr><th>Always cut</th><td id="ruleC"></td></tr>
+                    <tr><th>Last S# digit is even</th><td id="ruleS"></td></tr>
+                    <tr><th>Parallel port present</th><td id="ruleP"></td></tr>
+                    <tr><th>2+ Batteries present</th><td id="ruleB"></td></tr>
+                    <tr><th>Never</th><td id="ruleD"></td></tr>
+                </table>
+                <ul>
+                    <li>W - Wire is fully white.</li>
+                    <li>R - Wire has red coloring.</li>
+                    <li>B - Wire has blue coloring.</li>
+                    <li>★ - Has star symbol.</li>
+                    <li>L - LED is on.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
