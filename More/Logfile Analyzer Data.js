@@ -14313,6 +14313,88 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'NotChessModule',
+		loggingTag: 'Not Chess',
+		matches: [
+			{
+				regex: /Board:/,
+				handler: function(_, module) {
+					
+					const CROWN_PATH = "M1.13-37.05C3.65-28.23 6.17-19.41 8.7-10.6 13.07-16.27 17.44-21.94 21.81-27.61 21.51-28.37 21.08-29.3 21.21-30.15 21.55-32.28 23.81-36.48 26.65-34.7 30.28-32.42 27.36-26.97 24.05-26.26 24.05-23.9 23.83-21.24 23.46-18.91 23.29-17.84 23.55-16.7 23.46-15.62 23.15-12.28 23.31-8.81 23.31-5.43 24.17-5.71 28.1-8.51 29.25-9.22 31.23-10.47 35.15-11.46 36.64-12.62 36.64-15.58 39.76-20 43.23-18.01 46.73-16 42.95-10.6 39.12-10.6 38.11-8.68 36.92-6.79 35.77-4.95 32.66 0 29.95 5.33 27.33 10.58 25.75 13.73 23.7 17.2 23.01 20.65 20.81 21.3 18.7 22.19 16.46 22.64 3.33 25.27-11.11 25.44-23.82 20.72-24.39 19.99-24.64 18.71-24.97 17.83-25.75 15.8-26.71 13.79-27.67 11.83-30.98 5.05-34.61-1.74-38.61-8.1-39-8.73-39.47-10.11-40.09-10.52-40.6-10.85-41.38-10.73-41.93-11.07-43.74-12.18-45.4-14.19-44.85-16.49-43.73-21.18-35.41-16.3-37.23-12.47-36.42-11.84-35.06-11.5-34.09-11.12-31.08-9.94-26.68-7.61-24.42-5.35-24-7.47-24.35-10-24.35-12.17-24.35-16.71-24.23-21.95-25.17-26.33-27.61-27.24-29.41-29.55-28.87-32.28-28.68-33.22-28.15-34.54-27.09-34.84-23.18-35.97-20.93-30.28-22.7-27.46-18.38-21.89-14.06-16.32-9.74-10.75-7.21-19.51-4.69-28.28-2.17-37.05-4.59-39.47-4.3-46.03 0-45.36 3.75-44.77 3.17-39.09 1.13-37.05Z";
+					let board = $('<svg>').addClass('not-chess').attr('viewbox', '0 0 600 600');
+							
+					let asciiBoard = readLines(23);
+					let pieces = [];
+					
+					for (let row = 0; row < 6; row++){
+						for (let col = 0; col < 6; col++) {
+
+						}
+					}
+					
+					let debug = ""
+					
+					for (let row = 0; row < 6; row++) {
+						
+						for (let col = 0; col < 6; col++) {
+							
+							// Add checkerboard-pattern square to board.
+							let squareColor = (row % 2 === col % 2) ? '#FFF' : '#CCC';
+							$('<rect>')
+								.attr('x', 100 * col).attr('y', 100 * row)
+								.attr('width', 100).attr('height',100)
+								.attr('fill', squareColor)
+								.appendTo(board);
+							let logRow = 4 * row + 1;
+							let logCol = 4 * col + 1; 
+							
+							let symbol = asciiBoard[logRow][logCol];
+							
+							debug += symbol;
+							
+							if (symbol === '░' || symbol === '▓')
+								continue;
+							
+							let isWhite = symbol === 'w' || symbol === 'W';
+							let isKing = symbol === 'W' || symbol === 'B';
+							
+							let fill = isWhite ? '#E2DDD6' : '#222';
+							let stroke = isWhite ? '#666' : '#000';
+							let crownFill = isWhite ? '#222' : '#DDD';
+							
+							$('<circle>')
+								.attr('cx', 100 * col + 50)
+								.attr('cy', 100 * row + 50)
+								.attr('r', 40)
+								.attr('fill', fill)
+								.attr('stroke', stroke)
+								.attr('stroke-width', 8)
+								.appendTo(board);
+								
+							if (isKing) {
+								$('<path>')
+									.attr('d', CROWN_PATH)
+									.attr('fill', crownFill)
+									.attr('transform', `translate(${100 * col + 50} ${100 * row + 55}) scale(.75)`)
+									.appendTo(board);
+							}
+							
+						}
+						debug += "\n";
+					}
+					console.log(debug);
+					
+					
+					module.push({ obj:board.prop('outerHTML'), nobullet:true });
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: 'notCoordinates',
 		loggingTag: 'Not Coordinates',
 		matches: [
