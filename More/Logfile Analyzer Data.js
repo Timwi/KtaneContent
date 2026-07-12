@@ -2748,6 +2748,30 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: [ 'blackSudoku', 'blueSudoku', 'cyanSudoku', 'greenSudoku', 'orangeSudoku', 'pinkSudoku', 'purpleSudoku', 'redSudoku', 'whiteSudoku', 'yellowSudoku' ],
+		loggingTag: [ 'Black Sudoku', 'Blue Sudoku', 'Cyan Sudoku', 'Green Sudoku', 'Orange Sudoku', 'Pink Sudoku', 'Purple Sudoku', 'Red Sudoku', 'White Sudoku', 'Yellow Sudoku' ],
+		matches: [
+			{
+				regex: /Initial Grid|Solution/,
+				handler: function(matches, module) {
+					let board = readTaggedLines(9).map(l => l.split(' '));
+					let table = $('<table>').addClass('colored-sudokus');
+					for (let row = 0; row < 9; row++) {
+						let tr = $('<tr>').appendTo(table);
+						for (let col = 0; col < 9; col++) {
+							cellValue = board[row][col] == '0' ? '' : board[row][col]
+							$('<td>').html(cellValue).appendTo(tr);
+						}
+					}
+					module.push({ label: matches.input, obj: table });
+				}
+			},
+			{
+				regex: /(\w+) Sudoku Puzzle|Strike!/,
+			}
+		]
+	},
+	{
 		moduleID: "bloxx",
 		loggingTag: "Bloxx",
 		matches: [
