@@ -14348,8 +14348,6 @@ let parseData = [
 							
 							let symbol = asciiBoard[logRow][logCol];
 							
-							debug += symbol;
-							
 							if (symbol === '░' || symbol === '▓')
 								continue;
 							
