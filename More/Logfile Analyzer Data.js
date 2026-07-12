@@ -14647,7 +14647,7 @@ let parseData = [
 							}
 						}
 					}					
-					module.push({ label: "Current grid:", obj: grid.prop('outerHTML')});
+					module.push({ obj: grid.prop('outerHTML'), nobullet:true });
 				}
 			},
 			{
@@ -14682,12 +14682,13 @@ let parseData = [
 										.attr('d', path)
 										.attr('marker-end', `url(#nlcy-arrow${module.id})`)
 										.appendTo(grid);
-					module.push({ label:"Path:", obj: grid.prop('outerHTML') });
+					module.push({ obj: grid.prop('outerHTML'), nobullet:true });
 				}
 			},
 			{
 				regex: /Starting at Row [A-Z]|Rule [A-Z]\/[A-Z]|Hex #(\d+) with color/,
 				handler: function(matches, module) {
+					// Store log messages related to the path-marking process to go in a dropdown.
 					if (!module.rulesMessages)
 						module.rulesMessages = [ ];
 					module.rulesMessages.push(matches.input)
@@ -14704,8 +14705,10 @@ let parseData = [
 			{
 				regex: /Colors to submit:/,
 				handler: function(matches, module) {
+					// Path marking steps are all done at this point so we can send the full thing to the log.
 					module.push([ "Path Marking Steps:", module.rulesMessages ]);
 					
+					// Also, now that the marked hexes are all stored on the module we can post the grid with the marked hexes.
 					let grid = module.template.clone();
 					// Add hexes with ring markers.
 					for (let hex of module.pathHexes) {
@@ -14722,6 +14725,7 @@ let parseData = [
 						}
 					}
 					module.push({ label:"Marked hexes:", obj:grid.prop('outerHTML') });
+					// ...and then remember to log the colors to submit.
 					module.push(matches.input);
 				}
 			},
