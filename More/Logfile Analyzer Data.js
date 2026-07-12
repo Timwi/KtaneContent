@@ -10185,6 +10185,36 @@ let parseData = [
 		loggingTag: "KeypadComponent"
 	},
 	{
+		moduleID: "kookyKeypadModule",
+		loggingTag: "Kooky Keypad",
+		matches: [
+			{
+				regex: /-(Step [12])-/,
+				handler: function(matches, module) {
+					module.dropdownMode = true;
+					if (!module.dropdowns) module.dropdowns = [ ];
+					module.dropdowns.push([ ]);
+					module.push([ matches[1], module.dropdowns[module.dropdowns.length - 1] ]);
+					return true;
+				}
+			},
+			{
+				regex: /Submitted the following buttons/,
+				handler: function(_, module) {
+					module.dropdownMode = false;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function(matches, module) {
+					if (module.dropdownMode)
+						module.dropdowns[module.dropdowns.length - 1].push(matches.input);
+					else module.push(matches.input);
+				}
+			}
+		]
+	},
+	{
 		moduleID: "KudosudokuModule",
 		displayName: "Kudosudoku",
 		loggingTag: "Kudosudoku",
