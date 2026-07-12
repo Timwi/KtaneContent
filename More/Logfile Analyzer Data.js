@@ -14332,10 +14332,8 @@ let parseData = [
 						}
 					}
 					
-					let debug = ""
 					
 					for (let row = 0; row < 6; row++) {
-						
 						for (let col = 0; col < 6; col++) {
 							
 							// Add checkerboard-pattern square to board.
@@ -14378,11 +14376,8 @@ let parseData = [
 									.attr('transform', `translate(${100 * col + 50} ${100 * row + 55}) scale(.75)`)
 									.appendTo(board);
 							}
-							
 						}
-						debug += "\n";
 					}
-					console.log(debug);
 					
 					
 					module.push({ obj:board.prop('outerHTML'), nobullet:true });
@@ -15563,6 +15558,149 @@ let parseData = [
 
 					module.push(module.dropdown);
 				}
+			}
+		]
+	},
+	{
+		moduleID: "PairEmModule",
+		loggingTag: "Pair 'em",
+		matches: [
+			{
+				regex: /Card #\d+ is an? (\w+)/,
+				handler: function(matches, module) {
+					if (!module.initialized) {
+					
+						const PADDING = 5;
+						const CARD_WIDTH = 20;
+						const CARD_HEIGHT = 30;
+						const suitPaths = {
+							'Chevron': 'M-19-38.5 0-23.5 19-38.5V24.5L0 38.5-19 24.5V-38.5Z',
+							'Club': 'M1-38.2A16.5 16.5 0 00-.6-38.2 16.5 16.5 0 00-16.2-20.8 16.5 16.5 0 00-13.6-12.9 16.5 16.5 0 00-19.1-13.5 16.5 16.5 0 00-34.7 3.9 16.5 16.5 0 00-17.3 19.5 16.5 16.5 0 00-5.9 14C-5.6 22.6-6.6 30.9-11.5 38.3-3.1 38.3 2.5 38.7 11.6 38.5 6.6 30.9 5.8 22.3 6.1 13.6A16.5 16.5 0 0019.7 19.5 16.5 16.5 0 0035.3 2.1L35.3 2A16.5 16.5 0 0017.9-13.5 16.5 16.5 0 0014.3-12.9 16.5 16.5 0 0016.8-22.6L16.8-22.6A16.5 16.5 0 001-38.2Z',
+							'Diamond': 'M.05-37.7-28.15.7.05 38.5 28.75.5Z',
+							'Coin': 'M1.3-30.2 1.3-29.5 1.2-29.6 20.1-21.7 20.4-22.3C15.6-26.7 9.5-29.4 3-30.1L3-30.1H3C2.5-30.1 1.9-30.1 1.4-30.2L1.4-30.2H1.3 1.3ZM-1.3-30.1C-8.4-29.8-15.1-27-20.3-22.3L-20-21.7-1.2-29.5ZM-22.3-20.3-22.4-20.2C-26.7-15.4-29.4-9.3-30.1-2.9V-2.9-2.9C-30.1-2.4-30.1-1.9-30.2-1.4L-29.5-1.3-21.9-19.7H-22C-21.9-19.7-21.9-19.8-21.9-19.8L-21.4-20.3H-22.1ZM22.4-20.3 21.9-19.9 29.6-1.3 30.2-1.4C29.9-8.4 27.1-15.1 22.4-20.3ZM29.6 1.5 22 19.9 22.5 20.2C26.8 15.5 29.5 9.4 30.2 3L30.2 3V3 3C30.2 2.5 30.2 2.1 30.2 1.6ZM-29.5 1.6-30.1 1.7C-29.8 8.5-27.1 15.1-22.5 20.2L-21.9 19.9ZM20.2 21.9 19.8 22.1 1.6 29.6 1.8 30.2C8.6 29.8 15 27.2 20.1 22.6L20.2 22.5ZM-19.7 22.1-20 22.6C-15.3 26.9-9.3 29.5-2.9 30.2H-2.9-2.9C-2.5 30.2-2.1 30.2-1.7 30.2L-1.5 29.6ZM34.7-1.8A34.7 34.7 90 011.9 34.7 34.7 34.7 90 01-34.6 1.9 34.7 34.7 90 01-1.9-34.6 34.7 34.7 90 0134.7-1.9',
+							'Cup': 'M29-38.5C29.2-13.6 29 3.1 9.5 19L9.4 32.1 23.9 38.5C14.7 38.4-13.4 38.5-22.6 38.5L-8.2 32.3-8.4 18.9C-28.8 3.9-29.1-14.5-29-38.5-8.3-38.5 9.2-38.3 29-38.5Z',
+							'Eye': 'M1.4-24A38.2 23.6 0 00-2.4-24 38.2 23.6 0 00-38.4.9 38.2 23.6 0 001.8 23.2 38.2 23.6 0 0037.9-1.6L37.9-1.7A38.2 23.6 0 001.4-24ZM1.3-18.5A31.3 18.2 0 0131.2-1.4L31.2-1.3A31.3 18.2 0 011.6 17.8 31.3 18.2 0 01-31.3.6 31.3 18.2 0 01-1.8-18.5 31.3 18.2 0 011.3-18.5ZM.5-18A17.6 17.6 0 00-1.3-17.9 17.6 17.6 0 00-17.8.6 17.6 17.6 0 00.7 17.2 17.6 17.6 0 0017.3-1.3L17.3-1.4A17.6 17.6 0 00.5-18Z',
+							'Heart': 'M15.21-34.65C9.54-34.92 4.05-32.58 0-28.26L-.09-28.35-.18-28.26C-5.22-33.48-12.42-35.55-19.17-33.75-26.37-31.86-32.04-25.92-34.11-18.18-37.62 6.21-1.8 10.53-.18 35.28 1.44 10.53 36.72 8.64 34.02-18.45 31.95-26.19 26.28-32.13 19.08-34.02 17.73-34.38 16.38-34.56 15.03-34.65Z',
+							'Pentacle': 'M.8-34.75-9.4-13.95H11.1L.8-34.75ZM-11.9-12.15-34.9-8.85-18.2 7.35-11.8-12.25ZM14-12.05 20.3 7.15 36.7-8.85ZM-9.5-11.15-12.7-1.35-15.9 8.45-7.5 14.55.9 20.65 9.3 14.55 17.7 8.45 14.5-1.35 11.3-11.15ZM-17.4 10.65-21.3 33.25-.9 22.65-17.4 10.65ZM19.1 10.85 2.8 22.65 22.9 33.25Z',
+							'Shield': 'M-34.6-29.1C-25-25.7-7.7-28.8 0-34.9 7.1-28.8 23.1-25.5 34.6-29.1 34.6-29.1 34.6-29.1 34.6-29.1 27-8.1 29.9 37.2 0 34.6-30.4 37.4-28.4-8.6-34.6-29.1-34.6-29.1-34.6-29.1-34.6-29.1Z',
+							'Spade': 'M-.15-38.5C-1.55-17.5-31.45-15.9-29.15 7.1-27.45 13.7-22.55 18.7-16.45 20.3-15.35 20.6-14.15 20.8-12.95 20.8-9.95 20.9-6.85 19.8-4.25 18.4-4.75 25.7-7.35 32.5-12.55 38.6-8.55 39.1 6.65 38.9 11.25 38.8 6.35 32.5 4.15 25.9 3.85 18.3 7.55 20.5 11.95 21.1 16.15 20 22.25 18.4 27.05 13.4 28.85 6.8 31.75-13.9 1.45-17.6.05-38.5Z',
+							'Sword': 'M.55-37.9-19.25-23.6-11.35 16.1H-21.25V24.6H-4.75V39.2H5.75V24.6H21.75V16.1H12.55L19.45-23.6Z'
+						};
+						module.makeGrid = function (cardValues, highlightCards) {
+							
+							let rowCount = Math.ceil(cardValues.length / 5);
+							
+							let width =  5 * CARD_WIDTH  + 6 * PADDING;
+							let height = rowCount * CARD_HEIGHT + (rowCount + 1) * PADDING;
+							let board = $('<svg>').addClass('pair-em')
+											.attr('viewbox', `${-PADDING} ${-PADDING} ${width} ${height}`);
+							
+							$('<rect>').addClass('background')
+										.attr('x', -PADDING).attr('y', -PADDING)
+										.attr('width', width).attr('height', height)
+										.attr('rx', 5).attr('ry', 5)
+										.appendTo(board);
+							
+							for (let cardIx = 0; cardIx < cardValues.length; cardIx++) {
+								let row = Math.floor(cardIx / 5);
+								let col = cardIx % 5;
+								
+								let x = (CARD_WIDTH + PADDING) * col;
+								let y = (CARD_HEIGHT + PADDING) * row;
+								
+								let group = $('<g>').attr('transform', `translate(${x} ${y})`).appendTo(board);
+								
+								if (highlightCards && highlightCards.includes(cardIx)) {
+									$('<rect>').addClass('highlight')
+												.attr('width', CARD_WIDTH).attr('height', CARD_HEIGHT)
+												.appendTo(group);
+								}
+								
+								let suitNumber = cardValues[cardIx];
+								let suitPath = suitPaths[module.suitsLookup[suitNumber]];
+								
+								$('<rect>').addClass('card')
+											.attr('width', CARD_WIDTH).attr('height', CARD_HEIGHT)
+											.appendTo(group);
+								$('<path>').addClass('suit')
+											.attr('d', suitPath)
+											.attr('transform', `translate(${CARD_WIDTH / 2} ${CARD_HEIGHT / 2}) scale(0.225)`)
+											.appendTo(group);
+							}
+							return board;
+						}
+						module.suitsLookup = [ ];
+						module.initialized = true;
+					}
+					module.suitsLookup.push(matches[1]);
+				}
+			},
+			{
+				regex: /Initial state in reading order: ([\d,]+)/,
+				handler: function(matches, module) {
+					module.cardValues = matches[1].split(',').map(str => parseInt(str) - 1);
+				}
+			},
+			{
+				regex: /Intended Solution: (.+)/,
+				handler: function(matches, module) {
+					
+					let coordToNum = function (str) {
+						let col = "ABCDE".indexOf(str[0]);
+						let row = parseInt(str[1]) - 1;
+						return 5 * row + col;
+					}
+					let solutionPairs = [];
+					
+					selectedPairs = matches[1].matchAll(/([A-Z][1-5]),([A-Z][1-5])/g);
+					for (let pairMatches of selectedPairs) {
+						let cardA = coordToNum(pairMatches[1]);
+						let cardB = coordToNum(pairMatches[2]);
+						solutionPairs.push([ cardA, cardB ]);
+					}
+					
+					let initState = module.makeGrid(module.cardValues);
+					module.push({ label:"Initial board state:", obj: initState.prop('outerHTML') });
+					
+					let solutionGraphics = [ ];
+					
+					for (let solutionPair of solutionPairs) {
+					
+						let boardState = module.makeGrid(module.cardValues, solutionPair);
+						solutionGraphics.push({ obj: boardState.prop('outerHTML'), nobullet: true });
+						
+						let newState = [ ];
+						for (let ix = 0; ix < module.cardValues.length; ix++) {
+							if (!solutionPair.includes(ix))
+								newState.push(module.cardValues[ix]);
+						}
+						module.cardValues = newState;
+						
+					}
+					
+					module.push([ "Intended Solution:", solutionGraphics ]);
+					
+				}
+			},
+			{
+				regex: /Resetted from board state in reading order: (.+)/,
+				handler: function(matches, module) {
+					let resetValues = matches[1].split(", ").map(str => parseInt(str) - 1);
+					let resetState = module.makeGrid(resetValues);
+					module.push([ "Reset from board state:", [{ obj: resetState.prop('outerHTML'), nobullet:true }]]);
+					
+				}
+			},
+			{
+				regex: /Ran out of moves on the current board state: (.+)/,
+				handler: function(matches, module) {
+					let strikeValues = matches[1].split(", ").map(str => parseInt(str) - 1);
+					let resetState = module.makeGrid(strikeValues);
+					module.push([ "Strike! Ran out of moves on the current board state:", [{ obj: resetState.prop('outerHTML'), nobullet:true }]]);
+				}
+			},
+			{
+				regex: /Cleared/
 			}
 		]
 	},
