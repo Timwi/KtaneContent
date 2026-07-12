@@ -3265,6 +3265,29 @@ let parseData = [
 		loggingTag: "Button Grids"
 	},
 	{
+		moduleID: "ButtonMemoryModule",
+		loggingTag: "Button Memory",
+		matches: [
+			{
+				regex: /-+ (Stage [1-5]) -+/,
+				handler: function(matches, module) {
+					if (!module.dropdowns) module.dropdowns = [ ];
+					module.dropdowns.push([ ]);
+					module.push([ matches[1], module.dropdowns[module.dropdowns.length - 1] ]);
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function(matches, module) {
+					if (!module.dropdowns)
+						module.push(matches.input)
+					else module.dropdowns[module.dropdowns.length - 1].push(matches.input);
+				}
+			}
+		]
+	},
+	{
 		displayName: "Button Sequence",
 		moduleID: "buttonSequencesModule",
 		loggingTag: "Button Sequences",
