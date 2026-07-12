@@ -25798,6 +25798,25 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "xrotor",
+		loggingTag: "X-Rotor",
+		matches: [
+			{
+				regex: /.+/,
+				handler: function(matches, module) {
+					let replaceWithImages = function(m) {
+						let col = "ABCDEFG".indexOf(m[0])
+						let row = parseInt(m[1]) - 1;
+						return `<img src="../HTML/img/X-Rotor/Symbols/S${col}${row}.svg">`;
+					}
+					let withSymbols = matches.input.replace(/[A-H][1-8]/g, replaceWithImages);
+					let span = $('<span>').addClass('x-rotor').html(withSymbols);
+					module.push({ obj: span });
+				}
+			}
+		]
+	},
+	{
 		moduleID: "YahtzeeModule",
 		loggingTag: "Yahtzee",
 		matches: [
