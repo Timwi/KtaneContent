@@ -14437,6 +14437,301 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "NotLightCycleModule",
+		loggingTag: "Not Light Cycle",
+		matches: [
+			{
+				// Initialize a bunch of helper functions and also create the template grid.
+				regex: /Initializing module\./,
+				handler: function(_, module) {
+					
+					// Constants
+					module.CELL_HEIGHT = 1.0; // rectilineal height and width of a hex cell
+					module.CELL_WIDTH = 0.866;
+					module.HEX_PATH = 'M0 .25.433 0 .866.25.866.75.433 1 0 .75Z';
+					
+					// Gives the coordinates of the edge at given direction (see manual)
+					module.lineCoords = {
+						0: { x1:0, y1:0.25, x2:0.433, y2:0 },
+						1: { x1:0.433, y1:0, x2:0.866, y2:0.25 },
+						2: { x1:0.866, y1:0.25, x2:0.866, y2:0.75 },
+						3: { x1:0.866, y1:0.75, x2:0.433, y2:1.0 },
+						4: { x1:0.433, y1:1.0, x2:0, y2:0.75 },
+						5: { x1:0, y1:0.75, x2:0, y2:0.25 },
+					};
+					// Color of each hex
+					module.colorLookup = { 'R':'#F66', 'G':'#6F6', 'B':'#4AF', 'M':'#F8F', 'Y':'#FF6', 'W':'#FFF', 'X':'#CCC' };
+					// Color of the padding of hexes in the just-placed tetrahex visuals.
+					module.outlineLookup = { 'R':'#C44', 'G':'#6A6', 'B':'#48C', 'M':'#A4A', 'Y':'#CC4', 'W':'#AAA' };
+					
+					// Gets top-left corner of bounding box of hex at (q,r).
+					// Q is eastward-pointing axis.
+					// R is northeastward-pointing axis.
+					module.getXY = function(q, r) { 
+						let x = (q - r) * module.CELL_WIDTH / 2;
+						let y = (q + r) * 3/4 * module.CELL_HEIGHT;
+						return { x:x, y:y };
+					}
+					
+					// Gets center of hex at (q,r) coord.
+					module.getXYCenter = function(q,r) {
+						let pair = module.getXY(q,r);
+						pair.x += module.CELL_WIDTH / 2;
+						pair.y += module.CELL_HEIGHT / 2;
+						return pair;
+					}
+					
+					// Adds a hex to the grid at the (q,r) coordinate with the given color and returns the container at that position.
+					module.addHex = function(grid, q, r, color, clip) {
+						let coord = module.getXY(q, r);
+						let group = $SVG('<g>')
+										.attr('transform', `translate(${coord.x} ${coord.y})`)
+										.attr('q', q).attr('r', r)
+										.appendTo(grid);
+										
+						let hex = $SVG('<path>').addClass('hex')
+									.attr('d',		module.HEX_PATH)
+									.attr('fill', 	module.colorLookup[color]);
+						
+						if (clip){ 
+							let clipPath = $("<clipPath>").attr('id', 'nlcy-clip' + module.id).appendTo(group);
+							hex.appendTo(clipPath);
+						} else 
+							hex.appendTo(group);
+						
+						return group;	
+					}
+					// Adds a hex to the grid with colorblind text. 
+					module.addHexLargeText = function(grid, q, r, color, clip) {
+						let group = module.addHex(grid, q, r, color, clip);
+						// Unfilled has no colorblind text.
+						if (color === 'X') 
+							return group;
+						
+						let txt = $SVG('<text>')
+									.attr('dominant-baseline', 'central')
+									.attr('text-anchor', 'middle')
+									.attr('x', module.CELL_WIDTH / 2)
+									.attr('y', module.CELL_HEIGHT / 2)
+									.attr('font-size', '0.6')
+									.html(color)
+									.appendTo(group);
+						return group;
+					}
+					// Adds a hex to the grid with small colorblind text.
+					module.addHexSmallText = function(grid, q, r, color, clip) {
+						let group = module.addHex(grid, q, r, color, clip);
+						// Unfilled has no colorblind text.
+						if (color === 'X')
+							return group;
+						let txt = $SVG('<text>')
+									.attr('dominant-baseline', 'central')
+									.attr('text-anchor', 'middle')
+									.attr('x', module.CELL_WIDTH / 2)
+									.attr('y', module.CELL_HEIGHT * 0.16)
+									.attr('font-size', '0.25')
+									.html(color)
+									.appendTo(group);
+						return group; 
+					}
+					// evaluates if a list of (q,r) pairs contains the target pair.
+					module.hasQR = function(qrs, target) {
+						for (let qr of qrs) {
+							if (qr.q === target.q && qr.r === target.r)
+								return true;
+						}
+						return false;
+					}
+					// Gives the hex value from moving one cell from the source hex in the given direction, with values [0-5] corresponding to NW going clockwise.
+					module.moveFromHex = function (src, direction) {
+						switch (direction) {
+							case 0: return { q:src.q - 1, r:src.r     }; // NW
+							case 1: return { q:src.q    , r:src.r - 1 }; // NE
+							case 2: return { q:src.q + 1, r:src.r - 1 }; // E
+							case 3: return { q:src.q + 1, r:src.r     }; // SE 
+							case 4: return { q:src.q    , r:src.r + 1 }; // SW
+							case 5: return { q:src.q - 1, r:src.r + 1 }; // W
+						}
+					}
+					
+					// Retrieve the mod ID and store it (for unique ID'ing of #nlcy-clip and #nlcy-arrow)
+					linen--;
+					module.id = readLine().match(/\d+/)[0]
+					
+					//Setting bounds of template svg.
+					let MARGIN = .25; // Accounts for hex borders.
+					let w = 7 * module.CELL_WIDTH;
+					let h = 5.5 * module.CELL_HEIGHT;
+					let x = -w / 2 + module.CELL_WIDTH / 2;
+					let y = -h / 2 + module.CELL_WIDTH / 2;
+					module.template = $('<svg>')
+										.addClass('not-light-cycle')
+										.attr('viewbox', `${x - MARGIN} ${y - MARGIN} ${w + 2 *MARGIN} ${h + 2 * MARGIN}`);
+					
+					let defs = $('<defs>').appendTo(module.template);
+					let marker = $('<marker>')
+									.attr('id', 'nlcy-arrow' + module.id)
+									.attr('markerWidth', 4).attr('markerHeight', 4)
+									.attr('refX', 2).attr('refY', 2)
+									.attr('orient', 'auto')
+									.appendTo(defs);
+					let arrowPath = $SVG('<path>').addClass('arrow').attr('d', 'M1 1 3 2 1 3').appendTo(marker);
+					
+					
+					// One for-loop for each value of q from [-3,3]. Add a hex for each possible r value.
+					for (let r =  0; r <= 3; r++) module.addHex(module.template, -3, r, 'X', false);
+					for (let r = -1; r <= 3; r++) module.addHex(module.template, -2, r, 'X', false);
+					for (let r = -2; r <= 3; r++) module.addHex(module.template, -1, r, 'X', false);
+					for (let r = -3; r <= 3; r++) module.addHex(module.template,  0, r, 'X', false);
+					for (let r = -3; r <= 2; r++) module.addHex(module.template,  1, r, 'X', false);
+					for (let r = -3; r <= 1; r++) module.addHex(module.template,  2, r, 'X', false);
+					for (let r = -3; r <= 0; r++) module.addHex(module.template,  3, r, 'X', false);
+					
+
+				}
+			},
+			{
+				// Fires when tetrahex is generated.
+				regex: /^(Tetrahex .+ Color: ([A-Z])[a-z]+); Hex Positions: (.+)$/,
+				handler: function(matches, module) {
+					
+					// Log the tetrahex number, the flashing positions, and its color as normal.
+					module.push(matches[1]);
+					
+					// Keep track of the flashed hex positions.
+					let tetrahex = [];
+					let col = matches[2];
+					
+					// Split string into morsels, e.g. "(-1, -2)" with q (-1) and r (-2) selected by the regex.
+					let splitMatches = matches[3].matchAll(/\((-?[\d]), (-?[\d])\)/g);
+					for (let pairMatch of splitMatches)
+						tetrahex.push({ q: parseInt(pairMatch[1]), r: parseInt(pairMatch[2]), color: col });
+					
+					module.lastTetrahex = tetrahex;
+				}
+			},
+			{
+				// Fires when the module logs the full state of the grid.
+				regex: /^Grid: (.+)$/,
+				handler: function(matches, module) {
+					
+					// Split string into morsels e.g. "(1, -2)/Blue" with q (1), r (-2), and color (B) selected by the regex.
+					let splitMatches = matches[1].matchAll(/\((-?[\d]), (-?[\d])\)\/([A-Z])[a-z]+/g);
+					let allHexes = [];
+					for (let matchHex of splitMatches) {
+						let hexData = { q:parseInt(matchHex[1]), r:parseInt(matchHex[2]), color:matchHex[3] };
+						allHexes	.push(hexData);
+					}
+					
+					let grid = module.template.clone();
+
+					// Add all the colored hexes.
+					for (let hex of allHexes) 
+						module.addHexLargeText(grid, hex.q, hex.r, hex.color, false);
+					
+					// Mark the last-placed tetrahex with colored padding.
+					for (let hex of module.lastTetrahex) {
+						// Adds duplicate of hex as a clip path so the padding is contained fully within the tetrahex.
+						let clipper = module.addHex(grid, hex.q, hex.r, hex.color, true);
+						for (let dir = 0; dir < 6; dir++) {
+							// If the hex does NOT have another hex in the direction of dir, add padding there.
+							if (!module.hasQR(module.lastTetrahex, module.moveFromHex(hex, dir))) {
+								let coords = module.lineCoords[dir];
+								let line = $("<line>")
+											.addClass('tetrahex-highlight')
+											.attr('x1', coords.x1).attr('y1', coords.y1)
+											.attr('x2', coords.x2).attr('y2', coords.y2)
+											.attr('stroke', module.outlineLookup[hex.color])
+											.attr('clip-path', `url(#nlcy-clip${module.id})`)
+											.appendTo(clipper);
+							}
+						}
+					}					
+					module.push({ label: "Current grid:", obj: grid.prop('outerHTML')});
+				}
+			},
+			{
+				regex: /^Hexes of path: (.+)\./,
+				handler: function (matches, module) {
+					// Split string into morsels e.g. "(1, -2)/Blue" with q (1), r (-2), and color (B) selected by the regex.
+					
+					let splitMatches = matches[1].matchAll(/\((-?[\d]), (-?[\d])\)\/([A-Z])[a-z]+/g);
+					
+					module.pathHexes = [];
+					
+					for (let matchHex of splitMatches) {
+						let hexData = { q:parseInt(matchHex[1]), r:parseInt(matchHex[2]), color:matchHex[3] };
+						module.pathHexes.push(hexData);
+					}
+					
+					let grid = module.template.clone();
+					
+					let path;
+					for (let hex of module.pathHexes)  {
+						if (!path) 
+							path = 'M';
+						else path += 'L';
+						
+						let nodeXY = module.getXYCenter(hex.q, hex.r);
+						path += `${nodeXY.x} ${nodeXY.y}`;
+						
+						module.addHexSmallText(grid, hex.q, hex.r, hex.color, false);
+					}
+					let hexPath = $('<path>')
+										.addClass('hex-path')
+										.attr('d', path)
+										.attr('marker-end', `url(#nlcy-arrow${module.id})`)
+										.appendTo(grid);
+					module.push({ label:"Path:", obj: grid.prop('outerHTML') });
+				}
+			},
+			{
+				regex: /Starting at Row [A-Z]|Rule [A-Z]\/[A-Z]|Hex #(\d+) with color/,
+				handler: function(matches, module) {
+					if (!module.rulesMessages)
+						module.rulesMessages = [ ];
+					module.rulesMessages.push(matches.input)
+				}
+			},
+			{
+				regex: /Hex #(\d+) with color \w+ is (not )?marked\./,
+				handler: function (matches, module) {
+					let ix = parseInt(matches[1]) - 1; // # of hex
+					let marked = !matches[2];		   // Is marked or not
+					module.pathHexes[ix].isMarked = marked;
+				}
+			},
+			{
+				regex: /Colors to submit:/,
+				handler: function(matches, module) {
+					module.push([ "Path Marking Steps:", module.rulesMessages ]);
+					
+					let grid = module.template.clone();
+					// Add hexes with ring markers.
+					for (let hex of module.pathHexes) {
+						let group = module.addHexLargeText(grid, hex.q, hex.r, hex.color, false);
+						let strokeColor = hex.color === 'Y' || hex.color === 'W' ? '#CCC' : '#FFF';
+						
+						if (hex.isMarked) {
+							$SVG('<circle>').addClass("marker")
+								.attr('cx', module.CELL_WIDTH / 2)
+								.attr('cy', module.CELL_HEIGHT / 2)
+								.attr('r', module.CELL_WIDTH / 2 * 0.75)
+								.attr('stroke', strokeColor)
+								.appendTo(group);
+						}
+					}
+					module.push({ label:"Marked hexes:", obj:grid.prop('outerHTML') });
+					module.push(matches.input);
+				}
+			},
+			{
+				regex: /Path found from Corner|Strike|Correctly submitted|Module solved|Resetting/
+			}
+			
+		]
+	},
+	{
 		moduleID: "notSymbolicCoordinates",
 		loggingTag: "Not Symbolic Coordinates",
 		matches: [
