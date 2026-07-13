@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Wire Placement (Rearranged) — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+        function setRules(rnd) {
+            var coords = [ 'A1', 'A2', 'A3', 'A4', 'B1', 'C3', 'B3', 'B4', 'C1', 'C2', 'B2', 'C4', 'D1', 'D2', 'D3', 'D4' ];
+            var coord = coords [ rnd.next(0, coords.length) ];
+
+            var spans = document.getElementsByClassName('coordinate');
+            for (var i = 0; i < spans.length; i++)
+                spans[i].innerText = coord;
+
+            var colors = [ 'Black', 'Blue', 'Red', 'White', 'Yellow' ];
+
+            // Advance rng to maintain correct ruleseed support
+            for (var i = 0; i < 6; i++)
+                rnd.next(0, 10);
+
+            while (colors.length < 10)
+                colors.push([ 'Black', 'Blue', 'Red', 'White', 'Yellow' ][rnd.next(0, 5)]);
+
+            rnd.shuffleFisherYates(colors);
+            colors = [ colors[4], colors[0], colors[5], colors[7], colors[3], colors[2], colors[1], colors[8], colors[6], colors[9] ];
+
+            var columns = [];
+            coords = [ 'C3', 'A1', 'C4', 'A4', 'B3', 'B2', 'D3', 'B4', 'A3', 'D1', 'A2', 'C1', 'B1', 'C2', 'D4', 'D2' ];
+            rnd.shuffleFisherYates(coords);
+            columns.push(coords.slice(0, 10));
+
+            coords = [ 'A2', 'A3', 'D3', 'D1', 'C3', 'C4', 'A4', 'C1', 'B3', 'C2', 'B1', 'B2', 'B4', 'D2', 'A1', 'D4' ];
+            rnd.shuffleFisherYates(coords);
+            columns.push(coords.slice(0, 10));
+
+            coords = [ 'A3', 'B3', 'C2', 'B4', 'B1', 'D2', 'C1', 'A2', 'A4', 'C3', 'D1', 'A1', 'D3', 'C4', 'D4', 'B2' ];
+            rnd.shuffleFisherYates(coords);
+            columns.push(coords.slice(0, 10));
+
+            coords = [ 'C1', 'A2', 'A3', 'B2', 'D3', 'B1', 'C2', 'C3', 'C4', 'D1', 'B3', 'D2', 'D4', 'A4', 'B4', 'A1' ];
+            rnd.shuffleFisherYates(coords);
+            columns.push(coords.slice(0, 10));
+
+            coords = [ 'A1', 'A2', 'D4', 'A4', 'C2', 'C3', 'B4', 'C1', 'C4', 'B1', 'D2', 'B2', 'B3', 'A3', 'D1', 'D3' ];
+            rnd.shuffleFisherYates(coords);
+            columns.push(coords.slice(0, 10));
+
+            var prettyColors = [ 'Red', 'Yellow', 'Blue', 'White', 'Black' ];
+            var columnColors = [ 'Black', 'Blue', 'Red', 'White', 'Yellow' ];
+            var tableInner = `<tbody><tr><td class="corner" rowspan="2"></td><th colspan="5">If the wire connected to ${coord} is:</th></tr>
+                    <tr><th>Black</th><th>Blue</th><th>Red</th><th>White</th><th>Yellow</th></tr>
+                    <tr><th>Cut if color</th><th colspan="5">is connected to:</th></tr>`;
+
+            for (var color = 0; color < 5; color++) {
+                var colorColumns = [ [], [], [], [], [] ];
+                for (var row = 0; row < 10; row++) {
+                    if (colors[row] === prettyColors[color]) {
+                        for (var col = 0; col < 5; col++)
+                            colorColumns[col].push(columns[col][row]);
+                    }
+                }
+                for (var col = 0; col < 5; col++)
+                    colorColumns[col].sort();
+
+                for (var row = 0; row < colorColumns[0].length; row++) {
+                    tableInner = tableInner.concat(`<tr class="${prettyColors[color]}"><th>${prettyColors[color]}</th>`);
+                    for (var col = 0; col < 5; col++) {
+                        if (colorColumns[col][row] === coord && prettyColors[color] != columnColors[col])
+                            tableInner = tableInner.concat("<td class='ignore'>");
+                        else
+                            tableInner = tableInner.concat("<td>");
+                        tableInner = tableInner.concat(`${colorColumns[col][row]}</td>`);
+                    }
+                    tableInner = tableInner.concat("</tr>");
+                }
+            }
+            tableInner = tableInner.concat("</tbody>");
+            document.getElementById("wire-placement").innerHTML = tableInner;
+        }
+    </script>
+    <style>
+        table#wire-placement { border: none; }
+        .ignore { background-color: #808080; }
+        
+        .Red { background-color: #FFCCCC; }
+        .dark .Red { background-color: #330000; }
+        
+        .Yellow { background-color: #FFFFCC; }
+        .dark .Yellow { background-color: #333300; }
+        
+        .Blue { background-color: #CCCCFF; }
+        .dark .Blue { background-color: #000033; }
+        
+        .White { background-color: #E0E0E0; }
+        .dark .White { background-color: #444444; }
+        
+        .Black { background-color: #CCCCCC; }
+        .dark .Black { background-color: #000000; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wire Placement</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Wire Placement.svg">
+                <h2>On the Subject of Wire Placement</h2>
+
+                <p class="flavour-text">Sometimes, the wires may look like a face, giving you a sense of calm... until you explode.</p>
+                <ul>
+                    <li>This module features a grid of wires.</li>
+                    <li>There are always 8 wires present on the grid.</li>
+                    <li>The wires can be red, blue, yellow, black, or white.</li>
+                    <li>In the table below, use only the column corresponding to the color of the wire connected to <span class='coordinate'>C3</span>.</li>
+                    <li>Cut a wire if it matches a specific color and is connected to a designated spot on the grid, as indicated in the table.</li>
+                    <li>Gray cells represent positions where the wire should <u>never</u> be cut because <span class='coordinate'>C3</span> is confirmed to not be that color.</li>
+                </ul>
+
+                <table id="wire-placement">
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
