@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Backgrounds — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var options1;
+        var options2;
+        var options3;
+        var possibilities;
+        var ports =
+            [
+                "DVI", "Parallel", "PS/2", "RJ-45", "Serial", "Stereo RCA", "Component Video",
+                "Composite Video", "USB", "HDMI", "VGA", "AC", "PCMCIA"
+            ];
+        var indicators = [ "SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK" ];
+        var indicatorColors = [ "Blue", "Gray", "Green", "Magenta", "Orange", "Purple", "Red", "Yellow" ];
+        var coordX = [ "A", "D", "C", "D", "B", "F", "E", "B", "C", "E" ];
+        var coordXCopy;
+        var coordY = [ "C", "B", "E", "D", "F", "E", "B", "C", "D", "A" ];
+        var coordYCopy;
+        var ManualTable =
+            [
+                3, 2, 9, 1, 7, 4,
+                7, 9, 8, 8, 2, 3,
+                5, 1, 7, 4, 4, 6,
+                6, 4, 2, 6, 8, 5,
+                5, 1, 5, 3, 9, 9,
+                1, 2, 3, 6, 7, 8
+            ];
+        var ManualTableCopy;
+        function setRules(rnd)
+        {
+            //Make clones of the lists to avoid randomization issues when changing seeds
+            coordXCopy = coordX.slice();
+            coordYCopy = coordY.slice();
+            ManualTableCopy = ManualTable.slice();
+            if (rnd.seed != 1)
+            {
+                rnd.shuffleFisherYates(coordXCopy);
+                rnd.shuffleFisherYates(coordYCopy);
+                rnd.shuffleFisherYates(ManualTableCopy);
+            }
+            for (var j = 0; j < coordXCopy.length; j++)
+                document.getElementById('l-' + j).innerHTML = coordXCopy[j];
+            for (var j = 0; j < coordYCopy.length; j++)
+                document.getElementById('r-' + j).innerHTML = coordYCopy[j];
+            for (var j = 0; j < ManualTableCopy.length; j++)
+                document.getElementById('tbl-' + j).innerHTML = ManualTableCopy[j];
+            //Primaries randomization
+            var i = rnd.next(0, 2);
+            //Initialize lists for current randomization
+            options1 = [];
+            options2 = [];
+            options3 = [];
+            possibilities = [];
+            //Create possible options for Possibilities
+            AddToOptions(i, rnd.seed == 1);
+            //Generate all possible rules
+            Possibilities();
+            //Variable for holding the chosen Possibilty indicies
+            var RuleIndicies = []
+            //Function for generating the original manual for rule seed 1
+            Swap();
+            //Choose the rules for the manual
+            for (var j = 0; j < 9; j++)
+            {
+                var value = rnd.next(0, possibilities.length);
+                while (RuleIndicies.includes(value))
+                    value = rnd.next(0, possibilities.length);
+                RuleIndicies.push(value);
+                document.getElementById('rule-' + j).innerHTML = possibilities[value];
+            }
+        }
+
+        function Swap()
+        {
+            var values = [324, 1487, 393, 1415, 566, 1176, 941, 1308, 556];
+            var newValues = [0, 463, 1308, 1311, 8, 22, 1390, 1350, 28];
+            for (var i = 0; i < values.length; i++)
+            {
+                var hold = possibilities[values[i]];
+                possibilities[values[i]] = possibilities[newValues[i]];
+                possibilities[newValues[i]] = hold;
+            }
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function AddToOptions(i, r)
+        {
+            options1.push("Backing");
+            options1.push("Button");
+            DetermineColors(i, r);
+            for (var j = 0; j < ports.length; j++)
+                options3.push(ports[j]);
+            for (var j = 0; j < indicators.length; j++)
+                options3.push(indicators[j]);
+            var listSize = 1;
+            while (listSize < 4)
+            {
+                var coloredArray = ['<span class="red">RED</span>', i == 0 ? '<span class="orange">ORANGE</span>' : '<span class="cyan">CYAN</span>', '<span class="yellow">YELLOW</span>', '<span class="green">GREEN</span>',
+                    '<span class="blue">BLUE</span>', i == 0 ? '<span class="purple">PURPLE</span>' : '<span class="magenta">MAGENTA</span>', '<span class="white">WHITE</span>', '<span class="gray">GRAY</span>', '<span class="black">BLACK</span>'];
+                var orderedArray = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+                var intList = [[]];
+                var current = -1;
+                for (var j = 0; j < orderedArray.length; j++)
+                {
+                    if (current != -1)
+                        intList.push([]);
+                    current++;
+                    intList[current].push(coloredArray[j]);
+                    if (listSize > 1)
+                    {
+                        var list = orderedArray.slice(j + 1);
+                        for (var k = 0; k < list.length; k++)
+                        {
+                            intList[current].push(" OR " + coloredArray[list[k]]);
+                            if (listSize > 2)
+                            {
+                                var list2 = orderedArray.slice(list[k] + 1);
+                                for (var l = 0; l < list2.length; l++)
+                                {
+                                    intList[current].push(" OR " + coloredArray[list2[l]]);
+                                    current++;
+                                    intList.push([]);
+                                    intList[current].push(coloredArray[j]);
+                                    intList[current].push(" OR " + coloredArray[list[k]]);
+                                }
+                                intList.pop();
+                                current--;
+                            }
+                            current++;
+                            intList.push([]);
+                            intList[current].push(coloredArray[j]);
+                        }
+                        intList.pop();
+                        current--;
+                    }
+                }
+                for (var j = 0; j < intList.length; j++)
+                {
+                    //Check if options already has the sequences created
+                    var check = [false, false, false];
+                    var check2 = [false, false, false];
+                    
+                    for (var k = 0; k < options2[0].length; k++)
+                    {
+                        check[k] = options2[0][k] == intList[j][k];
+                        check2[k] = options2[1][k] == intList[j][k];
+                    }
+                    if (check.every(x => x == true) || check2.every(x => x == true)) continue;
+                    options2.push(intList[j]);
+                }
+                listSize++;
+            }
+        }
+        //Checking the primary colors chosen
+        function DetermineColors(i, r) {
+            if (i == 0)
+            {
+                options2.push(['<span class="red">RED</span>', ' OR <span class="yellow">YELLOW</span>', ' OR <span class="blue">BLUE</span>']);
+                options2.push(['<span class="orange">ORANGE</span>', ' OR <span class="green">GREEN</span>', ' OR <span class="purple">PURPLE</span>']);
+                options2.push('+ <span class="red">RED</span>');
+                options2.push('+ <span class="yellow">YELLOW</span>');
+                if (r) {
+                    document.getElementById('bg-foot').innerHTML = "Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing Blue and White will <strong>not</strong> make Blue.";
+                }
+                else
+                    document.getElementById('bg-foot').innerHTML = "Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing any color with White will <strong>not</strong> make the original color.";
+            }
+            else
+            {
+                options2.push(['<span class="red">RED</span>', ' OR <span class="green">GREEN</span>', ' OR <span class="blue">BLUE</span>']);
+                options2.push(['<span class="cyan">CYAN</span>', ' OR <span class="yellow">YELLOW</span>', ' OR <span class="magenta">MAGENTA</span>']);
+                options2.push('+ <span class="red">RED</span>');
+                options2.push('+ <span class="green">GREEN</span>');
+                document.getElementById('bg-foot').innerHTML = "Mixing Red and Green will make Yellow, Blue and Green will make Cyan, and Red and Blue will make Magenta. Mixing any color with White will <strong>not</strong> make the original color."
+            }
+            options2.push('+ <span class="blue">BLUE</span>');
+        }
+        function Possibilities() {
+            var check = false;
+
+            possibilities.push(options1[0] + " Color = " + options1[1] + " Color");
+            possibilities.push(options1[0] + " Color != " + options1[1] + " Color");
+            possibilities.push("SUBMIT Has Digit");
+            possibilities.push("SUBMIT Has No Digit");
+            for (var i = 0; i < options2.length; i++) {
+                options2[i] = ("" + options2[i]).replaceAll(",", "");
+                if (i < 2) { // primary/secondary
+                    possibilities.push("Button OR Backing =<br>" + options2[i]);
+                    possibilities.push("Button AND NOT Backing =<br>" + options2[i]);
+                    possibilities.push("Backing AND NOT Button =<br>" + options2[i]);
+                    possibilities.push("Button XOR Backing =<br>" + options2[i]);
+                    possibilities.push("Button AND Backing =<br>" + options2[i]);
+                    possibilities.push("Button AND Backing !=<br>" + options2[i]);
+                    for (var j = 0; j < 2; j++) {
+                        possibilities.push(options1[j] + " =<br>" + options2[i]);
+                        possibilities.push(options1[j] + " !=<br>" + options2[i]);
+                    }
+                }
+                else if (i < 5) { // mixed with primary
+                    for (var j = 0; j < 2; j++)
+                        possibilities.push(options1[j] + " Color " + options2[i] + " =<br>" + (j == 0 ? "Button" : "Backing") + " Color*");
+                }
+                else { // color(s)
+                    possibilities.push("Button OR Backing =<br>" + options2[i]);
+                    possibilities.push("Button AND NOT Backing =<br>" + options2[i]);
+                    possibilities.push("Backing AND NOT Button =<br>" + options2[i]);
+                    possibilities.push("Button XOR Backing =<br>" + options2[i]);
+                    possibilities.push("Button AND Backing =<br>" + options2[i]);
+                    possibilities.push("Button AND Backing !=<br>" + options2[i]);
+                    for (var j = 0; j < 2; j++) {
+                        possibilities.push(options1[j] + " =<br>" + options2[i]);
+                        possibilities.push(options1[j] + " !=<br>" + options2[i]);
+                    }
+                }
+            }
+            possibilities.push("No Ports");
+            possibilities.push("Empty Port Plate");
+            possibilities.push("=1 Port");
+            possibilities.push("3+ Ports");
+            possibilities.push("2+ Port Plates");
+            possibilities.push("No Batteries");
+            possibilities.push("Odd Batteries");
+            possibilities.push("Even Batteries");
+            possibilities.push("No D Batteries");
+            possibilities.push("1+ D Battery");
+            possibilities.push("2+ D Batteries");
+            possibilities.push("No AA Batteries");
+            possibilities.push("2+ AA Batteries");
+            possibilities.push("=3 AA Batteries");
+            possibilities.push("4+ AA Batteries");
+            possibilities.push("5+ AA Batteries");
+            possibilities.push("No Battery Holders");
+            possibilities.push("=1 Battery Holder");
+            possibilities.push("2+ Battery Holders");
+            possibilities.push("Empty Battery Holder");
+            possibilities.push("AA Battery Holder");
+            possibilities.push("AAx3 Battery Holder");
+            possibilities.push("2+ D Batteries + AAx3 Battery Holders");
+            possibilities.push("AAx4 Battery Holder");
+            possibilities.push("2+ Empty Battery Holders + AA Battery Holders + AAx4 Battery Holders");
+            possibilities.push("No Indicators");
+            possibilities.push("=1 Indicator");
+            possibilities.push("2+ Indicators");
+            possibilities.push("No Lit Indicators");
+            possibilities.push("=1 Lit Indicator");
+            possibilities.push("2+ Lit Indicators");
+            possibilities.push("No Unlit Indicators");
+            possibilities.push("=1 Unlit Indicator");
+            possibilities.push("2+ Unlit Indicators");
+            for (var i = 0; i < options3.length; i++) {
+                if (i < 13) { // ports
+                    possibilities.push(options3[i] + " Port");
+                    possibilities.push("2+ " + options3[i] + " Ports");
+                    possibilities.push("=1 " + options3[i] + " Port");
+                    possibilities.push("No " + options3[i] + " Ports");
+                    continue;
+                }
+                else { // indicators
+                    possibilities.push(+ options3[i] + " Indicator");
+                    possibilities.push("No " + options3[i] + " Indicator");
+                    possibilities.push("Lit " + options3[i] + " Indicator");
+                    possibilities.push("No Lit " + options3[i] + " Indicator");
+                    possibilities.push("Unlit " + options3[i] + " Indicator");
+                    possibilities.push("No Unlit " + options3[i] + " Indicator");
+                    for (var j = 0; j < indicatorColors.length; j++) {
+                        if (!check)
+                            possibilities.push(indicatorColors[j] + " Indicator");
+                        possibilities.push(indicatorColors[j] + " " + options3[i] + " Indicator");
+                    }
+                    check = true;
+                }
+            }
+            possibilities.push("No Two Factors");
+            possibilities.push("=1 Two Factor");
+            possibilities.push("2+ Two Factors");
+            possibilities.push("No Date of Manufacture");
+            possibilities.push("Date of Manufacture");
+            possibilities.push("No Day of Week");
+            possibilities.push("Day of Week");
+            possibilities.push("Day of Week and Date of Manufacture");
+            possibilities.push("No Random Time");
+            possibilities.push("&lt;2 Random Time");
+            possibilities.push("=2 Random Time");
+            possibilities.push("3+ Random Time");
+        }
+    </script>
+    <style>
+        .comment {
+            text-align: center;
+        }
+
+        table.backgroundstable {
+            text-align: center;
+            width: 90%;
+            border: 0;
+            margin: auto;
+        }
+
+        .black {
+            font-weight: bold;
+            text-decoration: underline;
+            padding: 3px;
+            background-color: white;
+            color: black;
+        }
+
+        .white {
+            font-weight: bold;
+            text-decoration: underline;
+            padding: 3px;
+            background-color: black;
+            color: white;
+        }
+
+        .red {
+            font-weight: bold;
+            text-decoration: underline;
+            color: #FF0000;
+        }
+
+        .yellow {
+            font-weight: bold;
+            text-decoration: underline;
+            padding: 3px;
+            background-color: #DDDD00;
+            color: #000;
+        }
+
+        .blue {
+            font-weight: bold;
+            text-decoration: underline;
+            color: #0000FF;
+        }
+
+        .orange {
+            font-weight: bold;
+            text-decoration: underline;
+            color: orange;
+        }
+
+        .green {
+            font-weight: bold;
+            text-decoration: underline;
+            color: #00FF00;
+        }
+
+        .purple {
+            font-weight: bold;
+            text-decoration: underline;
+            color: purple;
+        }
+        
+        .cyan {
+            font-weight: bold;
+            text-decoration: underline;
+            padding: 3px;
+            background-color: #00DDDD;
+            color: #000;
+        }
+        
+        .magenta {
+            font-weight: bold;
+            text-decoration: underline;
+            color: #FF00FF;
+        }
+        
+        .gray {
+            font-weight: bold;
+            text-decoration: underline;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Backgrounds</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Backgrounds.svg">
+                <h2>On the Subject of Backgrounds</h2>
+                <p class="flavour-text">For once you aren’t only focusing on what’s right in front of you. Make sure you pay attention to what’s going on behind the scenes here. We all know how you feel about exploding.</p>
+                <p>Use the “Push Me!” button to set the counter to the number in the first table.</p>
+
+                <table class="backgroundstable">
+                    <tr><td class="corner"></td><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr>
+                    <tr><th>A<td id="tbl-0"><td id="tbl-1"><td id="tbl-2"><td id="tbl-3"><td id="tbl-4"><td id="tbl-5"></tr>
+                    <tr><th>B<td id="tbl-6"><td id="tbl-7"><td id="tbl-8"><td id="tbl-9"><td id="tbl-10"><td id="tbl-11"></tr>
+                    <tr><th>C<td id="tbl-12"><td id="tbl-13"><td id="tbl-14"><td id="tbl-15"><td id="tbl-16"><td id="tbl-17"></tr>
+                    <tr><th>D<td id="tbl-18"><td id="tbl-19"><td id="tbl-20"><td id="tbl-21"><td id="tbl-22"><td id="tbl-23"></tr>
+                    <tr><th>E<td id="tbl-24"><td id="tbl-25"><td id="tbl-26"><td id="tbl-27"><td id="tbl-28"><td id="tbl-29"></tr>
+                    <tr><th>F<td id="tbl-30"><td id="tbl-31"><td id="tbl-32"><td id="tbl-33"><td id="tbl-34"><td id="tbl-35"></tr>
+                </table>
+                <br>
+
+                <table class="backgroundstable">
+                    <tr><th style="width:50%;">RULE</th><th style="width:25%;">ROW</th><th style="width:25%;">COLUMN</th></tr>
+                    <tr><td id="rule-0"><td id="l-0"><td id="r-0"></tr>
+                    <tr><td id="rule-1"><td id="l-1"><td id="r-1"></tr>
+                    <tr><td id="rule-2"><td id="l-2"><td id="r-2"></tr>
+                    <tr><td id="rule-3"><td id="l-3"><td id="r-3"></tr>
+                    <tr><td id="rule-4"><td id="l-4"><td id="r-4"></tr>
+                    <tr><td id="rule-5"><td id="l-5"><td id="r-5"></tr>
+                    <tr><td id="rule-6"><td id="l-6"><td id="r-6"></tr>
+                    <tr><td id="rule-7"><td id="l-7"><td id="r-7"></tr>
+                    <tr><td id="rule-8"><td id="l-8"><td id="r-8"></tr>
+                    <tr><td>Otherwise</td><td id="l-9"></td><td id="r-9"></td></tr>
+                </table>
+                <p id="bg-foot" class="comment">Mixing Red and Yellow will make Orange, Blue and Yellow will make Green, and Red and Blue will make Purple. Mixing Blue and White will <b>not</b> make Blue.</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
