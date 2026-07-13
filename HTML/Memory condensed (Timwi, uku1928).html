@@ -8,6 +8,98 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script>
+        var NUM_STAGES = 5;
+
+        function setRules(rnd)
+        {
+            var weights = {};
+            var flag = true;
+            for (var i = 0; i < NUM_STAGES; i++)
+            {
+                flag = !flag;
+                var tag = document.getElementById(`memory-stage-${i + 1}`);
+                tag.innerHTML = '';
+                for (var j = 1; j <= 4; j++)
+                {
+                    var digit = rnd.next(1, 5);
+                    var stage = i > 0 ? rnd.next(1, i + 1) : null;
+                    var rule = translateRule(SelectSolution(rnd, weights, CreateSolutionsList(weights, i, flag)), digit, stage);
+                    var numberdisplay = document.createElement('li');
+                    var displaySpan = document.createElement("span")
+                    displaySpan.classList.add('display');
+                    displaySpan.appendChild(document.createTextNode(j));
+                    numberdisplay.appendChild(displaySpan)
+                    numberdisplay.appendChild(document.createTextNode(` ⇒ ${rule}`));
+                    tag.appendChild(numberdisplay);
+                }
+            }
+        }
+
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function translateRule(id, targetDigit, targetStage)
+        {
+            switch (id)
+            {
+                case 0: return "position 1";
+                case 1: return "position 2";
+                case 2: return "position 3";
+                case 3: return "position 4";
+                case 4: return `label ${targetDigit}`;
+                case 5: return `stage ${targetStage} position`;
+                case 6: return `stage ${targetStage} label`;
+            }
+        }
+
+        function CreateSolutionsList(weights, stage, usePreviousIndex)
+        {
+            var list = [];
+            list.push(0);
+            list.push(1);
+            list.push(2);
+            list.push(3);
+            list.push(4);
+            if (stage > 0)
+            {
+                if (usePreviousIndex)
+                    list.push(5);
+                else
+                    list.push(6);
+            }
+            for (var i = 0; i < list.length; i++)
+            {
+                var current = list[i];
+                if (!(current in weights))
+                    weights[current] = 1;
+            }
+            if (stage > 2)
+            {
+                weights[5] = 1;
+                weights[6] = 1;
+            }
+            return list;
+        }
+
+        function SelectSolution(rnd, weights, list)
+        {
+            var num = 0;
+            for (var i = 0; i < list.length; i++)
+                num += weights[list[i]];
+            var num2 = rnd.nextDouble() * num;
+            for (var i = 0; i < list.length; i++)
+            {
+                if (num2 < weights[list[i]])
+                {
+                    weights[list[i]] = weights[list[i]] * .05;
+                    return list[i];
+                }
+                num2 -= weights[list[i]];
+            }
+            return list[rnd.next(0, list.length)];
+        }
+    </script>
     <style>
         table.memory {
             width: 100%;
@@ -43,21 +135,21 @@
                     <tr>
                         <td>
                             <h4>Stage 1</h4>
-                            <ul>
+                            <ul id="memory-stage-1">
                                 <li><span class='display'>1</span> ⇒ position 2
                                 <li><span class='display'>2</span> ⇒ position 2
                                 <li><span class='display'>3</span> ⇒ position 3
                                 <li><span class='display'>4</span> ⇒ position 4
                             </ul>
                             <h4>Stage 2</h4>
-                            <ul>
+                            <ul id="memory-stage-2">
                                 <li><span class='display'>1</span> ⇒ label 4
                                 <li><span class='display'>2</span> ⇒ stage 1 position
                                 <li><span class='display'>3</span> ⇒ position 1
                                 <li><span class='display'>4</span> ⇒ stage 1 position
                             </ul>
                             <h4>Stage 3</h4>
-                            <ul>
+                            <ul id="memory-stage-3">
                                 <li><span class='display'>1</span> ⇒ stage 2 label
                                 <li><span class='display'>2</span> ⇒ stage 1 label
                                 <li><span class='display'>3</span> ⇒ position 3
@@ -65,21 +157,21 @@
                             </ul>
                         <td>
                             <h4>Stage 4</h4>
-                            <ul>
+                            <ul id="memory-stage-4">
                                 <li><span class='display'>1</span> ⇒ stage 1 position
                                 <li><span class='display'>2</span> ⇒ position 1
                                 <li><span class='display'>3</span> ⇒ stage 2 position
                                 <li><span class='display'>4</span> ⇒ stage 2 position
                             </ul>
                             <h4>Stage 5</h4>
-                            <ul>
+                            <ul id="memory-stage-5">
                                 <li><span class='display'>1</span> ⇒ stage 1 label
                                 <li><span class='display'>2</span> ⇒ stage 2 label
                                 <li><span class='display'>3</span> ⇒ stage 4 label
                                 <li><span class='display'>4</span> ⇒ stage 3 label
                             </ul>
                             <h4>Grid</h4>
-                            <table width='100%'>
+                            <table style="width: 100%;">
                                 <tr><th>Stage<th colspan='4'>Position<th colspan='4'>Label</tr>
                                 <tr><th>Stage 1<td>1<td>2<td>3<td>4<td>1<td>2<td>3<td>4</tr>
                                 <tr><th>Stage 2<td>1<td>2<td>3<td>4<td>1<td>2<td>3<td>4</tr>
