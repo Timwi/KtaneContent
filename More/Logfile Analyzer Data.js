@@ -8955,6 +8955,128 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: 'greekCalculus',
+		loggingTag: 'Greek Calculus',
+		matches: [
+			{
+				regex: /Data point: \((-?\d+), (-?\d+)\) added to list/,
+				handler: function (matches, module) {
+					if (!module.dataPoints) module.dataPoints = [ ];
+					module.dataPoints.push({ x:parseInt(matches[1]), y:parseInt(matches[2]), symbolicForm:"" });
+				}
+			},
+			{
+				regex: /Generated LED color: (\w+)/,
+				handler: function (matches, module) {
+					module.ledColor = matches[1];
+					switch (matches[1]) {
+						case 'red':		module.rule = "Left-endpoint Riemann sum (Integral)"; break;
+						case 'blue': 	module.rule = "Right-endpoint Riemann sum (Integral)"; break;
+						case 'yellow':	module.rule = "Average-value Riemann sum (Integral)"; break;
+						case 'green': 	module.rule = "Derivative"; break;
+						case 'other': 	module.rule = "Sum"; break;
+					}
+				}
+			},
+			{
+				regex: /symbolic form for y-val of x = (-?\d+): {symbolic: (.+), value: .+/,
+				handler: function (matches, module) {
+					let xVal = parseInt(matches[1]);
+					let symbolic = matches[2];
+					for (let dataPoint of module.dataPoints) {
+						if (dataPoint.x === xVal)
+							dataPoint.symbolicForm = symbolic;	
+					}
+				}
+			},
+			{
+				regex: /symbolic form for parameter ([AB]): {symbolic: (.+), value: (-?\d+)}/,
+				handler: function (matches, module) {
+					let parameterParameters = { symbolicForm: matches[2], value: parseInt(matches[3]) };
+					if (matches[1] === 'A')
+						module.paramA = parameterParameters;
+					else module.paramB = parameterParameters;
+				}
+			},
+			{
+				regex: /(Deriv|Integ|Sum): (.+)/,
+				handler: function (matches, module) {
+					if (!module.stepsDropdown){
+						module.stepsDropdown = [];
+						switch (matches[1]) {
+							case 'Deriv': module.stepsHeader = 'Derivative Estimation Steps'; break;
+							case 'Integ': module.stepsHeader = 'Integral Estimation Steps'; break;
+							case 'Sum':	  module.stepsHeader = 'Summation Steps'; break;
+						}
+					}
+					
+					let cleanedUp = matches[2].replace(/{symbolic: .+, value: (-?\d+)}/, '$1');
+					module.stepsDropdown.push(cleanedUp);
+				}
+			},
+			{
+				regex: /Module activated/,
+				handler: function(_, module) {
+					
+					if (module.ledColor === 'green') {
+						let avg = (module.paramA.value + module.paramB.value) / 2;
+						for (let ix = 0; ix < module.dataPoints.length; ix++) {
+							 if (module.dataPoints[ix].x > avg) {
+								module.dataPoints[ix].highlighted = true;
+								module.dataPoints[ix - 1].highlighted = true;
+								break;
+							 }
+						}
+					} else { // Integration and summation both use the same highlighting process.
+						let lowerBound = Math.min(module.paramA.value, module.paramB.value);
+						let upperBound = Math.max(module.paramA.value, module.paramB.value);
+						for (let dataPoint of module.dataPoints) {
+							if (dataPoint.x >= lowerBound && dataPoint.x <= upperBound)
+								dataPoint.highlighted = true;
+						}
+					}
+
+					let table = $('<table>').addClass('greek-calculus');
+					
+					let headerRow = $('<tr>').appendTo(table);
+					$('<th>').html('x').appendTo(headerRow);
+					$('<th>').html('y').appendTo(headerRow);
+					$('<th>').html('y (symbolic)').appendTo(headerRow);
+					
+					for (let dataPoint of module.dataPoints) {
+						let row = $('<tr>').appendTo(table);
+						if (dataPoint.highlighted)
+							row.addClass('highlighted');
+						$('<td>').html(dataPoint.x).appendTo(row);
+						$('<td>').html(dataPoint.y).appendTo(row);
+						$('<td>').html(dataPoint.symbolicForm).appendTo(row);
+					}
+					
+					module.push({ label:"List of Data Points:", obj: table });
+					module.push(`LED color: ${module.ledColor}, Operation: ${module.rule}`);
+					module.push(`Upper parameter: ${module.paramA.value} ( ${module.paramA.symbolicForm} )`);
+					module.push(`Lower parameter: ${module.paramB.value} ( ${module.paramB.symbolicForm} )`);
+					module.push([ module.stepsHeader, module.stepsDropdown ]);
+					module.inputTime = true;
+					module.inputDropdown = [ ];
+					module.push([ "Inputs:", module.inputDropdown ]);
+					
+				}
+			},
+			{
+				// Weird edge case in the code.
+				regex: /No data point is symbolic!/ 
+			},
+			{
+				regex: /.+/,
+				handler: function(matches, module) {
+					if (module.inputTime)
+						module.inputDropdown.push(matches.input);
+				}
+			}
+		]
+	},
+	{
 		displayName: "Grid Matching",
 		moduleID: "GridMatching",
 		loggingTag: "Grid Matching",
