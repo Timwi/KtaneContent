@@ -20309,6 +20309,8 @@ let parseData = [
 						svg += g + '</g>';
 					}
 					module.push({ label: 'Switch Mappings:', obj: svg });
+					
+					
 				}
 			},
 			{
@@ -20326,14 +20328,21 @@ let parseData = [
 						return `${values.join(',')} (fig.${fig})`;
 					}
 
-					let label = matches[1] == 'INPUT' ? "Input signal: " : "Current generator signal: ";
-					module.push(label + module.generateState(matches[2]));
+					let currentState = module.generateState(matches[2]);
+					
+					if (matches[1] === 'INPUT') {
+						module.push( "Input signal: " + currentState);
+						module.interactions = [ ];
+						module.push([ "Interactions", module.interactions ]);
+					} else {
+						module.interactions.push("Current generator signal: " + currentState);
+					}
 				}
 			},
 			{
 				regex: /S(\d)->(UP|DOWN|CENTER)/,
 				handler: function (matches, module) {
-					module.push(`Switch ${matches[1]} set to ${matches[2].toLowerCase()}.`);
+					module.interactions.push(`Switch ${matches[1]} set to ${matches[2].toLowerCase()}.`);
 				}
 			},
 			{
