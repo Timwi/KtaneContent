@@ -14219,6 +14219,52 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "gameOfLifeNeedy",
+		loggingTag: "Needy Game of Life",
+		matches: [
+			{
+				regex: /Board:/,
+				handler: function (_, module) {
+					if (!module.makeBoard) {
+						module.makeBoard = function() {
+							let board = $('<svg>').addClass('game-of-life').attr('viewbox', '0 0 4 4');
+							let grid = readLines(4);
+							for (let row = 0; row < 4; row++) {
+								for (let col = 0; col < 4; col++) {
+									let fill = grid[row][col] === '▇' ? '#FFF' : '#444';
+									$('<rect>').attr('x',col).attr('y',row)
+											   .attr('width', 1).attr('height', 1)
+											   .css('fill', fill)
+											   .appendTo(board);
+								}
+							}
+							return board.prop('outerHTML');
+						}
+					}
+					module.push({ label:"Board:", obj:module.makeBoard() });
+				}
+			},
+			{
+				regex: /Solution:/,
+				handler: function(_, module) {
+					module.push([ "Solution", [{obj:module.makeBoard(), nobullet:true}] ]);
+				}
+			},
+			{
+				regex: /Strike! Inputted:/,
+				handler: function(_, module) {
+					let inputted = { label:"Inputted:", obj:module.makeBoard() };
+					readLine(); // "Expected:"
+					let expected = { label:"Expected:", obj:module.makeBoard() };
+					module.push([ "Strike!", [ inputted, expected ] ]); 
+				}
+			},
+			{
+				regex: /Ran out of time|Correct input/
+			}
+		]
+	},
+	{
 		moduleID: "neutralization",
 		loggingTag: "Neutralization",
 		matches: [
