@@ -5631,6 +5631,60 @@ let parseData = [
 		loggingTag: "TheDealmaker"
 	},
 	{
+		moduleID: 'DecoloredSquaresModule',
+		loggingTag: 'Decolored Squares',
+		matches: [
+			{
+				regex: /Starting position in the flowchart: ([A-D][1-4])/,
+				handler: function(matches, module) {
+					module.chartPos = matches[1];
+				}
+			},
+			{
+				regex: /Order of processing/,
+				handler: function(matches, module) {
+					module.push(matches.input);
+					module.table = $('<table>').addClass('decolored-squares');
+					
+					let headerRow = $('<tr>').appendTo(module.table);
+					$('<th>').html('Cell').appendTo(headerRow);
+					$('<th>').html('Color').appendTo(headerRow);
+					$('<th>').html('Flow-<br>-chart').appendTo(headerRow);
+					$('<th>').html('Press').appendTo(headerRow);
+					module.push({ label:"Procedure Table", obj:module.table });
+				}
+			},
+			{
+				regex: /([A-D][1-4]) color is (\w+), which is (NOT )?in the flowchart cell.+Flowchart position now ([A-F][1-6])/,
+				handler: function(matches, module) {
+					
+					const colorsLookup = {
+						'Red':'#C44',
+						'Green':'#4F4',
+						'Blue':'#46F',
+						'Yellow':'#FF4',
+						'Magenta':'#E4E'
+					};
+					
+					let row = $('<tr>').appendTo(module.table);
+					$('<td>').html(matches[1]).appendTo(row);
+					$('<td>').html(matches[2]).addClass('color').css('background-color', colorsLookup[matches[2]]).appendTo(row);
+					$('<td>').html(module.chartPos).appendTo(row);
+					if (matches[3])
+						 $('<td>').html('✗').addClass('check-or-x').css('color', '#C44').appendTo(row);
+					else $('<td>').html('✓').addClass('check-or-x').css('color', '#4C4').appendTo(row);
+					
+					module.chartPos = matches[4];
+					
+				}
+				
+			},
+			{
+				regex: /Using rule seed|Starting position in the flowchart|Strike and reset|Module solved|rare case/
+			}
+		]
+	},
+	{
 		moduleID: "rgbArithmeticDecomposed",
 		loggingTag: "Decomposed RGB Arithmetic",
 		matches: [
