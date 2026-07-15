@@ -20814,14 +20814,21 @@ let parseData = [
 							svg += `<rect fill='#888' x='${coord.x}' y='${coord.y}' width='1.01' height='1.01'/>`;
 						} else {
 							svg += `<rect fill='${hexCodes[coord.color]}' x='${coord.x}' y='${coord.y}' width='1.05' height='1.05'/>
-									<text class='tile-color' x='${coord.x + .5}' y='${coord.y + .5}'>${colorLetters[coord.color]}</text>`;
+									<text class='tile-color' x='${coord.x + .5}' y='${coord.y + .5}' fill='${coord.color == 0 ? '#FFF' : '#000'}'>${colorLetters[coord.color]}</text>`;
 						}
 					}
 					if (matches[1] == 'Generated') {
-						let i = 0;
 						for (let square of module.squares ?? []) {
+							let cornerColor = -1;
+							for (let coord of coords) {
+								if (coord.x == square.x && coord.y == square.y) {
+									cornerColor = coord.color;
+									break;
+								}
+							}
+							console.log(cornerColor == 0 ? '#FFF' : '#000');
 							svg += `<rect class='square' x='${square.x}' y='${square.y}' width='${square.size}' height='${square.size}' stroke='${strokeCodes[square.color]}'/>
-									<text class='square-color' x='${square.x + 0.1}' y='${square.y + 0.1}' fill='${square.color == 'Black' ? '#FFF' : '#000'}'
+									<text class='square-color' x='${square.x + 0.1}' y='${square.y + 0.1}' fill='${cornerColor == 0 ? '#FFF' : '#000'}'
 										>${colorLetters[square.color]}</text>`;
 						}
 						svg += "<circle cx='0.5' cy='0.5' r='0.125' fill='#444'/>";
