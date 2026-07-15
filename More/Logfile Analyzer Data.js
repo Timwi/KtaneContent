@@ -5675,7 +5675,6 @@ let parseData = [
 					else $('<td>').html('✓').addClass('check-or-x').css('color', '#4C4').appendTo(row);
 					
 					module.chartPos = matches[4];
-					
 				}
 				
 			},
@@ -23196,20 +23195,20 @@ let parseData = [
 			{
 				regex: /(Visible|Hidden) Maze:/,
 				handler: function (matches, module) {
-					linen++;
-					let grid = readTaggedLines(9).map(l => l.split(''));
-					let svg = `<svg viewbox='0 0 20 20' style='display: block; width: 3in'>`;
+					readLine(); // [Blank]
+					let grid = readLines(9).map(l => l.split(''));
+					let svg = `<svg viewbox='0 0 17 17' class='tombstone-maze'>`;
 					for (let row = 0; row < 4; row++) {
 						for (let col = 0; col < 4; col++) {
 							let group = `<g transform='translate(${4 * col}, ${4 * row})'>`;
 							if (grid[2 * row][2 * col + 1] == '─')
-								group += `<rect x='0' y='0' width='5' height='1' fill='#000'/>`;
+								group += `<rect x='0' y='0' width='5' height='1'/>`;
 							if (grid[2 * row + 1][2 * col] == '│')
-								group += `<rect x='0' y='0' width='1' height='5' fill='#000'/>`;
+								group += `<rect x='0' y='0' width='1' height='5'/>`;
 							if (row == 3)
-								group += `<rect x='0' y='4' width='5' height='1' fill='#000'/>`;
+								group += `<rect x='0' y='4' width='5' height='1'/>`;
 							if (col == 3)
-								group += `<rect x='4' y='0' width='1' height='5' fill='#000'/>`;
+								group += `<rect x='4' y='0' width='1' height='5'/>`;
 							svg += group + '</g>';
 						}
 					}
