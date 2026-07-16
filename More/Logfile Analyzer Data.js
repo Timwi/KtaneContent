@@ -19053,6 +19053,23 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "frogRgbTree",
+		loggingTag: "RGB Tree",
+		matches: [
+			{
+				regex: /Generated tree:/,
+				handler: function(matches, module){
+					let tree = readTaggedLines(7);
+					tree = tree.map(x => x.replaceAll("  ", " "));
+					tree = tree.join('\n');
+					module.push({ label: matches[0], obj: pre(tree)});
+					return true;
+				},
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: 'robitProgramming',
 		loggingTag: 'Robit Programming',
 		matches: [
