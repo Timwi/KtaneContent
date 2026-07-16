@@ -25062,10 +25062,9 @@ let parseData = [
 					module.attemptNum++;
 					module.attemptDropdown = [`Attempt ${module.attemptNum}`, []];
 					module.push(module.attemptDropdown);
-					module.attemptNum = 1;
 					module.getCurrentCubeOrientationLines = () => { return ["Current Cube Orientation", readLines(6)] }
 					module.readLine = () => { return readLine().replace(/^\[Wanderlust #\d+\]\s*/, "") }
-					module.readLines = (num) => { return readLines(2).map(l => l.replace(/^\[Wanderlust #\d+\]\s*/, "")) }
+					module.readLines = (num) => { return readLines(num).map(l => l.replace(/^\[Wanderlust #\d+\]\s*/, "")) }
 					module.dimension = 300;
 					module.attemptDropdown[1].push(match[0])
 					return true;
@@ -25075,7 +25074,20 @@ let parseData = [
 			{
 				regex: /Letter Pair \d: .+, .+/,
 				handler: function(match, module) {
-					module.attemptDropdown[1].push([match[0], module.readLines(2)]);
+
+					//if this is a letter pair taken from the status light, then we don't need a dropdown
+					let lines =  module.readLines(2);
+
+					if(lines[0].includes("Current Cube Orientation"))
+					{
+						linen -= 2;	
+						module.attemptDropdown[1].push(match[0])
+					}
+
+					else
+					{
+						module.attemptDropdown[1].push([match[0], lines]);
+					}
 					return true;
 				}
 			},
@@ -25314,7 +25326,7 @@ let parseData = [
 					function makeSVGBase(mazeIndex) {
 						const cellSize = module.dimension / 6;
 
-						let baseSVG = $(`<svg xmlns='http://www.w3.org/2000/svg' style="width: 80%" viewbox='0 0 ${module.dimension} ${module.dimension}'>`)
+						let baseSVG = $(`<svg xmlns='http://www.w3.org/2000/svg' style="width: 80%" viewbox='0 0 ${module.dimension} ${module.dimension}'>`).addClass("wanderlust")
 						let maze = mazeLayout[mazeIndex];
 
 						$SVG("<rect>")
@@ -25454,8 +25466,8 @@ let parseData = [
 						.attr("stroke", "red")
 						.attr("stroke-width", 5)
 						.attr("stroke-linecap", "round")
+						.addClass("path")
 						.appendTo(module.currentSVG)
-
 					}
 					return true;
 				}
