@@ -1406,6 +1406,7 @@ function makeCycleableDisplays(pages, module, loopDisplays = false) {
 
     module.push({obj: topDiv, nobullet: true});
     module.push({obj: bottomDiv, nobullet: true});
+    return { update: setPage };
 }
 
 function pre(line) {

@@ -25374,7 +25374,7 @@ let parseData = [
 					let globalPath = module.readLine();
 					let localPaths = readLines(2).map(l => l.match(/Local path for .+ solved modules: (.+)/)[1]);
 					module.keyDropdown[1].push([match[0], [globalPath, ["Local Paths", [`Even solved modules: ${localPaths[0]}`, `Odd solved modules: ${localPaths[1]}`]]]]);
-					makeCycleableDisplays(module.pages, module.keyDropdown[1]);
+					module.cycleableDisplay = makeCycleableDisplays(module.pages, module.keyDropdown[1]);
 					return true;
 				}
 			},
@@ -25410,67 +25410,65 @@ let parseData = [
 					let nextLine = module.readLine();
 
 					if (nextLine.includes("Strike!"))
-					{
 						module.pages[pageIndex].messages.push(nextLine);
-						return true;
-					}
 					else
 					{
 						linen--;
-					}
 
-					//if global back, make a new page/path for the new maze
-					if(match[1] == "back")
-					{
-						const regex = /Now in maze (\d+)/;
-						let found;
-						let pageIndex = module.pages.length - 1;
-						nextLine = module.readLine();
-						while(found == null)
+						//if global back, make a new page/path for the new maze
+						if(match[1] == "back")
 						{
-							let currentCubeLog = (line) => {return line == "Current Cube Orientation"};
-
-							if(!currentCubeLog(nextLine)) {
-								module.pages[pageIndex].messages.push(nextLine);
-							}
-
-
+							const regex = /Now in maze (\d+)/;
+							let found;
+							let pageIndex = module.pages.length - 1;
 							nextLine = module.readLine();
+							while(found == null)
+							{
+								let currentCubeLog = (line) => {return line == "Current Cube Orientation"};
 
-							//if next line is current cube orientation, print next lines
-							//todo fix this to work within maze dropdown (maybe it's make cycleable display problem)
-							if(currentCubeLog(nextLine)) {
-								module.pages[pageIndex].messages.push(module.getCurrentCubeOrientationLines());
+								if(!currentCubeLog(nextLine)) {
+									module.pages[pageIndex].messages.push(nextLine);
+								}
+
+
+								nextLine = module.readLine();
+
+								//if next line is current cube orientation, print next lines
+								//todo fix this to work within maze dropdown (maybe it's make cycleable display problem)
+								if(currentCubeLog(nextLine)) {
+									module.pages[pageIndex].messages.push(module.getCurrentCubeOrientationLines());
+								}
+
+								found = nextLine.match(regex);
 							}
 
-							found = nextLine.match(regex);
+							module.pages[pageIndex].messages.push(found[0])
+
+							module.currentMaze = Number.parseInt(found[1])
+							module.getNewMaze(module.currentMaze, `${"ABCDEF"[lastPos.col]}${Number.parseInt([lastPos.row]) + 1}`);
 						}
 
-						module.pages[pageIndex].messages.push(found[0])
+						//if not global front or back, draw line on current svg
+						else if (match[1] != "front")
+						{
+							//calculate the new position
+							let newPos = getNewPosition();
 
-						module.currentMaze = Number.parseInt(found[1])
-						module.getNewMaze(module.currentMaze, `${"ABCDEF"[lastPos.col]}${Number.parseInt([lastPos.row]) + 1}`);
+							module.currentPath.push(newPos);
+
+							//draw a line from the old position to the new one
+							let start = module.applyMazePosition(lastPos);
+							let end = module.applyMazePosition(newPos);
+							let line = module.makeLine({x: start.col, y: start.row}, {x: end.col, y: end.row});
+							line
+							.attr("stroke", "red")
+							.attr("stroke-width", 5)
+							.attr("stroke-linecap", "round")
+							.addClass("path")
+							.appendTo(module.currentSVG)
+						}
 					}
-
-					//if not global front or back, draw line on current svg
-					else if (match[1] != "front")
-					{
-						//calculate the new position
-						let newPos = getNewPosition();
-
-						module.currentPath.push(newPos);
-
-						//draw a line from the old position to the new one
-						let start = module.applyMazePosition(lastPos);
-						let end = module.applyMazePosition(newPos);
-						let line = module.makeLine({x: start.col, y: start.row}, {x: end.col, y: end.row});
-						line
-						.attr("stroke", "red")
-						.attr("stroke-width", 5)
-						.attr("stroke-linecap", "round")
-						.addClass("path")
-						.appendTo(module.currentSVG)
-					}
+					module.cycleableDisplay.update();
 					return true;
 				}
 			},
@@ -25479,6 +25477,7 @@ let parseData = [
 				handler: function (match, module) {
 					let pageIndex = module.pages.length - 1;
 					module.pages[pageIndex].messages.push(match[0]);
+					module.cycleableDisplay.update();
 				}
 			},
 			{
@@ -25499,13 +25498,15 @@ let parseData = [
 					module.pages = [];
 					const lastPos = module.currentPath[module.currentPath.length - 1];
 					module.getNewMaze(module.currentMaze, `${"ABCDEF"[lastPos.col]}${Number.parseInt([lastPos.row]) + 1}`);
+					module.cycleableDisplay.update();
 					return true;
 				}
 			},
 			{
-				regex: /Moule Solved/,
+				regex: /Mod?ule Solved/,
 				handler: function (match, module) {
 					module.attemptDropdown[1].push(match[0]);
+					module.cycleableDisplay.update();
 					return true;
 				}
 			}
