@@ -292,7 +292,7 @@ class BombGroup {
             // sources will be empty if Tweaks is not installed; in which case we will assume the pool is fully generic, even if it's not
             const isVanilla = sources.length ? sources.includes("Vanilla") : true;
             const isModded = sources.length ? sources.includes("Modded") : true;
-            return module === "ALL_NEEDY" ? isModded ? isVanilla ? "ALL_NEEDY" : "ALL_MODS_NEEDY" : "ALL_VANILLA_NEEDY" 
+            return module === "ALL_NEEDY" ? isModded ? isVanilla ? "ALL_NEEDY" : "ALL_MODS_NEEDY" : "ALL_VANILLA_NEEDY"
                 : isModded ? isVanilla ? "ALL_SOLVABLE" : "ALL_MODS" : "ALL_VANILLA";
         };
         const dmgString =
@@ -333,7 +333,7 @@ class BombGroup {
             .addCardClick(missionInfo).click();
 
         // Events
-        
+
         // swap defusal and pass events when out of order
         for (let i = 0; i < this.Events.length - 1; i++) {
             const event = this.Events[i];
@@ -1361,23 +1361,23 @@ function makeCycleableDisplays(pages, module, loopDisplays = false) {
 
     const topDiv = $('<div>').addClass("cyclable-disp-top");
     const leftButton = $('<button>')
-    .text("◀")
-    .attr("type", "button")
-    .addClass("cyclable-disp-button")
-    .addClass("cyclable-disp-left")
-    .appendTo(topDiv)
+        .text("◀")
+        .attr("type", "button")
+        .addClass("cyclable-disp-button")
+        .addClass("cyclable-disp-left")
+        .appendTo(topDiv);
 
     const rightButton = $('<button>')
-    .text("▶")
-    .attr("type", "button")
-    .addClass("cyclable-disp-button")
-    .addClass("cyclable-disp-right")
-    .appendTo(topDiv)
+        .text("▶")
+        .attr("type", "button")
+        .addClass("cyclable-disp-button")
+        .addClass("cyclable-disp-right")
+        .appendTo(topDiv);
 
     const label = $('<div>')
-    .text("label test")
-    .addClass("cyclable-disp-label")
-    .appendTo(topDiv);
+        .text("label test")
+        .addClass("cyclable-disp-label")
+        .appendTo(topDiv);
 
     const bottomDiv = $('<div>').addClass("cyclable-disp-bottom")
 
@@ -1388,9 +1388,8 @@ function makeCycleableDisplays(pages, module, loopDisplays = false) {
         bottomDiv.empty();
         bottomDiv.append(pages[curPage].obj);
 
-        if(pages[curPage].messages) {
+        if (pages[curPage].messages)
             makeTree(pages[curPage].messages, $("<ul>").appendTo(bottomDiv));
-        }
     }
 
     leftButton.on("click", function () {

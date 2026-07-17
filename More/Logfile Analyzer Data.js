@@ -5645,7 +5645,7 @@ let parseData = [
 				handler: function(matches, module) {
 					module.push(matches.input);
 					module.table = $('<table>').addClass('decolored-squares');
-					
+
 					let headerRow = $('<tr>').appendTo(module.table);
 					$('<th>').html('Cell').appendTo(headerRow);
 					$('<th>').html('Color').appendTo(headerRow);
@@ -5657,7 +5657,7 @@ let parseData = [
 			{
 				regex: /([A-D][1-4]) color is (\w+), which is (NOT )?in the flowchart cell.+Flowchart position now ([A-F][1-6])/,
 				handler: function(matches, module) {
-					
+
 					const colorsLookup = {
 						'Red':'#C44',
 						'Green':'#4F4',
@@ -5665,7 +5665,7 @@ let parseData = [
 						'Yellow':'#FF4',
 						'Magenta':'#E4E'
 					};
-					
+
 					let row = $('<tr>').appendTo(module.table);
 					$('<td>').html(matches[1]).appendTo(row);
 					$('<td>').html(matches[2]).addClass('color').css('background-color', colorsLookup[matches[2]]).appendTo(row);
@@ -5673,10 +5673,10 @@ let parseData = [
 					if (matches[3])
 						 $('<td>').html('✗').addClass('check-or-x').css('color', '#C44').appendTo(row);
 					else $('<td>').html('✓').addClass('check-or-x').css('color', '#4C4').appendTo(row);
-					
+
 					module.chartPos = matches[4];
 				}
-				
+
 			},
 			{
 				regex: /Using rule seed|Starting position in the flowchart|Strike and reset|Module solved|rare case/
@@ -9038,7 +9038,7 @@ let parseData = [
 					let symbolic = matches[2];
 					for (let dataPoint of module.dataPoints) {
 						if (dataPoint.x === xVal)
-							dataPoint.symbolicForm = symbolic;	
+							dataPoint.symbolicForm = symbolic;
 					}
 				}
 			},
@@ -9062,7 +9062,7 @@ let parseData = [
 							case 'Sum':	  module.stepsHeader = 'Summation Steps'; break;
 						}
 					}
-					
+
 					let cleanedUp = matches[2].replace(/{symbolic: .+, value: (-?\d+)}/, '$1');
 					module.stepsDropdown.push(cleanedUp);
 				}
@@ -9070,7 +9070,7 @@ let parseData = [
 			{
 				regex: /Module activated/,
 				handler: function(_, module) {
-					
+
 					if (module.ledColor === 'green') {
 						let avg = (module.paramA.value + module.paramB.value) / 2;
 						for (let ix = 0; ix < module.dataPoints.length; ix++) {
@@ -9090,12 +9090,12 @@ let parseData = [
 					}
 
 					let table = $('<table>').addClass('greek-calculus');
-					
+
 					let headerRow = $('<tr>').appendTo(table);
 					$('<th>').html('x').appendTo(headerRow);
 					$('<th>').html('y').appendTo(headerRow);
 					$('<th>').html('y (symbolic)').appendTo(headerRow);
-					
+
 					for (let dataPoint of module.dataPoints) {
 						let row = $('<tr>').appendTo(table);
 						if (dataPoint.highlighted)
@@ -9104,7 +9104,7 @@ let parseData = [
 						$('<td>').html(dataPoint.y).appendTo(row);
 						$('<td>').html(dataPoint.symbolicForm).appendTo(row);
 					}
-					
+
 					module.push({ label:"List of Data Points:", obj: table });
 					module.push(`LED color: ${module.ledColor}, Operation: ${module.rule}`);
 					module.push(`Upper parameter: ${module.paramA.value} ( ${module.paramA.symbolicForm} )`);
@@ -9113,12 +9113,12 @@ let parseData = [
 					module.inputTime = true;
 					module.inputDropdown = [ ];
 					module.push([ "Inputs:", module.inputDropdown ]);
-					
+
 				}
 			},
 			{
 				// Weird edge case in the code.
-				regex: /No data point is symbolic!/ 
+				regex: /No data point is symbolic!/
 			},
 			{
 				regex: /.+/,
@@ -14431,7 +14431,7 @@ let parseData = [
 					let inputted = { label:"Inputted:", obj:module.makeBoard() };
 					readLine(); // "Expected:"
 					let expected = { label:"Expected:", obj:module.makeBoard() };
-					module.push([ "Strike!", [ inputted, expected ] ]); 
+					module.push([ "Strike!", [ inputted, expected ] ]);
 				}
 			},
 			{
@@ -14617,23 +14617,23 @@ let parseData = [
 			{
 				regex: /Board:/,
 				handler: function(_, module) {
-					
+
 					const CROWN_PATH = "M1.13-37.05C3.65-28.23 6.17-19.41 8.7-10.6 13.07-16.27 17.44-21.94 21.81-27.61 21.51-28.37 21.08-29.3 21.21-30.15 21.55-32.28 23.81-36.48 26.65-34.7 30.28-32.42 27.36-26.97 24.05-26.26 24.05-23.9 23.83-21.24 23.46-18.91 23.29-17.84 23.55-16.7 23.46-15.62 23.15-12.28 23.31-8.81 23.31-5.43 24.17-5.71 28.1-8.51 29.25-9.22 31.23-10.47 35.15-11.46 36.64-12.62 36.64-15.58 39.76-20 43.23-18.01 46.73-16 42.95-10.6 39.12-10.6 38.11-8.68 36.92-6.79 35.77-4.95 32.66 0 29.95 5.33 27.33 10.58 25.75 13.73 23.7 17.2 23.01 20.65 20.81 21.3 18.7 22.19 16.46 22.64 3.33 25.27-11.11 25.44-23.82 20.72-24.39 19.99-24.64 18.71-24.97 17.83-25.75 15.8-26.71 13.79-27.67 11.83-30.98 5.05-34.61-1.74-38.61-8.1-39-8.73-39.47-10.11-40.09-10.52-40.6-10.85-41.38-10.73-41.93-11.07-43.74-12.18-45.4-14.19-44.85-16.49-43.73-21.18-35.41-16.3-37.23-12.47-36.42-11.84-35.06-11.5-34.09-11.12-31.08-9.94-26.68-7.61-24.42-5.35-24-7.47-24.35-10-24.35-12.17-24.35-16.71-24.23-21.95-25.17-26.33-27.61-27.24-29.41-29.55-28.87-32.28-28.68-33.22-28.15-34.54-27.09-34.84-23.18-35.97-20.93-30.28-22.7-27.46-18.38-21.89-14.06-16.32-9.74-10.75-7.21-19.51-4.69-28.28-2.17-37.05-4.59-39.47-4.3-46.03 0-45.36 3.75-44.77 3.17-39.09 1.13-37.05Z";
 					let board = $('<svg>').addClass('not-chess').attr('viewbox', '0 0 600 600');
-							
+
 					let asciiBoard = readLines(23);
 					let pieces = [];
-					
+
 					for (let row = 0; row < 6; row++){
 						for (let col = 0; col < 6; col++) {
 
 						}
 					}
-					
-					
+
+
 					for (let row = 0; row < 6; row++) {
 						for (let col = 0; col < 6; col++) {
-							
+
 							// Add checkerboard-pattern square to board.
 							let squareColor = (row % 2 === col % 2) ? '#FFF' : '#CCC';
 							$('<rect>')
@@ -14642,20 +14642,20 @@ let parseData = [
 								.attr('fill', squareColor)
 								.appendTo(board);
 							let logRow = 4 * row + 1;
-							let logCol = 4 * col + 1; 
-							
+							let logCol = 4 * col + 1;
+
 							let symbol = asciiBoard[logRow][logCol];
-							
+
 							if (symbol === '░' || symbol === '▓')
 								continue;
-							
+
 							let isWhite = symbol === 'w' || symbol === 'W';
 							let isKing = symbol === 'W' || symbol === 'B';
-							
+
 							let fill = isWhite ? '#E2DDD6' : '#222';
 							let stroke = isWhite ? '#666' : '#000';
 							let crownFill = isWhite ? '#222' : '#DDD';
-							
+
 							$('<circle>')
 								.attr('cx', 100 * col + 50)
 								.attr('cy', 100 * row + 50)
@@ -14664,7 +14664,7 @@ let parseData = [
 								.attr('stroke', stroke)
 								.attr('stroke-width', 8)
 								.appendTo(board);
-								
+
 							if (isKing) {
 								$('<path>')
 									.attr('d', CROWN_PATH)
@@ -14674,8 +14674,8 @@ let parseData = [
 							}
 						}
 					}
-					
-					
+
+
 					module.push({ obj:board.prop('outerHTML'), nobullet:true });
 					return true;
 				}
@@ -14817,12 +14817,12 @@ let parseData = [
 				// Initialize a bunch of helper functions and also create the template grid.
 				regex: /Initializing module\./,
 				handler: function(_, module) {
-					
+
 					// Constants
 					module.CELL_HEIGHT = 1.0; // rectilineal height and width of a hex cell
 					module.CELL_WIDTH = 0.866;
 					module.HEX_PATH = 'M0 .25.433 0 .866.25.866.75.433 1 0 .75Z';
-					
+
 					// Gives the coordinates of the edge at given direction (see manual)
 					module.lineCoords = {
 						0: { x1:0, y1:0.25, x2:0.433, y2:0 },
@@ -14836,16 +14836,16 @@ let parseData = [
 					module.colorLookup = { 'R':'#F66', 'G':'#6F6', 'B':'#4AF', 'M':'#F8F', 'Y':'#FF6', 'W':'#FFF', 'X':'#CCC' };
 					// Color of the padding of hexes in the just-placed tetrahex visuals.
 					module.outlineLookup = { 'R':'#C44', 'G':'#6A6', 'B':'#48C', 'M':'#A4A', 'Y':'#CC4', 'W':'#AAA' };
-					
+
 					// Gets top-left corner of bounding box of hex at (q,r).
 					// Q is eastward-pointing axis.
 					// R is northeastward-pointing axis.
-					module.getXY = function(q, r) { 
+					module.getXY = function(q, r) {
 						let x = (q - r) * module.CELL_WIDTH / 2;
 						let y = (q + r) * 3/4 * module.CELL_HEIGHT;
 						return { x:x, y:y };
 					}
-					
+
 					// Gets center of hex at (q,r) coord.
 					module.getXYCenter = function(q,r) {
 						let pair = module.getXY(q,r);
@@ -14853,7 +14853,7 @@ let parseData = [
 						pair.y += module.CELL_HEIGHT / 2;
 						return pair;
 					}
-					
+
 					// Adds a hex to the grid at the (q,r) coordinate with the given color and returns the container at that position.
 					module.addHex = function(grid, q, r, color, clip) {
 						let coord = module.getXY(q, r);
@@ -14861,26 +14861,26 @@ let parseData = [
 										.attr('transform', `translate(${coord.x} ${coord.y})`)
 										.attr('q', q).attr('r', r)
 										.appendTo(grid);
-										
+
 						let hex = $SVG('<path>').addClass('hex')
 									.attr('d',		module.HEX_PATH)
 									.attr('fill', 	module.colorLookup[color]);
-						
-						if (clip){ 
+
+						if (clip){
 							let clipPath = $("<clipPath>").attr('id', 'nlcy-clip' + module.id).appendTo(group);
 							hex.appendTo(clipPath);
-						} else 
+						} else
 							hex.appendTo(group);
-						
-						return group;	
+
+						return group;
 					}
-					// Adds a hex to the grid with colorblind text. 
+					// Adds a hex to the grid with colorblind text.
 					module.addHexLargeText = function(grid, q, r, color, clip) {
 						let group = module.addHex(grid, q, r, color, clip);
 						// Unfilled has no colorblind text.
-						if (color === 'X') 
+						if (color === 'X')
 							return group;
-						
+
 						let txt = $SVG('<text>')
 									.attr('dominant-baseline', 'central')
 									.attr('text-anchor', 'middle')
@@ -14905,7 +14905,7 @@ let parseData = [
 									.attr('font-size', '0.25')
 									.html(color)
 									.appendTo(group);
-						return group; 
+						return group;
 					}
 					// evaluates if a list of (q,r) pairs contains the target pair.
 					module.hasQR = function(qrs, target) {
@@ -14921,16 +14921,16 @@ let parseData = [
 							case 0: return { q:src.q - 1, r:src.r     }; // NW
 							case 1: return { q:src.q    , r:src.r - 1 }; // NE
 							case 2: return { q:src.q + 1, r:src.r - 1 }; // E
-							case 3: return { q:src.q + 1, r:src.r     }; // SE 
+							case 3: return { q:src.q + 1, r:src.r     }; // SE
 							case 4: return { q:src.q    , r:src.r + 1 }; // SW
 							case 5: return { q:src.q - 1, r:src.r + 1 }; // W
 						}
 					}
-					
+
 					// Retrieve the mod ID and store it (for unique ID'ing of #nlcy-clip and #nlcy-arrow)
 					linen--;
 					module.id = readLine().match(/\d+/)[0]
-					
+
 					//Setting bounds of template svg.
 					let MARGIN = .25; // Accounts for hex borders.
 					let w = 7 * module.CELL_WIDTH;
@@ -14940,7 +14940,7 @@ let parseData = [
 					module.template = $('<svg>')
 										.addClass('not-light-cycle')
 										.attr('viewbox', `${x - MARGIN} ${y - MARGIN} ${w + 2 *MARGIN} ${h + 2 * MARGIN}`);
-					
+
 					let defs = $('<defs>').appendTo(module.template);
 					let marker = $('<marker>')
 									.attr('id', 'nlcy-arrow' + module.id)
@@ -14949,8 +14949,8 @@ let parseData = [
 									.attr('orient', 'auto')
 									.appendTo(defs);
 					let arrowPath = $SVG('<path>').addClass('arrow').attr('d', 'M1 1 3 2 1 3').appendTo(marker);
-					
-					
+
+
 					// One for-loop for each value of q from [-3,3]. Add a hex for each possible r value.
 					for (let r =  0; r <= 3; r++) module.addHex(module.template, -3, r, 'X', false);
 					for (let r = -1; r <= 3; r++) module.addHex(module.template, -2, r, 'X', false);
@@ -14959,7 +14959,7 @@ let parseData = [
 					for (let r = -3; r <= 2; r++) module.addHex(module.template,  1, r, 'X', false);
 					for (let r = -3; r <= 1; r++) module.addHex(module.template,  2, r, 'X', false);
 					for (let r = -3; r <= 0; r++) module.addHex(module.template,  3, r, 'X', false);
-					
+
 
 				}
 			},
@@ -14967,19 +14967,19 @@ let parseData = [
 				// Fires when tetrahex is generated.
 				regex: /^(Tetrahex .+ Color: ([A-Z])[a-z]+); Hex Positions: (.+)$/,
 				handler: function(matches, module) {
-					
+
 					// Log the tetrahex number, the flashing positions, and its color as normal.
 					module.push(matches[1]);
-					
+
 					// Keep track of the flashed hex positions.
 					let tetrahex = [];
 					let col = matches[2];
-					
+
 					// Split string into morsels, e.g. "(-1, -2)" with q (-1) and r (-2) selected by the regex.
 					let splitMatches = matches[3].matchAll(/\((-?[\d]), (-?[\d])\)/g);
 					for (let pairMatch of splitMatches)
 						tetrahex.push({ q: parseInt(pairMatch[1]), r: parseInt(pairMatch[2]), color: col });
-					
+
 					module.lastTetrahex = tetrahex;
 				}
 			},
@@ -14987,7 +14987,7 @@ let parseData = [
 				// Fires when the module logs the full state of the grid.
 				regex: /^Grid: (.+)$/,
 				handler: function(matches, module) {
-					
+
 					// Split string into morsels e.g. "(1, -2)/Blue" with q (1), r (-2), and color (B) selected by the regex.
 					let splitMatches = matches[1].matchAll(/\((-?[\d]), (-?[\d])\)\/([A-Z])[a-z]+/g);
 					let allHexes = [];
@@ -14995,13 +14995,13 @@ let parseData = [
 						let hexData = { q:parseInt(matchHex[1]), r:parseInt(matchHex[2]), color:matchHex[3] };
 						allHexes	.push(hexData);
 					}
-					
+
 					let grid = module.template.clone();
 
 					// Add all the colored hexes.
-					for (let hex of allHexes) 
+					for (let hex of allHexes)
 						module.addHexLargeText(grid, hex.q, hex.r, hex.color, false);
-					
+
 					// Mark the last-placed tetrahex with colored padding.
 					for (let hex of module.lastTetrahex) {
 						// Adds duplicate of hex as a clip path so the padding is contained fully within the tetrahex.
@@ -15019,7 +15019,7 @@ let parseData = [
 											.appendTo(clipper);
 							}
 						}
-					}					
+					}
 					module.push({ obj: grid.prop('outerHTML'), nobullet:true });
 				}
 			},
@@ -15027,27 +15027,27 @@ let parseData = [
 				regex: /^Hexes of path: (.+)\./,
 				handler: function (matches, module) {
 					// Split string into morsels e.g. "(1, -2)/Blue" with q (1), r (-2), and color (B) selected by the regex.
-					
+
 					let splitMatches = matches[1].matchAll(/\((-?[\d]), (-?[\d])\)\/([A-Z])[a-z]+/g);
-					
+
 					module.pathHexes = [];
-					
+
 					for (let matchHex of splitMatches) {
 						let hexData = { q:parseInt(matchHex[1]), r:parseInt(matchHex[2]), color:matchHex[3] };
 						module.pathHexes.push(hexData);
 					}
-					
+
 					let grid = module.template.clone();
-					
+
 					let path;
 					for (let hex of module.pathHexes)  {
-						if (!path) 
+						if (!path)
 							path = 'M';
 						else path += 'L';
-						
+
 						let nodeXY = module.getXYCenter(hex.q, hex.r);
 						path += `${nodeXY.x} ${nodeXY.y}`;
-						
+
 						module.addHexSmallText(grid, hex.q, hex.r, hex.color, false);
 					}
 					let hexPath = $('<path>')
@@ -15080,14 +15080,14 @@ let parseData = [
 				handler: function(matches, module) {
 					// Path marking steps are all done at this point so we can send the full thing to the log.
 					module.push([ "Path Marking Steps:", module.rulesMessages ]);
-					
+
 					// Also, now that the marked hexes are all stored on the module we can post the grid with the marked hexes.
 					let grid = module.template.clone();
 					// Add hexes with ring markers.
 					for (let hex of module.pathHexes) {
 						let group = module.addHexLargeText(grid, hex.q, hex.r, hex.color, false);
 						let strokeColor = hex.color === 'Y' || hex.color === 'W' ? '#CCC' : '#FFF';
-						
+
 						if (hex.isMarked) {
 							$SVG('<circle>').addClass("marker")
 								.attr('cx', module.CELL_WIDTH / 2)
@@ -15105,7 +15105,7 @@ let parseData = [
 			{
 				regex: /Path found from Corner|Strike|Correctly submitted|Module solved|Resetting/
 			}
-			
+
 		]
 	},
 	{
@@ -15865,7 +15865,7 @@ let parseData = [
 				regex: /Card #\d+ is an? (\w+)/,
 				handler: function(matches, module) {
 					if (!module.initialized) {
-					
+
 						const PADDING = 5;
 						const CARD_WIDTH = 20;
 						const CARD_HEIGHT = 30;
@@ -15883,38 +15883,38 @@ let parseData = [
 							'Sword': 'M.55-37.9-19.25-23.6-11.35 16.1H-21.25V24.6H-4.75V39.2H5.75V24.6H21.75V16.1H12.55L19.45-23.6Z'
 						};
 						module.makeGrid = function (cardValues, highlightCards) {
-							
+
 							let rowCount = Math.ceil(cardValues.length / 5);
-							
+
 							let width =  5 * CARD_WIDTH  + 6 * PADDING;
 							let height = rowCount * CARD_HEIGHT + (rowCount + 1) * PADDING;
 							let board = $('<svg>').addClass('pair-em')
 											.attr('viewbox', `${-PADDING} ${-PADDING} ${width} ${height}`);
-							
+
 							$('<rect>').addClass('background')
 										.attr('x', -PADDING).attr('y', -PADDING)
 										.attr('width', width).attr('height', height)
 										.attr('rx', 5).attr('ry', 5)
 										.appendTo(board);
-							
+
 							for (let cardIx = 0; cardIx < cardValues.length; cardIx++) {
 								let row = Math.floor(cardIx / 5);
 								let col = cardIx % 5;
-								
+
 								let x = (CARD_WIDTH + PADDING) * col;
 								let y = (CARD_HEIGHT + PADDING) * row;
-								
+
 								let group = $('<g>').attr('transform', `translate(${x} ${y})`).appendTo(board);
-								
+
 								if (highlightCards && highlightCards.includes(cardIx)) {
 									$('<rect>').addClass('highlight')
 												.attr('width', CARD_WIDTH).attr('height', CARD_HEIGHT)
 												.appendTo(group);
 								}
-								
+
 								let suitNumber = cardValues[cardIx];
 								let suitPath = suitPaths[module.suitsLookup[suitNumber]];
-								
+
 								$('<rect>').addClass('card')
 											.attr('width', CARD_WIDTH).attr('height', CARD_HEIGHT)
 											.appendTo(group);
@@ -15940,42 +15940,42 @@ let parseData = [
 			{
 				regex: /Intended Solution: (.+)/,
 				handler: function(matches, module) {
-					
+
 					let coordToNum = function (str) {
 						let col = "ABCDE".indexOf(str[0]);
 						let row = parseInt(str[1]) - 1;
 						return 5 * row + col;
 					}
 					let solutionPairs = [];
-					
+
 					selectedPairs = matches[1].matchAll(/([A-Z][1-5]),([A-Z][1-5])/g);
 					for (let pairMatches of selectedPairs) {
 						let cardA = coordToNum(pairMatches[1]);
 						let cardB = coordToNum(pairMatches[2]);
 						solutionPairs.push([ cardA, cardB ]);
 					}
-					
+
 					let initState = module.makeGrid(module.cardValues);
 					module.push({ label:"Initial board state:", obj: initState.prop('outerHTML') });
-					
+
 					let solutionGraphics = [ ];
-					
+
 					for (let solutionPair of solutionPairs) {
-					
+
 						let boardState = module.makeGrid(module.cardValues, solutionPair);
 						solutionGraphics.push({ obj: boardState.prop('outerHTML'), nobullet: true });
-						
+
 						let newState = [ ];
 						for (let ix = 0; ix < module.cardValues.length; ix++) {
 							if (!solutionPair.includes(ix))
 								newState.push(module.cardValues[ix]);
 						}
 						module.cardValues = newState;
-						
+
 					}
-					
+
 					module.push([ "Intended Solution:", solutionGraphics ]);
-					
+
 				}
 			},
 			{
@@ -15984,7 +15984,7 @@ let parseData = [
 					let resetValues = matches[1].split(", ").map(str => parseInt(str) - 1);
 					let resetState = module.makeGrid(resetValues);
 					module.push([ "Reset from board state:", [{ obj: resetState.prop('outerHTML'), nobullet:true }]]);
-					
+
 				}
 			},
 			{
@@ -17989,7 +17989,7 @@ let parseData = [
 							{element: "path", d: "M100 100H78c0-24 22-30 22-52z"}, //19
 						],
 						[
-							
+
 							{element: "path", d: "m56 0 18 6.54V46l-13.77-4.13L46 16 35.8 34.54 4 25v27h12.29L6 68h14.5L4 92h22V68h18l-8.57-12H68l-2.2-4H94l-20-6h26v54l-12.6-6H96L80 66 69 85.24 58 80v20H0V0Z"}, // 0
 							{element: "path", d: "M74 0v6.54L56 0Z"}, //1
 							{element: "path", d: "M78.66 8.24 74 6.54V0Z"}, //2
@@ -18060,14 +18060,14 @@ let parseData = [
 
 					const whiteLine = readTaggedLine();
 					const whiteIndex = whiteLine.match(/The color of the white patch \((\d+)\) is .+/)[1];
-					
+
 					let fillArr = [];
-					
+
 					for(let i = 0; i < 20; i++) {
 						let line = givens.find(g => g[1] == i);
 						fillArr.push(i == whiteIndex ? "white" : line == undefined ? "none" : line[2]);
 					}
-					
+
 					module.push({label: "Given", obj: module.getQuiltSvg(module.index, fillArr)})
 					module.push(whiteLine)
 					return true;
@@ -20379,8 +20379,8 @@ let parseData = [
 						svg += g + '</g>';
 					}
 					module.push({ label: 'Switch Mappings:', obj: svg });
-					
-					
+
+
 				}
 			},
 			{
@@ -20399,7 +20399,7 @@ let parseData = [
 					}
 
 					let currentState = module.generateState(matches[2]);
-					
+
 					if (matches[1] === 'INPUT') {
 						module.push( "Input signal: " + currentState);
 						module.interactions = [ ];
@@ -25073,15 +25073,12 @@ let parseData = [
 				handler: function(match, module) {
 					module.pages = [];
 
-					if(module.attemptNum == undefined) {
-						module.attemptNum = 0;
-					}
-					module.attemptNum++;
+					module.attemptNum = (module.attemptNum ?? 0) + 1;
 					module.attemptDropdown = [`Attempt ${module.attemptNum}`, []];
 					module.push(module.attemptDropdown);
-					module.getCurrentCubeOrientationLines = () => { return ["Current Cube Orientation", readLines(6)] }
-					module.readLine = () => { return readLine().replace(/^\[Wanderlust #\d+\]\s*/, "") }
-					module.readLines = (num) => { return readLines(num).map(l => l.replace(/^\[Wanderlust #\d+\]\s*/, "")) }
+					module.getCurrentCubeOrientationLines = () => ["Current Cube Orientation", readLines(6)];
+					module.readLine = () => readLine().replace(/^\[Wanderlust #\d+\]\s*/, "");
+					module.readLines = num => readLines(num).map(l => l.replace(/^\[Wanderlust #\d+\]\s*/, ""));
 					module.dimension = 300;
 					module.attemptDropdown[1].push(match[0])
 					return true;
@@ -25097,10 +25094,9 @@ let parseData = [
 
 					if(lines[0].includes("Current Cube Orientation"))
 					{
-						linen -= 2;	
+						linen -= 2;
 						module.attemptDropdown[1].push(match[0])
 					}
-
 					else
 					{
 						module.attemptDropdown[1].push([match[0], lines]);
@@ -25245,28 +25241,23 @@ let parseData = [
 						]
 					]
 
-					module.makeLine = (start, end) => {
-						let line =
-						$SVG("<line>")
+					module.makeLine = (start, end) => $SVG("<line>")
 						.attr("x1", start.x)
 						.attr("y1", start.y)
 						.attr("x2", end.x)
-						.attr("y2", end.y)
+						.attr("y2", end.y);
 
-						return line;
-					}
-
-					module.convertBattleshipCoords = (coord) => {
-						return {
-								row: (Number.parseInt(coord[1]) - 1),
-								col: "ABCDEF".indexOf(coord[0]),
-							}
-					} 
+					module.convertBattleshipCoords = coord => ({
+						row: (Number.parseInt(coord[1]) - 1),
+						col: "ABCDEF".indexOf(coord[0]),
+					});
 
 					module.applyMazePosition = ({row, col}) => {
 						const cellWidth = module.dimension / 6;
-						return {row: (row * cellWidth) + cellWidth / 2, 
-							    col: (col * cellWidth) + cellWidth / 2}
+						return {
+							row: (row * cellWidth) + cellWidth / 2,
+							col: (col * cellWidth) + cellWidth / 2
+						};
 					}
 
 					module.getNewMaze = (newMazeIndex, startingBattleshipCoord) => {
@@ -25277,10 +25268,10 @@ let parseData = [
 						module.pages.push({label: `Maze ${newMazeIndex}`, obj: module.currentSVG, messages: []});
 
 						//draw circle to mark starting location
-						let startingPosition = module.convertBattleshipCoords(startingBattleshipCoord)
-						let convertedPosition = module.applyMazePosition(startingPosition)
+						let startingPosition = module.convertBattleshipCoords(startingBattleshipCoord);
+						let convertedPosition = module.applyMazePosition(startingPosition);
 						module.currentPath.push(startingPosition);
-						drawCircle(convertedPosition.row, convertedPosition.col, "red", module.currentSVG);						
+						drawCircle(convertedPosition.row, convertedPosition.col, "red", module.currentSVG);
 					}
 
 					function drawCircle(row, col, color, svg) {
@@ -25295,17 +25286,17 @@ let parseData = [
 					function makeWall (start, end, svg) {
 						let line = module.makeLine(start, end);
 						line
-						.attr("stroke", "black")
-						.attr("stroke-width", 5)
-						.attr("stroke-linecap", "round")
-						.appendTo(svg)
+							.attr("stroke", "black")
+							.attr("stroke-width", 5)
+							.attr("stroke-linecap", "round")
+							.appendTo(svg);
 					}
 
 					function makeBell(row, col, cellSize, svg)
 					{
 						const BELL_PATH = "M0,0h-24v-340c0,-141.1,-104.3,-257.8,-240,-277.2v-38.8c0,-22.1,-17.9,-40,-40,-40s-40,17.9,-40,40v38.8c-135.7,19.4,-240,136.1,-240,277.2v340h-24c-17.7,0,-32,14.3,-32,32v32c0,4.4,3.6,8,8,8h216c0,61.8,50.2,112,112,112s112,-50.2,112,-112h216c4.4,0,8,-3.6,8,-8v-32c0,-17.7,-14.3,-32,-32,-32zm-304,120c-26.5,0,-48,-21.5,-48,-48h96c0,26.5,-21.5,48,-48,48z";
 
-						//viewbox dimension for original bell path 
+						//viewbox dimension for original bell path
 						const BELL_VIEWBOX_WIDTH = 624;
 						const BELL_VIEWBOX_HEIGHT = 818;
 
@@ -25315,11 +25306,10 @@ let parseData = [
 
 						//find the size of cell with padding
 						const innerSize = cellSize - Math.max(paddingX * 2, paddingY * 2);
-						
+
 						// find the position the cell needs to be at
 						const x = (col + 1) * cellSize + paddingX;
 						const y = (row + 1) * cellSize + paddingY;
-
 
 						// scale to fit cell
 						const scale = innerSize / BELL_VIEWBOX_HEIGHT * 0.7;
@@ -25328,8 +25318,7 @@ let parseData = [
 						//1. Set the bell to the center of its origin
 						//2. Scale it
 						//3. Move to center of cell
-						const g = $SVG("<g>")
-							.attr("transform", `translate(${x},${y}) scale(${scale})`);
+						const g = $SVG("<g>").attr("transform", `translate(${x},${y}) scale(${scale})`);
 
 						$SVG("<path>")
 							.attr("d", BELL_PATH)
@@ -25354,23 +25343,19 @@ let parseData = [
 							.attr("fill", "none")
 							.appendTo(baseSVG);
 
-						for(let r = 0; r < 6; r++) {
-							for(let c = 0; c < 6; c++) {
+						for (let r = 0; r < 6; r++) {
+							for (let c = 0; c < 6; c++) {
 								const tl = {x: c * cellSize, y: r * cellSize};
 								const tr = {x: (c+1) * cellSize, y: r * cellSize};
 								const bl = {x: c * cellSize, y: (r+1) * cellSize};
 								const br = {x: (c+1) * cellSize, y: (r+1) * cellSize};
 
-								if(maze[r][c].includes("R")) {
-									makeWall(tr, br, baseSVG)
-								}
-								if(maze[r][c].includes("D")) {
-									makeWall(bl, br, baseSVG)
-								}
-
-								if(maze[r][c].includes("*")) {
-									makeBell(r, c, cellSize, baseSVG)
-								}
+								if (maze[r][c].includes("R"))
+									makeWall(tr, br, baseSVG);
+								if (maze[r][c].includes("D"))
+									makeWall(bl, br, baseSVG);
+								if (maze[r][c].includes("*"))
+									makeBell(r, c, cellSize, baseSVG);
 							}
 						}
 
@@ -25379,7 +25364,7 @@ let parseData = [
 					module.mazeSVGs = mazeLayout.map((_, i) => makeSVGBase(i));
 					module.getNewMaze(Number.parseInt(match[1]), match[2]);
 					module.pages[module.pages.length - 1].messages.push(match[0]);
-					
+
 					return true;
 				}
 			},
@@ -25388,7 +25373,7 @@ let parseData = [
 				handler: function (match, module) {
 					let globalPath = module.readLine();
 					let localPaths = readLines(2).map(l => l.match(/Local path for .+ solved modules: (.+)/)[1]);
-					module.keyDropdown[1].push([match[0], [globalPath, ["Local Paths", [`Even solved modules: ${localPaths[0]}`, `Odd solved modules: ${localPaths[1]}`]]]])
+					module.keyDropdown[1].push([match[0], [globalPath, ["Local Paths", [`Even solved modules: ${localPaths[0]}`, `Odd solved modules: ${localPaths[1]}`]]]]);
 					makeCycleableDisplays(module.pages, module.keyDropdown[1]);
 					return true;
 				}
@@ -25424,7 +25409,7 @@ let parseData = [
 					//if this moves causes a strike, move on
 					let nextLine = module.readLine();
 
-					if(nextLine.includes("Strike!"))
+					if (nextLine.includes("Strike!"))
 					{
 						module.pages[pageIndex].messages.push(nextLine);
 						return true;
@@ -25449,7 +25434,7 @@ let parseData = [
 								module.pages[pageIndex].messages.push(nextLine);
 							}
 
-							
+
 							nextLine = module.readLine();
 
 							//if next line is current cube orientation, print next lines
@@ -25468,7 +25453,7 @@ let parseData = [
 					}
 
 					//if not global front or back, draw line on current svg
-					else if(match[1] != "front")
+					else if (match[1] != "front")
 					{
 						//calculate the new position
 						let newPos = getNewPosition();
@@ -25501,7 +25486,7 @@ let parseData = [
 				handler: function (match, module) {
 					let pageIndex = module.pages.length - 1;
 					module.pages[pageIndex].messages.push(match[0])
-					if(match[1] != "3rd")
+					if (match[1] != "3rd")
 					{
 						module.attemptDropdown[1].push(module.readLine())
 						linen++;
@@ -25509,7 +25494,7 @@ let parseData = [
 					}
 					else
 					{
-						module.readLines(3).forEach(l => { module.attemptDropdown[1].push(l) });
+						module.readLines(3).forEach(l => { module.attemptDropdown[1].push(l); });
 					}
 					module.pages = [];
 					const lastPos = module.currentPath[module.currentPath.length - 1];
@@ -25520,7 +25505,7 @@ let parseData = [
 			{
 				regex: /Moule Solved/,
 				handler: function (match, module) {
-					module.attemptDropdown[1].push(match[0])
+					module.attemptDropdown[1].push(match[0]);
 					return true;
 				}
 			}
