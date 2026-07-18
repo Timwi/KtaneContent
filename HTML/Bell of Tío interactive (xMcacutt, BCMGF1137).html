@@ -201,8 +201,11 @@
                 for (let j = 0; j < 5; j++) {
                     if (direction === 'clockwise') {
                         newGrid[j][4 - i] = grid[i][j];
-                    } else {
+                    } else if (direction === 'counterclockwise') {
                         newGrid[4 - j][i] = grid[i][j];
+                    } else
+                    {
+                        newGrid[i][j] = grid[i][j];
                     }
                 }
             }
@@ -310,6 +313,7 @@
             }
 
             if (!activeCell) return;
+            
             const key = event.key;
             if (key === 'Backspace' || key === 'Delete') {
                 grid[activeCell.i][activeCell.j] = '';
@@ -317,10 +321,32 @@
                 event.preventDefault();
                 return;
             }
-
-            if (key.length === 1 && /^[a-z]$/i.test(key)) {
+            else if (key.length === 1 && /^[a-z]$/i.test(key)) {
                 grid[activeCell.i][activeCell.j] = key.toUpperCase();
                 updateGrid();
+                return;
+            }
+            
+            // Arrow key handling
+            else if (key === 'ArrowDown')
+            {
+                selectCell((activeCell.i + 1) % 5, activeCell.j);
+                event.preventDefault();
+            }
+            else if (key === 'ArrowUp')
+            {
+                selectCell((activeCell.i + 4) % 5, activeCell.j);
+                event.preventDefault();
+            }
+            else if (key === 'ArrowRight')
+            {
+                selectCell(activeCell.i, (activeCell.j + 1) % 5);
+                event.preventDefault();
+            }
+            else if (key === 'ArrowLeft')
+            {
+                selectCell(activeCell.i, (activeCell.j + 4) % 5);
+                event.preventDefault();
             }
         }
 
@@ -382,8 +408,12 @@
             <img src="img/Component/Bell%20of%20Tío.svg" class="diagram">
             <h2>On the Subject of Bell of Tío</h2>
             <p class="flavour-text">A. E. *ding* F. *ding* A. E. I. O. U. *ding ding ding* A. B. C. *ding* ...okay, enough!</p>
-            <p>This manual is intended for use by those familiar with the <a href='Bell of Tío.html'>original manual</a></p>
-            <p style="padding-top:35px">Use the controls on the right to manipulate the grid.</p>
+            <p>This manual is intended for use by those familiar with the <a href='Bell of Tío.html'>original manual</a>.</p>
+            <ul style="padding-top:35px">
+            <li>Fill in the grid by clicking a cell and typing the letter in.</li>
+            <li>If you have a selected cell, you can use the arrow keys to move to an adjacent cell, wrapping around.</li>
+            <li>Use the controls on the right to manipulate the grid.</li>
+            </ul>
             <div class="grid-wrapper">
                 <table class="grid-container">
                     <tbody>
@@ -393,6 +423,7 @@
                     <div class="control-group">
                         <label>Rot Grid</label>
                         <select id="rotate-direction">
+                            <option value="nothing">-</option>
                             <option value="clockwise">CW</option>
                             <option value="counterclockwise">CCW</option>
                         </select>
