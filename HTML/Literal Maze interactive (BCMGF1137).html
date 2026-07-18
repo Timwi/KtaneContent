@@ -1,0 +1,366 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Literal Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <meta property="og:title" content="Literal Maze">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://ktane.timwi.de/Icons/Literal Maze.png">
+    <meta property="og:url" content="https://ktane.timwi.de/HTML/Literal Maze.html">
+    <meta property="og:description" content="Construct a maze using logic deductions.">
+    <style>
+        table {
+            margin: 1em auto;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .canvas {
+            display: block;
+            margin: 16px auto 0;
+            width: 55%;
+        }
+        
+        .dark svg {
+            filter: invert(87%);
+        }
+        
+        .line.unknown {
+            stroke: #222;
+            stroke-width: 0.2;
+            stroke-dasharray: 0.4 1.2;
+        }
+        
+        .line.true {
+            stroke: #222;
+            stroke-width: 0.2;
+            stroke-dasharray: none;
+        }
+        
+        .line.false {
+            stroke: none;
+        }
+        
+        .svgtext {
+            fill: #222;
+            text-anchor: middle;
+            font-size: 8px;
+        }
+        
+        .click-box {
+            fill-opacity: 0;
+        }
+        
+        .click-box:hover {
+            fill-opacity: 0.2;
+        }
+    </style>
+    <script type="module">
+    window.onload = ________ => {
+        // Get the walls
+        // "Internal" walls; digits represent 0-1-2 meaning False-Unknown-True in ternary logic
+        const vert = Array.from({length: 4}, () => Array.from({length: 5}, () => 1));
+        const horiz = Array.from({length: 5}, () => Array.from({length: 4}, () => 1));
+        
+        // "External" walls; walls as they appear in the manual
+        const $horizline = Array.from({length: 5}, () => Array.from({length: 4}));
+        const $vertline = Array.from({length: 4}, () => Array.from({length: 5}));
+        
+        const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+        
+        let inputField = document.getElementById("inputField");
+        const mazeCells = document.querySelectorAll("svg > text");
+        
+        // Initialize lines
+        // Horizontals
+        for (let i = 0; i < horiz.length; i++) {
+            for (let j = 0; j < horiz[i].length; j++) {
+                $horizline[i][j] = document.getElementById("hzline-r" + (i + 1) + "-c" + (j + 1));
+                document.getElementById("hzbox-r" + (i + 1) + "-c" + (j + 1)).addEventListener("click", () => toggleHoriz(i, j));
+            }
+        }
+        // Verticals
+        for (let i = 0; i < vert.length; i++) {
+            for (let j = 0; j < vert[i].length; j++) {
+                $vertline[i][j] = document.getElementById("vtline-r" + (i + 1) + "-c" + (j + 1));
+                document.getElementById("vtbox-r" + (i + 1) + "-c" + (j + 1)).addEventListener("click", () => toggleVert(i, j));
+            }
+        }
+        draw();
+        
+        // Force uppercase letters in the textbox
+        inputField.addEventListener("input", function() {
+            let currentValue = this.value;
+            
+            // Force uppercase characters
+            currentValue = currentValue.toUpperCase();
+            
+            // Remove characters other than letters
+            currentValue = currentValue.split("").map(letter => (ALPHABET.includes(letter) ? letter : "")).join("");
+            
+            // Set textbox to the current value
+            this.value = currentValue;
+            
+            // For each letter in the textbox, set the corresponding mazeCell to that letter
+            draw();
+        });
+        
+        // Toggling Walls
+        function toggleHoriz(row, col)
+        {
+            horiz[row][col] = (horiz[row][col] + 1) % 3;
+            draw();
+        }
+        
+        function toggleVert(row, col)
+        {
+            vert[row][col] = (vert[row][col] + 1) % 3;
+            draw();
+        }
+        
+        // Reset button
+        document.getElementById("reset-button").addEventListener("click", () => {
+            // Horizontals
+            for (let i = 0; i < horiz.length; i++) {
+                for (let j = 0; j < horiz[i].length; j++) {
+                    horiz[i][j] = 1;
+                }
+            }
+            // Verticals
+            for (let i = 0; i < vert.length; i++) {
+                for (let j = 0; j < vert[i].length; j++) {
+                    vert[i][j] = 1
+                }
+            }
+            draw();
+        });
+        
+        // Update the interactive
+        function draw() {
+            // Letters
+            for (let i = 0; i < 16; i++)
+            {
+                if (i < inputField.value.length)
+                {
+                    mazeCells[i].textContent = inputField.value[i];
+                }
+                else
+                {
+                    mazeCells[i].textContent = "";
+                }
+            }
+            
+            // Walls
+            for (let i = 0; i < horiz.length; i++) {
+                for (let j = 0; j < horiz[i].length; j++) {
+                    //console.log("" + i + "" + j);
+                    if (horiz[i][j] == 2) 
+                    {
+                        $horizline[i][j].setAttribute("class", "line true");
+                    }
+                    else if (horiz[i][j] == 1)
+                    {
+                        $horizline[i][j].setAttribute("class", "line unknown");
+                    }
+                    else
+                    {
+                        $horizline[i][j].setAttribute("class", "line false");
+                    }
+                }
+            }
+            for (let i = 0; i < vert.length; i++) {
+                for (let j = 0; j < vert[i].length; j++) {
+                    //console.log("" + i + "" + j);
+                    if (vert[i][j] == 2) 
+                    {
+                        $vertline[i][j].setAttribute("class", "line true");
+                    }
+                    else if (vert[i][j] == 1)
+                    {
+                        $vertline[i][j].setAttribute("class", "line unknown");
+                    }
+                    else
+                    {
+                        $vertline[i][j].setAttribute("class", "line false");
+                    }
+                }
+            }
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Literal Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Literal Maze.svg" class="diagram">
+                <h2>On the Subject of Literal Maze</h2>
+                <p class="flavour-text">Because you should know where walls are NOT present.</p>
+                <p>The module shows a 4×4 grid of letters. Each letter corresponds to a configuration of walls.</p>
+                <p>Deduce the wall configurations in such a way that:</p>
+                <ul>
+                    <li>Same letters correspond to same wall configurations.</li>
+                    <li>Different letters correspond to different wall configurations.</li>
+                    <li>There is a wall around the outer edge.</li>
+                    <li>Adjacent cells agree on whether there is a wall between them or not.</li>
+                    <li>The resulting structure is a maze in which every location is reachable from every other (no isolated regions).</li>
+                    <li>At least one cell has the wall configuration shown at the top of the module.</li>
+                </ul>
+                <p>Once the maze structure is deduced, enter the maze as follows:</p>
+                <ul>
+                    <li>Determine which letter corresponds to the wall configuration shown at the top of the module.</li>
+                    <li>Tap any of the cells with that letter.</li>
+                    <li>Repeat this process until the entire maze is revealed.</li>
+                </ul>
+                <label for="x">Letters: </label><input type="text" id="inputField" class="textbox" maxlength="16" placeholder="16 letters here">
+                <button id="reset-button">Reset Walls</button>
+                
+                <!--
+                Interactive SVG
+                -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" class="canvas">
+                <!-- Text elements-->
+                <text x="07" y="09.5" class="svgtext" id="disp01"></text>
+                <text x="17" y="09.5" class="svgtext" id="disp02"></text>
+                <text x="27" y="09.5" class="svgtext" id="disp03"></text>
+                <text x="37" y="09.5" class="svgtext" id="disp04"></text>
+                                                                  
+                <text x="07" y="19.5" class="svgtext" id="disp05"></text>
+                <text x="17" y="19.5" class="svgtext" id="disp06"></text>
+                <text x="27" y="19.5" class="svgtext" id="disp07"></text>
+                <text x="37" y="19.5" class="svgtext" id="disp08"></text>
+                                                                  
+                <text x="07" y="29.5" class="svgtext" id="disp09"></text>
+                <text x="17" y="29.5" class="svgtext" id="disp10"></text>
+                <text x="27" y="29.5" class="svgtext" id="disp11"></text>
+                <text x="37" y="29.5" class="svgtext" id="disp12"></text>
+                                                                  
+                <text x="07" y="39.5" class="svgtext" id="disp13"></text>
+                <text x="17" y="39.5" class="svgtext" id="disp14"></text>
+                <text x="27" y="39.5" class="svgtext" id="disp15"></text>
+                <text x="37" y="39.5" class="svgtext" id="disp16"></text>
+                
+                <!-- Horizontal *lines*-->
+                <line x1="02" y1="02" x2="12" y2="02" class="line" id="hzline-r1-c1"></line>
+                <line x1="12" y1="02" x2="22" y2="02" class="line" id="hzline-r1-c2"></line>
+                <line x1="22" y1="02" x2="32" y2="02" class="line" id="hzline-r1-c3"></line>
+                <line x1="32" y1="02" x2="42" y2="02" class="line" id="hzline-r1-c4"></line>     
+                <line x1="02" y1="12" x2="12" y2="12" class="line" id="hzline-r2-c1"></line>
+                <line x1="12" y1="12" x2="22" y2="12" class="line" id="hzline-r2-c2"></line>
+                <line x1="22" y1="12" x2="32" y2="12" class="line" id="hzline-r2-c3"></line>
+                <line x1="32" y1="12" x2="42" y2="12" class="line" id="hzline-r2-c4"></line>
+                <line x1="02" y1="22" x2="12" y2="22" class="line" id="hzline-r3-c1"></line>
+                <line x1="12" y1="22" x2="22" y2="22" class="line" id="hzline-r3-c2"></line>
+                <line x1="22" y1="22" x2="32" y2="22" class="line" id="hzline-r3-c3"></line>
+                <line x1="32" y1="22" x2="42" y2="22" class="line" id="hzline-r3-c4"></line>
+                <line x1="02" y1="32" x2="12" y2="32" class="line" id="hzline-r4-c1"></line>
+                <line x1="12" y1="32" x2="22" y2="32" class="line" id="hzline-r4-c2"></line>
+                <line x1="22" y1="32" x2="32" y2="32" class="line" id="hzline-r4-c3"></line>
+                <line x1="32" y1="32" x2="42" y2="32" class="line" id="hzline-r4-c4"></line>
+                <line x1="02" y1="42" x2="12" y2="42" class="line" id="hzline-r5-c1"></line>
+                <line x1="12" y1="42" x2="22" y2="42" class="line" id="hzline-r5-c2"></line>
+                <line x1="22" y1="42" x2="32" y2="42" class="line" id="hzline-r5-c3"></line>
+                <line x1="32" y1="42" x2="42" y2="42" class="line" id="hzline-r5-c4"></line>
+                
+                <!-- Vertical *lines*-->
+                <line x1="02" y1="02" x2="02" y2="12" class="line" id="vtline-r1-c1"></line>
+                <line x1="02" y1="12" x2="02" y2="22" class="line" id="vtline-r2-c1"></line>
+                <line x1="02" y1="22" x2="02" y2="32" class="line" id="vtline-r3-c1"></line>
+                <line x1="02" y1="32" x2="02" y2="42" class="line" id="vtline-r4-c1"></line>
+                <line x1="12" y1="02" x2="12" y2="12" class="line" id="vtline-r1-c2"></line>
+                <line x1="12" y1="12" x2="12" y2="22" class="line" id="vtline-r2-c2"></line>
+                <line x1="12" y1="22" x2="12" y2="32" class="line" id="vtline-r3-c2"></line>
+                <line x1="12" y1="32" x2="12" y2="42" class="line" id="vtline-r4-c2"></line>
+                <line x1="22" y1="02" x2="22" y2="12" class="line" id="vtline-r1-c3"></line>
+                <line x1="22" y1="12" x2="22" y2="22" class="line" id="vtline-r2-c3"></line>
+                <line x1="22" y1="22" x2="22" y2="32" class="line" id="vtline-r3-c3"></line>
+                <line x1="22" y1="32" x2="22" y2="42" class="line" id="vtline-r4-c3"></line>
+                <line x1="32" y1="02" x2="32" y2="12" class="line" id="vtline-r1-c4"></line>
+                <line x1="32" y1="12" x2="32" y2="22" class="line" id="vtline-r2-c4"></line>
+                <line x1="32" y1="22" x2="32" y2="32" class="line" id="vtline-r3-c4"></line>
+                <line x1="32" y1="32" x2="32" y2="42" class="line" id="vtline-r4-c4"></line>
+                <line x1="42" y1="02" x2="42" y2="12" class="line" id="vtline-r1-c5"></line>
+                <line x1="42" y1="12" x2="42" y2="22" class="line" id="vtline-r2-c5"></line>
+                <line x1="42" y1="22" x2="42" y2="32" class="line" id="vtline-r3-c5"></line>
+                <line x1="42" y1="32" x2="42" y2="42" class="line" id="vtline-r4-c5"></line>
+                
+                <!-- Horizontal *selectables*-->
+                <rect x="02" y="01.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r1-c1"></rect>
+                <rect x="12" y="01.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r1-c2"></rect>
+                <rect x="22" y="01.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r1-c3"></rect>
+                <rect x="32" y="01.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r1-c4"></rect>
+                <rect x="02" y="11.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r2-c1"></rect>
+                <rect x="12" y="11.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r2-c2"></rect>
+                <rect x="22" y="11.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r2-c3"></rect>
+                <rect x="32" y="11.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r2-c4"></rect>
+                <rect x="02" y="21.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r3-c1"></rect>
+                <rect x="12" y="21.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r3-c2"></rect>
+                <rect x="22" y="21.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r3-c3"></rect>
+                <rect x="32" y="21.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r3-c4"></rect>
+                <rect x="02" y="31.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r4-c1"></rect>
+                <rect x="12" y="31.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r4-c2"></rect>
+                <rect x="22" y="31.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r4-c3"></rect>
+                <rect x="32" y="31.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r4-c4"></rect>
+                <rect x="02" y="41.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r5-c1"></rect>
+                <rect x="12" y="41.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r5-c2"></rect>
+                <rect x="22" y="41.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r5-c3"></rect>
+                <rect x="32" y="41.3" height="1.4" width="10" rx="0.7" class="click-box" id="hzbox-r5-c4"></rect>
+                
+                <!-- Vertical *selectables*-->
+                <rect x="01.3" y="02" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r1-c1"></rect>
+                <rect x="01.3" y="12" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r2-c1"></rect>
+                <rect x="01.3" y="22" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r3-c1"></rect>
+                <rect x="01.3" y="32" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r4-c1"></rect>
+                <rect x="11.3" y="02" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r1-c2"></rect>
+                <rect x="11.3" y="12" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r2-c2"></rect>
+                <rect x="11.3" y="22" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r3-c2"></rect>
+                <rect x="11.3" y="32" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r4-c2"></rect>
+                <rect x="21.3" y="02" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r1-c3"></rect>
+                <rect x="21.3" y="12" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r2-c3"></rect>
+                <rect x="21.3" y="22" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r3-c3"></rect>
+                <rect x="21.3" y="32" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r4-c3"></rect>
+                <rect x="31.3" y="02" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r1-c4"></rect>
+                <rect x="31.3" y="12" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r2-c4"></rect>
+                <rect x="31.3" y="22" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r3-c4"></rect>
+                <rect x="31.3" y="32" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r4-c4"></rect>
+                <rect x="41.3" y="02" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r1-c5"></rect>
+                <rect x="41.3" y="12" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r2-c5"></rect>
+                <rect x="41.3" y="22" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r3-c5"></rect>
+                <rect x="41.3" y="32" height="10" width="1.4" rx="0.7" class="click-box" id="vtbox-r4-c5"></rect>
+                </svg>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Literal Maze</span>
+            </div>
+            <div class="page-content">
+                <h3>How To Use The Interactive</h3>
+                <ul>
+                    <li>Type the 16 letters on the module into the textbox to make them appear on the maze.</li>
+                    <li>Clicking a wall will toggle it between "unknown", "true", and "false" states.
+                    <ul>
+                        <li>"Unknown" walls appear dashed. They indicate you haven't deduced whether or not they are walls.</li>
+                        <li>"True" walls mean that a wall must be PRESENT.</li>
+                        <li>"False" walls mean that a wall must be ABSENT (this might be relevant in some scenarios).</li>
+                    </ul>
+                    </li>
+                    <li>Pressing "Reset Walls" will reset all of the walls to their unknown states.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
