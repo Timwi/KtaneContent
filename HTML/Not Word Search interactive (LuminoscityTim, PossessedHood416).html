@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Cruel Word Search — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/ui-utils.js"></script>
+    <script src="js/Utilities/math-utils.js"></script>
+    <script>
+    $(function() {
+        let currX = 0;
+        let currY = 0;
+        const rows = 6;
+        const cols = 6;
+        const MODE_READ = 0;
+        const MODE_SOLVE = 1;
+        var selected;
+        var chosen;
+        let grid = $(".grid");
+
+        function updateSelection() {
+            $(".selected").removeClass("selected");
+            if (selected && selected.length > 0) {
+                selected.addClass("selected");
+            }
+        }
+        function updateChosen() {
+            $(".netsquare.chosen").removeClass("chosen");
+            if (chosen && chosen.length > 0) {
+                chosen.addClass("chosen");
+            }
+        }
+
+        function mode() {
+            if ($("button.read-solve").hasClass("solve"))
+                return MODE_SOLVE;
+            else
+                return MODE_READ;
+        }
+
+        let down = false;
+        $(document).keydown(function(event) {
+            if (down)
+                return false;
+            down = true;
+            let k = event.key.toUpperCase();
+            if (k == " " || IsLetter(k)) {
+                if (mode() == MODE_READ) {
+                    if (selected && selected.hasClass("netsq") && NoSpecialKeys(event)) {
+                        if (k != " ") {
+                            var elem = grid.children().eq(currY+1).children().eq(currX+1);
+                            elem.find(".celltext").text(k);
+                        }
+                        if (currX == rows - 1)
+                            currY = (currY + 1) % cols;
+                        currX = (currX + 1) % rows;
+                        var elem2 = grid.children().eq(currY+1).children().eq(currX+1);
+                        selected = elem2;
+                        updateSelection();
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                }
+            }
+            down = false;
+        });
+
+        let row = $("<div>").addClass("square-row letters").appendTo(grid);
+        for (var i = 0; i < cols; i++) {
+            $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row);
+        }
+        for (let y = 1; y <= rows; y++) {
+            row = $("<div>").addClass("square-row").appendTo(grid);
+            $("<div>").addClass("square numbers").text(y).appendTo(row);
+            for (let x = 1; x <= cols; x++) {
+                let square = $("<div>").addClass("netsquare square netsq").appendTo(row).each(function(_, e) {
+                    var element = $(e);
+
+                    $("<div>").addClass("celltext").text("A").appendTo(element);
+                    $("<div>").addClass("pathnum").appendTo(element);
+                    element.click(function(event) {
+                        currX = x-1;
+                        currY = y-1;
+
+                        if (mode() == MODE_READ) {
+                            selected = $(this);
+                            updateSelection();
+                        }
+                        else {
+                            let removal = element.hasClass("chosen");
+                            $(this).toggleClass("chosen");
+                            let pathnum = element.find(".pathnum");
+                            if (removal) {
+                                let n = parseInt(pathnum.text());
+                                pathN.splice(pathN.indexOf(n), 1);
+                                pathnum.text("");
+                            } else {
+                                pathnum.text(nextPathN());
+                            }
+                        }
+                    });
+                });
+            }
+        }
+        resetSelection();
+
+        let buttons = $(".buttons");
+        $("<button>").addClass("read-solve").click(function() {
+            $(this).toggleClass("solve");
+            if (mode() == MODE_READ)
+                resetSelection();
+            else
+                selectNone();
+            // $(".reset-grid").click();
+        }).appendTo(buttons);
+
+        let resetButton = $("<button>").addClass("reset-grid").text("Reset").click(function() {
+            $(".netsquare.chosen").removeClass("chosen");
+            $(".netsquare .pathnum").text("");
+            pathN.splice(0, pathN.length);
+        }).appendTo(buttons);
+
+        function resetSelection() {
+            selected = grid.children().eq(1).children().eq(1);
+            currX = currY = 0;
+            updateSelection();
+        }
+        function selectNone() {
+            $(".selected").removeClass("selected");
+            selected = null;
+        }
+        if ((/mobi/i).test(navigator.userAgent))
+            $(".letterbox").removeClass("invisible");
+
+        let pathN = [];
+        function nextPathN() {
+            pathN.sort(function(a, b) {
+                return a - b;
+            });
+            let first = 1;
+            for (let i = 1; i <= pathN.length; i++) {
+                first = pathN[i-1];
+                if (first !== i) {
+                    first = i;
+                    break;
+                }
+                first = i + 1;
+            }
+            pathN.push(first);
+            return first;
+        }
+    });
+    </script>
+    <style>
+        .consonant-table {
+            margin-left:auto;
+            margin-right:auto;
+            margin-top:60px;
+            font-size:20px;
+        }
+        .left-table, .right-table, .center-table {
+            width:48%;
+            margin-bottom:10px;
+            font-size:14px;
+        }
+        .left-table {
+            margin-left:6px;
+            margin-right:10px;
+            float:left;
+        }
+        .right-table { float:left; }
+        .center-table {
+            margin-left:auto;
+            margin-right:auto;
+        }
+        .inner-table {
+            margin-left:auto;
+            margin-right:auto;
+            border:none;
+        }
+
+        .hstack { align-items: center; }
+        .vstack { align-items: center; }
+        .hstack.just-left { justify-content: left; }
+        .invisible { display: none; }
+        .square-row {
+            height: 55px;
+            margin: 1.5px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .square-row.letters { margin-left: 60px; }
+        .square {
+            margin: 1.5px;
+            width: 55px;
+            height: 55px;
+            float: left;
+            font-size: 30px;
+            user-select: none;
+            text-align: center;
+            border: #808080 1px solid;
+            transition: background-color 0.1s, color 0.1s;
+            box-sizing: border-box;
+        }
+        .square.numbers, .letters .square {
+            margin-top: 8px;
+            border-width: 0;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .netsquare {
+            height: 55px;
+            width: 55px;
+            font-size: 35px;
+            line-height: 60px;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+        }
+        .netsquare .pathnum {
+            position: absolute;
+            left: 4px;
+            bottom: 12px;
+            font-size: 12px;
+        }
+        .netsquare .celltext {
+            position: absolute;
+            height: 55px;
+            width: 53px;
+            font-size: 35px;
+        }
+        .netsquare.selected { border: 5px dashed black; }
+        .netsquare.selected .pathnum {
+            left: 0px;
+            line-height: 52px;
+        }
+        .netsquare.selected .celltext {
+            width: 45px;
+            line-height: 52px;
+        }
+        .dark .netsquare.selected { border-color: #AAA; }
+        .netsquare.chosen { background-color: #8F8; }
+        .dark .netsquare.chosen { background-color: #282; }
+        .square.nopointer {
+            cursor: default;
+            background: transparent;
+            border: none;
+        }
+        .tools { width: 80px; }
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 20px;
+            border-radius: 5px;
+            border: black 2px solid;
+            padding: 4px 7px;
+            transition: color 1s, background-color 1s;
+            margin: 5px;
+        }
+        .letterbox {
+            margin-top: 10px;
+            width: 60px;
+        }
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.read-solve.solve::before { content: 'Solve'; }
+        button.read-solve:not(.solve)::before { content: 'Read'; }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 3'; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Not Word Search</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Not Word Search.svg" class="diagram">
+                <h2>On the Subject of Not Word Search</h2>
+                <p class="flavour-text">FLDSMDFR</p>
+                <p>A field of 18 pairs of consonants will appear on a screen within the module, leaving three remaining consonants that do not appear on the module.</p>
+                <ol><li>Two of the missing letters can be found in one of the cells in the table below. Start at the letter in the field that shares the same position as that cell and select both cells with that letter.</li>
+                <li>Find the letter of the current space in the diagram associated with the third missing consonant and apply the movement from the + symbol it describes.
+                <ul><li>If the letter landed on has already been selected, repeat the movement until landing on an unselected cell.</li>
+                <li>If the movement repeats until returning to the current space, apply the movement described by the next consonant in alphabetical order.</li></ul></li>
+                <li>Select the space that is landed on and the other space that shares the same letter.<br>Once the first selection is made, <strong>the grid will be hidden</strong>.</li>
+                <li>Repeat steps 2 and 3, updating the current space with the space that was landed on each time, until 12 total spaces have been selected.</li></ol>
+                <p>A strike is incurred if an incorrect letter is pressed or a letter is pressed out of order.</p>
+                <table class="consonant-table">
+                <tr><th>DJ</th><th>DN</th><th>BL</th><th>BM</th><th>HL</th><th>HJ</th></tr>
+                <tr><th>GL</th><th>FL</th><th>CK</th><th>BN</th><th>BK</th><th>HN</th></tr>
+                <tr><th>CM</th><th>CP</th><th>FP</th><th>HP</th><th>GJ</th><th>FJ</th></tr>
+                <tr><th>DP</th><th>FN</th><th>CJ</th><th>HM</th><th>CL</th><th>BJ</th></tr>
+                <tr><th>BP</th><th>GN</th><th>GM</th><th>CN</th><th>FM</th><th>HK</th></tr>
+                <tr><th>GK</th><th>FK</th><th>DM</th><th>GP</th><th>DK</th><th>DL</th></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Not Word Search</span>
+            </div>
+            <div class="page-content">
+                <table class="left-table">
+                <tr><th>Diagram Q</th></tr>
+                <tr><th><table class="inner-table">
+                <tr><th class="corner"></th><th>B</th><th>C</th><th>D</th><th class="corner"></th></tr>
+                <tr><th>F</th><th>G</th><th>H</th><th>J</th><th>K</th></tr>
+                <tr><th>L</th><th>M</th><th>+</th><th>N</th><th>P</th></tr>
+                <tr><th>R</th><th>S</th><th>T</th><th>V</th><th>W</th></tr>
+                <tr><th class="corner"></th><th>X</th><th>Y</th><th>Z</th><th class="corner"></th></tr>
+                </table></th></table>
+                <table class="right-table">
+                <tr><th>Diagram R</th></tr>
+                <tr><th><table class="inner-table">
+                <tr><th class="corner"></th><th>X</th><th>Y</th><th>Z</th><th class="corner"></th></tr>
+                <tr><th>W</th><th>H</th><th>J</th><th>K</th><th>L</th></tr>
+                <tr><th>V</th><th>G</th><th>+</th><th>B</th><th>M</th></tr>
+                <tr><th>T</th><th>F</th><th>D</th><th>C</th><th>N</th></tr>
+                <tr><th class="corner"></th><th>S</th><th>Q</th><th>P</th><th class="corner"></th></tr>
+                </table></th></table>
+                <table class="left-table">
+                <tr><th>Diagram S</th></tr>
+                <tr><th><table class="inner-table">
+                <tr><th class="corner"></th><th>N</th><th>D</th><th>P</th><th class="corner"></th></tr>
+                <tr><th>L</th><th>M</th><th>F</th><th>Q</th><th>R</th></tr>
+                <tr><th>B</th><th>C</th><th>+</th><th>H</th><th>G</th></tr>
+                <tr><th>Z</th><th>Y</th><th>K</th><th>V</th><th>T</th></tr>
+                <tr><th class="corner"></th><th>X</th><th>J</th><th>W</th><th class="corner"></th></tr>
+                </table></th></table>
+                <table class="right-table">
+                <tr><th>Diagram T</th></tr>
+                <tr><th><table class="inner-table">
+                <tr><th class="corner"></th><th>Z</th><th>G</th><th>M</th><th class="corner"></th></tr>
+                <tr><th>Y</th><th>F</th><th>L</th><th>H</th><th>N</th></tr>
+                <tr><th>D</th><th>X</th><th>+</th><th>P</th><th>J</th></tr>
+                <tr><th>W</th><th>C</th><th>S</th><th>K</th><th>Q</th></tr>
+                <tr><th class="corner"></th><th>V</th><th>B</th><th>R</th><th class="corner"></th></tr>
+                </table></th></table>
+                <table class="left-table">
+                <tr><th>Diagram V</th></tr>
+                <tr><th><table class="inner-table">
+                <tr><th class="corner"></th><th>L</th><th>W</th><th>K</th><th class="corner"></th></tr>
+                <tr><th>B</th><th>M</th><th>X</th><th>J</th><th>T</th></tr>
+                <tr><th>C</th><th>N</th><th>+</th><th>H</th><th>S</th></tr>
+                <tr><th>D</th><th>P</th><th>Y</th><th>G</th><th>R</th></tr>
+                <tr><th class="corner"></th><th>Q</th><th>Z</th><th>F</th><th class="corner"></th></tr>
+                </table></th></table>
+                <table class="right-table">
+                <tr><th>Diagram W</th></tr>
+                <tr><th><table class="inner-table">
+                <tr><th class="corner"></th><th>K</th><th>L</th><th>B</th><th class="corner"></th></tr>
+                <tr><th>J</th><th>T</th><th>V</th><th>M</th><th>C</th></tr>
+                <tr><th>S</th><th>Z</th><th>+</th><th>X</th><th>N</th></tr>
+                <tr><th>H</th><th>R</th><th>Y</th><th>P</th><th>D</th></tr>
+                <tr><th class="corner"></th><th>G</th><th>Q</th><th>F</th><th class="corner"></th></tr>
+                </table></th></table>
+                <table class="left-table">
+                <tr><th>Diagram X</th></tr>
+                <tr><th><table class="inner-table">
+                <tr><th>B</th><th>C</th><th class="corner"></th><th>N</th><th>P</th></tr>
+                <tr><th>D</th><th>F</th><th class="corner"></th><th>Q</th><th>R</th></tr>
+                <tr><th>G</th><th>H</th><th>+</th><th>S</th><th>T</th></tr>
+                <tr><th>J</th><th>K</th><th class="corner"></th><th>V</th><th>W</th></tr>
+                <tr><th>L</th><th>M</th><th class="corner"></th><th>Y</th><th>Z</th></tr>
+                </table></th></table>
+                <table class="right-table">
+                <tr><th>Diagram Y</th></tr>
+                <tr><th><table class="inner-table">
+                <tr><th>Z</th><th>X</th><th>W</th><th>V</th><th>T</th></tr>
+                <tr><th>S</th><th>R</th><th>Q</th><th>P</th><th>N</th></tr>
+                <tr><th class="corner"></th><th class="corner"></th><th>+</th><th class="corner"></th><th class="corner"></th></tr>
+                <tr><th>H</th><th>J</th><th>K</th><th>L</th><th>M</th></tr>
+                <tr><th>B</th><th>C</th><th>D</th><th>F</th><th>G</th></tr>
+                </table></th></table>
+                <table class="center-table">
+                <tr><th>Diagram Z</th></tr>             
+                <tr><th><table class="inner-table">
+                <tr><th class="corner"></th><th class="corner"></th><th>S</th><th class="corner"></th><th class="corner"></th><th class="corner"></th><th class="corner"></th></tr>
+                <tr><th class="corner"></th><th>N</th><th>R</th><th class="corner"></th><th>J</th><th>H</th><th class="corner"></th></tr>
+                <tr><th class="corner"></th><th>P</th><th>Q</th><th class="corner"></th><th>K</th><th>L</th><th>M</th></tr>
+                <tr><th class="corner"></th><th class="corner"></th><th class="corner"></th><th>+</th><th class="corner"></th><th class="corner"></th></tr>
+                <tr><th>Y</th><th>X</th><th>W</th><th class="corner"></th><th>D</th><th>C</th><th class="corner"></th></tr>
+                <tr><th class="corner"></th><th>T</th><th>V</th><th class="corner"></th><th>F</th><th>B</th><th class="corner"></th></tr>
+                <tr><th class="corner"></th><th class="corner"></th><th class="corner"></th><th class="corner"></th><th>G</th><th class="corner"></th><th class="corner"></th></tr>
+                </table></th></table>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Not Word Search</span>
+            </div>
+            <div class="page-content">
+                <h3>Interactive</h3>
+                <div class="hstack just-left">
+                    <div class="vstack tools buttons"></div>
+                    <div class="grid"></div>
+                </div>
+                <input type="text" class="letterbox invisible">
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>In <b>Read</b> mode, you can <b>press Space/Any Letter</b> on your keyboard to input the puzzle.</li>
+                    <li>In <b>Solve</b> mode, you can click the letters in the correct order, which will be displayed in the top-left corner of each cell.</li>
+                    <li>The <b>reset</b> button only resets the numbers and selected letter highlights.</li>
+                    <li>On mobile, you can use the textbox to type the puzzle letters.</li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+    </div>
+</body>
+</html>
