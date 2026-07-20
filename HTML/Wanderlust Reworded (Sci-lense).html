@@ -1,0 +1,302 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Wanderlust — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        $(function() {
+            setTimeout(() => { $("canvas#draw-canvas").remove();}, 1000);
+            const mazeLayout = [
+                [
+                    ["R","R*","D","","D","D*"],
+                    ["R","R","","RD","D*",""],
+                    ["","RD","D","D","RD*",""],
+                    ["R","D","","","RD",""],
+                    ["D","RD*","R","RD*","",""],
+                    ["*","","R","","R","*"]
+                ],
+                [
+                    ["D","D","R","D*","D",""],
+                    ["R*","D*","R","","RD*",""],
+                    ["","RD","D","RD","D",""],
+                    ["R","D*","D","","R",""],
+                    ["","D","RD*","R","R",""],
+                    ["","R","","R","R*","*"]
+                ],
+                [
+                    ["","D","","RD*","D",""],
+                    ["R","R*","R","","",""],
+                    ["RD*","R","RD","RD*","R","D*"],
+                    ["","D","RD","R*","D","D"],
+                    ["","R","","D","D",""],
+                    ["R","R*","","","R*",""]
+                ],
+                [
+                    ["","D","R","","D",""],
+                    ["D","R","RD*","D","R","D*"],
+                    ["D*","D","RD","D","D","D*"],
+                    ["","D","R","","",""],
+                    ["D","R","RD*","RD*","R","D*"],
+                    ["*","","R","","",""]
+                ],
+                [
+                    ["","D","D","","D",""],
+                    ["RD*","","RD*","RD*","R","D"],
+                    ["","","D","RD","R","*"],
+                    ["RD*","R","D","D","","D"],
+                    ["R","RD","R*","D*","RD","*"],
+                    ["","","","","",""]
+                ],
+                [
+                    ["R","","D","","D","D*"],
+                    ["R","D","RD*","R","R*",""],
+                    ["R","D*","R","RD","D",""],
+                    ["","RD*","","D","RD*",""],
+                    ["R","D","D","R","",""],
+                    ["","","R*","R","R*",""]
+                ],
+                [
+                    ["D","D","","RD*","","D*"],
+                    ["D*","R","D","D","RD",""],
+                    ["","D","RD","R*","",""],
+                    ["R","D*","R","R","RD*",""],
+                    ["R","D","R","R","",""],
+                    ["","R*","","R","R","*"]
+                ],
+                [
+                    ["D","","D","RD*","R","*"],
+                    ["","D","RD","D","D",""],
+                    ["D","RD*","R*","D","R",""],
+                    ["","D","RD","","R",""],
+                    ["R","","RD*","R","RD*",""],
+                    ["","R","*","","R","*"]
+                ],
+                [
+                    ["D","","D","D","RD*","*"],
+                    ["R*","R","","RD*R","D",""],
+                    ["D","RD","D","D","D","D"],
+                    ["","R","","D","D",""],
+                    ["R","RD*","D","RD*","D",""],
+                    ["","","","","R*","*"]
+                ],
+                [
+                    ["","","R","R*","R",""],
+                    ["R","R","R","R","D",""],
+                    ["RD*","RD","RD*","R","D*",""],
+                    ["D*","D","D","","RD",""],
+                    ["D","D","R","RD","R*",""],
+                    ["*","","","","R","*"]
+                ],
+                [
+                    ["D","D","","D","","D*"],
+                    ["","RD*","R","R*","RD",""],
+                    ["","RD","RD*","","D",""],
+                    ["R","D*","D","RD","R*","D"],
+                    ["","R","","D","RD","*"],
+                    ["R*","R","","","",""]
+                ],
+                [
+                    ["R","R*","D","","D","D*"],
+                    ["","RD","R","R","","D*"],
+                    ["","D","RD","D","RD",""],
+                    ["RD*","","R","D*","","D"],
+                    ["","RD","","RD","R","*"],
+                    ["R*","*","R","","",""]
+                ],
+                [
+                    ["","","D","D","RD*",""],
+                    ["R","R","D*","D","","D"],
+                    ["RD*","RD","","RD*","R","*"],
+                    ["","","RD","R*","D","D"],
+                    ["R","R","","","R","*"],
+                    ["R","R*","R","R","",""]
+                ]
+            ]
+        
+            var divs = document.querySelectorAll(".maze");
+        
+            for(var i = 0; i < divs.length; i++){
+                var svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'>";
+                svg += "<rect width='300' height='300' stroke-width='10' fill='none'/>";
+                
+                for(var r = 0; r < 6; r++) for(var c = 0; c < 6; c++){
+                    if(mazeLayout[i][r][c].indexOf('R') != -1)
+                        svg += `<line x1="${(c+1)*50}" y1="${(r)*50}" x2="${(c+1)*50}" y2="${(r+1)*50}" stroke-width="5" stroke-linecap="round"></line>`
+                    if(mazeLayout[i][r][c].indexOf('D') != -1)
+                        svg += `<line x1="${(c)*50}" y1="${(r+1)*50}" x2="${(c+1)*50}" y2="${(r+1)*50}" stroke-width="5" stroke-linecap="round"></line>`
+                    if(mazeLayout[i][r][c].indexOf('*') != -1)
+                        svg += `<path transform="scale(0.04)" d="M${930+c*1247},${900+r*1238}h-24v-340c0,-141.1,-104.3,-257.8,-240,-277.2v-38.8c0,-22.1,-17.9,-40,-40,-40s-40,17.9,-40,40v38.8c-135.7,19.4,-240,136.1,-240,277.2v340h-24c-17.7,0,-32,14.3,-32,32v32c0,4.4,3.6,8,8,8h216c0,61.8,50.2,112,112,112s112,-50.2,112,-112h216c4.4,0,8,-3.6,8,-8v-32c0,-17.7,-14.3,-32,-32,-32zm-304,120c-26.5,0,-48,-21.5,-48,-48h96c0,26.5,-21.5,48,-48,48z"/>`;
+                }
+                
+                svg += `<text x="17" y="30">${i}</text>`
+                
+                for(var r = 0; r < 6; r++) for(var c = 0; c < 6; c++)
+                    svg += `<rect width="50" height="50" x="${c*50}" y="${r*50}" fill="transparent" class="highlightable"></rect>`  
+            
+                svg += "</svg>";
+        
+                divs[i].innerHTML = svg;
+            }
+        });
+    </script>
+    <style>
+        svg:not(.diagram) {
+            width: 100%;
+        }
+        .dark svg:not(.diagram) {
+            fill: #ddd;
+        }
+        line, .maze svg rect:first-of-type {
+            stroke: #000
+        }
+        .dark line, .dark .maze svg rect:first-of-type {
+            stroke: #ddd
+        }
+        #axistable {
+            margin-top: 0px;
+            font-weight: bold
+        }
+        .asterisk {
+            font-size: 13px
+            
+        }
+        :nth-child(1 of .asterisk) {
+        margin-top: 270px;
+        }
+        table {
+            margin: 1em auto;
+            border: none;
+        }
+            .row {
+            display: flex;
+            margin-left: 5px;
+            margin-right: 5px;
+            gap: 20px;
+        }
+        .column { flex: 50%; }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 4'; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wanderlust</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Wanderlust.svg" class="diagram">
+                <h2>On the Subject of Wandering Orb Mazes</h2>
+                <p class="flavour-text">local and global are weird...</p>
+                <p>This module contains a sphere with 6 selectable regions: <u>U</u>p, <u>D</u>own, <u>L</u>eft, <u>R</u>ight, <u>F</u>ront, and <u>B</u>ack. The status light can be held down for 5 seconds to reset the module to the beginning. This module also uses 2 different direction groups; local, the sphere seen on the module; and global, the offset directions used to solve the module.</p>
+                <p>To solve the module, the defuser has to travel through mazes, interact with bells to travel across mazes, collect 3 keys in a specific order, and return back to the original starting point.</p>
+                <h3>Setting Up the Initial Global Rotations</h3>
+                <p>During this section, pairs of letters will be given; the first letter refers to the direction as either <u>L</u>ocal or <u>G</u>lobal; the second letter refers to it's direction on a sphere.</p>
+                <p>For each pair of letter pairs, the first pair needs to reach the second pair by rotating the sphere. It is recommended to use a die to reorient the sphere. If a pair of letter pairs are on opposite sides of the sphere, use the table below to show which rotation to use. Assume even if used from step 1 or 2. The column is the axis not being considered, and the row is the parity of solved modules at the moment. Note: X passes through LF and LB, Y passes through LL and LR, and Z passes through LU and LD.</p>
+                <table>
+                    <tr><th>Missing Axes</th><th>X</th><th>Y</th><th>Z</th></tr>
+                    <tr><th>Even</th><td>Y</td><td>Z</td><td>X</td></tr>
+                    <tr><th>Odd</th><td>Z</td><td>X</td><td>Y</td></tr>
+                </table>
+                <h4>Step 1: Status Light Position</h4>
+                <p>Depending on where the status light is located, a rotation is needed to before the next step.</p>
+                    <table>
+                        <tr><th>TL</th><th>TR</th><th>BL</th><th>BR</th></tr>
+                        <tr><td>LU LL</td><td>LU LU</td><td>LU LD</td><td>LU LR</td></tr>
+                    </table>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+    <div class="page page-bg-02">
+        <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Wanderlust</span>
+            </div>
+        <div class="page-content">
+            <h4>Step 2: Other Rotations</h4>
+                <p>Take each character of the serial number and either, turn them into their alpha-numeric positions if they are letter, or keep the number if it's a number. For each character, two copies will be needed and applied on to find the postiion on the table below; add the number of batteries then mod 4 to one copy, and subtract the number of ports mod 3 to another copy. Use the first copy as the column and the second copy as the row to create more letter pairs from the table. This should result in 3 rotational pairs.</p>
+                <table>
+                    <tr><td></td><th>0</th><th>1</th><th>2</th><th>3</th></tr>
+                    <tr><th>0</th><td>LL</td><td>GB</td><td>GU</td><td>LF</td></tr>
+                    <tr><th>1</th><td>GR</td><td>LD</td><td>LB</td><td>GL</td>
+                    <tr><th>2</th><td>GD</td><td>GF</td><td>LR</td><td>LU</td>
+                </table>
+                <h3>Maze Components</h3>
+            <p>In the maze, bells can be interacted by pressing GB, keys can be collected by pressing GF, and to solve the module.</p>
+            <h4>Finding the Starting Location</h4>
+            <p>The starting maze can be found by taking the sum of all the serial characters mod 13. To find the start position take the global position of LL as the row and the number of modules (ignoring needies) mod 6 as the column. Once a bell is rung, the location doesn't change but maze advances one plus the last digit of the serial number.</p>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+    </div>
+    <div class="page page-bg-03">
+         <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Wanderlust</span>
+        </div>
+        <div class="page-content">
+            <h4>Finding the Key Locations</h4>
+            <p>The first key's maze is the number of modules (ignoring needies) mod 13. The row is the global direction that is LF, and the column is the starting maze mod 6.</p>
+            <p>The second and third key's maze can be found by taking the total amount of bells rung previously mod 13. The row can be found by the local direction pressed to collect the previous key, and the column can be found by taking the total amount of squares moved (ignoring GB and GF presses) mod 6.</p>
+            <table>
+                <tr><th></th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+                <tr><th>L</th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
+                <tr><th>R</th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
+                <tr><th>U</th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
+                <tr><th>D</th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
+                <tr><th>F</th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
+                <tr><th>B</th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
+            </table>
+            <h4>When Interacting with a Bell</h4>
+                <p>After each ring of a bell, a rotation is applied on the global directions. Use the latest local input before GB as the first pair, and the row of the interacted bell as a global second pair. If the first input was GB, use GB.</p>
+            <h4>When Collecting a Key</h4>
+                <p>After each keys is collected, 2 global directions will switch.<br><b>First Key: </b>if GF was LL, LR, or LU, swap LU and LR; otherwise, swap LU and LF.<br><b>Second Key: </b>if this key's maze is even, swap LD with LU then LR with LL; otherwise, swap LF with LB then LB with LD.<br><b>Third Key: </b>Use the pairs of letter pairs from step 2 as swap instead of rotations.</p>
+        </div>
+        <div class="page-footer relative-footer">3</div>
+    </div>
+    <div class="page page-bg-04">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Wanderlust</span>
+        </div>
+        <div class="page-content">
+            <div class="page-content">
+                <div class="row">
+                    <div class="column"><div class="maze"></div></div>
+                    <div class="column"><div class="maze"></div></div>
+                    <div class="column"><div class="maze"></div></div>
+                </div>
+                <div class="row">
+                    <div class="column"><div class="maze"></div></div>
+                    <div class="column"><div class="maze"></div></div>
+                    <div class="column"><div class="maze"></div></div>
+                </div>
+                <div class="row">
+                    <div class="column"><div class="maze"></div></div>
+                    <div class="column"><div class="maze"></div></div>
+                    <div class="column"><div class="maze"></div></div>
+                </div>
+                <div class="row">
+                    <div class="column"><div class="maze"></div></div>
+                    <div class="column"><div class="maze"></div></div>
+                    <div class="column"><div class="maze"></div></div>
+                </div>
+                <div class="row">
+                    <div class="column"></div>
+                    <div class="column"><div class="maze"></div></div>
+                    <div class="column"></div>
+                </div>
+            </div> 
+            <div class="page-footer relative-footer">4</div>
+        </div>
+    </div>      
+</body>
+</html>
