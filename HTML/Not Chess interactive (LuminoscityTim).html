@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Not Chess — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+    $(function() {
+        let pieces = ["wpiece", "wking", "bpiece", "bking"];
+        let pieceTitles = { wpiece: "White Piece", wking: "White King", bpiece: "Black Piece", bking: "Black King" };
+
+        let selected = "";
+        let start;
+        let saveStates = [];
+        let currentState = 0;
+        let chessboard = $(".chessboard");
+        let squares = 6;
+
+        $(document).click(function() {
+            start = null;
+        });
+
+        function pieceSvg(king) {
+            let ring = king ? '<circle class="king-ring" cx="50" cy="50" r="24"/>' : "";
+            return `<svg viewBox="0 0 100 100"><circle class="filled" cx="50" cy="50" r="42"/>${ring}</svg>`;
+        }
+
+        function setupInitialPosition() {
+            removePieceClass($(".netsq"));
+            for (let y = 0; y < squares; y++) {
+                for (let x = 0; x < squares; x++) {
+                    let elm = $(`.netsq.x${x}.y${y}`);
+                    if (!elm.hasClass("black")) continue;
+                    if (y <= 1) elm.addClass("bpiece");
+                    else if (y >= squares - 2) elm.addClass("wpiece");
+                }
+            }
+        }
+
+        let row;
+        // Initially based on code from Samfundev’s Chess interactive
+        row = $("<div>").addClass("chess-row letters").appendTo(chessboard);
+        $("<div>").addClass("square").appendTo(row);
+        for (let i = 0; i < squares; i++) {
+            $("<div>").addClass("square").text(String.fromCharCode(65 + i)).appendTo(row).each(function(_, e) {
+                $(this).addClass(`label${i+1}`);
+            });
+        }
+        for (let y = 0; y < squares; y++) {
+            row = $("<div>").addClass("chess-row").appendTo(chessboard);
+            $("<div>").addClass("square").text(squares - y).appendTo(row);
+            for (let x = 0; x < squares; x++) {
+                $("<div>").addClass("netsq square " + ((y + x) % 2 == 0 ? "white" : "black")).appendTo(row).each(function(_, e) {
+                    let element = $(e);
+                    element.mousedown(function(event) {
+                        start = [x, y];
+                        event.preventDefault();
+                        event.stopPropagation();
+                    });
+                    $(this).addClass(`x${x} y${y}`);
+
+                    element.mouseup(function(event) {
+                        let letgo = [x, y];
+                        if (start) { // Just in case.
+                            let changed = [];
+                            let a, b, i;
+                            if (start[0] == x) {
+                                a = (start[1] > y ? y : start[1]);
+                                b = (start[1] > y ? start[1] : y);
+                                if (selected == "moving") {
+                                    changed.push([x, a]);
+                                    if (a != b) { changed.push([x, b]); }
+                                } else {
+                                    for (i = a; i <= b; i++) {
+                                        changed.push([x, i]);
+                                    }
+                                }
+                            } else if (start[1] == y) {
+                                a = (start[0] > x ? x : start[0]);
+                                b = (start[0] > x ? start[0] : x);
+                                if (selected == "moving") {
+                                    changed.push([a, y]);
+                                    if (a != b) { changed.push([b, y]); }
+                                } else {
+                                    for (i = a; i <= b; i++) {
+                                        changed.push([i, y]);
+                                    }
+                                }
+                            } else if (Math.abs(start[0] - x) == Math.abs(start[1] - y)) {
+                                let dist = Math.abs(start[0] - x);
+                                let dirx = (start[0] < x) ? 1 : -1;
+                                let diry = (start[1] < y) ? 1 : -1;
+
+                                for (i = 0; i <= dist; i++) {
+                                    changed.push([start[0] + i * dirx, start[1] + i * diry]);
+                                }
+                            }
+                            else if (selected == "moving") {
+                                changed.push([start[0], start[1]]);
+                                changed.push([letgo[0], letgo[1]]);
+                            }
+
+                            if (changed.length > 0) {
+                                let from = $(`.netsq.x${start[0]}.y${start[1]}`);
+                                let toMove = hasWhichPieceClass(from);
+                                let markState = !from.hasClass("highlighted");
+                                let toSquare = $(`.netsq.x${letgo[0]}.y${letgo[1]}`);
+                                let moveBlocked = selected == "moving" && !toSquare.hasClass("black");
+                                if (!moveBlocked) {
+                                    changed.forEach((pos, idx) => {
+                                        let elm = $(`.netsq.x${pos[0]}.y${pos[1]}`);
+                                        if (selected == "marking") {
+                                            elm.toggleClass("highlighted", markState);
+                                        } else if (selected == "moving") {
+                                            if (changed.length > 1) {
+                                                if (pos[0] != letgo[0] || pos[1] != letgo[1]) {
+                                                    removePieceClass(elm);
+                                                } else {
+                                                    removePieceClass(elm);
+                                                    elm.addClass(pieces[toMove]);
+                                                }
+                                            }
+                                        } else if (changed.length == 1) {
+                                            if (elm.hasClass("black")) {
+                                                let whichPiece = hasWhichPieceClass(elm);
+                                                if (whichPiece >= 0) {
+                                                    elm.removeClass(pieces[whichPiece]);
+                                                    if (pieces[whichPiece] != selected) {
+                                                        elm.addClass(selected);
+                                                    }
+                                                } else {
+                                                    elm.addClass(selected);
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+
+                            start = null;
+                        }
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return false;
+                    });
+                });
+            }
+        }
+
+        function removePieceClass(elem) {
+            pieces.forEach(function(val) {
+                elem.removeClass(val);
+            });
+        }
+
+        function hasWhichPieceClass(elem) {
+            for (let i = 0; i < pieces.length; i++) {
+                if (elem.hasClass(pieces[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        let chesspieces1 = $(".chess-pieces.r1");
+        for (let i = 0; i < pieces.length; i++) {
+            $("<div>").addClass("piece square").appendTo(chesspieces1).attr("title", pieceTitles[pieces[i]]).click(function() {
+                $(".piece").removeClass("selected");
+                $(this).addClass("selected");
+                selected = pieces[i];
+            }).addClass(pieces[i]);
+        }
+
+        pieces.forEach(function(val) {
+            let king = val.endsWith("king");
+            $(`.piece.square.${val}`).append($(pieceSvg(king)).addClass(val));
+            $(".netsq").append($(pieceSvg(king)).addClass(val));
+        });
+
+        $("<div>").addClass("piece square move").text("Move").appendTo(chesspieces1).click(function() {
+            $(".piece").removeClass("selected");
+            $(this).addClass("selected");
+            selected = "moving";
+        });
+        $("<div>").addClass("piece square select mark").text("Mark").appendTo(chesspieces1).click(function(event) {
+            $(".piece").removeClass("selected");
+            $(this).addClass("selected");
+            selected = "marking";
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        $(".square.move").click();
+        setupInitialPosition();
+
+        $(".reset-board").click(function() {
+            setupInitialPosition();
+        });
+
+        $(".reset-saves").click(function() {
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        $(".reset-all").click(function() {
+            setupInitialPosition();
+            $(".netsq").removeClass("highlighted");
+            $(".square.move").click();
+            saveStates.forEach(x => x.remove());
+            saveStates = [];
+            currentState = 0;
+        });
+
+        function removeFutureSaves() {
+            if (currentState < saveStates.length - 1) {
+                for (let i = currentState + 1; i < saveStates.length; i++) {
+                    saveStates[i].remove();
+                }
+
+                saveStates.splice(currentState + 1, saveStates.length - currentState);
+            }
+        }
+
+        $("button.save").click(function() {
+            removeFutureSaves();
+
+            let saveState = Array.from($(".chessboard .netsq, svg, .piece")).map(x => $(x)).map(x => x.attr("class") || "");
+            let stateNumber = saveStates.length;
+            currentState = stateNumber;
+
+            let s_selected = selected;
+            let s_start = start;
+
+            let button = $("<button>").text(stateNumber + 1).click(function() {
+                $(".chessboard .netsq, svg, .piece").each((i, x) => $(x).attr("class", saveState[i]));
+                currentState = stateNumber;
+
+                selected = s_selected;
+                start = s_start;
+            }).addClass("flash").appendTo(".saves");
+            setTimeout(() => {
+                button.removeClass("flash");
+            }, 100);
+
+            saveStates.push(button);
+        });
+
+        window.onbeforeunload = function() {
+            return true;
+        };
+    });
+    </script>
+    <style>
+        .checkers-diagram {
+            width: 290px;
+            float: right;
+            clear: right;
+        }
+        .dark .checkers-diagram {
+            content: url("img/Not Chess/Checkers-dark.png");
+        }
+        .hstack {
+            align-items: flex-start;
+        }
+        .not-chess-table {
+            width: 48%;
+            margin: 10px;
+            border: none;
+        }
+        .not-chess-header {
+            text-align: center;
+            border: none;
+            font-style: italic;
+        }
+        .rules li {
+            font-size: 10pt;
+        }
+        .rules p {
+            margin: 0;
+        }
+        .rules ul {
+            margin-top: 0.25em;
+        }
+        .appendix-subtitle {
+            text-align: center;
+        }
+        .appendix-icon {
+            background: none;
+        }
+        .dark .appendix-icon {
+            filter: invert(90%);
+        }
+
+        .chess-row, .chess-pieces {
+            height: 60px;
+        }
+
+        .chess-pieces {
+            margin-top: 10px;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            float: left;
+            font-size: 60px;
+            user-select: none;
+            text-align: center;
+            border: 0px solid;
+            cursor: default;
+        }
+        .netsq {
+            box-sizing: border-box;
+        }
+        .netsq.black {
+            cursor: pointer;
+        }
+        .netsq:not(.wpiece) svg.wpiece,
+        .netsq:not(.wking) svg.wking,
+        .netsq:not(.bpiece) svg.bpiece,
+        .netsq:not(.bking) svg.bking {
+            display: none;
+        }
+
+        .netsq.x0 { border-left: 1px solid black; }
+        .netsq.x5 { border-right: 1px solid black; }
+        .netsq.y0 { border-top: 1px solid black; }
+        .netsq.y5 { border-bottom: 1px solid black; }
+        .dark .netsq { border-color: #CCC; }
+
+        .netsq.black { background: #474f7e; }
+        .netsq.white { background: #DDD; }
+        .netsq.highlighted { box-shadow: inset 0 0 0 100px rgba(214, 40, 40, 0.55); }
+
+        .move, .select {
+            border: 1px solid black;
+            font-size: 20px;
+            width: 67px;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: column;
+        }
+        .select.mark {
+            background: #FBD9D9;
+        }
+        .dark .select.mark {
+            background: #5A2E2E;
+        }
+
+        svg .filled { stroke-width: 4px; }
+        svg.wpiece .filled, svg.wking .filled { fill: #F5F1E6; stroke: #333; }
+        svg.bpiece .filled, svg.bking .filled { fill: #2B2B2B; stroke: #000; }
+        .dark svg.bpiece .filled, .dark svg.bking .filled { fill: #595959; stroke: #000; }
+        .king-ring { fill: none; stroke-width: 6px; }
+        svg.wking .king-ring { stroke: #333; }
+        svg.bking .king-ring { stroke: #F5F1E6; }
+
+        .piece {
+            margin: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+        .piece svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .piece.selected {
+            margin: 0px;
+            border: black 2px dashed;
+        }
+        .dark .piece {
+            border-color: white;
+        }
+
+        .gridholder {
+            height: 430px;
+            width: 430px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .stampholder {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        button {
+            font-family: 'Special Elite';
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 5px 10px;
+            transition: color 1s, background-color 1s;
+            margin: 5px;
+        }
+        button.reset-saves, button.reset-board, button.reset-all {
+            padding: 10px 20px;
+        }
+
+        button:hover {
+            background-color: black;
+            color: white;
+        }
+        button.flash {
+            color: white;
+            background-color: blue;
+        }
+        .save {
+            padding: 5px 8px;
+        }
+
+        .page1 li {
+            margin-bottom: 16px;
+        }
+
+        .page {
+            background-repeat: repeat-y;
+            background-position: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01 page1">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Not Chess</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Chess.svg" class="diagram">
+                <h2>On the Subject of Not Chess</h2>
+                <p class="flavour-text">This ain’t chess, it’s a supercomputer with unnecessarily cryptic lore!</p>
+
+                <img class="checkers-diagram" src="img/Not Chess/Checkers.png">
+
+                <p><i>SEE APPENDIX KNGM3 FOR THE ORIENTATION MANUAL OF “CHECKERS”.</i></p>
+
+                <p>This module takes place on a 6×6 checkerboard, shown to the right. You play as white, while the computer plays as black.</p>
+
+                <p>Every 108 seconds, you must use the buttons to make your move. From the moment the alarm sounds, you will have 40 seconds to make any valid move on the checkerboard.</p>
+
+                <p>Enter your move by pressing the letter and number buttons to input the starting and ending coordinates. (Most moves require two coordinate entries, though additional inputs may be needed if multiple captures occur in the same turn.)</p>
+
+                <p>On every move after the first, your opponent will also move a piece. The start and end positions of the opponent’s move are indicated by the LEDs at the bottom of the module, with a short pause between them. The green LED shows the file (a–f), while the red LED shows the rank (1–6). If a yellow LED lights up, it indicates that the rank and file are the same (e.g., a1, b2, etc.).</p>
+
+                <p>When approximately 40% of the bomb’s modules are solved, when the timer reaches three minutes, or when either player has no remaining moves, the LEDs at the bottom of the module will light up solid. At this point, use the tables on the next page to enter two coordinates to disarm the module.</p>
+
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 4</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Not Chess</span>
+            </div>
+            <div class="page-content">
+                <div class="gridholder"><div class="chessboard vstack left"></div></div>
+                <div class="stampholder">
+                    <div class="chess-pieces hstack r1"></div>
+                </div>
+                <br>
+                <div class="saves buttons">
+                    <button class="save">Save</button>
+                </div>
+                <div style="margin-top: 5mm">
+                    <button class="reset-board">Reset Board</button>
+                    <button class="reset-saves">Reset Saves</button>
+                    <button class="reset-all">Reset All</button>
+                </div>
+                <h3>Interactive Controls</h3>
+                <ul>
+                    <li>Use the above interactive graphic as the module’s checkerboard.</li>
+                    <li>Select one of the tools below the board, then click on the board to use that tool.</li>
+                    <li>Use the <strong>White Piece</strong>, <strong>White King</strong>, <strong>Black Piece</strong>, or <strong>Black King</strong> tool to place or remove a piece of that type on a square.</li>
+                    <li>Use the <strong>Move</strong> tool to drag a piece from one square to another. Dragging a piece diagonally over an occupied square captures it, this also works over a chain of multiple jumps.</li>
+                    <li>Use the <strong>Mark</strong> tool to highlight one or more squares in red. Drag along a row, column, or diagonal to mark or unmark several squares at once.</li>
+                    <li>
+                        You can save the current state of the board, reset the board,
+                        reset the saves, or reset everything using the other buttons.
+                    </li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Not Chess</span>
+            </div>
+            <div class="page-content">
+
+                <div class="hstack">
+                <table class="not-chess-table">
+                    <tr>
+                        <td class="not-chess-header" colspan="2">First coordinate:<br>White pieces remaining</td>
+                    </tr>
+                    <tr>
+                        <th>0</th>
+                        <td>The location of the black piece which captured the last white piece.</td>
+                    </tr>
+                    <tr>
+                        <th>1</th>
+                        <td>If it is in rank 4 or below and there is a black piece, file d in the rank corresponding to the number of black checkers. Otherwise, d4.</td>
+                    </tr>
+                    <tr>
+                        <th>2</th>
+                        <td>If there is exactly one black piece diagonally touching both white pieces, its coordinate. Otherwise, c5.</td>
+                    </tr>
+                    <tr>
+                        <th>3</th>
+                        <td>If there is exactly one kinged piece, its coordinate. Otherwise, f2.</td>
+                    </tr>
+                    <tr>
+                        <th>4</th>
+                        <td>The square with the same rank and file which have no pieces within them. If there are none or multiple, e5.</td>
+                    </tr>
+                    <tr>
+                        <th>5</th>
+                        <td>The square on which a white piece began on, which has no piece on it now. If there are none or multiple, a1.</td>
+                    </tr>
+                    <tr>
+                        <th>6</th>
+                        <td>a5.</td>
+                    </tr>
+                </table>
+                <table class="not-chess-table">
+                    <tr>
+                        <td class="not-chess-header" colspan="2">Second coordinate:<br>Black pieces remaining</td>
+                    </tr>
+                    <tr>
+                        <th>0</th>
+                        <td>d4.</td>
+                    </tr>
+                    <tr>
+                        <th>1</th>
+                        <td>Its position.</td>
+                    </tr>
+                    <tr>
+                        <th>2</th>
+                        <td>The coordinate of the midpoint between the two pieces, only if it falls on a square of the board. Otherwise, f2</td>
+                    </tr>
+                    <tr>
+                        <th>3</th>
+                        <td>If all three pieces are diagonally touching, the coordinate which lies at the midpoint of their arrangement. Otherwise, a1.</td>
+                    </tr>
+                    <tr>
+                        <th>4</th>
+                        <td>File a in whichever rank has the most black pieces. If tied, a5.</td>
+                    </tr>
+                    <tr>
+                        <th>5</th>
+                        <td>Rank 5 in whichever file has a unique number of black pieces. If there are none or multiple, c5.</td>
+                    </tr>
+                    <tr>
+                        <th>6</th>
+                        <td>If there are 3 or fewer white pieces, the coordinate obtained by using the number of white pieces in this table. Otherwise, e5.</td>
+                    </tr>
+                </table>
+                </div>
+
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 4</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Not Chess</span>
+            </div>
+            <div class="page-content">
+
+                <img src="img/Not Chess/appendix-icon.png" class="diagram appendix-icon"/>
+                <h2>Appendix KNGM3</h2>
+                <h2 class="appendix-subtitle">Orientation Manual for<br>Not Chess: CHECKERS</h2>
+
+                <p>Welcome, I'm Dr. T. Andrea Keck, and this is the orientation manual for CHECKERS of the Not Chess Initiative. In a moment you'll be given a simple set of instructions for how you can enjoy a nice evening with friends in the park. Oh, and also responsibilities, bomb defusal, etc. But first, a little history.</p>
+
+                <p>The Not Chess Initiative was created in 20XX because I'm really bad at chess—like, <i>godawful</i>. Then there was an incident, and now you gotta play checkers. Them's the rules.</p>
+                <div class='rules'>
+                    <p>Anyhow, checkers consists of these basic rules:</p>
+                    <ul>
+                        <li>Pieces move diagonally forward one square at a time.</li>
+                        <li>You can only move onto an empty dark square.</li>
+                        <li>If an opponent’s piece is diagonally adjacent, and the square immediately beyond it is empty, you can jump over the piece and capture it, removing it from the board.</li>
+                        <li>Captures are mandatory—if you can jump, you must.</li>
+                        <li>Multiple jumps are allowed (and mandated, if possible) in a single turn.</li>
+                        <li>When a piece reaches the last rank (either 1 or 6), it becomes a king. Kings can move and capture both forwards and backwards.
+                            <ul><li>If a player’s piece captures an opponent’s piece and becomes a king simultaneously, their turn ends immediately. They cannot continue their turn with a backwards capture.</li></ul>
+                        </li>
+                        <li>You win by capturing all of your opponent’s pieces or blocking them so they have no legal moves.</li>
+                    </ul>
+                    <p>In addition, note that this checkers game follows the rules of <em>American Checkers/English Draughts</em>. These rules, described below, differ from those used in <a href="Shashki.html">International Draughts</a>.</p>
+                        <ul>
+                            <li>Pieces cannot capture backwards; only kings can.</li>
+                            <li>When a piece becomes a king, their turn ends immediately. If the crowning occurs during a jump, they may not continue by jumping backwards.</li>
+                            <li>Kings move only one square at a time.</li>
+                        </ul>
+                    <p style="font-size: 11.5pt">Do not attempt to use the computer for anything else other than playing checkers—like chess. This is its only function. The mind-numbing simplicity of checkers may tempt you to try and utilise the computer for chess. This is strictly forbidden. Attempting to use the computer in this manner will compromise the integrity of the project or worse, could lead to another incident. I repeat, do not use the computer for anything other than checkers. </p>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 4 of 4</div>
+        </div>
+    </div>
+</body>
+</html>
