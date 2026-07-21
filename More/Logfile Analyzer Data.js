@@ -6603,7 +6603,7 @@ let parseData = [
 			{
 				regex: /^Puzzle on module: “([^“”]+)”$/,
 				handler: function (matches, module) {
-					let span = $("span").addClass('emoticon-math').text(matches[1]);
+					let span = $("<span>").addClass('emoticon-math').text(matches[1]);
 					module.push({ label: "Puzzle on module: ", obj: span });
 					return true;
 				}
