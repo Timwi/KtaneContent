@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1">
-    <title>Loopover — Keep Talking and Nobody Explodes Module</title>
+    <title>Clumsy Loopover — Keep Talking and Nobody Explodes Module</title>
     <link rel="stylesheet" type="text/css" href="css/font.css">
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
@@ -13,8 +13,8 @@
     <script src="js/Utilities/array-utils.js"></script>
     <script>
     $(function() {
-        const rows = 5;
-        const cols = 5;
+        const rows = 6;
+        const cols = 6;
         const sqw = 100;
         const sqspace = 10;
         const sqsize = sqw + sqspace;
@@ -36,6 +36,8 @@
         let nMoves = 60;
         let nTiles = rows * cols;
         let generatedState = Array(cols).fill().map(()=>Array(rows).fill(0));
+        let rowCoupleDir = -1; // -1 = Above, 1 = Below
+        let colCoupleDir = -1; // -1 = Left, 1 = Right
 
         let grid = $("svg.grid");
 
@@ -54,7 +56,7 @@
             let cy = 225 + row * sqsize + sqw / 2;
             grid.append(RegularPolygon(arrowSize, cx, cy, 3, 270, { class: "arrow" }));
             grid.append(RegularPolygon(arrowSize, cx + arrowSize + arrowSp, cy, 3, 90, { class: "arrow" }));
-            grid.append(MakeSvgElem("text", { x:765, y:(cy + 17) }, row+1));
+            grid.append(MakeSvgElem("text", { x:875, y:(cy + 17) }, row+1));
         }
 
         for (let row = 0; row < rows; row++) {
@@ -62,7 +64,7 @@
             for (let col = 0; col < cols; col++) {
                 let x = col * sqsize;
                 let y = row * sqsize;
-                let letter = String.fromCharCode(65 + row * cols + col);
+                let letter = (row * cols + col).toString(36).toUpperCase();
                 let group = $(MakeSvgElem("g", { class: "tile" }));
                 group.append(MakeSvgElem("rect", { class: "square", x: xOff, y: yOff, width: sqw, height: sqw }));
                 group.append(MakeSvgElem("text", { x: (xOff + sqw / 2), y: (yOff + sqw / 2 + 20) }, letter));
@@ -76,8 +78,8 @@
         }
 
         let resetButton = $(MakeSvgElem("g", { class:"reset" }));
-        resetButton.append(MakeSvgElem("text", { x:710, y:110 }, "↻"));
-        resetButton.append(MakeSvgElem("rect", { class:"reset square", x:660, y:38, width:sqw, height:sqw }));
+        resetButton.append(MakeSvgElem("text", { x:860, y:110 }, "↻"));
+        resetButton.append(MakeSvgElem("rect", { class:"reset square", x:810, y:38, width:sqw, height:sqw }));
         grid.append(resetButton);
         resetButton.click(function(event) {
             resetPos();
@@ -124,6 +126,10 @@
             }
         }
 
+        function coupledPos(pos, dir, limit) {
+            return (pos + dir + limit) % limit;
+        }
+
         let audio0 = $("<audio>")
             .attr("src", "audio/Not The Bulb/TapCode.wav")
             .appendTo(grid);
@@ -131,8 +137,8 @@
             .attr("src", "audio/Not The Bulb/NonoClick.wav")
             .appendTo(grid);
         let audioSolve = $("<audio>")
-            .attr("src", "audio/Not The Bulb/StarDing.wav")
-            .prop("volume", 0.4)
+            .attr("src","audio/Module Listening/Valves.wav")
+            .prop("volume", 0.5)
             .appendTo(grid);
 
         function playMoveSound(dir) {
@@ -167,9 +173,14 @@
 
                 let isRow = index >= cols * 2;
                 let pos = isRow ? Math.floor(index / 2) - cols : Math.floor(index / 2);
-                let direction = (index % 2 === 0) == isRow ? -1 : 1;    
+                let direction = (index % 2 === 0) == isRow ? -1 : 1;
+                let limit = isRow ? rows : cols;
+                let coupleDir = isRow ? rowCoupleDir : colCoupleDir;
+                let coupled = coupledPos(pos, coupleDir, limit);
+
                 shiftRow(isRow, pos, direction);
-                
+                shiftRow(isRow, coupled, direction);
+
                 let currentMove = moveText(isRow, pos, direction, 1);
                 let lastMove = movementList[movementList.length - 1];
 
@@ -213,6 +224,13 @@
             });
         });
 
+        $(".row-couple-toggle").on("change", function() {
+            rowCoupleDir = $(this).is(":checked") ? 1 : -1;
+        });
+        $(".col-couple-toggle").on("change", function() {
+            colCoupleDir = $(this).is(":checked") ? 1 : -1;
+        });
+
         let inputs = $(".inputs");
         for (let y = 0; y < rows; y++) {
             let row = $("<div>").addClass("hstack").appendTo(inputs);
@@ -247,20 +265,31 @@
             generating = true;
             answerList = []; // Clear the answerList
 
-            // Set all the read inputs to A - Y in order and the corresponding tiles
+            // Set all the read inputs to base-36 order and the corresponding tiles
             for (let i = 0; i < nTiles; i++) {
-                let letter = String.fromCharCode(65 + i);
+                let letter = i.toString(36).toUpperCase();
                 $(`.readinp.i${i}`).val(letter);
                 tiles[i].tile.find("text").text(letter);
             }
 
             resetPos(MODE_READ);
 
+            $(".row-couple-toggle, .col-couple-toggle").prop("checked", false);
+            colCoupleDir = rowCoupleDir = -1;
+            if (Math.random() > 0.5) {
+                $(".row-couple-toggle").prop("checked", true);
+                rowCoupleDir = 1;
+            }
+            if (Math.random() > 0.5) {
+                $(".col-couple-toggle").prop("checked", true);
+                colCoupleDir = 1;
+            }
+
             let prevRow = null;
             let prevCol = null;
 
             for (let i = 0; i < nMoves; i++) {
-                let row, col, dir, pos, times;
+                let row, col, dir, pos, times, limit, coupleDir, coupled;
 
                 do {
                     row = Math.random() > 0.5;
@@ -269,10 +298,15 @@
                     col = !row;
                 } while ((row && pos === prevRow) || (col && pos === prevCol));
 
-                times = Math.floor(Math.random() * 2) + 1;
+                limit = row ? rows : cols;
+                coupleDir = row ? rowCoupleDir : colCoupleDir;
+                coupled = coupledPos(pos, coupleDir, limit);
+
+                times = Math.floor(Math.random() * 3) + 1;
 
                 for (let t = 0; t < times; t++) {
                     shiftRow(row, pos, dir);
+                    shiftRow(row, coupled, dir);
                 }
 
                 answerList.unshift(moveText(row, pos, -dir, times)); // Add the move to the answerList in reverse order
@@ -363,6 +397,9 @@
             $("button.show-sol").removeClass("show");
             $("button.read-solve").removeClass("solve");
             $("input.readinp").val("");
+            $(".row-couple-toggle, .col-couple-toggle").prop("checked", false);
+            rowCoupleDir = -1;
+            colCoupleDir = -1;
             resetPos();
 
             saveStates.forEach(x => x.remove());
@@ -386,6 +423,7 @@
             let saveReadInputs = Array.from($("input.readinp")).map(x => $(x)).map(x => x.val() || "");
             let saveLabels = Array.from($("g.tile text")).map(x => $(x)).map(x => x.text() || "");
             let saveStateBody = Array.from($("body")).map(x => $(x)).map(x => x.attr("class") || "");
+            let saveSwitches = Array.from($(".row-couple-toggle, .col-couple-toggle")).map(x => $(x)).map(x => x.prop("checked") || "");
             console.log(saveStates);
             let stateNumber = saveStates.length;
             currentState = stateNumber;
@@ -394,6 +432,8 @@
             let s_tileAt = JSON.parse(JSON.stringify(tileAt));
             let s_generatedState = JSON.parse(JSON.stringify(generatedState));
 
+            let s_rowCoupleDir = rowCoupleDir;
+            let s_colCoupleDir = colCoupleDir;
             let s_answerList = [];
             let s_movementList = [];
             Object.assign(s_movementList, movementList);
@@ -404,6 +444,7 @@
                 $("input.readinp").each((i, x) => $(x).val(saveReadInputs[i]));
                 $("g.tile text").each((i, x) => $(x).text(saveLabels[i]));
                 $("body").each((i, x) => $(x).attr("class", saveStateBody[i]));
+                $(".row-couple-toggle, .col-couple-toggle").each((i, x) => $(x).prop("checked", saveSwitches[i]));
                 movementList = Array(s_movementList.length);
                 answerList = Array(s_answerList.length);
                 Object.assign(movementList, s_movementList);
@@ -411,6 +452,9 @@
                 $(".path .str").text(movementList.join(" "));
                 $(".solution .str").text(answerList.join(" "));
                 currentState = stateNumber;
+
+                rowCoupleDir = s_rowCoupleDir;
+                colCoupleDir = s_colCoupleDir;
 
                 // Restore tileAt and generatedState
                 for (let row = 0; row < rows; row++) {
@@ -437,7 +481,7 @@
     </script>
     <style>
         svg.grid {
-            width: 500px;
+            width: 530px;
         }
         svg rect {
             stroke: #000;
@@ -460,6 +504,8 @@
         }
         svg g.tile>text {
             font-size: 60px;
+            font-family: 'Inconsolata';
+            font-weight: bold;
         }
         svg g.tile {
             transition: transform 0.4s;
@@ -548,6 +594,13 @@
             cursor: default;
             opacity: 30%;
         }
+        body:is(.solve, .play) .couplers {
+            user-select: none;
+            pointer-events: none;
+        }
+        body:is(.solve, .play) .toggle-switch .slider {
+            opacity: 0.4;
+        }
         button.expert-play.play::before {
             content: 'Generated';
         }
@@ -575,20 +628,85 @@
             text-decoration: underline;
             font-weight: bold;
         }
+        .coupling {
+            font-size: 14pt;
+        }
+        .couplers {
+            gap: 12mm;
+            margin-top: 2mm;
+            margin-bottom: 2mm;
+        }
+        .coupler {
+            gap: 4px;
+        }
+        .coupler-label {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .toggle-switch.vertical {
+            width: 26px;
+            height: 50px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-switch .slider {
+            position: absolute;
+            inset: 0;
+            background-color: white;
+            border: 3px black solid;
+            border-radius: 26px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .toggle-switch .slider::before {
+            content: "";
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 1px;
+            top: 1px;
+            background-color: black;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        .dark .toggle-switch .slider {
+            border: 3px #DDD solid;
+            background-color: #222;
+        }
+        .dark .toggle-switch .slider::before {
+            background-color: #DDD;
+        }
+        .toggle-switch:not(.vertical) input:checked + .slider::before {
+            transform: translateX(24px);
+        }
+        .toggle-switch.vertical input:checked + .slider::before {
+            transform: translateY(24px);
+        }
     </style>
 </head>
 <body>
     <div class="section">
-        <div class="page page-bg-02">
+        <div class="page page-bg-01">
             <div class="page-header">
                 <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                <span class="page-header-section-title">Loopover</span>
+                <span class="page-header-section-title">Clumsy Loopover</span>
             </div>
             <div class="page-content">
-                <img src="img/Component/Loopover.svg" class="diagram">
-                <h2>On the Subject of Loopover</h2>
-                <p class="flavour-text">o follow the module’s gimmick?  Did you expect this flavor text t</p>
-                <p>Use the arrow buttons to shift the rows and columns to arrange the 25 tiles into alphabetical order.</p>
+                <img src="img/Component/Clumsy Loopover.svg" class="diagram">
+                <h2>On the Subject of Clumsy Loopover</h2>
+                <p class="flavour-text">Get them up for me, Nickel.</p>
+                <p>Use the arrow buttons to shift the rows and columns to arrange the 36 tiles into base-36 order.</p>
+                <p>Every row button also moves either the row above it or below it.</p>
+                <p>Every column button also moves either the column to the left or right of it.</p>
                 <div class="inputs vstack">
                     <div class="hstack even alignc">
                         <p class="read-label">Read</p>
@@ -596,10 +714,30 @@
                     </div>
                 </div>
                 <div style="height: 5mm"></div>
+                
+                <div class="couplers hstack alignc">
+                    <p class="coupling">Coupling:</p>
+                    <div class="coupler vstack alignc">
+                        <span class="coupler-label">Above</span>
+                        <label class="toggle-switch vertical">
+                            <input type="checkbox" class="row-couple-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="coupler-label">Below</span>
+                    </div>
+                    <div class="coupler hstack alignc">
+                        <span class="coupler-label">Left</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="col-couple-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="coupler-label">Right</span>
+                    </div>
+                </div>
                 <div class="hstack wrap left">
                     <div class="vstack tools alignc top"></div>
-                    <svg class="grid" viewbox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
-                        <rect x="2" y="2" width="796" height="796" />
+                    <svg class="grid" viewbox="0 0 950 950" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
+                        <rect x="2" y="2" width="946" height="946" />
                     </svg>
                 </div>
                 <div style="height: 5mm"></div>
@@ -637,6 +775,7 @@
                             <li>Have fun solving the generated puzzle.</li>
                         </ul>
                     </li>
+                    <li>Use the <b>Above/Below</b> switch to choose which row is coupled with the row being moved, and the <b>Left/Right</b> switch to choose which column is coupled with the column being moved.</li>
                     <li>The sound effects can be muted.</li>
                     <li>The movement path you came up with (and the solution to generated puzzles) can be shown or hidden.</li>
                     <li>Press <b>Save</b> to save the current state of the interactive.</li>
