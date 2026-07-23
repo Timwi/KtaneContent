@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Turtle Robot — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .shape-img {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        table {width: 100%;}
+        .dark #svgPlane {stroke: white}
+    </style>
+    <script>
+        let codeInput, svgPlane, svgViewer;
+        let viewerConfig = {x:0,y:0, l:100};
+        function init() {
+            codeInput = document.getElementById('codeInput');
+            svgPlane = document.getElementById('svgPlane');
+            svgViewer = document.getElementById('svgViewer');
+            codeInput.addEventListener('input', function(e) {
+                svgPlane.setAttribute('d', convertTurtleToSvg(e.target.value));
+            })
+        }
+
+        function convertTurtleToSvg(code){
+            let lines = code.split('\n');
+            let rot = -90;
+            let ans = "M0 0";
+            for (let line of lines){
+                if (/^FD (\d+)$/i.test(line)){
+                    let length = parseInt(/^FD (\d+)$/i.exec(line)[1], 10);
+                    let dx = length * Math.cos(rot * Math.PI / 180), dy = length * Math.sin(rot * Math.PI / 180);
+                    ans+=`l ${dx} ${dy}`;
+                }
+                else if (/^(LT|RT) (\d+) (\d+)$/i.test(line)){
+                    let matches = /^(LT|RT) (\d+) (\d+)$/i.exec(line);
+                    let radius = parseInt(matches[3], 10), angle = parseInt(matches[2], 10), direction = matches[1].toUpperCase();
+                    let largeArc = angle>=180?1:0, sweep = direction === "RT"?1:0;
+                    let dx, dy;
+                    if (direction ==="RT")
+                    {
+                        dx = radius * (
+                            Math.sin((rot + angle) * Math.PI / 180) - Math.sin((rot) * Math.PI / 180)
+                        );
+                        dy = radius * (
+                            Math.cos(rot * Math.PI / 180) - Math.cos((rot + angle) * Math.PI / 180)
+                        );
+                    }
+                    else {
+                        dx = -radius * (
+                            Math.sin((rot - angle) * Math.PI / 180) - Math.sin((rot) * Math.PI / 180)
+                        );
+                        dy = -radius * (
+                            Math.cos(rot * Math.PI / 180) - Math.cos((rot - angle) * Math.PI / 180)
+                        );
+                    }
+                    rot += angle * (direction==="RT"?1:-1);
+                    ans += `a ${radius} ${radius} 0 ${largeArc} ${sweep} ${dx} ${dy}`;
+                }
+                else if (/^(LT|RT) (\d+)$/i.test(line)){
+                    let matches = /^(LT|RT) (\d+)$/i.exec(line);
+                    rot += parseInt(matches[2], 10) * (matches[1].toUpperCase()==="RT"?1:-1);
+                }
+            }
+            return ans;
+        }
+        function zoom(d){
+            if (d===1) viewerConfig.l*=.8;
+            else viewerConfig.l/=.8;
+            updateViewer();
+        }
+        function move(dx,dy){
+            viewerConfig.x+=dx*viewerConfig.l/10;
+            viewerConfig.y+=dy*viewerConfig.l/10;
+            updateViewer();
+        }
+
+        function updateViewer(){
+            svgViewer.setAttribute("viewBox", `${viewerConfig.x-viewerConfig.l/2} ${viewerConfig.y-viewerConfig.l/2} ${viewerConfig.l} ${viewerConfig.l}`);
+        }
+    </script>
+</head>
+<body>
+<div class="section">
+    <div class="page page-bg-01">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Turtle Robot</span>
+        </div>
+        <div class="page-content">
+            <h2>On the Subject of Turtle Robot Interactive</h2>
+            <p class="flavour-text">a.k.a. TurtleIDE</p>
+            <table>
+                <tr>
+                    <td style="width: 20%">
+                        <textarea cols="10" rows="20" id="codeInput"></textarea>
+                    </td>
+                    <td>
+                        <svg class='shape-img' viewBox="-50 -50 100 100" id="svgViewer">
+                            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                                <path fill="none" stroke="#999" stroke-width=".2" d="M0 0h10v10h-10z"/>
+                            </pattern>
+                            <circle cx="0" cy="0" r="2" fill="#f00" fill-opacity=".50"></circle>
+                            <rect x="-50" y="-50" width="100" height="100" fill="url(#grid)"/>
+                            <path fill="none" stroke="#000" stroke-width=".5" id="svgPlane"/>
+                        </svg>
+                    </td>
+                </tr>
+            </table>
+            <div>
+                <button onclick="zoom(1)">Zoom in</button>
+                <button onclick="zoom(-1)">Zoom out</button>
+                <button onclick="move(-1,0)">Left</button>
+                <button onclick="move(1,0)">Right</button>
+                <button onclick="move(0,-1)">Up</button>
+                <button onclick="move(0,1)">Down</button>
+            </div>
+        </div>
+        <div class="page-footer relative-footer">Page 1 of 1</div>
+    </div>
+    <script>init();</script>
+</div>
+</body>
+</html>
