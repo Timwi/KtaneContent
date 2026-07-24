@@ -166,10 +166,9 @@
         }
 
         function moveText(isRow, pos, direction, times) {
-            let r = isRow ? "row" : "col";
             let direc = direction < 0 ? (isRow ? "L" : "D") : (isRow ? "R" : "U");
             let p = isRow ? (pos + 1) : String.fromCharCode(65 + pos);
-            return `${r}${pos+1} ${direc}${times}`;
+            return `${p}${direc}${times}`;
         }
 
         function isSolved() {
@@ -204,9 +203,9 @@
                 let lastMove = movementList[movementList.length - 1];
 
                 if (lastMove) {
-                    let lastMoveData = lastMove.split(" ");
-                    let lastMoveIsRow = lastMoveData[0].startsWith("row");
-                    let lastMovePos = parseInt(lastMoveData[0].slice(3)) - 1;
+                    let lastMoveData = [lastMove.slice(0, 1), lastMove.slice(1)];
+                    let lastMoveIsRow = !isNaN(lastMoveData[0]) && !isNaN(parseInt(lastMoveData[0]));
+                    let lastMovePos = lastMoveIsRow ? parseInt(lastMoveData[0]) - 1 : "ABCDEF".indexOf(lastMoveData[0]);
                     let lastMoveDirection = lastMoveData[1].startsWith("R") || lastMoveData[1].startsWith("U") ? 1 : -1;
 
                     if (isRow === lastMoveIsRow && pos === lastMovePos) {
@@ -220,8 +219,12 @@
                             }
                         } else {
                             // If the same arrow is clicked right after the same row or column was just clicked
-                            let count = parseInt(lastMoveData[1].slice(1)) + 1;
-                            movementList[movementList.length - 1] = moveText(isRow, pos, direction, count);
+                            let count = (parseInt(lastMoveData[1].slice(1)) + 1) % 36;
+                            if (count > 0) {
+                                movementList[movementList.length - 1] = moveText(isRow, pos, direction, count);
+                            } else {
+                                movementList.pop();
+                            }
                         }
                     } else {
                         movementList.push(currentMove);
