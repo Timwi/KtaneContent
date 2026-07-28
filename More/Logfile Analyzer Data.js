@@ -3716,7 +3716,7 @@ let parseData = [
 					module.makeImage = (row, col, image, rotate = false) => {
 						const rowPosition = 33 * row + 8;
 						const colPosition = 33 * col + 44;
-						return $('<img>').attr('style', `top: ${rowPosition}px; left: ${colPosition}px; transform: scale(1.5) ${rotate ? "rotate(90deg)" : ""};`).attr('src', `../HTML/img/City Planning/${image}.png`).addClass("city-planning");
+						return $('<img>').attr('style', `top: ${rowPosition}px; left: ${colPosition}px; transform: scale(1.5) ${rotate ? "rotate(90deg)" : ""};`).attr('src', `../HTML/img/City Planning/${image}.svg`).addClass("city-planning");
 					}
 					module.makeSvg = (module) => {
 						const matchCoordinate = (row, col, str) => {
