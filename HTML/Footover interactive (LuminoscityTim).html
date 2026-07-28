@@ -15,6 +15,7 @@
     $(function() {
         const rows = 6;
         const cols = 6;
+        const cells = 36;
         const sqw = 100;
         const sqspace = 10;
         const sqsize = sqw + sqspace;
@@ -64,7 +65,7 @@
             for (let col = 0; col < cols; col++) {
                 let x = col * sqsize;
                 let y = row * sqsize;
-                let letter = (row * cols + col).toString(36).toUpperCase();
+                let letter = (row * cols + col).toString(cells).toUpperCase();
                 let group = $(MakeSvgElem("g", { class: "tile" }));
                 group.append(MakeSvgElem("rect", { class: "square", x: xOff, y: yOff, width: sqw, height: sqw }));
                 group.append(MakeSvgElem("text", { x: (xOff + sqw / 2), y: (yOff + sqw / 2 + 20) }, letter));
@@ -78,8 +79,8 @@
         }
 
         let resetButton = $(MakeSvgElem("g", { class:"reset" }));
-        resetButton.append(MakeSvgElem("text", { x:860, y:110 }, "↻"));
         resetButton.append(MakeSvgElem("rect", { class:"reset square", x:810, y:38, width:sqw, height:sqw }));
+        resetButton.append(MakeSvgElem("text", { x:860, y:110 }, "↻"));
         grid.append(resetButton);
         resetButton.click(function(event) {
             resetPos();
@@ -134,14 +135,14 @@
             if (isRow) {
                 for (let col = 0; col < cols; col++) {
                     let t = tileAt[pos][col];
-                    t.value = (t.value + delta + 36) % 36;
-                    t.tile.find("text").text(t.value.toString(36).toUpperCase());
+                    t.value = (t.value + delta + cells) % cells;
+                    t.tile.find("text").text(t.value.toString(cells).toUpperCase());
                 }
             } else {
                 for (let row = 0; row < rows; row++) {
                     let t = tileAt[row][pos];
-                    t.value = (t.value + delta + 36) % 36;
-                    t.tile.find("text").text(t.value.toString(36).toUpperCase());
+                    t.value = (t.value + delta + cells) % cells;
+                    t.tile.find("text").text(t.value.toString(cells).toUpperCase());
                 }
             }
         }
@@ -219,7 +220,7 @@
                             }
                         } else {
                             // If the same arrow is clicked right after the same row or column was just clicked
-                            let count = (parseInt(lastMoveData[1].slice(1)) + 1) % 36;
+                            let count = (parseInt(lastMoveData[1].slice(1)) + 1) % cells;
                             if (count > 0) {
                                 movementList[movementList.length - 1] = moveText(isRow, pos, direction, count);
                             } else {
@@ -262,7 +263,7 @@
                     e.val(e.val().toUpperCase());
                     let i = y * cols + x;
                     tiles[i].tile.find("text").text(e.val());
-                    let val = parseInt(e.val(), 36);
+                    let val = parseInt(e.val(), cells);
                     tiles[i].value = isNaN(val) ? tiles[i].value : val;
                     if (e.val().length > 0) $(`.readinp.i${(i + 1) % nTiles}`).select();
                 }).click(function() {
@@ -292,7 +293,7 @@
 
             // Set all the read inputs to base-36 order and the corresponding tiles
             for (let i = 0; i < nTiles; i++) {
-                let letter = i.toString(36).toUpperCase();
+                let letter = i.toString(cells).toUpperCase();
                 $(`.readinp.i${i}`).val(letter);
                 tiles[i].tile.find("text").text(letter);
             }
@@ -364,7 +365,7 @@
                         tiles[i].x = tile.x;
                         tiles[i].y = tile.y;
                         tiles[i].value = tile.value;
-                        tiles[i].tile.find("text").text(tile.value.toString(36).toUpperCase());
+                        tiles[i].tile.find("text").text(tile.value.toString(cells).toUpperCase());
                         tileAt[row][col] = tiles[i];
                     }
                 }
@@ -379,7 +380,7 @@
                         tiles[i].y = row;
                         tiles[i].x = col;
                         tiles[i].value = i;
-                        tiles[i].tile.find("text").text(i.toString(36).toUpperCase());
+                        tiles[i].tile.find("text").text(i.toString(cells).toUpperCase());
                         tileAt[row][col] = tiles[i];
                     }
                 }
@@ -408,7 +409,7 @@
                 generate();
             }
             else resetPos();
-            $(".reset-grid").click();
+            $(".reset").click();
         });
         $("<button>").addClass("show-sol").appendTo(tools).click(function() {
             $(this).toggleClass("show");
@@ -516,31 +517,37 @@
         svg.grid {
             width: 530px;
         }
-        svg rect {
+        svg.grid rect {
             stroke: #000;
             stroke-width: 4px;
             fill: none;
         }
-        .dark svg :is(rect, polygon) {
+        .dark svg.grid :is(rect, polygon) {
             stroke: #DDD;
         }
-        svg text {
+        svg.grid text {
             font-size: 50px;
             user-select: none;
             pointer-events: none;
         }
-        .dark svg text {
+        .dark svg.grid text {
             fill: #DDD;
         }
-        svg g.reset text {
+        svg.grid g.reset text {
             font-size: 70px;
         }
-        svg g.tile>text {
+        svg.grid rect.reset {
+            fill: #FFF;
+        }
+        .dark svg.grid rect.reset {
+            fill: #222;
+        }
+        svg.grid g.tile>text {
             font-size: 60px;
             font-family: 'Inconsolata';
             font-weight: bold;
         }
-        svg g.tile {
+        svg.grid g.tile {
             transition: transform 0.4s;
         }
         .arrow, .square {
@@ -548,7 +555,7 @@
             stroke: #000;
             fill: transparent;
         }
-        .arrow, .square.reset {
+        .arrow, .reset {
             cursor: pointer;
         }
 
