@@ -9,10 +9,179 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="stylesheet" type="text/css" href="css/font-cyrillic.css">
     <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <style>
+        .ruleseed-active .left-right {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        table, .dark table { border: none; }
+    </style>
+    <script>
+        function setDefaultRules()
+        {
+            let rulesHtml = document.getElementsByClassName('rule');
+            rulesHtml[0].innerText = 'Если на бомбе имеется горящий индикатор MSA, к суммарному числу прибавьте 20.';
+            rulesHtml[1].innerText = 'Если на бомбе имеется последовательный порт, к суммарному числу прибавьте 14.';
+            rulesHtml[2].innerText = 'Если серийный номер содержит хотя бы одну из букв "F", "A", "S" или "T", от суммарного числа отнимите 5.';
+            rulesHtml[3].innerText = 'Если на бомбе имеется порт RJ-45, к суммарному числу прибавьте 27.';
+            rulesHtml[4].innerText = 'Если на бомбе имеется более 3 элементов питания, от суммарного числа отнимите 15.';
+
+            let candidateLetters = ['A', 'B', 'C', 'D', 'E', 'G', 'K', 'N', 'P', 'S', 'T', 'X', 'Z'];
+            let cols = document.querySelectorAll("table tr:first-child > th:nth-child(n + 2)");
+            let rows = document.querySelectorAll("table tr:nth-child(n + 2) > th:last-of-type");
+            let tds = document.getElementsByTagName('td');
+            let numbers =
+                [25, 11, 53, 97, 2, 42, 51, 97, 12, 86, 55, 73, 33,
+                    54, 7, 32, 19, 84, 33, 27, 78, 26, 46, 9, 13, 58,
+                    86, 37, 44, 1, 5, 26, 93, 49, 18, 69, 23, 40, 22,
+                    54, 28, 77, 93, 11, 0, 35, 61, 27, 48, 13, 72, 80,
+                    99, 36, 23, 95, 67, 5, 26, 17, 44, 60, 26, 41, 67,
+                    74, 95, 3, 4, 56, 23, 54, 29, 52, 38, 10, 76, 98,
+                    88, 46, 37, 96, 2, 52, 81, 37, 12, 70, 14, 36, 78,
+                    54, 43, 12, 65, 94, 3, 47, 23, 16, 62, 73, 46, 21,
+                    7, 33, 26, 1, 67, 26, 27, 77, 83, 14, 27, 93, 9,
+                    63, 64, 94, 27, 48, 84, 33, 10, 16, 74, 43, 99, 4,
+                    35, 39, 3, 25, 47, 62, 38, 45, 88, 48, 34, 31, 27,
+                    67, 30, 27, 71, 9, 11, 44, 37, 18, 40, 32, 15, 78,
+                    13, 23, 26, 85, 92, 12, 73, 56, 81, 7, 75, 47, 99];
+
+            for (let i = 0; i < 13; i++)
+            {
+                cols[i].innerText = candidateLetters[i];
+                rows[i].innerText = candidateLetters[i];
+
+                for (let j = 0; j < 13; j++)
+                    tds[i*13 + j].innerText = numbers[i*13 + j].toString().padStart(2, '0');
+            }
+
+            let lrs = document.getElementsByClassName('left-right');
+            lrs[0].innerText = 'Правая буква:';
+            lrs[1].innerText = 'Левая буква:';
+        }
+
+        function setRules(rnd)
+        {
+            let candidates = {
+                's': [
+                    "последняя цифра серийного номера чётна",
+                    "серийный номер содержит гласную букву",
+                    function(rnd) {
+                        let values = rnd.shuffleFisherYates([...Array(36).keys()]).slice(0, 4);
+                        let letterNames = values.filter(v => v >= 10).map(v => String.fromCodePoint(55 + v));
+                        let digitNames = values.filter(v => v < 10);
+                        switch (digitNames.length)
+                        {
+                            case 0: return `серийный номер содержит хотя бы одну из букв "${letterNames[0]}", "${letterNames[1]}", "${letterNames[2]}" или "${letterNames[3]}"`;
+                            case 1: return `серийный номер содержит хотя бы одну из букв "${letterNames[0]}", "${letterNames[1]}" или ${letterNames[2]}, или хотя бы одну цифру "${digitNames[0]}"`;
+                            case 2: return `серийный номер содержит хотя бы одну из букв "${letterNames[0]}" или "${letterNames[1]}", или хотя бы одну из цифр "${digitNames[0]}" или "${digitNames[1]}"`;
+                            case 3: return `серийный номер содержит хотя бы одну букву "${letterNames[0]}", или хотя бы одну из цифр "${digitNames[0]}", "${digitNames[1]}" или "${digitNames[2]}"`;
+                            case 4: return `серийный номер содержит хотя бы одну из цифр "${digitNames[0]}", "${digitNames[1]}", "${digitNames[2]}" или "${digitNames[3]}"`;
+                        }
+                    }
+                ],
+                'p': [
+                    "на бомбе имеется параллельный порт",
+                    "на бомбе имеется последовательный порт",
+                    "на бомбе имеется порт PS/2",
+                    "на бомбе имеется двухканальный порт RCA",
+                    "на бомбе имеется порт RJ-45",
+                    "на бомбе имеется порт DVI-D",
+                    "на бомбе имеются повторяющиеся порты",
+                    "на бомбе имеется пустая плата для портов"
+                ],
+                'i': [
+                    "на бомбе имеется индикатор SND",
+                    "на бомбе имеется индикатор CLR",
+                    "на бомбе имеется индикатор CAR",
+                    "на бомбе имеется индикатор IND",
+                    "на бомбе имеется индикатор FRQ",
+                    "на бомбе имеется индикатор SIG",
+                    "на бомбе имеется индикатор NSA",
+                    "на бомбе имеется индикатор MSA",
+                    "на бомбе имеется индикатор TRN",
+                    "на бомбе имеется индикатор BOB",
+                    "на бомбе имеется индикатор FRK",
+                    "на бомбе имеется горящий индикатор SND",
+                    "на бомбе имеется горящий индикатор CLR",
+                    "на бомбе имеется горящий индикатор CAR",
+                    "на бомбе имеется горящий индикатор IND",
+                    "на бомбе имеется горящий индикатор FRQ",
+                    "на бомбе имеется горящий индикатор SIG",
+                    "на бомбе имеется горящий индикатор NSA",
+                    "на бомбе имеется горящий индикатор MSA",
+                    "на бомбе имеется горящий индикатор TRN",
+                    "на бомбе имеется горящий индикатор BOB",
+                    "на бомбе имеется горящий индикатор FRK",
+                    "на бомбе имеется негорящий индикатор SND",
+                    "на бомбе имеется негорящий индикатор CLR",
+                    "на бомбе имеется негорящий индикатор CAR",
+                    "на бомбе имеется негорящий индикатор IND",
+                    "на бомбе имеется негорящий индикатор FRQ",
+                    "на бомбе имеется негорящий индикатор SIG",
+                    "на бомбе имеется негорящий индикатор NSA",
+                    "на бомбе имеется негорящий индикатор MSA",
+                    "на бомбе имеется негорящий индикатор TRN",
+                    "на бомбе имеется негорящий индикатор BOB",
+                    "на бомбе имеется негорящий индикатор FRK"
+                ],
+                'b': [
+                    function (rnd) { return `на бомбе имеется более ${rnd.next(2, 5)} элементов питания`; },
+                    function (rnd) { return `на бомбе имеется менее ${rnd.next(2, 5)} элементов питания`; },
+                    function (rnd) { let min = rnd.next(1, 3); return `на бомбе имеется между ${min} и ${rnd.next(min+1, min+3)} элементами питания`; },
+                    function (rnd) { return `на бомбе имеется более ${rnd.next(2, 5)} отсеков элементов питания`; },
+                    function (rnd) { return `на бомбе имеется менее ${rnd.next(2, 5)} отсеков элементов питания`; },
+                    function (rnd) { let min = rnd.next(1, 3); return `на бомбе имеется между ${min} и ${rnd.next(min+1, min+3)} отсеками элементов питания`; }
+                ]
+            };
+            let rules = [];
+            let offsets = rnd.shuffleFisherYates([...Array(60).keys()].map(i => i < 30 ? i-30 : i-29));
+            let ruleTypes = ['s', 'p', 'i', 'b'];
+            ruleTypes.push(['s', 'p', 'i', 'b'][rnd.next(0, 4)]);
+            for (let ruleType of ruleTypes)
+            {
+                let ix = rnd.next(0, candidates[ruleType].length);
+                rules.push(candidates[ruleType][ix]);
+                candidates[ruleType].splice(ix, 1);
+            }
+            rnd.shuffleFisherYates(rules);
+
+            let rulesHtml = document.getElementsByClassName('rule');
+            for (let i = 0; i < 5; i++)
+            {
+                let ruleStr = typeof rules[i] === 'function' ? rules[i](rnd) : rules[i];
+                rulesHtml[i].innerText = `Если ${ruleStr}, ${offsets[i] < 0 ? `от суммарного числа отнимите ${Math.abs(offsets[i])}` : `к суммарному числу прибавьте ${Math.abs(offsets[i])}`}.`;
+            }
+
+            let lrs = document.getElementsByClassName('left-right');
+            if (rnd.next(0, 2) != 0)
+            {
+                lrs[0].innerText = 'Левая буква:';
+                lrs[1].innerText = 'Правая буква:';
+            }
+            else
+            {
+                lrs[0].innerText = 'Правая буква:';
+                lrs[1].innerText = 'Левая буква:';
+            }
+
+            let candidateLetters = rnd.shuffleFisherYates(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']).slice(0, 13).sort();
+            let cols = document.querySelectorAll("table tr:first-child > th:nth-child(n + 2)");
+            let rows = document.querySelectorAll("table tr:nth-child(n + 2) > th:last-of-type");
+            let tds = document.getElementsByTagName('td');
+            let numbers = rnd.shuffleFisherYates([...Array(200).keys()].map(i => i % 100));
+
+            for (let i = 0; i < 13; i++)
+            {
+                cols[i].innerText = candidateLetters[i];
+                rows[i].innerText = candidateLetters[i];
+
+                for (let j = 0; j < 13; j++)
+                    tds[i*13 + j].innerText = numbers[i*13 + j].toString().padStart(2, '0');
+            }
+        }
+    </script>
 </head>
-<style>
-    table, .dark table { border: none; }
-</style>
 <body>
     <div class="section">
         <div class="page page-bg-01">
@@ -33,20 +202,20 @@
                     <li>
                         Следуйте этим правилам перед тем, как отправить ответ:
                         <ul>
-                            <li>Если на бомбе имеется горящий индикатор MSA, к суммарному числу прибавьте 20.</li>
-                            <li>Если на бомбе имеется последовательный порт, к суммарному числу прибавьте 14.</li>
-                            <li>Если серийный номер содержит хотя бы одну из букв "F, A, S или T", от суммарного числа отнимите 5.</li>
-                            <li>Если на бомбе имеется порт RJ-45, к суммарному числу прибавьте 27.</li>
-                            <li>Если на бомбе имеется более 3 элементов питания, от суммарного числа отнимите 15.</li>
+                            <li class='rule'>Если на бомбе имеется горящий индикатор MSA, к суммарному числу прибавьте 20.</li>
+                            <li class='rule'>Если на бомбе имеется последовательный порт, к суммарному числу прибавьте 14.</li>
+                            <li class='rule'>Если серийный номер содержит хотя бы одну из букв "F", "A", "S" или "T", от суммарного числа отнимите 5.</li>
+                            <li class='rule'>Если на бомбе имеется порт RJ-45, к суммарному числу прибавьте 27.</li>
+                            <li class='rule'>Если на бомбе имеется более 3 элементов питания, от суммарного числа отнимите 15.</li>
                         </ul>
                     </li>
                     <li><i>Если суммарное число больше 99, возьмите от него последние две цифры. Если суммарное число меньше 0, прибавьте к нему 50.</i></li>
                 </ul>
                 <table>
-                        <tr><th class="corner" colspan="2">Правая буква:</th>
+                        <tr><th class="corner left-right" colspan="2">Правая буква:</th>
                             <th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>G</th><th>K</th><th>N</th><th>P</th><th>S</th><th>T</th><th>X</th><th>Z</th>
                         </tr>
-                        <tr><th rowspan="13">Левая буква:</th>
+                        <tr><th rowspan="13" class="left-right">Левая буква:</th>
                             <th>A</th><td>25</td><td>11</td><td>53</td><td>97</td><td>02</td><td>42</td><td>51</td><td>97</td><td>12</td><td>86</td><td>55</td><td>73</td><td>33</td></tr>
                         <tr><th>B</th><td>54</td><td>07</td><td>32</td><td>19</td><td>84</td><td>33</td><td>27</td><td>78</td><td>26</td><td>46</td><td>09</td><td>13</td><td>58</td></tr>
                         <tr><th>C</th><td>86</td><td>37</td><td>44</td><td>01</td><td>05</td><td>26</td><td>93</td><td>49</td><td>18</td><td>69</td><td>23</td><td>40</td><td>22</td></tr>

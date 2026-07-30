@@ -9,16 +9,13 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="stylesheet" type="text/css" href="css/font-cyrillic.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
     <style>
-        .Braille {
+        .braille {
             font-family:"Braille";
             font-size:60px;
             padding: 0;
             line-height: 37px;
-        }
-        .Lombax {
-            font-family:"Lombax";
-            font-size:30px;
         }
         .flag {
             position: absolute;
@@ -29,7 +26,7 @@
         .flagcell {
             height: 29px;
         }
-        .Zoni {
+        .zoni {
             font-family:"Zoni";
             font-size:28px;
             line-height: 22px;
@@ -109,7 +106,76 @@
         @media screen and (width < 900px) {
             .boxborder { margin-top: 16mm; }
         }
+
+        .dark a, a {
+            display: inline-block;
+            margin-right: .5em;
+            text-decoration: none;
+            color: white;
+            font-size: 80%;
+            transition: color .1s;
+
+            background: #008;
+            border-radius: 50%;
+            width: 1.5em;
+            height: 1.5em;
+            text-align: center;
+            padding-left: .1em;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+
+        a:hover:not(.failed):not(.playing) {
+            color: #ff8;
+        }
+
+        a.playing {
+            color: #8f8;
+        }
+
+        a.failed {
+            cursor: not-allowed;
+            color: red;
+        }
     </style>
+    <script>
+        $(function() {
+            var translations = {
+                "Большой барабан": "Kick",
+                "Малый барабан": "Snare",
+                "Хай-хэт": "HiHat",
+                "Открытый хай-хэт": "Open"
+            };
+            // Based on code from Samfundev’s Listening interactive
+            $(".smalltable tr:nth-child(2) td").each(function() {
+                var elem = $(this);
+                var audio = $("<audio>")
+                    .on("error", function() {
+                        button.addClass("failed");
+                    })
+                    .attr("src", "../HTML/audio/Module Listening/Sim Samples - " + translations[elem.text()] + ".wav")
+                    .on("ended", function() {
+                        button.removeClass("playing");
+                    })
+                    .appendTo(elem);
+                elem.append($("<br>"));
+                var button = $("<a href='#' class='play-button'>▶</a>")
+                    .click(function() {
+                        if (button.hasClass("playing")) {
+                            button.removeClass("playing");
+                            audio[0].pause();
+                            audio[0].currentTime = 0;
+                        } else {
+                            button.addClass("playing");
+                            audio[0].play();
+                        }
+                        return false;
+                    })
+                    .appendTo(elem);
+                
+            });
+        });
+    </script>
 </head>
 <body>
     <div class="section">
@@ -126,24 +192,24 @@
                 </p>
                 <p class="infobox highlightable">
                     <b>2.</b> Возьмите первую цифру серийного номера. Если эта цифра 0, то возьмите 10.
-                    Начиная с буквы из первого шага, двигайтесь столько позиций в алфавите
+                    Начиная с буквы из первого шага, двигайтесь на столько позиций в алфавите
                     и присвойте этой букве номер 2.
                     Повторяйте это для нахождения 3-го и 4-го номера.
                 </p>
                 <p class="infobox highlightable">
-                    <b>3.</b> Пусть ваш сапер опишет объекты и их позиции
+                    <b>3.</b> Пусть Ваш сапёр опишет объекты и их позиции
                     в заранее заполненных квадратах на модуле.
-                    Каждое совпадает с числом или буквой(т.е., "H&nbsp;на&nbsp;B1").
+                    Каждое совпадает с числом или буквой (к примеру, "H&nbsp;на&nbsp;B1").
                 </p>
                 <p class="infobox highlightable">
                     <b>4.</b> Используя эти числа (переводя буквы),
-                    заполните Судоку 4×4, заполнив клетки верными значениями.
+                    решите Судоку 4×4, заполнив клетки верными значениями.
                 </p>
                 <p class="infobox highlightable">
-                    <b>5.</b>По одной клетке за раз, предоставьте саперу значение, зависящее от символа на этой клетке.
-                    Красная кнопка означает, что нужно для ввода использовать Морзе; синия Код нажатия.
-                    Некоторые клетки нужно ввести вручную, когда другие клетки по нажатию будут менять значение циклично,
-                    при этом результат отправится после 2 секунд бездействия.
+                    <b>5.</b> По одной клетке за раз, предоставьте сапёру значение, зависящее от символа на этой клетке.
+                    Красная ("dark red") кнопка означает, что для ввода нужно использовать Морзе; синия ("blue") - Код нажатия.
+                    Некоторые клетки нужно ввести вручную, а другие клетки по нажатию будут менять значение циклично,
+                    при этом результат для них отправится после 2 секунд бездействия.
                 </p>
                 </div>
             </div>
@@ -153,160 +219,160 @@
                     <th>Морские флаги</th><th>Семафор</th><th>Зони</th>
                 </tr>
                 <tr>
-                    <td>A</td><td>.-</td><td>1 1</td><td>00001</td><td class="Braille">A</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-A.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Alpha.svg"></td>
-                    <td class="Zoni">A</td>
+                    <td>A</td><td>.-</td><td>1 1</td><td>00001</td><td class="braille">A</td>
+                    <td class="flagcell"><img class="flag" title="White-blue with cutout (Бело-синий с вырезом)"  src="img/Letter Grid/Flag-A.png"></td>
+                    <td class="flagcell"><img class="flag" title="SW.S (ЮЗ.Ю)"  src="img/Semaphore/Semaphore_Alpha.svg"></td>
+                    <td class="zoni" title="3 dots triangle inside circle (Треугольник из трёх точек внутри круга)">A</td>
                 </tr>
                 <tr>
-                    <td>B</td><td>-...</td><td>1 2</td><td>00010</td><td class="Braille">B</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-B.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Bravo.svg"></td>
-                    <td class="Zoni">B</td>
+                    <td>B</td><td>-...</td><td>1 2</td><td>00010</td><td class="braille">B</td>
+                    <td class="flagcell"><img class="flag" title="Red with cutout (Красный с вырезом)"  src="img/Letter Grid/Flag-B.png"></td>
+                    <td class="flagcell"><img class="flag" title="W.S (З.Ю)"  src="img/Semaphore/Semaphore_Bravo.svg"></td>
+                    <td class="zoni" title="Filled circle inside outline with dots on top and bottom (Заполненный круг внутри обводки с точками сверху и снизу)">B</td>
                 </tr>
                 <tr>
-                    <td>C</td><td>-.-.</td><td>1 3</td><td>00011</td><td class="Braille">C</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-C.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Charlie.svg"></td>
-                    <td class="Zoni">C</td>
+                    <td>C</td><td>-.-.</td><td>1 3</td><td>00011</td><td class="braille">C</td>
+                    <td class="flagcell"><img class="flag" title="Blue-white-red-white-blue horizontal (Сине-бело-красно-бело-синие горизонтальные линии)"  src="img/Letter Grid/Flag-C.png"></td>
+                    <td class="flagcell"><img class="flag" title="NW.S (СЗ.Ю)"  src="img/Semaphore/Semaphore_Charlie.svg"></td>
+                    <td class="zoni" title="Filled circle inside left half-circle (Заполненный круг внутри левой половины круга)">C</td>
                 </tr>
                 <tr>
-                    <td>D</td><td>-..</td><td>1 4</td><td>00100</td><td class="Braille">D</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-D.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Delta.svg"></td>
-                    <td class="Zoni">D</td>
+                    <td>D</td><td>-..</td><td>1 4</td><td>00100</td><td class="braille">D</td>
+                    <td class="flagcell"><img class="flag" title="Yellow-blue-yellow horizontal (Жёлто-сине-жёлтые горизонтальные линии)"  src="img/Letter Grid/Flag-D.png"></td>
+                    <td class="flagcell"><img class="flag" title="N.S (С.Ю)"  src="img/Semaphore/Semaphore_Delta.svg"></td>
+                    <td class="zoni" title="2 dots vertical inside right half-circle (Две вертикальные точки внутри правой половины круга)">D</td>
                 </tr>
                 <tr>
-                    <td>E</td><td>.</td><td>1 5</td><td>00101</td><td class="Braille">E</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-E.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Echo.svg"></td>
-                    <td class="Zoni">E</td>
+                    <td>E</td><td>.</td><td>1 5</td><td>00101</td><td class="braille">E</td>
+                    <td class="flagcell"><img class="flag" title="Blue-red horizontal (Сине-красные горизонтальные линии)"  src="img/Letter Grid/Flag-E.png"></td>
+                    <td class="flagcell"><img class="flag" title="S.NE (Ю.СВ)"  src="img/Semaphore/Semaphore_Echo.svg"></td>
+                    <td class="zoni" title="3 dots vertical inside circle (Три вертикальные точки внутри круга)">E</td>
                 </tr>
                 <tr>
-                    <td>F</td><td>..-.</td><td>2 1</td><td>00110</td><td class="Braille">F</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-F.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Foxtrot.svg"></td>
-                    <td class="Zoni">F</td>
+                    <td>F</td><td>..-.</td><td>2 1</td><td>00110</td><td class="braille">F</td>
+                    <td class="flagcell"><img class="flag" title="Red diamond on white (Красный ромб на белом)"  src="img/Letter Grid/Flag-F.png"></td>
+                    <td class="flagcell"><img class="flag" title="S.E (Ю.В)"  src="img/Semaphore/Semaphore_Foxtrot.svg"></td>
+                    <td class="zoni" title="Left half-circle with dots on each end (Левая половина круга с точками на каждом её конце)">F</td>
                 </tr>
                 <tr>
-                    <td>G</td><td>--.</td><td>2 2</td><td>00111</td><td class="Braille">G</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-G.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Golf.svg"></td>
-                    <td class="Zoni">G</td>
+                    <td>G</td><td>--.</td><td>2 2</td><td>00111</td><td class="braille">G</td>
+                    <td class="flagcell"><img class="flag" title="Yellow-blue vertical stripes (Жёлто-синие вертикальные полосы)"  src="img/Letter Grid/Flag-G.png"></td>
+                    <td class="flagcell"><img class="flag" title="S.SE (Ю.ЮВ)"  src="img/Semaphore/Semaphore_Golf.svg"></td>
+                    <td class="zoni" title="Dot inside circle with gaps at N, E, S and W (Точка внутри круга с пробелами на С, В, Ю и З)">G</td>
                 </tr>
                 <tr>
-                    <td>H</td><td>....</td><td>2 3</td><td>01000</td><td class="Braille">H</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-H.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Hotel.svg"></td>
-                    <td class="Zoni">H</td>
+                    <td>H</td><td>....</td><td>2 3</td><td>01000</td><td class="braille">H</td>
+                    <td class="flagcell"><img class="flag" title="White-red vertical (Бело-красные вертикальные линии)"  src="img/Letter Grid/Flag-H.png"></td>
+                    <td class="flagcell"><img class="flag" title="W.SW (З.ЮЗ)"  src="img/Semaphore/Semaphore_Hotel.svg"></td>
+                    <td class="zoni" title="3 dots horizontal inside circle with gaps at N and S (Три горизонтальные точки внутри круга с пробелами на С и Ю)">H</td>
                 </tr>
                 <tr>
-                    <td>I</td><td>..</td><td>2 4</td><td>01001</td><td class="Braille">I</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-I.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_India.svg"></td>
-                    <td class="Zoni">I</td>
+                    <td>I</td><td>..</td><td>2 4</td><td>01001</td><td class="braille">I</td>
+                    <td class="flagcell"><img class="flag" title="Black dot on yellow (Чёрная точка на жёлтом)"  src="img/Letter Grid/Flag-I.png"></td>
+                    <td class="flagcell"><img class="flag" title="SW.NW (ЮЗ.СЗ)"  src="img/Semaphore/Semaphore_India.svg"></td>
+                    <td class="zoni" title="Filled circle with dot above and below (Заполненный круг с точками сверху и снизу)">I</td>
                 </tr>
                 <tr>
-                    <td>J</td><td>.---</td><td>2 5</td><td>01010</td><td class="Braille">J</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-J.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Juliet.svg"></td>
-                    <td class="Zoni">J</td>
+                    <td>J</td><td>.---</td><td>2 5</td><td>01010</td><td class="braille">J</td>
+                    <td class="flagcell"><img class="flag" title="Blue-white-blue horizontal (Бело-сине-белые горизонтальные линии)"  src="img/Letter Grid/Flag-J.png"></td>
+                    <td class="flagcell"><img class="flag" title="N.E (С.В)"  src="img/Semaphore/Semaphore_Juliet.svg"></td>
+                    <td class="zoni" title="Filled circle with quarter-circles at NW and SE (Заполненный круг с четвертями кругов на СЗ и ЮВ)">J</td>
                 </tr>
                 <tr>
-                    <td>K</td><td>-.-</td><td>1 3</td><td>01011</td><td class="Braille">K</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-K.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Kilo.svg"></td>
-                    <td class="Zoni">K</td>
+                    <td>K</td><td>-.-</td><td>1 3</td><td>01011</td><td class="braille">K</td>
+                    <td class="flagcell"><img class="flag" title="Yellow-blue vertical (Жёлто-синие вертикальные линии)"  src="img/Letter Grid/Flag-K.png"></td>
+                    <td class="flagcell"><img class="flag" title="SW.N (ЮЗ.С)"  src="img/Semaphore/Semaphore_Kilo.svg"></td>
+                    <td class="zoni" title="3 dots triangle with half-circle on left (Треугольник из трёх точек с половиной круга слева)">K</td>
                 </tr>
                 <tr>
-                    <td>L</td><td>.-..</td><td>3 1</td><td>01100</td><td class="Braille">L</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-L.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Lima.svg"></td>
-                    <td class="Zoni">L</td>
+                    <td>L</td><td>.-..</td><td>3 1</td><td>01100</td><td class="braille">L</td>
+                    <td class="flagcell"><img class="flag" title="Yellow-black checkerboard (Жёлто-чёрная шахматная расцветка)"  src="img/Letter Grid/Flag-L.png"></td>
+                    <td class="flagcell"><img class="flag" title="SW.NE (ЮЗ.СВ)"  src="img/Semaphore/Semaphore_Lima.svg"></td>
+                    <td class="zoni" title="Filled circle surrounded by 3 unequal arcs (Заполненный круг, окружённый тремя неравными дугами)">L</td>
                 </tr>
                 <tr>
-                    <td>M</td><td>--</td><td>3 2</td><td>01101</td><td class="Braille">M</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-M.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Mike.svg"></td>
-                    <td class="Zoni">M</td>
+                    <td>M</td><td>--</td><td>3 2</td><td>01101</td><td class="braille">M</td>
+                    <td class="flagcell"><img class="flag" title="White saltire on blue (Белый косой крест на синем)"  src="img/Letter Grid/Flag-M.png"></td>
+                    <td class="flagcell"><img class="flag" title="SW.E (ЮЗ.В)"  src="img/Semaphore/Semaphore_Mike.svg"></td>
+                    <td class="zoni" title="3 dots horizontal below top half-circle (Три горизонтальные точки под верхней половины круга)">M</td>
                 </tr>
                 <tr>
-                    <td>N</td><td>-.</td><td>3 3</td><td>01110</td><td class="Braille">N</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-N.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_November.svg"></td>
-                    <td class="Zoni">N</td>
+                    <td>N</td><td>-.</td><td>3 3</td><td>01110</td><td class="braille">N</td>
+                    <td class="flagcell"><img class="flag" title="Blue-white checkerboard (Сине-белая шахматная расцветка)"  src="img/Letter Grid/Flag-N.png"></td>
+                    <td class="flagcell"><img class="flag" title="SW.SE (ЮЗ.ЮВ)"  src="img/Semaphore/Semaphore_November.svg"></td>
+                    <td class="zoni" title="2 quarter-circles with dots below (Две четверти круга с точками снизу)">N</td>
                 </tr>
                 <tr>
-                    <td>O</td><td>---</td><td>3 4</td><td>01111</td><td class="Braille">O</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-O.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Oscar.svg"></td>
-                    <td class="Zoni">O</td>
+                    <td>O</td><td>---</td><td>3 4</td><td>01111</td><td class="braille">O</td>
+                    <td class="flagcell"><img class="flag" title="Yellow-red diagonal (Жёлто-красная диагональная расцветка)"  src="img/Letter Grid/Flag-O.png"></td>
+                    <td class="flagcell"><img class="flag" title="W.NW (З.СЗ)"  src="img/Semaphore/Semaphore_Oscar.svg"></td>
+                    <td class="zoni" title="Filled circle (Заполненный круг)">O</td>
                 </tr>
                 <tr>
-                    <td>P</td><td>.--.</td><td>3 5</td><td>10000</td><td class="Braille">P</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-P.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Papa.svg"></td>
-                    <td class="Zoni">P</td>
+                    <td>P</td><td>.--.</td><td>3 5</td><td>10000</td><td class="braille">P</td>
+                    <td class="flagcell"><img class="flag" title="White square on blue (Белый квадрат на синем)"  src="img/Letter Grid/Flag-P.png"></td>
+                    <td class="flagcell"><img class="flag" title="W.N (З.С)"  src="img/Semaphore/Semaphore_Papa.svg"></td>
+                    <td class="zoni" title="Filled circle inside left half-circle with dots on top and bottom (Заполненный круг внутри левой половины круга с точками сверху и снизу)">P</td>
                 </tr>
                 <tr>
-                    <td>Q</td><td>--.-</td><td>4 1</td><td>10001</td><td class="Braille">Q</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-Q.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Quebec.svg"></td>
-                    <td class="Zoni">Q</td>
+                    <td>Q</td><td>--.-</td><td>4 1</td><td>10001</td><td class="braille">Q</td>
+                    <td class="flagcell"><img class="flag" title="Yellow (Жёлтый)"  src="img/Letter Grid/Flag-Q.png"></td>
+                    <td class="flagcell"><img class="flag" title="W.NE (З.СВ)"  src="img/Semaphore/Semaphore_Quebec.svg"></td>
+                    <td class="zoni" title="Three-quarter-circle with dot inside gap at SE (Три четверти круга с точкой внутри пробела на ЮВ)">Q</td>
                 </tr>
                 <tr>
-                    <td>R</td><td>.-.</td><td>4 2</td><td>10010</td><td class="Braille">R</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-R.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Romeo.svg"></td>
-                    <td class="Zoni">R</td>
+                    <td>R</td><td>.-.</td><td>4 2</td><td>10010</td><td class="braille">R</td>
+                    <td class="flagcell"><img class="flag" title="Yellow cross on red (Жёлтый крест на красном)"  src="img/Letter Grid/Flag-R.png"></td>
+                    <td class="flagcell"><img class="flag" title="W.E (З.В)"  src="img/Semaphore/Semaphore_Romeo.svg"></td>
+                    <td class="zoni" title="Circle with gaps at NW, NE, SE and SW (Круг с пробелами на СЗ, СВ, ЮВ и ЮЗ)">R</td>
                 </tr>
                 <tr>
-                    <td>S</td><td>...</td><td>4 3</td><td>10011</td><td class="Braille">S</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-S.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Sierra.svg"></td>
-                    <td class="Zoni">S</td>
+                    <td>S</td><td>...</td><td>4 3</td><td>10011</td><td class="braille">S</td>
+                    <td class="flagcell"><img class="flag" title="Blue square on white (Синий квадрат на белом)"  src="img/Letter Grid/Flag-S.png"></td>
+                    <td class="flagcell"><img class="flag" title="W.SE (З.ЮВ)"  src="img/Semaphore/Semaphore_Sierra.svg"></td>
+                    <td class="zoni" title="Circle with gaps at NW and SE (Круг с пробелами на СЗ и ЮВ)">S</td>
                 </tr>
                 <tr>
-                    <td>T</td><td>-</td><td>4 4</td><td>10100</td><td class="Braille">T</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-T.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Tango.svg"></td>
-                    <td class="Zoni">T</td>
+                    <td>T</td><td>-</td><td>4 4</td><td>10100</td><td class="braille">T</td>
+                    <td class="flagcell"><img class="flag" title="Red-white-blue vertical (Красно-бело-синие вертикальные линии)"  src="img/Letter Grid/Flag-T.png"></td>
+                    <td class="flagcell"><img class="flag" title="NW.N (СЗ.С)"  src="img/Semaphore/Semaphore_Tango.svg"></td>
+                    <td class="zoni" title="3 dots diagonal inside top-left half-circle (Три диагональные точки внутри левой верхней половины круга)">T</td>
                 </tr>
                 <tr>
-                    <td>U</td><td>..-</td><td>4 5</td><td>10101</td><td class="Braille">U</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-U.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Uniform.svg"></td>
-                    <td class="Zoni">U</td>
+                    <td>U</td><td>..-</td><td>4 5</td><td>10101</td><td class="braille">U</td>
+                    <td class="flagcell"><img class="flag" title="Red-white checkerboard (Красно-белая шахматная расцветка)"  src="img/Letter Grid/Flag-U.png"></td>
+                    <td class="flagcell"><img class="flag" title="NW.NE (СЗ.СВ)"  src="img/Semaphore/Semaphore_Uniform.svg"></td>
+                    <td class="zoni" title="3 dots diagonal inside bottom-right half-circle (Три диагональные точки внутри правой нижней половины круга)">U</td>
                 </tr>
                 <tr>
-                    <td>V</td><td>...-</td><td>5 1</td><td>10110</td><td class="Braille">V</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-V.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Victor.svg"></td>
-                    <td class="Zoni">V</td>
+                    <td>V</td><td>...-</td><td>5 1</td><td>10110</td><td class="braille">V</td>
+                    <td class="flagcell"><img class="flag" title="Red saltire on white (Красный косой крест на белом)"  src="img/Letter Grid/Flag-V.png"></td>
+                    <td class="flagcell"><img class="flag" title="N.SE (С.ЮВ)"  src="img/Semaphore/Semaphore_Victor.svg"></td>
+                    <td class="zoni" title="Filled circle with dots at N, SE and SW (Заполненный круг с точками на С, ЮВ и ЮЗ)">V</td>
                 </tr>
                 <tr>
-                    <td>W</td><td>.--</td><td>5 2</td><td>10111</td><td class="Braille">W</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-W.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Whiskey.svg"></td>
-                    <td class="Zoni">W</td>
+                    <td>W</td><td>.--</td><td>5 2</td><td>10111</td><td class="braille">W</td>
+                    <td class="flagcell"><img class="flag" title="Red square on white square on blue (Красный квадрат на белом квадрате на синем)"  src="img/Letter Grid/Flag-W.png"></td>
+                    <td class="flagcell"><img class="flag" title="NE.E (СВ.В)"  src="img/Semaphore/Semaphore_Whiskey.svg"></td>
+                    <td class="zoni" title="3 dots vertical inside circle with gaps at N and S (Три вертикальные точки внутри круга с пробелами на С и Ю)">W</td>
                 </tr>
                 <tr>
-                    <td>X</td><td>-..-</td><td>5 3</td><td>11000</td><td class="Braille">X</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-X.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_X-ray.svg"></td>
-                    <td class="Zoni">X</td>
+                    <td>X</td><td>-..-</td><td>5 3</td><td>11000</td><td class="braille">X</td>
+                    <td class="flagcell"><img class="flag" title="Blue cross on white (Синий крест на белом)"  src="img/Letter Grid/Flag-X.png"></td>
+                    <td class="flagcell"><img class="flag" title="NE.SE (СВ.ЗВ)"  src="img/Semaphore/Semaphore_X-ray.svg"></td>
+                    <td class="zoni" title="Filled circle inside circle with gaps at N, E, S and W (Заполненный круг внутри круга с пробелами на С, В, Ю и З)">X</td>
                 </tr>
                 <tr>
-                    <td>Y</td><td>-.--</td><td>5 4</td><td>11001</td><td class="Braille">Y</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-Y.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Yankee.svg"></td>
-                    <td class="Zoni">Y</td>
+                    <td>Y</td><td>-.--</td><td>5 4</td><td>11001</td><td class="braille">Y</td>
+                    <td class="flagcell"><img class="flag" title="Yellow-red diagonal stripes (Жёлто-красные диагональные полоски)"  src="img/Letter Grid/Flag-Y.png"></td>
+                    <td class="flagcell"><img class="flag" title="NW.E (СВ.В)"  src="img/Semaphore/Semaphore_Yankee.svg"></td>
+                    <td class="zoni" title="Filled circle inside circle (Заполненный круг внутри круга)">Y</td>
                 </tr>
                 <tr>
-                    <td>Z</td><td>--..</td><td>5 5</td><td>11010</td><td class="Braille">Z</td>
-                    <td class="flagcell"><img class="flag" src="img/Letter Grid/Flag-Z.png"></td>
-                    <td class="flagcell"><img class="flag" src="img/Semaphore/Semaphore_Zulu.svg"></td>
-                    <td class="Zoni">Z</td>
+                    <td>Z</td><td>--..</td><td>5 5</td><td>11010</td><td class="braille">Z</td>
+                    <td class="flagcell"><img class="flag" title="Yellow-blue-red-black diagonal quadrants (Жёлто-сине-красно-чёрные диагональные квадранты)"  src="img/Letter Grid/Flag-Z.png"></td>
+                    <td class="flagcell"><img class="flag" title="SE.E (ЮВ.В)"  src="img/Semaphore/Semaphore_Zulu.svg"></td>
+                    <td class="zoni" title="2 dots angled inside circle with gaps at E and W (Две наклонные точки внутри круга с пробелами на В и З)">Z</td>
                 </tr>
             </table>
             <table class="smalltable">
@@ -317,40 +383,40 @@
                     <td>Большой барабан</td><td>Малый барабан</td><td>Хай-хэт</td><td>Открытый хай-хэт</td>
                 </tr>
                 <tr>
-                    <td class="shortcell"><img class="shortimg ondark" src="img/Astrology/e_fire.png"></td>
-                    <td class="shortcell"><img class="shortimg ondark" src="img/Astrology/e_water.png"></td>
-                    <td class="shortcell"><img class="shortimg ondark" src="img/Astrology/e_earth.png"></td>
-                    <td class="shortcell"><img class="shortimg ondark" src="img/Astrology/e_air.png"></td>
+                    <td class="shortcell"><img title="Fire (Огонь)"   class="shortimg ondark" src="img/Astrology/e_fire.png"></td>
+                    <td class="shortcell"><img title="Water (Вода)"   class="shortimg ondark" src="img/Astrology/e_water.png"></td>
+                    <td class="shortcell"><img title="Earth (Земля)"   class="shortimg ondark" src="img/Astrology/e_earth.png"></td>
+                    <td class="shortcell"><img title="Air (Воздух)"   class="shortimg ondark" src="img/Astrology/e_air.png"></td>
                 </tr>
                 <tr>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/CardSuits/Spades.png"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/CardSuits/Hearts.png"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/CardSuits/Clubs.png"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/CardSuits/Diamonds.png"></td>
+                    <td class="shortcell"><img title="Spades (Пики)"   class="shortimg" src="img/Kudosudoku/CardSuits/Spades.png"></td>
+                    <td class="shortcell"><img title="Hearts (Черви)"   class="shortimg" src="img/Kudosudoku/CardSuits/Hearts.png"></td>
+                    <td class="shortcell"><img title="Clubs (Трефы)"   class="shortimg" src="img/Kudosudoku/CardSuits/Clubs.png"></td>
+                    <td class="shortcell"><img title="Diamonds (Бубны)"   class="shortimg" src="img/Kudosudoku/CardSuits/Diamonds.png"></td>
                 </tr>
                 <tr>
-                    <td class="shortcell"><img class="shortimg ondark" src="img/Kudosudoku/ChessPieces/Rook.png"></td>
-                    <td class="shortcell"><img class="shortimg ondark" src="img/Kudosudoku/ChessPieces/Knight.png"></td>
-                    <td class="shortcell"><img class="shortimg ondark" src="img/Kudosudoku/ChessPieces/Bishop.png"></td>
-                    <td class="shortcell"><img class="shortimg ondark" src="img/Kudosudoku/ChessPieces/Queen.png"></td>
+                    <td class="shortcell"><img title="Rook (Ладья)"   class="shortimg ondark" src="img/Kudosudoku/ChessPieces/Rook.png"></td>
+                    <td class="shortcell"><img title="Knight (Конь)"   class="shortimg ondark" src="img/Kudosudoku/ChessPieces/Knight.png"></td>
+                    <td class="shortcell"><img title="Bishop (Слон)"   class="shortimg ondark" src="img/Kudosudoku/ChessPieces/Bishop.png"></td>
+                    <td class="shortcell"><img title="Queen (Ферзь)"   class="shortimg ondark" src="img/Kudosudoku/ChessPieces/Queen.png"></td>
                 </tr>
                 <tr>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/MahjongTiles/Plum.png"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/MahjongTiles/Orchid.png"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/MahjongTiles/Chrysanthemum.png"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/MahjongTiles/Bamboo.png"></td>
+                    <td class="shortcell"><img title="Plum (Слива)" class="shortimg" src="img/Kudosudoku/MahjongTiles/Plum.png"></td>
+                    <td class="shortcell"><img title="Orchid (Орхидея)" class="shortimg" src="img/Kudosudoku/MahjongTiles/Orchid.png"></td>
+                    <td class="shortcell"><img title="Chrysanthemum (Хризантема)" class="shortimg" src="img/Kudosudoku/MahjongTiles/Chrysanthemum.png"></td>
+                    <td class="shortcell"><img title="Bamboo (Бамбук)" class="shortimg" src="img/Kudosudoku/MahjongTiles/Bamboo.png"></td>
                 </tr>
                 <tr>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/Snooker/RedCB.png"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/Snooker/YellowCB.png"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/Snooker/GreenCB.png"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/Snooker/BrownCB.png"></td>
+                    <td class="shortcell"><img title="Red (Красный)"   class="shortimg" src="img/Kudosudoku/Snooker/RedCB.png"></td>
+                    <td class="shortcell"><img title="Yellow (Жёлтый)"   class="shortimg" src="img/Kudosudoku/Snooker/YellowCB.png"></td>
+                    <td class="shortcell"><img title="Green (Зелёный)"   class="shortimg" src="img/Kudosudoku/Snooker/GreenCB.png"></td>
+                    <td class="shortcell"><img title="Brown (Коричневый)"   class="shortimg" src="img/Kudosudoku/Snooker/BrownCB.png"></td>
                 </tr>
                 <tr>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/Arrows.png" style="transform: rotate(90deg)"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/Arrows.png" style="transform: rotate(180deg)"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/Arrows.png" style="transform: rotate(270deg)"></td>
-                    <td class="shortcell"><img class="shortimg" src="img/Kudosudoku/Arrows.png"></td>
+                    <td class="shortcell"><img title="Down (Вниз)" class="shortimg" src="img/Kudosudoku/Arrows.png" style="transform: rotate(90deg)"></td>
+                    <td class="shortcell"><img title="Left (Влево)" class="shortimg" src="img/Kudosudoku/Arrows.png" style="transform: rotate(180deg)"></td>
+                    <td class="shortcell"><img title="Up (Вверх)" class="shortimg" src="img/Kudosudoku/Arrows.png" style="transform: rotate(270deg)"></td>
+                    <td class="shortcell"><img title="Right (Вправо)" class="shortimg" src="img/Kudosudoku/Arrows.png"></td>
                 </tr>
                 <tr>
                     <td class="shortcell">
@@ -379,10 +445,10 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="Zoni">1</td>
-                    <td class="Zoni">2</td>
-                    <td class="Zoni">3</td>
-                    <td class="Zoni">4</td>
+                    <td class="zoni">1</td>
+                    <td class="zoni">2</td>
+                    <td class="zoni">3</td>
+                    <td class="zoni">4</td>
                 </tr>
                 <tr style="font-size: 14px">
                     <td>.----</td>
