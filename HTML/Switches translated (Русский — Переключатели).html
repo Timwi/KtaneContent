@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <link rel="stylesheet" type="text/css" href="css/font-cyrillic.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <style>
         svg {
             width: 14mm;
@@ -17,19 +18,81 @@
         table.switches {
             margin: 1em auto;
         }
-
-            table.switches td {
-                padding: 0;
-                border: .5mm solid;
-            }
-
-                table.switches td > svg {
-                    display: block;
-                }
+        table.switches td {
+            padding: 0;
+            border: .5mm solid;
+        }
+        table.switches td > svg {
+            display: block;
+        }
         svg path { fill: #DDD; }
         .dark svg path { fill: #999; }
         .dark svg path, .dark svg circle { stroke: #DDD; }
     </style>
+    <script>
+        let switchUp = 'M44 67h12l6-57H38z';
+        let switchDn = 'M44 67h12l6 57H38z';
+        let _numSwitches = 5;
+        let _numForbiddenConfigurations = 10;
+
+        function setDefaultRules()
+        {
+            setSwitches([ 4, 26, 30, 9, 25, 29, 3, 11, 7, 15 ]);
+        }
+
+        function setRules(rnd)
+        {
+            let startPoint = rnd.next(0, 1 << _numSwitches);
+            let visitedConfigurations = visitConfigurations(startPoint, rnd);
+            let forbidden = [];
+            for (var i = 0; i < (1 << _numSwitches); i++)
+                if (!visitedConfigurations.some(c => c === i))
+                    forbidden.push(i);
+            setSwitches(forbidden);
+        }
+
+        function visitConfigurations(startConfiguration, rnd)
+        {
+            let visitedConfigurations = [];
+            let visitStack = [];
+            visitStack.push(startConfiguration);
+
+            while (true)
+            {
+                if (visitedConfigurations.length >= (1 << _numSwitches) - _numForbiddenConfigurations)
+                    return visitedConfigurations;
+
+                let configToVisit = visitStack.pop();
+                if (visitedConfigurations.some(v => v === configToVisit))
+                    continue;
+                visitedConfigurations.push(configToVisit);
+
+                let adjacentConfigurations = getAdjacentConfigurations(configToVisit);
+                while (adjacentConfigurations.length > 0)
+                {
+                    let ix = rnd.next(0, adjacentConfigurations.length);
+                    visitStack.push(adjacentConfigurations[ix]);
+                    adjacentConfigurations.splice(ix, 1);
+                }
+            }
+        }
+
+        function getAdjacentConfigurations(configuration)
+        {
+            let ret = [];
+            for (let i = 0; i < _numSwitches; i++)
+                ret.push(configuration ^ (1 << i));
+            return ret;
+        }
+
+        function setSwitches(switches)
+        {
+            var tds = document.getElementsByClassName('switch');
+            for (let i = 0; i < _numForbiddenConfigurations; i++)
+                for (let sw = 0; sw < _numSwitches; sw++)
+                    tds[5*i + sw].innerHTML = `<svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="${(switches[i] & (1 << sw)) ? switchUp : switchDn}" stroke="#000"/></svg>`;
+        }
+    </script>
 </head>
 <body>
     <div class="section">
@@ -39,7 +102,7 @@
                 <span class="page-header-section-title">Переключатели</span>
             </div>
             <div class="page-content">
-                <img src="img/Component/Switches.svg" class="diagram">
+                <img class="diagram" src="img/Component/Switches.svg">
                 <h2>О Переключателях</h2>
                 <p class="flavour-text">
                     "Да" или "Нет" — не такой уж и сложный выбор. К несчастью, вам нужно сделать пять таких выборов, и каждый из них может стать для вас последним.
@@ -48,178 +111,76 @@
                 <p>Измените положение переключателей в соответствии с горящими индикаторами над или под ними.</p>
                 <p>Избегайте следующих положений:</p>
                 <table class="switches">
-                    <tbody>
-                        <tr>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6-57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                            <td>
-                                <svg viewBox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"></circle><path d="M44 67h12l6 57H38z" stroke="#000" fill="#fff"></path></svg>
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                    </tr>
+                    <tr>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6-57H38z" stroke="#000"/></svg></td>
+                        <td class='switch'><svg viewbox="0 0 100 134"><circle cx="50" cy="67" r="17" stroke="#000" fill="none"/><path d="M44 67h12l6 57H38z" stroke="#000"/></svg></td>
+                    </tr>
                 </table>
             </div>
             <div class="page-footer relative-footer">Стр. 1 из 1</div>
