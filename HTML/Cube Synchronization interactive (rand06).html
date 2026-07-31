@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Cube Synchronization — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+
+        select, input {
+            font-family: inherit;
+        }
+
+        table, .dark table {
+            border: none;
+            font-size: 16pt;
+        }
+
+        .cube-cell {
+            padding: 0;
+            width: min-content;
+            height: auto;
+            aspect-ratio: 1 / 1;
+        }
+
+        #stage-list {
+            user-select: none;
+            border-radius: 2rem;
+            width: 100%;
+            height: 100%;
+            border: black solid 0.3rem;
+            max-height: 823px;
+            overflow-y: auto;
+        }
+        .dark #stage-list { border: #ddd solid 0.3rem; }
+
+        #new-stage {
+            margin: 0.5rem;
+            border-radius: 1rem;
+            width: auto;
+            height: 4rem;
+            border: blue solid 0.3rem;
+            display: grid;
+            place-items: center;
+            font-size: 2rem;
+            background-color: whitesmoke;
+            color: black;
+        }
+
+        .stage {
+            padding: 0 1rem;
+            margin: 0.5rem;
+            border-radius: 1rem;
+            width: auto;
+            height: auto;
+            border: gray solid 0.3rem;
+            display: grid;
+            justify-content: space-between;
+            grid-auto-flow: row;
+            background-color: whitesmoke;
+            color: black;
+        }
+
+        .stage-header {
+            width: 100%;
+            display: grid;
+            justify-content: space-between;
+            grid-auto-flow: column;
+            height: 4rem;
+        }
+
+        .stage-content {
+            width: 100%;
+            display: grid;
+            justify-items: center;
+            grid-auto-flow: column;
+            overflow-y: hidden;
+            overflow-x: auto;
+            gap: 1rem;
+        }
+
+        .cube {
+            box-sizing: border-box;
+            padding: .3rem;
+            width: auto;
+            height: auto;
+            border-radius: 1rem;
+            border: gray solid 0.3rem;
+            margin-bottom: 1rem;
+        }
+        .dark .cube td { border-color: #222; }
+
+        .new-cube {
+            height: auto;
+            width: 8rem;
+            border-radius: 1rem;
+            border: blue solid 0.3rem;
+            margin-bottom: 1rem;
+            padding: .3rem;
+            display: grid;
+            place-items: center;
+        }
+
+        .new-cube:hover {
+            background-color: blue;
+            color: white;
+        }
+
+        .stage:hover:not(.selected) {
+            background-color: gray;
+            color: white;
+        }
+
+        #new-stage:hover {
+            background-color: blue;
+            color: white;
+        }
+
+        .stage-text {
+            display: grid;
+            align-items: center;
+            font-size: 2rem;
+        }
+
+        .cube-cell {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            grid-column-gap: 5px;
+            grid-row-gap: 5px;
+        }
+
+        .div1 {
+            grid-area: 1 / 1 / 2 / 2;
+        }
+
+        .div2 {
+            grid-area: 1 / 2 / 2 / 3;
+        }
+
+        .div3 {
+            grid-area: 2 / 1 / 3 / 2;
+        }
+
+        .div4 {
+            grid-area: 2 / 2 / 3 / 3;
+        }
+
+    </style>
+    <script>
+        let stageList, newStage;
+let lastStage = 0, selectedStage = 0;
+let database = {};
+
+function init() {
+    stageList = document.getElementById('stage-list');
+    newStage = document.getElementById('new-stage');
+    createStage(0);
+    selectedStage = 0;
+    let stage0 = document.getElementById('stage-0');
+    stage0.classList.add('selected');
+    redrawStageList();
+    
+    newStage.addEventListener('click', function () {
+        lastStage++;
+        createStage(lastStage);
+    });
+}
+
+function createStage(stageNumber) {
+    let stage = document.createElement('div');
+    stage.classList.add('stage');
+    stage.id = `stage-${stageNumber}`;
+    stage.innerHTML = `<div class="stage-header"><div class="stage-text">Stage ${stageNumber}</div></div>`;
+    stage.addEventListener('click', function (e) {
+        
+        if (e.target.closest('.new-cube') || e.target.closest('.cube') || 
+            e.target.closest('select') || e.target.closest('input')) return;
+        
+        if (selectedStage === stageNumber) {
+            this.classList.remove('selected');
+            let content = this.querySelector('.stage-content');
+            if (content) {
+                content.style.display = 'none';
+            }
+            selectedStage = null;
+            return;
+        }
+        
+        if (selectedStage !== null) {
+            let prev = document.getElementById('stage-' + selectedStage);
+            if (prev) {
+                prev.classList.remove('selected');
+                let prevContent = prev.querySelector('.stage-content');
+                if (prevContent) {
+                    prevContent.style.display = 'none';
+                }
+            }
+        }
+        
+        selectedStage = stageNumber;
+        this.classList.add('selected');
+        redrawStageList();
+    });
+    
+    stageList.appendChild(stage);
+}
+
+function redrawStageList() {
+    let currentStage = document.getElementById(`stage-${selectedStage}`);
+    if (!currentStage) return;
+    
+    let oldContent = currentStage.querySelector('.stage-content');
+    if (oldContent) {
+        oldContent.remove();
+    }
+    
+    let stageContent = document.createElement('div');
+    stageContent.classList.add('stage-content');
+    stageContent.id = `stage-content-${selectedStage}`;
+    
+    let newCube = document.createElement('div');
+    newCube.classList.add('new-cube');
+    newCube.id = `new-cube-${selectedStage}`;
+    newCube.innerHTML = `<span class="new-cube-label">+ New cube</span>`;
+    stageContent.appendChild(newCube);
+    currentStage.appendChild(stageContent);
+    
+    newCube.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!database[selectedStage]) {
+            database[selectedStage] = [];
+        }
+        
+        let cubeData = {};
+        for (let i = 1; i <= 6; i++) {
+            cubeData[i] = { select1: '', select2: '', input: '' };
+        }
+        database[selectedStage].push(cubeData);
+        let cubeIndex = database[selectedStage].length - 1;
+        insertTable(stageContent, selectedStage, cubeIndex);
+    });
+
+    if (database[selectedStage]) {
+        for (let i = 0; i < database[selectedStage].length; i++) {
+            insertTable(stageContent, selectedStage, i);
+        }
+    }
+}
+
+function insertTable(parent, stageNumber, cubeNumber) {
+    let table = document.createElement('div');
+    table.classList.add("cube");
+    table.id = `cube-${stageNumber}-${cubeNumber}`;
+    
+    let html = "<table><tr><td>5</td><td class='corner'></td><td rowspan='2' class='corner'></td></tr>\
+                <tr><td>3</td><td>6</td></tr><tr><td rowspan='2' class='corner'></td><td>4</td><td>2</td></tr>\
+                <tr><td>1</td><td class='corner'></td></tr></table>";
+    
+    html = html.replace(/<td>(\d)<\/td>/g, function(match, i) {
+        return `<td>
+                    <div class="cube-cell">
+                        <div class="div1">${i}</div>
+                        <div class="div2"><select id="select1-${stageNumber}-${cubeNumber}-${i}" ${stageNumber !== selectedStage ? 'disabled' : ''}><option></option><option>←</option><option>↑</option><option>→</option><option>↓</option><option>↻</option><option>↺</option></select></div>
+                        <div class="div3"><select id="select2-${stageNumber}-${cubeNumber}-${i}" ${stageNumber !== selectedStage ? 'disabled' : ''}><option></option><option>←</option><option>↑</option><option>→</option><option>↓</option><option>↻</option><option>↺</option></select></div>
+                        <div class="div4"><input id="input-${stageNumber}-${cubeNumber}-${i}" type="text" size="1" ${stageNumber !== selectedStage ? 'disabled' : ''}/></div>
+                    </div>
+                </td>`;
+    });
+    
+    table.innerHTML = html;
+    
+    let newCube = parent.querySelector('.new-cube');
+    if (newCube) {
+        parent.insertBefore(table, newCube);
+    } else {
+        parent.appendChild(table);
+    }
+    
+    if (!database[stageNumber]) {
+        database[stageNumber] = [];
+    }
+    if (!database[stageNumber][cubeNumber]) {
+        database[stageNumber][cubeNumber] = {};
+        for (let i = 1; i <= 6; i++) {
+            database[stageNumber][cubeNumber][i] = { select1: '', select2: '', input: '' };
+        }
+    }
+    
+    for (let i = 1; i <= 6; i++) {
+        let select1 = document.getElementById(`select1-${stageNumber}-${cubeNumber}-${i}`);
+        let select2 = document.getElementById(`select2-${stageNumber}-${cubeNumber}-${i}`);
+        let input = document.getElementById(`input-${stageNumber}-${cubeNumber}-${i}`);
+        
+        if (select1) {
+            
+            if (database[stageNumber][cubeNumber][i] && database[stageNumber][cubeNumber][i].select1) {
+                select1.value = database[stageNumber][cubeNumber][i].select1;
+            }
+            
+            select1.addEventListener('change', function(e) {
+                e.stopPropagation();
+                if (database[stageNumber] && database[stageNumber][cubeNumber] && database[stageNumber][cubeNumber][i]) {
+                    database[stageNumber][cubeNumber][i].select1 = e.target.value;
+                    console.log('Saved select1:', database[stageNumber][cubeNumber][i].select1); 
+                }
+            });
+        }
+        
+        if (select2) {
+            
+            if (database[stageNumber][cubeNumber][i] && database[stageNumber][cubeNumber][i].select2) {
+                select2.value = database[stageNumber][cubeNumber][i].select2;
+            }
+            
+            select2.addEventListener('change', function(e) {
+                e.stopPropagation();
+                if (database[stageNumber] && database[stageNumber][cubeNumber] && database[stageNumber][cubeNumber][i]) {
+                    database[stageNumber][cubeNumber][i].select2 = e.target.value;
+                    console.log('Saved select2:', database[stageNumber][cubeNumber][i].select2); 
+                }
+            });
+        }
+        
+        if (input) {
+            
+            if (database[stageNumber][cubeNumber][i] && database[stageNumber][cubeNumber][i].input) {
+                input.value = database[stageNumber][cubeNumber][i].input;
+            }
+            
+            input.addEventListener('input', function(e) {
+                e.stopPropagation();
+                if (database[stageNumber] && database[stageNumber][cubeNumber] && database[stageNumber][cubeNumber][i]) {
+                    database[stageNumber][cubeNumber][i].input = e.target.value;
+                    console.log('Saved input:', database[stageNumber][cubeNumber][i].input); 
+                }
+            });
+        }
+    }
+}
+    </script>
+</head>
+<body>
+<div class="section">
+    <div class="page page-bg-01">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Cube Synchronization</span>
+        </div>
+        <div class="page-content">
+            <img src="img/Component/Cube Synchronization.svg" class="diagram">
+            <h2>On the Subject of Cube Synchronization</h2>
+            <p class="flavour-text">Don’t forget the perspectives this time!</p>
+            <p>
+                When the bomb is started, the defuser will see a white square with a green number (top-right) on the
+                module.
+                Every time a <a href="../More/Ignore Table.html#mod=qkCubeSynchronization">non-ignored module</a> is
+                solved, a blue number (top-left),
+                a red number (bottom-right) and a black arrow will display on each Cube Synchronization module X times
+                (see appendix X) periodically,
+                one at a time, going from lowest to highest (green number), looping around.<br>
+                The white square might start turning as well.
+            </p>
+            <p>
+                Each of these flashes represent a side of a face on a cube.<br>
+                When a new module is solved during the display phase, the new faces will display after the faces of the
+                current stage.<br>
+                Consider this cube net with empty faces:
+            </p>
+            <table>
+                <tr>
+                    <td>5</td>
+                    <td class="corner"></td>
+                    <td rowspan="2" class="corner"></td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>6</td>
+                    <td class="corner"></td>
+                </tr>
+                <tr>
+                    <td rowspan="2" class="corner"></td>
+                    <td>4</td>
+                    <td>2</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td class="corner"></td>
+                </tr>
+            </table>
+            <p>
+                <b>On each stage:</b><br>
+                Acquire the information of all the sides (turn direction as well, if the square was turning) (Might not
+                fill the whole cube!) <br>
+                The red number represents the position of the face in the cube net above (1–6).<br>
+                On the back (inner) side, write the given movements (arrow and turn) and the blue number multiplied by
+                the green number of the module the face was displayed on. <br>
+                On the front (outer) side, write the opposite of the given movements and the blue number multiplied by:
+                <br>
+            </p>
+            <ul>
+                <li>If Twitch Plays is active, the ID of the module on Twitch Plays</li>
+                <li>Otherwise the green number + 2</li>
+            </ul>
+            <p>
+                If every face on the cube is filled, but there are still faces left, start a new cube! (Always start a
+                new cube for a new stage!)<br>
+                On each of the cubes you’ve got, close the net and look at it so you’re facing the front side of face 4
+                and face 6 is on top (whether they are present or not)!
+            </p>
+        </div>
+        <div class="page-footer relative-footer">Page 1 of 4</div>
+    </div>
+    <div class="page page-bg-02">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Cube Synchronization</span>
+        </div>
+        <div class="page-content">
+            <p>
+                Take the number of solved, non-ignored modules (aka. the number of the stage you’re currently on)!<br>
+                Modulo it by 20!<br>
+                Take:
+            </p>
+            <ul>
+                <li>If both Twitch Plays and Tweaks are present: The sum of the Points Per Module scores (Twitch Plays
+                    and Time Mode)
+                </li>
+                <li>If only Twitch Plays is present: Twitch Plays Points Per Module score of this module</li>
+                <li>If only Tweaks is present: Time Mode Points Per Module score of this module</li>
+                <li>Otherwise (or if the above instructions yield 0 or less): 3</li>
+            </ul>
+            <p>
+                To acquire the scores, see appendix S!<br>
+                Multiply these two numbers together (round them <b>up</b> to the nearest integer)!<br>
+                Repeat that many number of times on all cubes:<br>
+            </p>
+            <ul>
+                <li>If that face was turning, turn the cube in the turn direction you’re currently facing (The direction
+                    of the arrows won’t change!)
+                </li>
+                <li>Rotate the cube in the direction on the face you’re currently facing (If a face is not filled,
+                    you’re facing the back side of the opposite face, if you see no face at all, rotate it downwards)!
+                </li>
+            </ul>
+            <p>
+                Join together the numbers (Do not sum them!) you see on the cubes that you’ve written on them before (If
+                you see no number, add 30)!<br>
+                When the modules are ready to be solved, input [All of the numbers you’ve got joined, add the green
+                number at the end (The green numbers will disappear when it’s ready to be solved!)]<br>
+                On an incorrect digit, a strike will be issued. Upon a strike, a yellow button will show up. Pressing
+                said button will show the cube the defuser is currently inputting (the same way it was shown the first
+                time).<br>
+                Once every correct digit is entered, the module will solve.
+            </p>
+        </div>
+        <div class="page-footer relative-footer">Page 2 of 4</div>
+    </div>
+    <div class="page page-bg-03">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Cube Synchronization</span>
+        </div>
+        <div class="page-content">
+            <h2>Appendix X</h2>
+            <p>
+                To calculate X:<br>
+                Take:
+            </p>
+            <ul>
+                <li>If both Twitch Plays and Tweaks are present: The sum of the Base scores (Twitch Plays and Time
+                    Mode)
+                </li>
+                <li>If only Twitch Plays is present: Twitch Plays Base score of this module</li>
+                <li>If only Tweaks is present: Time Mode Base score of this module</li>
+                <li>Otherwise (or if the above instructions yield 0 or less): 4</li>
+            </ul>
+            <p>
+                To acquire scores, see appendix S!<br>
+                Round the number <b>up</b> to the nearest integer, modulo it by 10!<br>
+                The number you’ve got is X. (This many faces will appear <b>on each</b> Cube Synchronization module per
+                stage)
+            </p>
+            <p>Note: Calculating X isn’t necessary as it will be the same for each stage, and they appear periodically
+                on the modules.</p>
+            <h2>Appendix S</h2>
+            <p>To acquire Twitch Plays scores, run <b>!read module score Cube Synchronization</b></p>
+            <p>Tweaks (Time Mode scores) can be acquired on <a target="_blank"
+                                                               href="https://docs.google.com/spreadsheets/d/16lz2mCqRWxq__qnamgvlD0XwTuva4jIDW1VPWX49hzM/edit?usp=sharing">this
+                sheet</a>. Priorities (column names):</p>
+            <ol>
+                <li>Assigned</li>
+                <li>Community</li>
+                <li>TP</li>
+                <li>Score</li>
+            </ol>
+            <p>If a score is not present (or there’s no internet connection), count it as 0!</p>
+        </div>
+        <div class="page-footer relative-footer">Page 3 of 4</div>
+    </div>
+    <div class="page page-bg-04">
+        <div class="page-header">
+            <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+            <span class="page-header-section-title">Cube Synchronization</span>
+        </div>
+        <div class="page-content">
+            <h2>Cube Sync: Interactive</h2>
+            <p class="comment">Bon voyage!</p>
+            <div id="stage-list">
+                <div id="new-stage">+ New stage</div>
+                <!--
+                <div class="stage selected">
+                    <div class="stage-header">
+                        <div class="stage-text">Stage 0</div>
+                    </div>
+                    <div id="stage-0-content" class="stage-content">
+                        <div class="new-cube">
+                            <span class="new-cube-label">+ New cube</span>
+                        </div>
+                    </div>
+                </div>
+                -->
+            </div>
+        </div>
+        <div class="page-footer relative-footer">Page 4 of 4</div>
+    </div>
+</div>
+<script>init();</script>
+</body>
+</html>
