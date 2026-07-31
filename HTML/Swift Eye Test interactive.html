@@ -31,13 +31,33 @@
 			moduleElement = document.getElementById("module");
 			
 			setupImages();
-			switchButton.addEventListener("click", handleSwitchPress);
+			switchButton.disabled = true;
+			
+			preloadAssets()
+				.then(results => {
+					const failures = results.filter(
+						result => result.status === "rejected"
+					);
+		
+					if (failures.length > 0) {
+						console.error(`${failures.length} image(s) failed to preload:`, failures.map(result => result.reason));
+					} else {
+						console.log("All images preloaded successfully.");
+					}
+				})
+				.catch(error => {
+					console.error("Unexpected preload error:", error);
+				})
+				.finally(() => {
+					switchButton.disabled = false;
+					switchButton.addEventListener("click", handleSwitchPress);
+				});
+			
 		});
 		
 		function handleSwitchPress() {
-			if (state.solved || !state.interactable) {
+			if (state.solved || !state.interactable)
 				return;
-			}
 			
 			state.switchFlipped = !state.switchFlipped;
 
@@ -66,9 +86,7 @@
 			const submitted = [...state.submittedIndexes].sort((a, b) => a - b);
 			const targets = [...state.targetPositions].sort((a, b) => a - b);
 		
-			const correct =
-				submitted.length === targets.length &&
-				submitted.every((value, index) => value === targets[index]);
+			const correct = submitted.length === targets.length && submitted.every((value, index) => value === targets[index]);
 		
 			if (correct) {
 				state.solved = true;
@@ -111,6 +129,33 @@
 			return `img/Swift Eye Test/Shapes/${filename}`;
 		}
 		
+		function preloadImage(url) {
+			return new Promise((resolve, reject) => {
+				const image = new Image();
+				image.onload = () => resolve(url);
+				image.onerror = () => { reject(new Error(`Could not preload image: ${url}`)); };
+				image.src = url;
+			});
+		}
+		
+		async function preloadAssets() {
+			const imageUrls = [
+				"img/Swift Eye Test/ModuleBackground.png",
+				"img/Swift Eye Test/ModuleBackgroundSolved.png",
+				"img/Swift Eye Test/ModuleBackgroundStrike.png"
+			];
+		
+			for (let shapeId = 0; shapeId < 81; shapeId++) {
+				imageUrls.push(getShapeUrl(shapeId));
+			}
+		
+			switchSound1.load();
+			switchSound2.load();
+			startAudio.load();
+			
+			return Promise.allSettled(imageUrls.map(preloadImage));
+		}
+		
 		function randomInt(min, max) {
 			return Math.floor(Math.random() * (max - min)) + min;
 		}
@@ -139,19 +184,8 @@
 		}
 
 		function getShapeUrl(shapeId) {
-			const [
-				countIndex,
-				fillingIndex,
-				colorIndex,
-				shapeIndex
-			] = getShapeAttributes(shapeId);
-		
-			return getShapeUrlFromAttributes(
-				countIndex,
-				fillingIndex,
-				colorIndex,
-				shapeIndex
-			);
+			const [countIndex, fillingIndex, colorIndex, shapeIndex] = getShapeAttributes(shapeId);
+			return getShapeUrlFromAttributes(countIndex, fillingIndex, colorIndex, shapeIndex);
 		}
 
 		function isSet(shapeIds) {
@@ -161,11 +195,9 @@
 				const values = attributes.map(shapeAttributes => shapeAttributes[attributeIndex]);
 				const distinctCount = new Set(values).size;
 		
-				if (distinctCount === 2) {
+				if (distinctCount === 2)
 					return false;
-				}
 			}
-		
 			return true;
 		}
 		
@@ -177,14 +209,9 @@
 				let shapes;
 		
 				do {
-					shapes = [
-						randomInt(0, 81),
-						randomInt(0, 81),
-						randomInt(0, 81)
-					];
+					shapes = [randomInt(0, 81), randomInt(0, 81), randomInt(0, 81)];
 				} while (
-					new Set(shapes).size !== 3 ||
-					isSet(shapes) !== targetSet.has(position)
+					new Set(shapes).size !== 3 || isSet(shapes) !== targetSet.has(position)
 				);
 		
 				sequence.push(shapes);
@@ -196,9 +223,18 @@
 		function displaySequencePosition(position) {
 			const shapeIds = state.sequence[position];
 		
-			screens.forEach((screen, screenIndex) => {
+			screens.forEach((screen, screenIndex) => { const expectedUrl = getShapeUrl(shapeIds[screenIndex]);
+		
 				screen.classList.remove("visible");
-				screen.src = getShapeUrl(shapeIds[screenIndex]);
+		
+				screen.onload = () => { screen.classList.add("visible"); };
+		
+				screen.onerror = () => {
+					screen.classList.remove("visible");
+					console.error("Could not load image:", expectedUrl);
+				};
+		
+				screen.src = expectedUrl;
 			});
 		
 			pulseScreens();
@@ -248,10 +284,7 @@
 			state.targetPositions = getTargetPositions();
 			state.sequence = generateSetSequence(state.targetPositions);
 		
-			console.log(
-				"Target positions:",
-				state.targetPositions.map(index => index + 1)
-			);
+			console.log("Target positions:", state.targetPositions.map(index => index + 1));
 		
 			await wait(10);
 		
