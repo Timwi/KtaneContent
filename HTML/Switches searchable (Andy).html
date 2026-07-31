@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Switches — Keep Talking and Nobody Explodes Mod</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        let _numSwitches = 5;
+        let _numForbiddenConfigurations = 10;
+
+        function setDefaultRules()
+        {
+            setSwitches([ 4, 26, 30, 9, 25, 29, 3, 11, 7, 15 ]);
+        }
+
+        function setRules(rnd)
+        {
+            let startPoint = rnd.next(0, 1 << _numSwitches);
+            let visitedConfigurations = visitConfigurations(startPoint, rnd);
+            let forbidden = [];
+            for (var i = 0; i < (1 << _numSwitches); i++)
+                if (!visitedConfigurations.some(c => c === i))
+                    forbidden.push(i);
+            setSwitches(forbidden);
+        }
+
+        function visitConfigurations(startConfiguration, rnd)
+        {
+            let visitedConfigurations = [];
+            let visitStack = [];
+            visitStack.push(startConfiguration);
+
+            while (true)
+            {
+                if (visitedConfigurations.length >= (1 << _numSwitches) - _numForbiddenConfigurations)
+                    return visitedConfigurations;
+
+                let configToVisit = visitStack.pop();
+                if (visitedConfigurations.some(v => v === configToVisit))
+                    continue;
+                visitedConfigurations.push(configToVisit);
+
+                let adjacentConfigurations = getAdjacentConfigurations(configToVisit);
+                while (adjacentConfigurations.length > 0)
+                {
+                    let ix = rnd.next(0, adjacentConfigurations.length);
+                    visitStack.push(adjacentConfigurations[ix]);
+                    adjacentConfigurations.splice(ix, 1);
+                }
+            }
+        }
+
+        function getAdjacentConfigurations(configuration)
+        {
+            let ret = [];
+            for (let i = 0; i < _numSwitches; i++)
+                ret.push(configuration ^ (1 << i));
+            return ret;
+        }
+
+        function setSwitches(switches)
+        {
+            var tds = document.getElementsByClassName('switch');
+            for (let i = 0; i < _numForbiddenConfigurations; i++) {
+                let text = "";
+                for (let sw = 0; sw < _numSwitches; sw++) {
+                    if (switches[i] & 1 << sw)
+                        text += sw + 1;
+                }
+                tds[i].innerText = text;
+          }
+        }
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-07">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Switches</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Switches.svg">
+                <h2>On the Subject of Switches</h2>
+                <p class="flavour-text">A manual choice isn't too bad. Unfortunately you never know ahead of time which one will be your next.</p>
+
+                <p>Switches need to be flipped to match the lit indicators either above or below them.</p>
+                <p>There are however configurations to be avoided. 
+                Switches are numbered 1-5 from left to right. 
+                A configuration lists the numbers of the switches that are UP, any switch not listed is DOWN.
+                Avoid the following switch configurations:</p>
+                <ul>
+                    <li class='switch'>3</li> 
+                    <li class='switch'>245</li> 
+                    <li class='switch'>2345</li> 
+                    <li class='switch'>14</li> 
+                    <li class='switch'>145</li> 
+                    <li class='switch'>1345</li> 
+                    <li class='switch'>12</li> 
+                    <li class='switch'>124</li> 
+                    <li class='switch'>123</li> 
+                    <li class='switch'>1234</li> 
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
