@@ -7549,6 +7549,13 @@ let parseData = [
 				}
 			},
 			{
+				regex: /Once in a blue moon.+/,
+				handler: function (matches, module) {
+					module.dropDown[1][module.desiredDestinationIndex].push([matches[0]])
+					return true;
+				}
+			},
+			{
 				regex: /Strike! Generating new maze.../,
 				handler: function (matches, module) {
 					module.attempts++;
