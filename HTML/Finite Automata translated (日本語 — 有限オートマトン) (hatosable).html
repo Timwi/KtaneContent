@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>有限オートマトン — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/font-japanese.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border: none;
+        }
+
+        .page-footer::before { content: 'ページ '; }
+        .page-footer::after { content: '/6'; }
+        .dark img:not(.diagram) { filter: invert(80%); }
+        ol {
+            margin-top: 5px;
+            margin-bottom: 3px;
+        }
+        ul {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">有限オートマトン</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Finite Automata.svg" class="diagram">
+                <h2>モジュール詳細：有限オートマトン</h2>
+                <p class="flavour-text">ステートマシンについて勉強しておいてくださいね。さもないと、この爆弾の状態が「爆発済み」に遷移してしまうかもしれませんから。</p>
+                <p>このモジュールでは、シリアルナンバーに基づいて1つ以上の正規表現を選択し、それらを有限オートマトンに変換し、それらに演算を適用する。最初の5つの画面には5つの正規表現が表示され、最後の画面は送信パネルである。</p>
+                <h3 style="margin-top:0px;margin-bottom:0px;">用語</h3>
+                <ul style="margin-top:0px;margin-bottom:5px;">
+                    <li>正規表現:記号 a, b, ε (イプシロン、テキストが空であることを表す)と演算子(下記参照)から構成される文字列。</li>
+                    <li>有限オートマトン: 状態およびそれらの間の遷移から成る集合であり、正規表現と相互変換が可能である。各遷移には英字1文字が関連し、ここでは「a」または「b」のどちらかのみ出現する。これは、その遷移がどの入力に従うかを制御するために用いられる。</li>
+                    <li>遷移グラフ: 有限オートマトンに似た構造を持つが、「a」と「b」のみではなく、遷移には任意の正規表現を関連付けることができる。ここでは、有限オートマトンを作成するプロセスにおける一歩として用いられる。</li>
+                </ul>
+                <h3 style="margin-top:0px;margin-bottom:0px;">正規表現の演算と構文</h3>
+                <code>R</code> と<code>S</code> は任意の正規表現である。
+                <ol>
+                    <li>括弧：<code>(R)</code> 例：<code>(a)</code>, <code>(b)</code></li>
+                    <li>クリーネスター：<code>R*</code> 例： <code>a*</code>, <code>(ab)*</code></li>
+                    <li>結合：<code>RS</code> 例： <code>ab</code>, <code>ab*</code>, <code>b*a</code></li>
+                    <li>選択：<code>R|S</code> 例： <code>a|b</code>, <code>a*|ab</code></li>
+                </ol>
+                <p style="margin-top: 0px;">注意点として、選択の最後の例については、オペランド(演算対象)は、<code>a*</code> と<code>ab</code> となる。これは、オペランドの優先順位によるものである。同様に、結合の最後の例について、右のオペランドは<code>b*</code> であり、クリーネスターの二つ目の例については、オペランドは<code>(ab)</code> である。また、もう一点付け加えると、 <code>*</code> は単項演算子であり、右側にオペランドを持たない。そのため<code>b*a</code> は <code>b*</code> と<code>a</code> の結合として解釈される。</p>
+                <p>下記のアルゴリズムにおいて、「最も外側の演算子」とは、括弧の中に含まれていない正規表現内で最後に演算する演算子を指す。具体的には、正規表現<code>ab|a(ab*|a)b</code> について、最も外側の演算子は括弧の外側にある選択演算子を指す。このような演算子が複数ある場合、次ページで説明しているアルゴリズムについては、そのような演算子からいずれかを選択してよい。</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">有限オートマトン</span>
+            </div>
+            <div class="page-content">
+                <h3>使用する正規表現と演算子の特定</h3>
+                <p>使用する正規表現を特定するには、シリアルナンバーの数字を確認する。</p>
+                シリアルナンバーに数字が奇数個含まれている場合:
+                <ol>
+                    <li>真ん中に位置する数字を5で割る。</li>
+                    <li>その余りが、有限オートマトンの変換に必要な正規表現である。
+                    <li>真ん中に位置する数字が5以上である場合、結果の有限オートマトンの補集合を取る。そうでない場合、前のステップで得たオートマトンが最終的な答えとなる。
+                </ol>
+                シリアルナンバーに数字が偶数個含まれている場合:
+                <ol>
+                    <li>シリアルナンバーの最初の数字と最後の数字を5で割る。</li>
+                    <li>その余りが、有限オートマトンの変換に必要な2つの正規表現である。
+                    <li>シリアルナンバーの最初の数字が5以上である場合、1つ目のオートマトンの補集合を取得する。</li>
+                    <li>シリアルナンバーの最後の数字が5以上である場合、2つ目のオートマトンの補集合を取得する。</li>
+                    <li>最後の数字が最初の数字より小さい場合、2つのオートマトンの積集合を取得する。そうでない場合、2つのオートマトンの和集合を取得する。その結果が最終的な答えとなる。</li>
+                </ol>
+                <p>結果は、次のページに示されている形式で、モジュール内の表の欄に入力していく。</p>
+                <h3>正規表現から有限オートマトンへの変換</h3>
+                正規表現を有限オートマトンに変換するプロセスは以下の通りである。
+                <ul style="margin-top:10px;">
+                    <li>2つの状態と1つの遷移を持ち、開始状態から終了状態へと完全な正規表現に沿って遷移する遷移グラフを作成する。</li>
+                    <li>(任意) いずれかの時点で、2つの遷移の正規表現と開始状態と終了状態が同じ場合、重複した遷移を削除できる。</li>
+                    <li>(任意) いずれかの時点で、2つの状態について、それらがすべて同じ正規表現ラベルで同じ遷移先へ向かう遷移を持っているかつ、2つが両方とも受理状態である又はどちらも受理状態でない場合、2つのうち一方の状態が遷移先であるすべての遷移について、もう一方の状態に置き換えてもよい。その後、付け替えられた状態は削除できる。</li>
+                </ul>
+                次のページに続く...
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">有限オートマトン</span>
+            </div>
+            <div class="page-content">
+                <ul style="margin:0;">
+                    <li>(任意) いずれかの時点で、任意の回数遷移しても受理状態に到達できない状態がある場合、その状態を削除できる。</li>
+                    <li>
+                        <p style="margin:0">(任意) 到達不可能な状態は、いつでも削除できる。</p>
+                        <p style="margin-top:4px;margin-bottom:4px;">状態が「到達可能」であるとは、ある開始状態から状態への経路があることを指す。そうでない場合、その状態は「到達不可能」である。</p>
+                    </li>
+                </ul>
+                <ul style="margin:0;">
+                    <li>正規表現が <code>a</code>, <code>b</code>, <code>ε</code> 以外の遷移がなくなるまで、以下の手順を繰り返す。
+                        <ul>
+                            <li>その遷移のうち1つを選ぶ。これを <var>e</var> と呼ぶ。</li>
+                            <li><var>e</var> の正規表現について、最も外側の演算子を特定する。
+                                <ul>
+                                    <li>その正規表現の最も外側の演算子が式全体を囲む括弧である場合、括弧を削除し、このリストの下に進む。</li>
+                                    <li>最も外側の演算子が、ある正規表現 <var>R</var> のクリーネスター <code>R*</code> である場合、以下の手順を行う。
+                                        <ol>
+                                            <li>状態を1つ追加する。</li>
+                                            <li><var>e</var> から、新しい状態へ ε 遷移で接続する。</li>
+                                            <li>新しい状態から <var>e</var> の遷移先へ ε 遷移で接続する。</li>
+                                            <li>新しい状態から新しい状態(自分自身)へ <var>R</var> 遷移で接続する。</li>
+                                            <li><var>e</var> を削除する。</li>
+                                        </ol>
+                                    </li>
+                                    <li>最も外側の演算子が、ある正規表現 <var>R</var> と <var>S</var> の選択 <code>R|S</code> である場合、以下の手順を行う。
+                                        <ol>
+                                            <li><var>e</var> の正規表現を <var>R</var> に置き換える。</li>
+                                            <li><var>e</var> の遷移元から <var>e</var> の遷移先へ、正規表現 <var>S</var> で遷移する遷移を追加する。 </li>
+                                        </ol>
+                                    </li>
+                                    <li>最も外側の演算子が、ある正規表現 <var>R</var> と <var>S</var> の結合 <code>RS</code> である場合、以下の手順を行う。
+                                        <ol>
+                                            <li>状態を1つ追加する。</li>
+                                            <li><var>e</var> の遷移元から新しい状態へ、正規表現 <var>R</var> で遷移する遷移を追加する。</li>
+                                            <li>新しい状態から <var>e</var> の遷移先へ、正規表現 <var>S</var> で遷移する遷移を追加する。</li>
+                                            <li><var>e</var> を削除する。</li>
+                                        </ol>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>正規表現が ε である遷移 <var>e</var> に対して、それぞれ以下の処理を行う。
+                        <ol>
+                            <li><var>A</var> を <var>e</var> の遷移元、<var>B</var> を <var>e</var> の遷移先とする。</li>
+                            <li><var>B</var> を遷移元とする遷移 <var>s</var> に対して、 <var>s</var> のコピーを作成し、その遷移元を <var>A</var> にする。</li>
+                        </ol>
+                    </li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">有限オートマトン</span>
+            </div>
+            <div class="page-content">
+                <ul style="margin-top:0px">
+                    <li style="list-style-type:none;">
+                        <ol start="3">
+                            <li><var>A</var> を遷移先とする遷移 <var>t</var> に対して、 <var>t</var> のコピーを作成し、その遷移先を <var>B</var> にする。</li>
+                            <li><var>B</var> が受理状態である場合、<var>A</var> も受理状態にする。</li>
+                            <li><var>e</var> を削除する。</li>
+                        </ol>
+                    </li>
+                    <li>同じ正規表現で複数の遷移が存在する状態 <var>S</var> に対して、それぞれ以下の処理を行う。
+                        <ol>
+                            <li>新たな状態を作成する。</li>
+                            <li>状態 <var>S</var> から、その正規表現で遷移する遷移<var>t</var>ごとに、
+                                <ul>
+                                    <li> <var>t</var> の遷移先が受理状態である場合、新たな状態を受理状態に設定する。</li>
+                                    <li> <var>t</var> の遷移先を遷移元とする各遷移に対して、コピーを作成し、その遷移元を新たな状態に設定する。</li>
+                                </ul>
+                            </li>
+                            <li>状態 <var>S</var> から、その正規表現で遷移するすべての遷移を削除する。</li>
+                            <li><var>S</var> から、新たな状態へ、それと同じ正規表現で遷移する新しい遷移を1つ追加する。</li>
+                        </ol>
+                    </li>
+                    <li style="margin-top:0px">遷移先が <code>a</code> でも <code>b</code> でもない遷移が最低一つ存在する場合、</li>
+                </ul>
+                <ol>
+                    <li>新しい状態を追加し、これを<var>B</var>とする。</li>
+                    <li> <var>B</var> から自分自身へ <code>a</code> で遷移する遷移と <code>b</code> で遷移する遷移を追加する。</li>
+                    <li><code>a</code> で遷移する遷移か <code>b</code> で遷移する遷移が存在しない状態に対して、その状態から <var>B</var>へ、その正規表現で遷移する新しい遷移を追加する。</li>
+                </ol>
+                <h3>有限オートマトンの演算</h3>
+                有限オートマトンに対して適用できる3つの集合演算がある。以下は、その一覧と評価方法を示している。
+                <ul style="margin-bottom:0px;">
+                    <li><b>補集合演算</b>: この操作が適用された有限オートマトンの状態それぞれについて、受理状態の有無を反転させる。つまり、元々受理状態だったもの以外を、すべて受理状態する。</li>
+                    <li><b>和集合演算</b>:
+                        <ul>
+                            <li>簡易版: もし入力オートマトンの一方の状態がすべて受理状態であるか、一方の入力オートマトンがもう一方の補集合であるなら、到達可能な状態が<b><u>すべて</u></b>受理状態である任意の有限オートマトンは受理される。</li>
+                            <li>簡易版: もし入力オートマトンの一方に到達可能な受理状態が全くないか、両方とも等しいなら、もう一方の入力オートマトンが受理される。</li>
+                        </ul>
+                        <ol style="margin-bottom:0px;">
+                            <li>新しい有限オートマトンを作成する。このオートマトンは、演算が適用される有限オートマトンの2状態を1つのペアとし、それを状態として持つ。以降、この状態を「グループ状態」と呼ぶ。</li>
+                            <li>新しいオートマトンに開始状態となるグループ状態を1つ追加する。</li>
+                        </ol>
+                    </li>
+                </ul>        
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">有限オートマトン</span>
+            </div>
+            <div class="page-content">
+                <ul style="margin:0;">
+                    <li style="list-style-type:none;">
+                        <ol start="2">
+                            <li style="list-style-type:none;">この状態は、2つの入力オートマトンの開始状態のペアを設定する。</li>
+                            <li>入力オートマトンのいずれかの開始状態が受理状態であれば、開始グループ状態も受理状態とする。</li>
+                            <li>各入力オートマトンに対応する状態から、<code>a</code>で遷移する遷移と、<code>b</code>で遷移する遷移の2つを確認する。そして、それぞれの入力が到達する状態を調べる。
+                                <ul>
+                                    <li>グループ状態には、対応する2つのオートマトンの状態に対応する番号を付けられる。例えば、オートマトンAの状態1が<var>a</var>遷移で状態2に遷移し、オートマトンBの状態1が<var>a</var>遷移で状態3に遷移する場合、出力オートマトンは状態(1,1)から状態(2,3)へ<var>a</var>で遷移する遷移を持つ。</li>
+                                </ul>
+                            </li>
+                            <li>見つけた状態のペアに対応するグループ状態が存在しなければ、それに対応する新しいグループ状態を追加する。</li>
+                            <li>ペア内のどちらかの状態がその有限オートマトンで受理状態であれば、グループ状態も受理状態とする。
+                                <ul>
+                                    <li>例えば、オートマトン<var>B</var>の状態3が受理状態なら、グループ状態(2,3)も受理状態となる。</li>
+                                </ul>
+                            </li>
+                            <li>一つ前のグループ状態からこのグループ状態へ、対応する正規表現で遷移する遷移が存在しなければ、その遷移を追加する。
+                                <ul>
+                                    <li>上の例では、状態(1,1)から状態(2,3)へ<code>a</code>で遷移する遷移を追加することになる。</li>
+                                </ul>
+                            </li>
+                            <li>この手順を、ステップ4以降で新たに追加された各グループ状態ごこに繰り返し、追加すべき新しいグループ状態がなくなるまで続ける。その後、次に進む。</li>
+                        </ol>
+                    </li>
+                    <li style="list-style-type: none;">
+                        <ol start="9">
+                            <li>各グループ状態について、番号を割り当てる。同じグループ状態が現れる箇所は、すべて対応する番号に置き換える。これが結果のオートマトンである。</li>
+                        </ol>
+                    </li>
+                </ul>
+                <ul>
+                    <li><b>積集合演算</b>:
+                        <ul>
+                            <li>簡易版: 一方の入力オートマトンに受理状態が<b>全く</b>無い場合、結果は、到達可能な受理状態が<b>全く</b>無い任意の有限オートマトンを指定できる。</li>
+                            <li>簡易版: 入力オートマトンの一方のすべての状態が受理状態である場合、結果は他方の入力オートマトンと等しい。</li>
+                            <li>簡易版: 2つの入力オートマトンが等しい場合、結果も等しい。</li>
+                            <li>簡易版: 2つの入力オートマトンが互いに補集合である場合、結果は、到達可能な受理状態が<b>全く</b>無い任意の有限オートマトンを指定できる。</li>
+                        </ul>
+                        <ol>
+                            <li>上の和集合の手順と同じプロセスを実行する。ただし、ペアの<b>両方の</b>状態が受理状態である場合のみ、グループ状態を受理状態にする。</li>
+                        </ol>
+                    </li>
+                </ul>
+                
+            </div>
+            <div class="page-footer relative-footer">5</div>
+        </div>
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">有限オートマトン</span>
+            </div>
+            <div class="page-content">
+                <h3>入力形式の例</h3>
+                <p>以下に示す3つの状態間の遷移を持つ有限オートマトンを考える。状態1が開始状態であり、状態3が受理状態であるとする。</p>
+                <img src="img/Finite Automata/state diagram.png" width=367 height=398 class="centered-img">
+                <p>入力形式は以下の表で示している。右2列は、左端の列に示された起点状態から、列が示す遷移で進んだ先の状態を表す。<br>左端の列の数字の前にある > は開始状態を示し、+ は受理状態を示す。状態が開始状態かつ受理状態である場合は、状態番号の前に >+ を示して表す。</p>
+                <table>
+                    <tr>
+                        <th>起点状態</th>
+                        <th>a</th>
+                        <th>b</th>
+                    </tr>
+                    <tr>
+                        <td>>1</td>
+                        <td>3</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>1</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>+3</td>
+                        <td>2</td>
+                        <td>1</td>
+                    </tr>
+                </table>
+                <p>なお、行は常に追加できるが、削除することはできない。空白の行は無視される。数字を入力するには、セルをクリックして値を順に切り替える。開始状態または受理状態を設定するには、左端の列の状態番号をクリックする。上下矢印を使って表示される行を変更する。</p>
+            </div>
+            <div class="page-footer relative-footer" style="vertical-align: middle;">6</div>
+        </div>
+    </div>
+</body>
+</html>
