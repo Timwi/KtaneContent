@@ -5580,12 +5580,12 @@ let parseData = [
 				}
 			},
 			{
-				regex: /Floor #\d:/,
+				regex: /Floor #\d+:/,
 				handler: function (matches, module) {
 					let floorDropdown = [matches, [readTaggedLine()]];
 
 					let twistedsDropdown = [readTaggedLine()];
-					let twistedCount = twistedsDropdown[0].match(/,/).length + 1;
+					let twistedCount = twistedsDropdown[0].match(/,/g).length + 1;
 					twistedsDropdown.push(readTaggedLines(twistedCount));
 					floorDropdown[1].push(twistedsDropdown);
 
@@ -5613,8 +5613,14 @@ let parseData = [
 					}
 					floorDropdown[1].push(damageDropdown);
 
-					let itemUsesDropdown = [damageLine, readTaggedLines(inventoryItemCount + 1)];
+					let itemUsesDropdown = [damageLine, []];
+					let itemUseLine = readTaggedLine();
+					while (!itemUseLine.match(/Inventory after using items - /)) {
+						itemUsesDropdown[1].push(itemUseLine);
+						itemUseLine = readTaggedLine();
+					}
 					floorDropdown[1].push(itemUsesDropdown);
+					floorDropdown[1].push(itemUseLine);
 
 					floorDropdown[1].push(readTaggedLine()); // "Player's HP after this floor is..."
 
