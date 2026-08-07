@@ -21213,7 +21213,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /You submitted/
+				regex: /(You submitted|sword is at position)/
 			}
 		]
 	},
