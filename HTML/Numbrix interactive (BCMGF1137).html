@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Numbrix interactive (BCMGF1137) — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <meta property="og:title" content="Numbrix">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://ktane.timwi.de/Icons/Numbrix.png">
+    <meta property="og:url" content="https://ktane.timwi.de/HTML/Numbrix.html">
+    <meta property="og:description" content="Solve a numbrix puzzle.">
+    <style>
+        .dark table, table {
+            margin: 1em auto;
+            border-collapse: collapse;
+        }
+        td {
+            width: 1.9rem;
+            height: 1.9rem;
+            padding: 4.8px;
+            cursor: pointer;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 19px;
+        }
+        
+        .grid-wrapper {
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        /* Active cells are in yellow */
+        
+        td.active {
+            background: #ffffc9;
+        }
+        .dark td.active {
+            background: #505037;
+        }
+        
+        /* Given cells are in blue */
+        
+        td.given {
+            background: #e0e0ff;
+        }
+        .dark td.given {
+            background: #29294e;
+        }
+        
+        td.special {
+            background: #d0e9d0;
+        }
+        .dark td.special {
+            background: #294e29;
+        }
+        
+        /* Buttons */
+        
+        button {
+            font-family: Special Elite;
+            background-color: white;
+            color: black;
+            font-size: 18px;
+            border-radius: 5px;
+            border: black 3px solid;
+            padding: 7px 10px;
+        }
+        .instructions p {
+            font-family: 'Special Elite', 'Courier New', monospace;
+            font-size: 10pt;
+            width: 280px;
+            line-height: 1.35;
+        }
+    </style>
+    <script>
+    window.onload = __________ => {
+        let table = document.getElementById("interactive");
+        let cells = Array(9);
+        let activeCell = {i:0, j:0}; // What cell have we selected (alternatively, what cell is active)?
+        let sound = true;
+        // Define the grid, initially with empty strings
+        let grid = Array.from({length: 9}, () => Array.from({length: 9}, () => ""));
+        
+        updateGrid(); // Update the grid
+        function updateGrid() {
+            table.innerHTML = '';
+            for (let i = 0; i < 9; i++)
+            {
+                let row = document.createElement("tr");
+                table.appendChild(row);
+                cells[i] = Array(9);
+                
+                for (let j = 0; j < 9; j++) {
+                    let cell = document.createElement("td");
+                    if (/\D+/i.test(grid[i][j])) // Letters present
+                    {
+                        cell.textContent = grid[i][j].split("").map(x => "" + "ABCDEFGHIJ".indexOf(x)).join("");
+                        if (activeCell && activeCell.i == i && activeCell.j == j)
+                        {
+                            cell.classList.add("special");
+                        }
+                        else cell.classList.add("given");
+                    }
+                    else // Just digits, or otherwise an empty cell
+                    {
+                        cell.textContent = grid[i][j];
+                    }
+                    // Is this index our active cell? If so, color it accordingly.
+                    if (activeCell && activeCell.i == i && activeCell.j == j)
+                    {
+                        cell.classList.add("active");
+                    }
+                    cell.onclick = () => selectCell(i, j);
+                    row.appendChild(cell);
+                    cells[i][j] = cell;
+                }
+            }
+            
+            let result = document.getElementById("result");
+            let resultText = ("" + grid).split(",").map(x => x.split("").map(y => /\d/.test(y) ? y : ("" + "ABCDEFGHIJ".indexOf(y))).join("").replaceAll(/^(0|A)/g, "")).join(" ");
+            
+            result.innerHTML = "Input For TP:<br><code>" + (/^\s*$/i.test(resultText) ? "(nothing so far...)" : resultText + "</code>");
+        }
+        
+        // Select a cell
+        function selectCell(i, j)
+        {
+            activeCell = {i, j};
+            updateGrid();
+        }
+        
+        // Pressing a key
+        document.addEventListener("keydown", handleKey);
+        function handleKey(event) {
+            if (!activeCell) return;
+            const key = event.key;
+            const k = key.toLowerCase();
+            // Prevent given cells from being filled in.
+            if (/^(\d|Backspace|Delete)$/i.test(key) && /\D/.test(grid[activeCell.i][activeCell.j])) return;
+            
+            if (/^\d$/i.test(key)) // If a digit is pressed, append it to the grid.
+            {
+                grid[activeCell.i][activeCell.j] += grid[activeCell.i][activeCell.j].length == 2 ? "" : key;
+                updateGrid();
+            }
+            else if (/^(Backspace|Delete)$/i.test(key)) // Delete the last character of the cell on Backspace or Delete.
+            {
+                grid[activeCell.i][activeCell.j] = grid[activeCell.i][activeCell.j].length == 2 ? grid[activeCell.i][activeCell.j][0] : "";
+                updateGrid();
+            }
+            else if (/^Arrow/i.test(key) || ['w','a','s','d'].includes(k)) // If we are pressing an arrow, move to an adjacent cell.
+            {
+                if (key == "ArrowUp" || k == 'w') {
+                    selectCell((activeCell.i + 8) % 9, activeCell.j);
+                } else if(key == "ArrowDown" || k == 's') {
+                    selectCell((activeCell.i + 1) % 9, activeCell.j);
+                } else if(key == "ArrowLeft" || k == 'a') {
+                    selectCell(activeCell.i, (activeCell.j + 8) % 9);
+                } else if(key == "ArrowRight" || k == 'd') {
+                    selectCell(activeCell.i, (activeCell.j + 1) % 9);
+                }
+                event.preventDefault();
+            }
+            else if (k == 'tab') {
+                let y = (activeCell.j + 1) % 9;
+                let x = (activeCell.j == 8 ? (activeCell.i + 1) % 9 : activeCell.i);
+                selectCell(x, y);
+                event.preventDefault();
+                return false;
+            }
+        }
+        
+        // Read/Solve
+        document.getElementById("mode-button").addEventListener("click", () => {
+            if (document.getElementById("mode-button").innerHTML == "Mode: Read")
+            {
+                document.getElementById("mode-button").innerHTML = "Mode: Solve";
+                
+                // Encrypt all currently-filled grid spaces into alphabetic positions.
+                for (let i = 0; i < 9; i++)
+                {
+                    for (let j = 0; j < 9; j++)
+                    {
+                        grid[i][j] = grid[i][j].replaceAll(/^0+/g, "").split("").map(x => "ABCDEFGHIJ"["0123456789".indexOf(x)]).join("");
+                    }
+                }
+                updateGrid();
+            }
+            else
+            {
+                document.getElementById("mode-button").innerHTML = "Mode: Read";
+                for (let i = 0; i < 9; i++)
+                {
+                    for (let j = 0; j < 9; j++)
+                    {
+                        grid[i][j] = grid[i][j].split("").map(x => "" + (/\d/g.test(x) ? "" : "ABCDEFGHIJ".indexOf(x))).join("");
+                    }
+                }
+                updateGrid();
+            }
+        });
+        
+        // Erase Grid
+        document.getElementById("erase-button").addEventListener("click", () => {
+            document.getElementById("mode-button").innerHTML = "Mode: Read";
+            grid = Array.from({length: 9}, () => Array.from({length: 9}, () => ""));
+            updateGrid();
+        });
+        selectCell(0,0);
+    }
+    
+    </script>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Numbrix</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Numbrix.svg" class="diagram">
+                <h2>On the Subject of Numbrix</h2>
+                <p class="flavour-text">Basically a number matrix. Which is just a matrix. Which is also a 2D set of numbers. Which is still just a matrix.</p>
+
+                <p>The module presents a 9×9 grid. Numbers are present in some of the squares in the grid.</p>
+                <p>To solve the module, fill in the grid with consecutive numbers from 1 to 81 so that they follow a horizontal or vertical path.</p>
+                <p>To input a number, first press the square to input, then input the number using your own keyboard. Note that leading zeroes are always omitted, and each square can only hold two digits.</p>
+                <p>Press backspace in your keyboard to reset the selected square. Press R in your keyboard to reset the whole grid.</p>
+                <div class="grid-wrapper">
+                    <table class="interactive" id="interactive">
+                    </table>
+                    <div class="instructions">
+                        <button id="mode-button">Mode: Read</button>
+                        <button id="erase-button">Erase Grid</button>
+                        <p>To use the interactive, fill in the grid by clicking a cell and typing a number in it. Press Backspace or Delete to delete the last digit of the cell.</p>
+                        <p>If you have a selected cell, pressing an arrow key (or WASD or Tab) will move the selection to an adjacent cell, wrapping around.</p>
+                        <p>In “Read” mode, enter all of the given numbers as they appear on the module into the grid. Then, press the button to enter “Solve” mode and fill in the rest of the grid.
+                        Pressing “Solve” again will return to “Read” mode but will also <u>reset the puzzle</u>.</p>
+                        <p>“Erase Grid” will clear all numbers from the grid and return to “Read” mode.</p>
+                    </div>
+                </div>
+                <p id="result">Input For TP:</p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+</html>
