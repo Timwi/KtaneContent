@@ -80,7 +80,7 @@
     window.onload = __________ => {
         let table = document.getElementById("interactive");
         let cells = Array(9);
-        let activeCell = null; // What cell have we selected (alternatively, what cell is active)?
+        let activeCell = {i:0, j:0}; // What cell have we selected (alternatively, what cell is active)?
         let sound = true;
         // Define the grid, initially with empty strings
         let grid = Array.from({length: 9}, () => Array.from({length: 9}, () => ""));
@@ -129,7 +129,6 @@
         // Select a cell
         function selectCell(i, j)
         {
-            //console.log("uhh");
             activeCell = {i, j};
             updateGrid();
         }
@@ -139,7 +138,7 @@
         function handleKey(event) {
             if (!activeCell) return;
             const key = event.key;
-            
+            const k = key.toLowerCase();
             // Prevent given cells from being filled in.
             if (/^(\d|Backspace|Delete)$/i.test(key) && /\D/.test(grid[activeCell.i][activeCell.j])) return;
             
@@ -153,20 +152,25 @@
                 grid[activeCell.i][activeCell.j] = grid[activeCell.i][activeCell.j].length == 2 ? grid[activeCell.i][activeCell.j][0] : "";
                 updateGrid();
             }
-            else if (/^Arrow/i.test(key)) // If we are pressing an arrow, move to an adjacent cell.
+            else if (/^Arrow/i.test(key) || ['w','a','s','d'].includes(k)) // If we are pressing an arrow, move to an adjacent cell.
             {
-                switch (key)
-                {
-                    case "ArrowUp":
-                        selectCell((activeCell.i + 8) % 9, activeCell.j); break;
-                    case "ArrowDown":
-                        selectCell((activeCell.i + 1) % 9, activeCell.j); break;
-                    case "ArrowLeft":
-                        selectCell(activeCell.i, (activeCell.j + 8) % 9); break;
-                    case "ArrowRight":
-                        selectCell(activeCell.i, (activeCell.j + 1) % 9); break;
+                if (key == "ArrowUp" || k == 'w') {
+                    selectCell((activeCell.i + 8) % 9, activeCell.j);
+                } else if(key == "ArrowDown" || k == 's') {
+                    selectCell((activeCell.i + 1) % 9, activeCell.j);
+                } else if(key == "ArrowLeft" || k == 'a') {
+                    selectCell(activeCell.i, (activeCell.j + 8) % 9);
+                } else if(key == "ArrowRight" || k == 'd') {
+                    selectCell(activeCell.i, (activeCell.j + 1) % 9);
                 }
                 event.preventDefault();
+            }
+            else if (k == 'tab') {
+                let y = (activeCell.j + 1) % 9;
+                let x = (activeCell.j == 8 ? (activeCell.i + 1) % 9 : activeCell.i);
+                selectCell(x, y);
+                event.preventDefault();
+                return false;
             }
         }
         
@@ -206,6 +210,7 @@
             grid = Array.from({length: 9}, () => Array.from({length: 9}, () => ""));
             updateGrid();
         });
+        selectCell(0,0);
     }
     
     </script>
@@ -219,9 +224,6 @@
             </div>
             <div class="page-content">
                 <img src="img/Component/Numbrix.svg" class="diagram">
-                <!--
-                <img src="img/Component/Module Name.svg" class="diagram">
-                -->
                 <h2>On the Subject of Numbrix</h2>
                 <p class="flavour-text">Basically a number matrix. Which is just a matrix. Which is also a 2D set of numbers. Which is still just a matrix.</p>
 
@@ -236,10 +238,10 @@
                         <button id="mode-button">Mode: Read</button>
                         <button id="erase-button">Erase Grid</button>
                         <p>To use the interactive, fill in the grid by clicking a cell and typing a number in it. Press Backspace or Delete to delete the last digit of the cell.</p>
-                        <p>If you have a selected cell, pressing an arrow key will move the selection to an adjacent cell, wrapping around.</p>
-                        <p>In "Read" mode, enter all of the given numbers as they appear on the module into the grid. Then, press the button to enter "Solve" mode and fill in the rest of the grid.
-                        Pressing "Solve" again will return to "Read" mode but will also <u>reset the puzzle</u>.</p>
-                        <p>"Erase Grid" will clear all numbers from the grid and return to "Read" mode.</p>
+                        <p>If you have a selected cell, pressing an arrow key (or WASD or Tab) will move the selection to an adjacent cell, wrapping around.</p>
+                        <p>In “Read” mode, enter all of the given numbers as they appear on the module into the grid. Then, press the button to enter “Solve” mode and fill in the rest of the grid.
+                        Pressing “Solve” again will return to “Read” mode but will also <u>reset the puzzle</u>.</p>
+                        <p>“Erase Grid” will clear all numbers from the grid and return to “Read” mode.</p>
                     </div>
                 </div>
                 <p id="result">Input For TP:</p>
