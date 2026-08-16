@@ -1,0 +1,348 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1">
+        <title>Cyan Sudoku — Keep Talking and Nobody Explodes Module</title>
+        <link rel="stylesheet" type="text/css" href="css/font.css">
+        <link rel="stylesheet" type="text/css" href="css/normalize.css">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <script src="js/ktane-utils.js"></script>
+        <script src="js/jquery.3.7.0.min.js"></script>
+        <script>
+        $(function() {
+            table = document.getElementById("sudoku");
+            buildTable();
+            document.addEventListener("keydown", handleKeyPress);
+
+            document.getElementById("clr-ord").addEventListener("input", change);
+        });    
+
+        var table;
+        var cells = [[],[],[],[],[],[],[],[],[]];
+        var selectedCell;
+        var colourOrder = "roygcbpiw";
+        var labelStyle = "none";
+        var saves = [];
+
+        function buildTable(){
+            for(var r = 0; r < 9; r++){
+                let tr = document.createElement("tr");
+                table.append(tr);
+
+                for(var c = 0; c < 9; c++){
+                      let cell = document.createElement("th");
+                    cells[r][c] = cell;
+                    tr.append(cell);
+
+                    cell.classList.add("colour-k");
+                    cell.clr = 'k';
+                    if(r == 2 || r == 5) cell.classList.add("bottom-divider");
+                    if(c == 2 || c == 5) cell.classList.add("right-divider");
+
+                    cell.onclick = function(){
+                        selectCell(cell);
+                    }
+                }                    
+            }
+        }
+
+        function selectCell(target){
+            if(selectedCell != null){
+                selectedCell.classList.remove("selected");
+                if(selectedCell.clr == 'k' || labelStyle == "none") setCellText(selectedCell, "");
+            }
+
+            if(target == null) return;
+            target.classList.add("selected");
+            if(target.classList.contains("colour-k") || labelStyle == "none"){
+                setCellText(target, ".");
+            }
+            selectedCell = target;
+        }
+
+        function setCellText(cell, text){
+            if(cell == null) return;
+            cell.innerHTML = `<p class="cell-text">${text}</p>`;
+        }
+
+        function setCellColour(target, newclr){
+            if(target == null) return;
+            if(newclr == null || newclr == "0") newclr = 'k';
+            if("1234567890".indexOf(newclr[0]) != -1) newclr = colourOrder[newclr-1];
+
+            let colourChars = ['r','o','y','g','c','b','p','i','w','k'];
+            colourChars.forEach(clr => {
+                target.classList.remove(`colour-${clr}`);
+            });
+            
+            target.classList.add(`colour-${newclr}`);
+            target.clr = newclr;
+
+            if(labelStyle == "none" || newclr == 'k') return;
+            else if(labelStyle == "nums") setCellText(target, colourOrder.indexOf(newclr)+1);
+            else if(labelStyle == "clrs") setCellText(target, newclr.toUpperCase());
+        }
+
+        function updateLabels(){
+            for(let r = 0; r < 9; r++) for(let c = 0; c < 9; c++){
+                
+                if(cells[r][c] == selectedCell && (labelStyle == "none" || cells[r][c].clr == 'k')){ //edgecase
+                    setCellText(selectedCell, ".");
+                    continue;
+                }
+
+                if(cells[r][c].clr == 'k' || labelStyle == "none"){
+                    setCellText(cells[r][c], "");
+                    continue;
+                }
+
+                if (labelStyle == "nums"){
+                    setCellText(cells[r][c], colourOrder.indexOf(cells[r][c].clr)+1);
+                    continue;
+                }
+                
+                if (labelStyle == "clrs"){
+                    setCellText(cells[r][c], cells[r][c].clr.toUpperCase());
+                    continue;
+                }
+            }
+        }
+
+        function resetGrid(){
+            for(let r = 0; r < 9; r++) for(let c = 0; c < 9; c++){
+                setCellColour(cells[r][c], 'k')
+            }
+            updateLabels();
+        }
+
+        function handleKeyPress(e) {
+            if(e.ctrlKey || e.altKey || e.target == document.getElementById("clr-ord")) return;
+            switch(e.code) {
+                case "Numpad1":
+                case "Digit1":
+                    setCellColour(selectedCell, "1");
+                    break;
+                case "Numpad2":
+                case "Digit2":
+                    setCellColour(selectedCell, "2");
+                    break;
+                case "Numpad3":
+                case "Digit3":
+                    setCellColour(selectedCell, "3");
+                    break;
+                case "Numpad4":
+                case "Digit4":
+                    setCellColour(selectedCell, "4");
+                    break;
+                case "Numpad5":
+                case "Digit5":
+                    setCellColour(selectedCell, "5");
+                    break;
+                case "Numpad6":
+                case "Digit6":
+                    setCellColour(selectedCell, "6");
+                    break;
+                case "Numpad7":
+                case "Digit7":
+                    setCellColour(selectedCell, "7");
+                    break;
+                case "Numpad8":
+                case "Digit8":
+                    setCellColour(selectedCell, "8");
+                    break;
+                case "Numpad9":
+                case "Digit9":
+                    setCellColour(selectedCell, "9");
+                    break;
+                case "KeyR":
+                    setCellColour(selectedCell, 'r');
+                    break;
+                case "KeyO":
+                    setCellColour(selectedCell, 'o');
+                    break;
+                case "KeyY":
+                    setCellColour(selectedCell, 'y');
+                    break;
+                case "KeyG":
+                    setCellColour(selectedCell, 'g');
+                    break;
+                case "KeyC":
+                    setCellColour(selectedCell, 'c');
+                    break;
+                case "KeyB":
+                    setCellColour(selectedCell, 'b');
+                    break;
+                case "KeyP":
+                    setCellColour(selectedCell, 'p');
+                    break;
+                case "KeyI":
+                    setCellColour(selectedCell, 'i');
+                    break;
+                case "KeyW":
+                    setCellColour(selectedCell, 'w');
+                    break;
+                case "Numpad0":
+                case "Digit0":
+                case "KeyK":
+                case "Space":
+                case "Delete":
+                case "Backspace":
+                    setCellText(selectedCell, ".");
+                    setCellColour(selectedCell);
+                    break;
+            }
+        }
+
+        let change = (e) => {
+            let text = document.getElementById("clr-ord").value.toLowerCase();
+            if(text == "") toggleOrderWarning(false);
+            else if(!/^[roygcbpiw]{9}$/.test(text)) toggleOrderWarning(true);
+            else if(new Set(text).size != 9) toggleOrderWarning(true);
+            else {
+                toggleOrderWarning(false);
+                colourOrder = text;
+                text += "k";
+                let newButtons = "";
+                for(let i = 0; i < 10; i++) newButtons += `<button class="colour-${text[i]} thin-button" onclick="setCellColour(selectedCell, '${text[i]}');">${text[i].toUpperCase()}</button>\n`;
+                document.getElementById("colour-buttons-div").innerHTML = newButtons;
+                updateLabels();
+            }
+        }
+
+        function toggleOrderWarning(t){
+            if(!t) document.getElementById("clr-ord-warn").classList.add("hidden");
+            else document.getElementById("clr-ord-warn").classList.remove("hidden");
+        }
+
+        function makeSave(){
+            let gridData = "";
+            for(let r = 0; r < 9; r++) for(let c = 0; c < 9; c++){
+                gridData += cells[r][c].clr;
+            }
+            saves.push([gridData, null]);
+
+            let docwrite = `<button class="colour-w thin-button" onclick="makeSave();">Save</button>\n`;
+            for(let i = 0; i < saves.length; i++) docwrite += `<button class="colour-w thin-button" onclick="loadSave(${i});">${i}</button>\n`;
+            document.getElementById("save-buttons-div").innerHTML = docwrite;
+        }
+
+        function loadSave(i){
+            let gridData = saves[i][0]
+            for(let r = 0; r < 9; r++) for(let c = 0; c < 9; c++){
+                setCellColour(cells[r][c], gridData[r*9 +c])
+            }
+            updateLabels();
+        }
+
+        function eraseSaves(){
+            document.getElementById("save-buttons-div").innerHTML = `<button class="colour-w thin-button" onclick="makeSave();">Save</button>\n`;
+            saves = [];
+        }
+
+        </script>
+        <style>
+            table {
+                margin: 1em auto;
+                border: none;
+            }
+
+            th {
+                height: 60px;
+                width: 60px;
+                font-size: 40px;
+                padding: 0%;
+                background-color: transparent;
+                border-color: #DDD;
+                transition: all 0.25s;
+            }
+
+            .cell-text {
+                transition: all 0.25s;
+                transform: translateY(5px);
+                margin: 0%;
+                padding: 0%;
+            }
+
+            .selected .cell-text {
+                font-size: 20px;
+                transform: translateY(3px);
+            }
+
+            .colour-r { background-color: #F55; color: #000;}
+            .colour-o { background-color: #F85; color: #000;}
+            .colour-y { background-color: #FF5; color: #000;}
+            .colour-g { background-color: #5F5; color: #000;}
+            .colour-c { background-color: #5FF; color: #000;}
+            .colour-b { background-color: #55F; color: #DDD;}
+            .colour-p { background-color: #85F; color: #DDD;}
+            .colour-i { background-color: #F8C; color: #000;}
+            .colour-w { background-color: #DDD; color: #000;}
+            .colour-k { background-color: #222; color: #DDD;}
+
+            .bottom-divider { border-bottom-width: 5px; }
+            .right-divider { border-right-width: 5px; }
+
+            .smaller { font-size: 10px; }
+
+            button {
+                font-family: Special Elite;
+                font-size: 14px;
+                border-radius: 5px;
+                border: black 3px solid;
+                padding: 4px 0px;
+                margin-bottom: 2px;
+                transition: color 0.5s, background-color 0.5s;
+            }
+
+            .thin-button { width: 50px; }
+            .thick-button { width: 80px; }
+            .thicker-button { width: 100px; }
+            .error-span { color: #F00; }
+        </style>
+    </head>
+    <body>
+        <div class="section">
+            <div class="page page-bg-01">
+                <div class="page-header">
+                    <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                    <span class="page-header-section-title">Cyan Sudoku</span>
+                </div>
+                <div class="page-content">
+                    <img src="img/Component/Cyan%20Sudoku.svg" class="diagram">
+                    <h2>On the Interaction with Cyan Sudoku</h2>
+                    <p class="flavour-text">For those familiar with the <a href="Cyan Sudoku.html" target="_blank">original manual</a>.</p>
+                    <h4>Anti-Knight Sudoku Rules</h4>
+                    <p class="smaller">
+                        Fill the grid with colours such that no colour appears more than once in any row, column, or 3x3 box. No colour may appear within a chess knight's move of any the same colour. (Two cells in one orthogonal direction and then one cell in a perpendicular direction.)
+                    </p>
+                    <table id="sudoku"></table>
+                    <label for="search">Colour order: </label><input type="text" maxlength="9" autocomplete="off" id="clr-ord"> <span id="clr-ord-warn" class="smaller error-span hidden">Please provide 9 letters matching the main colours.</span>
+                    <div id="colour-buttons-div" style="margin: 0%;">
+                        <button class="colour-r thin-button" onclick="setCellColour(selectedCell, 'r');">R</button>
+                        <button class="colour-o thin-button" onclick="setCellColour(selectedCell, 'o');">O</button>
+                        <button class="colour-y thin-button" onclick="setCellColour(selectedCell, 'y');">Y</button>
+                        <button class="colour-g thin-button" onclick="setCellColour(selectedCell, 'g');">G</button>
+                        <button class="colour-c thin-button" onclick="setCellColour(selectedCell, 'c');">C</button>
+                        <button class="colour-b thin-button" onclick="setCellColour(selectedCell, 'b');">B</button>
+                        <button class="colour-p thin-button" onclick="setCellColour(selectedCell, 'p');">P</button>
+                        <button class="colour-i thin-button" onclick="setCellColour(selectedCell, 'i');">I</button>
+                        <button class="colour-w thin-button" onclick="setCellColour(selectedCell, 'w');">W</button>
+                        <button class="colour-k thin-button" onclick="setCellColour(selectedCell, 'k');">K</button>
+                    </div>
+                    Labels:
+                    <button class="colour-w thick-button" onclick="labelStyle='none'; updateLabels();">Neither</button>
+                    <button class="colour-w thick-button" onclick="labelStyle='clrs'; updateLabels();">Colours</button>
+                    <button class="colour-w thick-button" onclick="labelStyle='nums'; updateLabels();">Numbers</button>
+                    <div id="save-buttons-div" style="margin: 0%;">
+                        <button class="colour-w thin-button" onclick="makeSave();">Save</button>
+                    </div>
+                    <div style="text-align: right;">
+                        <button class="colour-w thicker-button" onclick="resetGrid();">Reset grid</button>
+                        <button class="colour-w thicker-button" onclick="eraseSaves();">Reset saves</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
