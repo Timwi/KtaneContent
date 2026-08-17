@@ -14473,7 +14473,7 @@ let parseData = [
 					lines = lines.filter(ln => ln.match(/\[|\{/) != null);
 					
 					const CELL_DIMENSION = 25;
-          const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 200 ${CELL_DIMENSION*lines.length}'>`).addClass("net-positive");
+          const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 300 ${CELL_DIMENSION*lines.length}'>`).addClass("net-positive");
 
 					let furthestLeft = Number.MAX_SAFE_INTEGER;
 					lines.forEach(ln => {
