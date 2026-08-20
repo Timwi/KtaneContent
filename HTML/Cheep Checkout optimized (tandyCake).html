@@ -8,6 +8,126 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        let possibleBirds = [ // Even if names are not shown, we need to reapply exactly all steps to ensure ruleseed gives the same answer
+            ["Auklet", "Albatross", "Antbird", "Apalis", "Aracari"],
+            ["Bluebird", "Bird-of-Paradise", "Bittern", "Bananaquit", "Booby"],
+            ["Chickadee", "Crane", "Cuckoo", "Courser", "Chachalaca"],
+            ["Dove", "Darter", "Duck", "Drongo", "Doradito"],
+            ["Egret", "Emu", "Eagle", "Eremomela"],
+            ["Finch", "Flamingo", "Frigatebird", "Firefinch", "Friarbird"],
+            ["Godwit", "Grouse", "Guan", "Gull", "Go-Away Bird"],
+            ["Hummingbird", "Hoatzin", "Hornbill", "Heron"],
+            ["Ibis", "Inezia", "Iora", "Indigobird"],
+            ["Jay", "Jacamar", "Jacana", "Jacobin"],
+            ["Kinglet", "Kiwi", "Kagu", "Kingfisher", "Kea"],
+            ["Loon", "Lark", "Lyrebird", "Leaftosser", "Limpkin"],
+            ["Magpie", "Mallard", "Motmot", "Murrelet", "Morepork"],
+            ["Nuthatch", "Nightingale", "Noddy", "Nightjar"],
+            ["Oriole", "Ostrich", "Oilbird", "Owl"],
+            ["Pipit", "Pardalote", "Pheasant", "Potoo", "Pigeon"],
+            ["Quail", "Quetzal"],
+            ["Raven", "Rhea", "Robin", "Roadrunner", "Riflebird"],
+            ["Shrike", "Scrubbird", "Seedsnipe", "Seriema", "Shearwater"],
+            ["Thrush", "Turkey", "Turaco", "Tern", "Tūī"],
+            ["Umbrellabird", "Ural Owl"],
+            ["Vireo", "Vulture", "Vanga"],
+            ["Warbler", "Wren", "Woodpecker", "Wagtail", "Weaver"],
+            ["Xantus’s Hummingbird", "Xavier's Greenbul"],
+            ["Yellowlegs", "Yellowthroat", "Yuhina"],
+            ["Zigzag Heron", "Zebra Dove", "Zino's Petrel"]
+        ];
+
+        let possibleCalls = ["221", "312", "223", "213", "112", "222", "122", "121", "311", "131", "132", "232", "323", "113", "212", "133", "233", "322", "321", "332", "313", "211", "231", "123", "333", "331", "111"];
+
+        let possiblePrices = [ 359, 633, 199, 250, 901, 690, 527, 912, 410, 893, 728, 123, 377, 99, 314, 141, 904, 800, 420, 260, 1, 967, 369, 551, 201, 753 ];
+        let possibleIndicators = ["SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK"];
+
+        var selectedCalls;
+        var selectedBirds = [];
+        var selectedPrices;
+        var selectedUnicornCondition;
+
+        function toDollar(intCents) {
+            var stringCents = intCents.toString();
+
+            if (intCents > 99){
+                return stringCents[0] + '.' + stringCents.substring(1);
+            }
+            else if (intCents > 9){
+                return '0.' + stringCents;
+            }
+            else{
+                return '0.0' + stringCents;
+            }
+        }
+
+        function setRules(rnd){
+            // Slice to make a copy
+            selectedCalls = rnd.shuffleFisherYates(possibleCalls.slice());
+            selectedPrices = rnd.shuffleFisherYates(possiblePrices.slice());
+            for (var i = 0; i < 26; i ++){
+                selectedBirds[i] = rnd.shuffleFisherYates(possibleBirds[i].slice())[0];
+
+                var intPrice = selectedPrices[i];
+                intPrice += rnd.next(-10, 11);
+                if (intPrice < 1)
+                    intPrice = 1;
+                selectedPrices[i] = intPrice;
+            }
+
+            // Unicorn Condition being duplicate port is 10%
+            if (rnd.next(0, 10) == 0){
+                selectedUnicornCondition = "a Cheap Checkout module present on the Bomb";
+            }
+            else {
+                selectedUnicornCondition = "a ";
+                selectedUnicornCondition += rnd.next(0, 2) == 0 ? "lit " : "unlit ";
+                selectedUnicornCondition += possibleIndicators[rnd.next(0, 11)] + " indicator";
+            }
+
+            setValues();
+        }
+
+        function setDefaultRules(){
+            selectedCalls = possibleCalls.slice();
+            selectedPrices = possiblePrices.slice();
+            for (var i = 0; i < 26; i ++){
+                selectedBirds[i] = possibleBirds[i][0];
+            }
+            selectedUnicornCondition = "a lit BOB indicator";
+            setValues();
+        }
+
+        function setValues(){
+            birdPriceCells = document.querySelectorAll(".bird-table td:nth-of-type(2n)");
+            birdCallCells = document.querySelectorAll(".bird-table td:nth-of-type(2n-1)");
+
+            let reorderedCalls = [];
+
+            for (var i = 0; i < 27; i ++){
+                var editedCall = selectedCalls[i];
+                editedCall += '_' + i.toLocaleString(undefined, {minimumIntegerDigits: 2})
+                reorderedCalls[i] = editedCall;
+            }
+
+            // Handle values for the Unicorn
+            selectedPrices[26] = 0;
+            selectedCalls[26] += "*";
+
+            reorderedCalls.sort();
+
+            for (var i = 0; i < 27; i ++){
+                var newRowIndex = parseInt(reorderedCalls[i].substring(4));
+                birdCallCells[i].textContent = selectedCalls[newRowIndex];
+                birdPriceCells[i].textContent = toDollar(selectedPrices[newRowIndex]);
+            }
+            document.querySelectorAll(".unicorn-call")[0].textContent = selectedCalls[26].substring(0, 3);
+            var conditions = document.querySelectorAll(".unicorn-condition");
+            conditions[0].textContent = selectedUnicornCondition;
+        }
+    </script>
     <style>
         table {
             margin: 1em auto;
@@ -25,9 +145,8 @@
                 <img src="img/Component/Cheep Checkout.svg" class="diagram">
                 <h2>On the Subject of Cheeting Checkout</h2>
                 <p class="flavour-text">That title... doesn’t work.</p>
-                    <p>Refer to the original manual for instructions</p>
-                    <table>
-                    
+                <p>Refer to the original manual for instructions</p>
+                <table class="bird-table">
                     <tr> <th>Call</th> <th>Price</th> <th>Call</th> <th>Price</th> <th>Call</th> <th>Price</th> </tr>
                     <tr> <td>111*</td> <td>0.00</td> <td>112</td> <td>9.01</td>  <td>113</td> <td>0.99</td> </tr>
                     <tr> <td>121</td> <td>9.12</td> <td>122</td> <td>5.27</td>  <td>123</td> <td>5.51</td> </tr>
@@ -38,10 +157,9 @@
                     <tr> <td>311</td> <td>4.10</td> <td>312</td> <td>6.33</td>  <td>313</td> <td>0.01</td> </tr>
                     <tr> <td>321</td> <td>4.20</td> <td>322</td> <td>8.00</td>  <td>323</td> <td>3.77</td> </tr>
                     <tr> <td>331</td> <td>7.53</td> <td>332</td> <td>2.60</td>  <td>333</td> <td>2.01</td> </tr>
-                    </table>
-                    <br>
-                    <p>*If there is a lit BOB indicator and there is a 111 bird, mash submit until the mod solves.</p>
-          
+                </table>
+                <br>
+                <p>*If there is <span class="unicorn-condition">a lit BOB indicator</span> and there is a <span class="unicorn-call">111</span> bird, mash submit until the mod solves.</p>
              </div>
             <div class="page-footer relative-footer">Page 1 of 1</div>
         </div>
