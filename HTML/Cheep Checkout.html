@@ -8,6 +8,141 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        let possibleBirds = [
+            ["Auklet", "Albatross", "Antbird", "Apalis", "Aracari"],
+            ["Bluebird", "Bird-of-Paradise", "Bittern", "Bananaquit", "Booby"],
+            ["Chickadee", "Crane", "Cuckoo", "Courser", "Chachalaca"],
+            ["Dove", "Darter", "Duck", "Drongo", "Doradito"],
+            ["Egret", "Emu", "Eagle", "Eremomela"],
+            ["Finch", "Flamingo", "Frigatebird", "Firefinch", "Friarbird"],
+            ["Godwit", "Grouse", "Guan", "Gull", "Go-Away Bird"],
+            ["Hummingbird", "Hoatzin", "Hornbill", "Heron"],
+            ["Ibis", "Inezia", "Iora", "Indigobird"],
+            ["Jay", "Jacamar", "Jacana", "Jacobin"],
+            ["Kinglet", "Kiwi", "Kagu", "Kingfisher", "Kea"],
+            ["Loon", "Lark", "Lyrebird", "Leaftosser", "Limpkin"],
+            ["Magpie", "Mallard", "Motmot", "Murrelet", "Morepork"],
+            ["Nuthatch", "Nightingale", "Noddy", "Nightjar"],
+            ["Oriole", "Ostrich", "Oilbird", "Owl"],
+            ["Pipit", "Pardalote", "Pheasant", "Potoo", "Pigeon"],
+            ["Quail", "Quetzal"],
+            ["Raven", "Rhea", "Robin", "Roadrunner", "Riflebird"],
+            ["Shrike", "Scrubbird", "Seedsnipe", "Seriema", "Shearwater"],
+            ["Thrush", "Turkey", "Turaco", "Tern", "Tūī"],
+            ["Umbrellabird", "Ural Owl"],
+            ["Vireo", "Vulture", "Vanga"],
+            ["Warbler", "Wren", "Woodpecker", "Wagtail", "Weaver"],
+            ["Xantus’s Hummingbird", "Xavier's Greenbul"],
+            ["Yellowlegs", "Yellowthroat", "Yuhina"],
+            ["Zigzag Heron", "Zebra Dove", "Zino's Petrel"]
+        ];
+
+        let possibleCalls = [
+            "Medium, Medium, Low",
+            "High, Low, Medium",
+            "Medium, Medium, High",
+            "Medium, Low, High",
+            "Low, Low, Medium",
+            "Medium, Medium, Medium",
+            "Low, Medium, Medium",
+            "Low, Medium, Low",
+            "High, Low, Low",
+            "Low, High, Low",
+            "Low, High, Medium",
+            "Medium, High, Medium",
+            "High, Medium, High",
+            "Low, Low, High",
+            "Medium, Low, Medium",
+            "Low, High, High",
+            "Medium, High, High",
+            "High, Medium, Medium",
+            "High, Medium, Low",
+            "High, High, Medium",
+            "High, Low, High",
+            "Medium, Low, Low",
+            "Medium, High, Low",
+            "Low, Medium, High",
+            "High, High, High",
+            "High, High, Low",
+            "Low, Low, Low"];
+
+        let possiblePrices = [ 359, 633, 199, 250, 901, 690, 527, 912, 410, 893, 728, 123, 377, 99, 314, 141, 904, 800, 420, 260, 1, 967, 369, 551, 201, 753 ];
+        let possibleIndicators = ["SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK"];
+
+        var selectedCalls;
+        var selectedBirds = [];
+        var selectedPrices;
+        var selectedUnicornCondition;
+
+        function toDollar(intCents) {
+            var stringCents = intCents.toString();
+
+            if (intCents > 99){
+                return '$' + stringCents[0] + '.' + stringCents.substring(1);
+            }
+            else if (intCents > 9){
+                return '$0.' + stringCents;
+            }
+            else{
+                return '$0.0' + stringCents;
+            }
+        }
+
+        function setRules(rnd){
+            // Slice to make a copy
+            selectedCalls = rnd.shuffleFisherYates(possibleCalls.slice());
+            selectedPrices = rnd.shuffleFisherYates(possiblePrices.slice());
+            for (var i = 0; i < 26; i ++){
+                selectedBirds[i] = rnd.shuffleFisherYates(possibleBirds[i].slice())[0];
+
+                var intPrice = selectedPrices[i];
+                intPrice += rnd.next(-10, 11);
+                if (intPrice < 1)
+                    intPrice = 1;
+                selectedPrices[i] = intPrice;
+            }
+
+            // Unicorn Condition being duplicate port is 10%
+            if (rnd.next(0, 10) == 0){
+                selectedUnicornCondition = "a Cheap Checkout module present on the Bomb";
+            }
+            else {
+                selectedUnicornCondition = "a ";
+                selectedUnicornCondition += rnd.next(0, 2) == 0 ? "lit " : "unlit ";
+                selectedUnicornCondition += possibleIndicators[rnd.next(0, 11)] + " indicator";
+            }
+
+            setValues();
+        }
+
+        function setDefaultRules(){
+            selectedCalls = possibleCalls;
+            selectedPrices = possiblePrices;
+            for (var i = 0; i < 26; i ++){
+                selectedBirds[i] = possibleBirds[i][0];
+            }
+            selectedUnicornCondition = "a lit BOB indicator";
+            setValues();
+        }
+
+        function setValues(){
+            birdCallCells = document.querySelectorAll(".bird-table td:nth-of-type(3n)");
+            birdPriceCells = document.querySelectorAll(".bird-table td:nth-of-type(3n-1)");
+            birdNameCells = document.querySelectorAll(".bird-table td:nth-of-type(3n-2)");
+
+            for (var i = 0; i < 26; i ++){
+                birdCallCells[i].textContent = selectedCalls[i];
+                birdPriceCells[i].textContent = toDollar(selectedPrices[i]);
+                birdNameCells[i].textContent = selectedBirds[i];
+            }
+            document.querySelectorAll(".unicorn-call")[0].textContent = selectedCalls[26];
+            var conditions = document.querySelectorAll(".unicorn-condition");
+            conditions[0].textContent = selectedUnicornCondition;
+            conditions[1].textContent = selectedUnicornCondition;
+        }
+    </script>
     <style>
         table {
             margin: 1em auto;
@@ -35,18 +170,17 @@
 
                 <p>The below table shows the bird species, the price, and their call. A call consists of three tones that can be high, medium, or low. Three medium tones can be heard whenever the clear button is pressed.</p>
 
-                <table>
-                <tbody>
+                <table class="bird-table">
                     <tr>
-                        <td>
-                            <b>Species</b>
-                        </td>
-                        <td>
-                            <b>Price</b>
-                        </td>
-                        <td>
-                            <b>Call</b>
-                        </td>
+                        <th>
+                            Species
+                        </th>
+                        <th>
+                            Price
+                        </th>
+                        <th>
+                            Call
+                        </th>
                     </tr>
                     <tr>
                         <td>Auklet</td>
@@ -118,8 +252,7 @@
                         <td>$0.99</td>
                         <td>Low, Low, High</td>
                     </tr>
-                </tbody>
-            </table>
+                </table>
             </div>
             <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
@@ -129,8 +262,7 @@
                 <span class="page-header-section-title">Cheep Checkout</span>
             </div>
             <div class="page-content">
-                <table>
-                <tbody>
+                <table class="bird-table">
                     <tr>
                         <td>Oriole</td>
                         <td>$3.14</td>
@@ -191,10 +323,9 @@
                         <td>$7.53</td>
                         <td>High, High, Low</td>
                     </tr>
-                </tbody>
                 </table>
 
-                <p>If one of the sounds is Low, Low, Low (not on the table) and there is a lit BOB indicator, mash the submit button with no change to solve the module. If there is not a lit BOB, the bird costs nothing.</p>
+                <p>If one of the sounds is <span class="unicorn-call">Low, Low, Low</span> (not on the table) and there is <span class="unicorn-condition">a lit BOB indicator</span>, mash the submit button with no change to solve the module. If there is not <span class="unicorn-condition">a lit BOB indicator</span>, the bird costs nothing.</p>
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
         </div>
