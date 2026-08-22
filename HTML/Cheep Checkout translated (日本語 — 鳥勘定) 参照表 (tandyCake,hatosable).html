@@ -9,6 +9,53 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        const birdCounts = [5, 5, 5, 5, 4, 5, 5, 4, 4, 4, 5, 5, 5, 4, 4, 5, 2, 5, 5, 5, 2, 3, 5, 2, 3, 3];
+        const possibleBirds = birdCounts.map(count => Array(count));
+        const possibleCalls = ["221", "312", "223", "213", "112", "222", "122", "121", "311", "131", "132", "232", "323", "113", "212", "133", "233", "322", "321", "332", "313", "211", "231", "123", "333", "331", "111"];
+        const possiblePrices = [359, 633, 199, 250, 901, 690, 527, 912, 410, 893, 728, 123, 377, 99, 314, 141, 904, 800, 420, 260, 1, 967, 369, 551, 201, 753];
+        const possibleIndicators = ["SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK"];
+
+        function formatPrice(cents) {
+            return `${Math.floor(cents / 100)}.${(cents % 100).toString().padStart(2, "0")}`;
+        }
+
+        function setRules(rnd) {
+            const selectedCalls = rnd.shuffleFisherYates(possibleCalls.slice());
+            const selectedPrices = rnd.shuffleFisherYates(possiblePrices.slice());
+
+            for (let i = 0; i < 26; i++) {
+                rnd.shuffleFisherYates(possibleBirds[i].slice());
+                selectedPrices[i] = Math.max(1, selectedPrices[i] + rnd.next(-10, 11));
+            }
+
+            const selectedUnicornCondition = rnd.next(0, 10) === 0
+                ? "爆弾に「安勘定」モジュールがある"
+                : `${rnd.next(0, 2) === 0 ? "点灯" : "消灯"}した${possibleIndicators[rnd.next(0, 11)]}インジケーターがある`;
+
+            setValues(selectedCalls, selectedPrices, selectedUnicornCondition);
+        }
+
+        function setDefaultRules() {
+            setValues(possibleCalls.slice(), possiblePrices.slice(), "点灯したBOBインジケーターがある");
+        }
+
+        function setValues(selectedCalls, selectedPrices, selectedUnicornCondition) {
+            const rows = selectedCalls.map((call, index) => ({ call, price: index === 26 ? 0 : selectedPrices[index], index }));
+            rows.sort((a, b) => a.call.localeCompare(b.call) || a.index - b.index);
+
+            const birdCallCells = document.querySelectorAll(".bird-table td:nth-of-type(2n-1)");
+            const birdPriceCells = document.querySelectorAll(".bird-table td:nth-of-type(2n)");
+            rows.forEach((row, index) => {
+                birdCallCells[index].textContent = row.call + (row.index === 26 ? "*" : "");
+                birdPriceCells[index].textContent = formatPrice(row.price);
+            });
+
+            document.querySelector(".unicorn-call").textContent = selectedCalls[26];
+            document.querySelector(".unicorn-condition").textContent = selectedUnicornCondition;
+        }
+    </script>
     <style>
         table {
             margin: 1em auto;
@@ -34,7 +81,7 @@
              </ul>
 
              <p>下の表は、鳴き声とその価格を示している。鳴き声は低(1)／中(2)／高(3)の3種類のトーンで構成されている。クリアボタンを押すことで、中(2)のトーンを3回聞くことができる。</p>
-                    <table>
+                    <table class="bird-table">
                     
                     <tr><th>鳴き声</th> <th>価格</th><th>鳴き声</th> <th>価格</th><th>鳴き声</th> <th>価格</th></tr>
                     <tr> <td>111*</td> <td>0.00</td> <td>112</td> <td>9.01</td>  <td>113</td> <td>0.99</td> </tr>
@@ -48,7 +95,7 @@
                     <tr> <td>331</td> <td>7.53</td> <td>332</td> <td>2.60</td>  <td>333</td> <td>2.01</td> </tr>
                     </table>
                     <br>
-                    <p>*点灯したBOBインジケーターが存在し、この鳥がいる場合、モジュールが解除されるまで送信ボタンを連打する。</p>
+                    <p>*<span class="unicorn-condition">点灯したBOBインジケーターがある</span>場合、<span class="unicorn-call">111</span>の鳥がいれば、モジュールが解除されるまで送信ボタンを連打する。</p>
           
              </div>
             <div class="page-footer relative-footer">ページ 1/1</div>
