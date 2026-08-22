@@ -32,9 +32,9 @@ function setRules(rnd)
 	}
 
 	// Unicorn condition being duplicate port is 10%
-	let selectedUnicornCondition;
+	let selectedUnicornConditions;
 	if (rnd.next(0, 10) === 0)
-		selectedUnicornCondition = [CheepCheckout.unicornModule, CheepCheckout.unicornModuleNegative];
+		selectedUnicornConditions = [CheepCheckout.unicornModule, CheepCheckout.unicornModuleNegative];
 	else
 	{
 		let litOrUnlit = rnd.next(0, 2) === 0
