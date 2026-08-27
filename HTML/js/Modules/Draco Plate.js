@@ -102,6 +102,7 @@ function setRules(rnd){
     rules[2].innerHTML = DracoPlate.ThirdRule(rulesOrder[2]);
     let manhattanOrder = [2, 4, 8, 1, 3, 5, 6, 7, 9 ];
     rnd.shuffleFisherYates(manhattanOrder);
+	manhattanOrder = manhattanOrder.slice(0,3).sort();
     var manhattans = document.getElementsByClassName("manhattan-data");
     manhattans[0].innerText = manhattanOrder[0];
     manhattans[1].innerText = manhattanOrder[1];
