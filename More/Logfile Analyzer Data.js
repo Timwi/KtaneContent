@@ -3003,18 +3003,20 @@ let parseData = [
 				handler: function (matches, module) {
 					module.symbols = matches[1].split("), (").map(ele => {
 						arr = ele.replace("(", "").replace(")", "").split(', ');
-						return { x: arr[0], y: arr[1], item: arr[2] };
+						return { x: arr[0], y: arr[1], item: arr[2] - 1 };
 					});
 					return true;
 				}
 			},
 			{
-				regex: /^Shifting symbol table to the left by \d\.$/,
+				regex: /^Shifting symbol table to the left by (\d)\.$/,
 				handler: function (matches, module) {
+					const mod = (x, n) => { return ((x % n) + n) % n }						
+					const shift = parseInt(matches[1]);
 					const dimension = 40;
 					const radius = 10;
 					const padding = 5;
-					const imageNames = ["thiswayupM", "umbrellaM", "biohazardM", "boxesM", "fireM", "glassM", "recycleM", "snowflakeM"];
+					const imageNames = ["biohazardM", "boxesM", "fireM", "glassM", "recycleM", "snowflakeM", "thiswayupM", "umbrellaM"];
 					const svg = $(`<svg viewbox="-${radius + padding} -${radius + padding} 400 350">`);
 					for (let row = 0; row < 8; row++) {
 						for (let col = 0; col < 6; col++) {
@@ -3043,7 +3045,7 @@ let parseData = [
 							.attr("width", imgDimension)
 							.attr("height", imgDimension)
 							.attr("x", xPos - (imgDimension / 2)).attr("y", yPos - (imgDimension / 2))
-							.attr("href", `../HTML/img/Bridges/${imageNames[symbol.item]}.png`)
+							.attr("href", `../HTML/img/Bridges/${imageNames[mod(symbol.item + shift, imageNames.length)]}.png`)
 							.addClass("bridges")
 							.appendTo(svg);
 					});
@@ -20919,7 +20921,6 @@ let parseData = [
 									break;
 								}
 							}
-							console.log(cornerColor == 0 ? '#FFF' : '#000');
 							svg += `<rect class='square' x='${square.x}' y='${square.y}' width='${square.size}' height='${square.size}' stroke='${strokeCodes[square.color]}'/>
 									<text class='square-color' x='${square.x + 0.1}' y='${square.y + 0.1}' fill='${cornerColor == 0 ? '#FFF' : '#000'}'
 										>${colorLetters[square.color]}</text>`;
