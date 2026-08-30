@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Draco Plate — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/Modules/Mythical Plates.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/Modules/Draco Plate.js"></script>
+    <script>
+        // Translation Notes: You should only have to update those exposed strings to translate the Ruleseed implementation of this module.
+        DracoPlate = {
+            Cyan: "Cyan",
+            Magenta: "Magenta",
+            Yellow: "Yellow",
+            FirstRule(x){ return `The <b class="colour-rule">${x}</b> Cell Rules,`; },
+            SecondRule(x){ return `Then the <b class="colour-rule">${x}</b> Cell Rules,`; },
+            ThirdRule(x){ return `And finally the <b class="colour-rule">${x}</b> Cell Rules`; },
+        }
+    </script>
+    <style>
+        .draco-grid th { border-style: none; }
+
+        .draco-grid td {
+            width: 1.5em;
+            height: 1.5em;
+            padding: 0.4em;
+            border: #635f78 6px solid;
+            background: #38333f;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .draco-grid td>.box::after {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            content: '';
+            width: 0px;
+            height: 0px;
+            background: #f9f1ff;
+            transition: background 0.2s, top 0.2s, left 0.2s, width 0.2s, height 0.2s;
+        }
+
+        .draco-grid td.white { background:#f9f1ff; }
+        .draco-grid td.cyan { background:#5ff4fb; }
+        .draco-grid td.magenta { background:#e96cc1; }
+        .draco-grid td.yellow { background:#fbe72e; }
+        .draco-grid td.void { background:#000000; }
+
+        .draco-grid td.dot>.box::after {
+            top: 13.4px;
+            left: 13.4px;
+            width: 10px;
+            height: 10px;
+        }
+
+        td.white.dot>.box::after, td.cyan.dot>.box::after, td.magenta.dot>.box::after, td.yellow.dot>.box::after{
+            background: #312b3a;
+        }
+
+        .manhattan-data { font-weight: bold; }
+
+        .interaction-buttons, .colour-selector {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        .colour-selector { gap: 20px; }
+
+        .page.strip::before { opacity: 1; --strip-color: var(--draco); }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 4'; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-06 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Draco Plate</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Draco Plate.svg" class="diagram">
+                <h2>On the Subject of Draco Plate</h2>
+                <p class="flavour-text">Imagine having more defensive weaknesses than offensive strengths... So much for an “indestructible” type.</p>
+
+                <p>The Plate on the module contains ciphered information revealing a 8x8 grid of black and white pixels and CMY cells.</p>
+                <p>Your goal is to decipher the information, modify the grid using rules, and submit back a column or row by pressing on the Plate.</p>
+
+                <h3>Deciphering the grid’s initial state:</h3>
+                <p>
+                    Take the eight numbers at the top of the Plate.<br>
+                    Convert each number to a 8-digit binary number. Those are the 8 rows of the grid, in order. A 0 represents a black cell, and a 1 a white cell.
+                </p>
+                <p>The inscriptions at the bottom of the Plate are three coordinates, representing the Cyan cell, Magenta cell and Yellow cell’s location respectively.</p>
+                <p class="inline-secondary">Top-Left corner is A1, letters increase going right, numbers increase going down.</p>
+                <p>
+                    Take the first letter and first number in the Serial Number.<br>
+                    Considering the top-left corner as A1 <b class="emphasis">and the grid as looping</b>, keep going right until you reach your letter, and down until you reach your number.
+                    This is the location of a Voided Cell.<br>
+                    0 is equivalent to an 8.<br>
+                    Repeat for the next letter-number pairs you can make with the Serial Number.
+                </p>
+
+                <h3>Submission process:</h3>
+                <p>
+                    If the Serial Number’s third character is even, you will submit a column (starting at the top, going down); otherwise, a row (starting on the left, going right).<br>
+                    Take the number of ports on the bomb, and add/subtract 8 until it is in the range 1-8. You will submit the line whose index (starting at 1) is that number.
+                </p>
+                <p>The topmost “Hollow” pressable area on the Plate submits a Black cell, the bottommost “Filled” submits a White cell.</p>
+                <p>Skip submitting Voided Cells, this means the submission can be less than 8 cells.</p>
+                <p>Pressing an incorrect area will give a Strike and ignore the last input. <b class="emphasis">Do not restart the submission from the start.</b></p>
+                <p>You can press the “DRACO” text on the module’s casing to reset your submission.</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+
+        <div class="page page-bg-04 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Draco Plate</span>
+            </div>
+            <div class="page-content">
+                <h3>Grid and Submission Rules:</h3>
+                <p>Apply in order:</p>
+                <ol>
+                    <li class="rules-data">The <b class="colour-rule">Cyan</b> Cell Rules,</li>
+                    <li class="rules-data">Then the <b class="colour-rule">Magenta</b> Cell Rules,</li>
+                    <li class="rules-data">And finally the <b class="colour-rule">Yellow</b> Cell Rules</li>
+                </ol>
+                <p>A coloured (CMY) cell is <b class="emphasis">always</b> considered white and can never be toggled.</p>
+                <p>For the entirety of the Cyan, Magenta and Yellow rules, <b class="emphasis">the grid does NOT loop</b>.</p>
+                <p>See <b class="appendix-name">Shared Appendix V O I D</b> for more information about Voided Cells.</p>
+
+                <h3>Cyan Cell Rules:</h3>
+                <p>For every cell in the same row and column as the Cyan cell:</p>
+                <ul>
+                    <li>Toggle all of the cells at once.</li>
+                    <li>Then apply the <a href="https://ktane.timwi.de/HTML/Game%20of%20Life%20Simple.html" target="null">Game of Life</a> rules to all of those cells, if applicable.</li>
+                </ul>
+                <p class="inline-secondary">White cell turns black if not 2 or 3 white neighbors in surrounding 8, Black cell turns white if exactly 3 white neighbors in surrounding 8.</p>
+                <h3>Magenta Cell Rules:</h3>
+                <p>For all 3 Coloured (Cyan, Magenta, Yellow) cells:</p>
+                <ul>
+                    <li>Toggle their 4 orthogonal neighbor cells (do not forget about Voided Cells). The same cell can be toggled multiple times.</li>
+                    <li>Find the 3 cells in the position of the Coloured cells if the whole grid was rotated 180°; and toggle those.</li>
+                </ul>
+                <h3>Yellow Cell Rules:</h3>
+                <p>Toggle every cell whose Manhattan Distance to the Yellow cell is <span class="manhattan-data">2</span> or <span class="manhattan-data">4</span> or <span class="manhattan-data">8</span>.</p>
+                <p>
+                    The Manhattan Distance is the distance obtained while only moving in cardinal directions. A diagonal neighbor is 2 Manhattan Distance away.<br>
+                    <b class="appendix-name">Shared Appendix V O I D</b> shows how distances are affected by Void.
+                </p>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+
+        <div class="page page-bg-02 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Draco Plate</span>
+            </div>
+            <div class="page-content">
+                <h3>Interactive Table for your convenience:</h3>
+                <p class="inline-secondary">Original code credit to LuminoscityTim (Critters) and samfundev (Game of Life).</p>
+                <table class="interactive draco-grid">
+                </table>
+                <div class="interaction-buttons">
+                    <button class="reset-all">Reset Grid &amp; Saves</button>
+                    <button class="reset-grid">Reset Grid</button>
+                    <button class="reset-marked">Reset Markings</button>
+                    <button class="toggle-marked">Toggle Marked Cells</button>
+                </div>
+                <div class="interaction-buttons saves">
+                    <button class="save">Save State</button>
+                </div>
+                <div class="colour-selector">
+                    <label><input type="radio" name="colour" value="white" checked> Toggle</label>
+                    <label><input type="radio" name="colour" value="cyan"> Cyan</label>
+                    <label><input type="radio" name="colour" value="magenta"> Magenta</label>
+                    <label><input type="radio" name="colour" value="yellow"> Yellow</label>
+                    <label><input type="radio" name="colour" value="void"> Void</label>
+                </div>
+                <table>
+                    <tr>
+                        <th>Interaction</th>
+                        <th>Action</th>
+                    </tr>
+                    <tr>
+                        <th>Click a cell</th>
+                        <td>
+                            Toggle between a black cell and an white cell<br>
+                            Or toggle the selected colour
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Right-click a cell</th>
+                        <td>Mark a cell to be toggled</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+
+        <div class="page page-bg-01 strip">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Draco Plate</span>
+            </div>
+            <div class="page-content">
+                <h3>Shared Appendix V O I D:</h3>
+                <p>Voided cells are considered to not exist anymore. Cells aligned on either sides are considered adjacent and at a distance of 1. This includes diagonals.</p>
+                <p>You can move from one side of a Voided cell to another in a single movement. You cannot stop a movement onto a Voided cell.</p>
+                <p>Neighbors of a Voided Cell are the cells directly adjacent to it (unless one of them is a Voided cell, in which case the neighbors are of course one cell further).</p>
+                <span class="void-flex">
+                    <span class="void-flex-element">
+                        <img src="img/Mythical Plates/Void Cell Movements.svg" class="void-diagram invertible">
+                        <span>Each arrow represents a single movement of length one</span>
+                    </span>
+                    <span class="void-flex-element">
+                        <img src="img/Mythical Plates/Void Cell Neighbors.svg" class="void-diagram invertible">
+                        <span>Here are the 8 neighbors of a cell with Void around it</span>
+                    </span>
+                    <span class="void-flex-element">
+                        <img src="img/Mythical Plates/Void Cell Distances.svg" class="void-diagram invertible">
+                        <span>Distances of a cell with Void in its surroundings</span>
+                    </span>
+                </span>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+    </div>
+</body>
+</html>

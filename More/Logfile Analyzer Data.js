@@ -14453,6 +14453,69 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "netPositive",
+		loggingTag: "Net Positive",
+		matches: [
+			{
+				regex: /Given net:/,
+        handler: function (_, module) {
+					
+					linen--;
+					let moduleId = readLine().match(/\d+/);
+					let lines = readTaggedLines(6);
+					let additionalLine = readLine();
+					if (additionalLine.includes(`[Net Positive #${moduleId}]`)) {
+						lines.push(additionalLine.replace(`[Net Positive #${moduleId}] `, ""));
+					} else {
+						linen--;
+					}
+
+					lines = lines.filter(ln => ln.match(/\[|\{/) != null);
+					
+					const CELL_DIMENSION = 25;
+          const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 300 ${CELL_DIMENSION*lines.length}'>`).addClass("net-positive");
+
+					let furthestLeft = Number.MAX_SAFE_INTEGER;
+					lines.forEach(ln => {
+						let split = ln.split(' ');
+						let nonEmpty = split.findIndex(c => !c.includes('_'));
+						if (furthestLeft > nonEmpty) { furthestLeft = nonEmpty; }
+					});
+
+					lines.forEach((ln, lix) => {
+						ln.split(' ').slice(furthestLeft).forEach((cl, cix) => {
+							if (cl[0] != '_') {
+								$SVG("<rect>")
+									.attr("width", CELL_DIMENSION)
+									.attr("height", CELL_DIMENSION)
+									.attr("x", cix*CELL_DIMENSION)
+									.attr("y", lix*CELL_DIMENSION)
+									.attr("fill", cl[0] == '[' ? "#5a5600" : "#cac000")
+								.appendTo(svg);
+								
+								if (cl.length == 3) {
+									$SVG("<text>")
+										.attr("x", cix*CELL_DIMENSION + (CELL_DIMENSION/2))
+										.attr("y", lix*CELL_DIMENSION + (CELL_DIMENSION/2))
+										.attr("style", "dominant-baseline: central; text-anchor: middle;")
+										.text(cl[1])
+									.appendTo(svg);
+								}
+							}
+						});
+					});
+					module.push({ label: "Given net:", obj: svg, nobullet: true });
+
+					return true;
+					
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "neutralization",
 		loggingTag: "Neutralization",
 		matches: [
