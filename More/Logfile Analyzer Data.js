@@ -5643,7 +5643,7 @@ let parseData = [
 		loggingTag: 'Decolored Squares',
 		matches: [
 			{
-				regex: /Starting position in the flowchart: ([A-D][1-4])/,
+				regex: /Starting position in the flowchart: ([A-F][1-6])/,
 				handler: function(matches, module) {
 					module.chartPos = matches[1];
 				}
