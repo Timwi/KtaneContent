@@ -8070,7 +8070,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /You pressed \d, expected \d\./,
+				regex: /You pressed \d, expected \d\.|That is incorrect, strike and reset!/,
 				handler: function (match, module) {
 					if(module.inputs == undefined) {
 						module.inputs = ["Inputs", []]; 
@@ -8081,7 +8081,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /Module solved!|You pressed \d, expected \d\./,
+				regex: /Module solved!/,
 				handler: function (match, module) {
 					module.push(match.input);
 					return true;
