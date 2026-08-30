@@ -1,5 +1,6 @@
 function formatReadableTime(time){
     console.log(time);
+    if (SkyPlate.Optimized) return "-" + time;
     var hours = (Math.floor(time/3600)).toLocaleString(undefined, {minimumIntegerDigits: 2});
     var minutes = (Math.floor(time/60)%60).toLocaleString(undefined, {minimumIntegerDigits: 2});
     var seconds = (time%60).toLocaleString(undefined, {minimumIntegerDigits: 2});
