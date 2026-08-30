@@ -8050,6 +8050,71 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "ForgetsUltimateShowdownModule",
+		loggingTag: "Forget's Ultimate Showdown",
+		matches: [
+			{
+				regex: /------(Start of (.+))------/,
+				handler: function (match, module) {
+					module.currentDropdown = [match[1], []];
+					module.currentModule = match[2];
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /^(?:A>N<D|Forget Everything|Forget Infinity|Forget Me Later|Forget Me Not|Forget Me Now|Forget Us Not|Simon's Stages):$/,
+				handler: function (match, module) {
+					module.push(`${match.input} ${readTaggedLine()}`);
+					return true;
+				}
+			},
+			{
+				regex: /You pressed \d, expected \d\./,
+				handler: function (match, module) {
+					if(module.inputs == undefined) {
+						module.inputs = ["Inputs", []]; 
+						module.push(module.inputs);
+					}
+					module.inputs[1].push(match.input);
+					return true;
+				}
+			},
+			{
+				regex: /Module solved!|You pressed \d, expected \d\./,
+				handler: function (match, module) {
+					module.push(match.input);
+					return true;
+				}
+			},
+			{
+				 regex: /.+/,
+				 handler: function (match, module) {
+					if(module.currentDropdown != undefined) {
+						if(module.currentModule == "A>N<D") {
+							if(match.input.match(/Digit \d+:/)) {
+								module.andDropdown = [match.input, []];
+								module.currentDropdown[1].push(module.andDropdown);
+							}
+							else if(match.input.match(/After step/)) {
+								module.currentDropdown[1].push(match.input);
+							}
+							else {
+								module.andDropdown[1].push(match.input);
+							}
+						}
+						else {
+							module.currentDropdown[1].push(match.input);
+						}
+					}
+					else {
+						module.push(match.input);
+					}
+				}
+			}
+		]
+	},
+	{
 		moduleID: "GSFourElements",
 		loggingTag: "Four Elements",
 		matches: [
