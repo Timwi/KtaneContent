@@ -6226,7 +6226,7 @@ let parseData = [
 				}
 			},
 			{
-				regex: /Strike!|solved|handler/,
+				regex: /Strike!|Module solved|handler/,
 				handler: function (match, module) {
 					module.push(match.input);
 					return true;
