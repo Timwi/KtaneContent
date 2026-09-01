@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Technicolored Squares — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        function setRules(rnd) {
+            // Shuffle the bit tables:
+            let btables = Array.from(document.querySelectorAll(".tcsq-bit-diagram"));
+            for (let table of btables) {
+                let btds = Array.from(table.querySelectorAll("td.bit"));
+                let bs = [];
+                for (let i = 0; i < btds.length; i++)
+                    bs.push(i < 8 ? 1 : 0);
+                rnd.shuffleFisherYates(bs);
+                for (let i = 0; i < btds.length; i++) {
+                    btds[i].classList.remove("tcsq-bit-false", "tcsq-bit-true");
+                    if (bs[i] === 0) {
+                        btds[i].classList.add("tcsq-bit-false");
+                        btds[i].innerText = "✗";
+                    }
+                    else {
+                        btds[i].classList.add("tcsq-bit-true");
+                        btds[i].innerText = "✓";
+                    }
+                }
+            }
+            
+            // Shuffle the logic gates:
+            let gates = [ "AND", "OR", "NAND", "NOR", "XOR", "XNOR", ];
+            let gs = [];
+            for (let i = 0; i < gates.length; i++)
+                gs.push(gates[i]);
+            rnd.shuffleFisherYates(gs);
+            let gtds = Array.from(document.querySelectorAll(`.tcsq-logic-diagram td.gate`));
+            for (let i = 0; i < gtds.length; i++)
+                gtds[i].innerHTML = gs[i];
+            
+            // Shuffle the rules:
+            const transformations = [
+                "Swap Row&nbsp;1 with Row&nbsp;2",
+                "Swap Row&nbsp;1 with Row&nbsp;3",
+                "Swap Row&nbsp;1 with Row&nbsp;4",
+                "Swap Row&nbsp;2 with Row&nbsp;3",
+                "Swap Row&nbsp;2 with Row&nbsp;4",
+                "Swap Row&nbsp;3 with Row&nbsp;4",
+                "Swap Column&nbsp;A with Column&nbsp;B",
+                "Swap Column&nbsp;A with Column&nbsp;C",
+                "Swap Column&nbsp;A with Column&nbsp;D",
+                "Swap Column&nbsp;B with Column&nbsp;C",
+                "Swap Column&nbsp;B with Column&nbsp;D",
+                "Swap Column&nbsp;C with Column&nbsp;D",
+                "Invert Row&nbsp;1",
+                "Invert Row&nbsp;2",
+                "Invert Row&nbsp;3",
+                "Invert Row&nbsp;4",
+                "Invert Column&nbsp;A",
+                "Invert Column&nbsp;B",
+                "Invert Column&nbsp;C",
+                "Invert Column&nbsp;D",
+                "Invert the top&nbspleft quadrant",
+                "Invert the top&nbspright quadrant",
+                "Invert the bottom&nbspleft quadrant",
+                "Invert the bottom&nbspright quadrant",
+                "Invert the central four squares",
+                "Invert the four corner squares",
+                "Shift Row&nbsp;1 left&nbsp;once",
+                "Shift Row&nbsp;2 left&nbsp;once",
+                "Shift Row&nbsp;3 left&nbsp;once",
+                "Shift Row&nbsp;4 left&nbsp;once",
+                "Shift Row&nbsp;1 right&nbsp;once",
+                "Shift Row&nbsp;2 right&nbsp;once",
+                "Shift Row&nbsp;3 right&nbsp;once",
+                "Shift Row&nbsp;4 right&nbsp;once",
+                "Shift Column&nbsp;A up&nbsp;once",
+                "Shift Column&nbsp;B up&nbsp;once",
+                "Shift Column&nbsp;C up&nbsp;once",
+                "Shift Column&nbsp;D up&nbsp;once",
+                "Shift Column&nbsp;A down&nbsp;once",
+                "Shift Column&nbsp;B down&nbsp;once",
+                "Shift Column&nbsp;C down&nbsp;once",
+                "Shift Column&nbsp;D down&nbsp;once",
+                "Horizontally flip Row&nbsp;1",
+                "Horizontally flip Row&nbsp;2",
+                "Horizontally flip Row&nbsp;3",
+                "Horizontally flip Row&nbsp;4",
+                "Vertically flip Column&nbsp;A",
+                "Vertically flip Column&nbsp;B",
+                "Vertically flip Column&nbsp;C",
+                "Vertically flip Column&nbsp;D",
+                "Swap the left and right halves",
+                "Swap the top and bottom halves",
+                "Swap the top&nbsp;left and top&nbsp;right qaudrants",
+                "Swap the top&nbsp;left and bottom&nbsp;left qaudrants",
+                "Swap the top&nbsp;left and bottom&nbsp;right qaudrants",
+                "Swap the top&nbsp;right and bottom&nbsp;left qaudrants",
+                "Swap the top&nbsp;right and bottom&nbsp;right qaudrants",
+                "Swap the bottom&nbsp;left and bottom&nbsp;right qaudrants",
+                "Rotate the top&nbsp;left quadrant clockwise",
+                "Rotate the top&nbsp;left quadrant counterclockwise",
+                "Rotate the top&nbsp;right quadrant clockwise",
+                "Rotate the top&nbsp;right quadrant counterclockwise",
+                "Rotate the bottom&nbsp;left quadrant clockwise",
+                "Rotate the bottom&nbsp;left quadrant counterclockwise",
+                "Rotate the bottom&nbsp;right quadrant clockwise",
+                "Rotate the bottom&nbsp;right quadrant counterclockwise",
+                "Rotate the central four squares clockwise",
+                "Rotate the central four squares counterclockwise",
+                "Rotate the four corner squares clockwise",
+                "Rotate the four corner squares counterclockwise",
+                "Rotate the grid clockwise",
+                "Rotate the grid counterclockwise",
+                "Invert the position of the first paired&nbsp;square",
+                "Invert the position of the second paired&nbsp;square",
+                "Invert the position of the third paired&nbsp;square",
+                "Invert the position of the fourth paired&nbsp;square",
+                "Invert the position of the fifth paired&nbsp;square",
+                "Invert the position of the sixth paired&nbsp;square",
+                "Invert the position of the seventh paired&nbsp;square",
+                "Invert the position of the eighth paired&nbsp;square",
+            ];
+            let ts = [];
+            for (let i = 0; i < transformations.length; i++)
+                ts.push(transformations[i]);
+            rnd.shuffleFisherYates(ts);
+            let rtds = Array.from(document.querySelectorAll(`.tcsq-rule-table td.rule`));
+            for (let i = 0; i < rtds.length; i++)
+                rtds[i].innerHTML = ts[i];
+        }
+    </script>
+    <style>
+        .tcsq-rule-table, .tcsq-bit-diagram, .tcsq-logic-diagram, .dark .tcsq-rule-table, .dark .tcsq-bit-diagram, .dark .tcsq-logic-diagram {
+            border: 2px solid black;
+        }
+        
+        .tcsq-rule-table {
+            width: 90%;
+            aspect-ratio: 2 / 1;
+            margin: 0em auto;
+            margin-top: 0.75cm;
+            outline: 10px solid black;
+        }
+        
+        .tcsq-rule-table:nth-child(2) {
+            margin-top: 2cm;
+        }
+        
+        .tcsq-rule-table tr {
+            height: 25%;
+        }
+        .tcsq-rule-table td {
+            width: 25%;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 9pt;
+        }
+        
+        .tcsq-bit-false { background-color: #f88; }
+        .tcsq-bit-true { background-color: #8f8; }
+        
+        .tcsq-logic-diagram {
+            float: right;
+            clear: right;
+            text-align: center;
+            margin-left: 10px;
+            margin-bottom: 20px;
+            outline: 5px solid black;
+            margin-bottom: 0.35cm;
+            width: 70px;
+        }
+        
+        .tcsq-bit-diagram {
+            margin: 0 4px;
+            outline: 5px solid black;
+            color: black;
+        }
+        .tcsq-bit-diagram td.bit {
+            width: 15px;
+            height: 18px;
+            font-size: 8pt;
+            text-align: center;
+            font-weight: bold;
+            border-color: black;
+        }
+        
+        .red     { outline-color: #f46; }
+        .green   { outline-color: #4f6; }
+        .yellow  { outline-color: #fd4; }
+        .blue    { outline-color: #4af; }
+        .magenta { outline-color: #f6f; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Technicolored Squares</span>
+            </div>
+            <div class="page-content">
+                <img class="diagram" src="img/Component/Technicolored Squares.svg">
+                <h2>On the Subject of Technicolored Squares</h2>
+                <p class="flavour-text">We all dream a lot. Some are lucky, some are not.<br>But if you think it, want it, dream it, then it's real. You are what you feel.</p>
+                <p class="appendix-reference" id="appendix-reference">See <a href="Appendix SQUARE.html">Appendix SQUARE</a> for identifying modules in Colored Squares family.</p>
+                <table class="tcsq-logic-diagram red"><tr><td class="gate"></td></tr></table>
+                <table class="tcsq-logic-diagram yellow"><tr><td class="gate"></td></tr></table>
+                <table class="tcsq-logic-diagram green"><tr><td class="gate"></td></tr></table>
+                <table class="tcsq-logic-diagram blue"><tr><td class="gate"></td></tr></table>
+                <table class="tcsq-logic-diagram magenta"><tr><td class="gate"></td></tr></table>
+                <ul>
+                    <li>At the start, if there are not four colors that occur exactly twice each, you are looking at a different module.</li>
+                    <li>Begin with the grid corresponding to the color that occurs eight times.</li>
+                    <li>For each of the remaining eight squares in reading order, use its color and position to find the corresponding rule in that color’s table, then apply that rule to the bit grid.</li>
+                    <li>For each pair of identically-colored squares, find both squares’ positions in the resulting bit grid.</li>
+                    <li>Using the logic gate corresponding to the pair’s color, evaluate the two bits at those positions.</li>
+                    <li>If the result is true, press the first square of the pair followed by the second. If the result is false, press them in the opposite order.</li>
+                    <li>Repeat this for all four pairs to disarm the module.</li>
+                </ul>
+                <div class="hstack">
+                    <table class="tcsq-bit-diagram red">
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                    </table>
+                    <table class="tcsq-bit-diagram yellow">
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                    </table>
+                    <table class="tcsq-bit-diagram green">
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                    </table>
+                    <table class="tcsq-bit-diagram blue">
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                    </table>
+                    <table class="tcsq-bit-diagram magenta">
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                        <tr><td class='bit'></td><td class='bit'></td><td class='bit'></td><td class='bit'></td></tr>
+                    </table>
+                </div>
+                <table class="tcsq-rule-table red">
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 1</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Technicolored Squares</span>
+            </div>
+            <div class="page-content">
+                <table class="tcsq-rule-table yellow">
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <table class="tcsq-rule-table green">
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                </table>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Technicolored Squares</span>
+            </div>
+            <div class="page-content">
+                <table class="tcsq-rule-table blue">
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                </table>
+                <table class="tcsq-rule-table magenta">
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                    <tr>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                        <td class='rule'>abcd abcd</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 3</div>
+        </div>
+    </div>
+</body>
+</html>
