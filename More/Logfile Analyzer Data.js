@@ -6303,6 +6303,52 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "DracoPlate",
+		loggingTag: "Draco Plate",
+		matches: [
+			{
+				regex: /(Initial Grid State:|Applying (.+) rules)/,
+				handler: function (match, module) {
+					const colors = {
+							"w" : "#f9f1ff",
+							"k" :"#38333f",
+							"C" :"#5ff4fb",
+							"M" :"#e96cc1",
+							"Y" :"#fbe72e",
+							"V" :"#000"
+					};
+					
+					const grid = $SVG('<svg class="game-of-life" viewBox="0 0 8 8">');
+					if (match[2] == "Yellow") { linen += 9; }; // skip Distance Field log
+					const map = readTaggedLines(8).map(row => row.replace(/\[Draco Plate #\d+\] /g, '').split(""));
+					map.forEach((row, y) => {
+						row.forEach((cell, x) => {
+							const rect = $SVG(`<rect x=${x} y=${y} width=1 height=1 >`).appendTo(grid);
+							rect.css("fill", colors[cell]);
+						});
+					});
+					module.push({ label: match.input, obj: grid});
+					return true;
+				}
+			},
+			{
+				regex: /(Line to submit is (row|column) with zero-index \d \(ignoring Voids\): )(.+)/,
+				handler: function (match, module) {
+					const grid = $SVG(`<svg class="game-of-life" viewBox="0 0 ${match[3].length} 1">`);
+					match[3].split("").forEach((cell, x) => {
+						const rect = $SVG(`<rect x=${x} y=0 width=1 height=1 >`).appendTo(grid);
+						if (cell == "w") rect.css("fill", "#f9f1ff");
+						else if (cell == "k") rect.css("fill", "#38333f");
+					});
+					
+					module.push({ label: match[1], obj: grid});
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "Dreamcipher",
 		moduleID: "ksmDreamcipher",
 		loggingTag: "Dreamcipher",
