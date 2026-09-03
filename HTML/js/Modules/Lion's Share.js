@@ -213,7 +213,7 @@ function setRules(rnd)
 	document.getElementById('dividers').setAttribute('d', lines);
 
 	// Lines showing unborn cubs’ mothers
-	lines = 'M5 110v15';
+	lines = 'M5 110v19';
 	for (let year = 0; year < 16; year++)
 	{
 		let unbornCubs = pride.filter(lion => lion.status[year] === LionStatus.Unborn);
