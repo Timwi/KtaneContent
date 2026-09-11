@@ -21,7 +21,7 @@
         var table;
         var cells = [[],[],[],[],[],[],[],[],[]];
         var selectedCell;
-        var colourOrder = "roygcbpiw";
+        var colourOrder = "roygcbvpw";
         var labelStyle = "none";
         var saves = [];
 
@@ -33,6 +33,7 @@
                 for(var c = 0; c < 9; c++){
                       let cell = document.createElement("th");
                     cells[r][c] = cell;
+					cell.r = r; cell.c = c;
                     tr.append(cell);
 
                     cell.classList.add("colour-k");
@@ -71,7 +72,7 @@
             if(newclr == null || newclr == "0") newclr = 'k';
             if("1234567890".indexOf(newclr[0]) != -1) newclr = colourOrder[newclr-1];
 
-            let colourChars = ['r','o','y','g','c','b','p','i','w','k'];
+            let colourChars = ['r','o','y','g','c','b','v','p','w','k'];
             colourChars.forEach(clr => {
                 target.classList.remove(`colour-${clr}`);
             });
@@ -79,7 +80,7 @@
             target.classList.add(`colour-${newclr}`);
             target.clr = newclr;
 
-            if(labelStyle == "none" || newclr == 'k') return;
+            if(labelStyle == "none" || newclr == 'k') setCellText(target, ".");
             else if(labelStyle == "nums") setCellText(target, colourOrder.indexOf(newclr)+1);
             else if(labelStyle == "clrs") setCellText(target, newclr.toUpperCase());
         }
@@ -173,11 +174,11 @@
                 case "KeyB":
                     setCellColour(selectedCell, 'b');
                     break;
+                case "KeyV":
+                    setCellColour(selectedCell, 'v');
+                    break;
                 case "KeyP":
                     setCellColour(selectedCell, 'p');
-                    break;
-                case "KeyI":
-                    setCellColour(selectedCell, 'i');
                     break;
                 case "KeyW":
                     setCellColour(selectedCell, 'w');
@@ -191,13 +192,25 @@
                     setCellText(selectedCell, ".");
                     setCellColour(selectedCell);
                     break;
+				case "ArrowLeft":
+					if(selectedCell != null) selectCell(cells[selectedCell.r][(selectedCell.c+8)%9]);
+					break;
+				case "ArrowRight":
+					if(selectedCell != null) selectCell(cells[selectedCell.r][(selectedCell.c+1)%9]);
+					break;
+				case "ArrowUp":
+					if(selectedCell != null) selectCell(cells[(selectedCell.r+8)%9][selectedCell.c]);
+					break;
+				case "ArrowDown":
+					if(selectedCell != null) selectCell(cells[(selectedCell.r+1)%9][selectedCell.c]);
+					break;
             }
         }
 
         let change = (e) => {
             let text = document.getElementById("clr-ord").value.toLowerCase();
             if(text == "") toggleOrderWarning(false);
-            else if(!/^[roygcbpiw]{9}$/.test(text)) toggleOrderWarning(true);
+            else if(!/^[roygcbvpw]{9}$/.test(text)) toggleOrderWarning(true);
             else if(new Set(text).size != 9) toggleOrderWarning(true);
             else {
                 toggleOrderWarning(false);
@@ -240,6 +253,25 @@
             saves = [];
         }
 
+		function getTPString() { //ty hawker
+		    const data = { r: [], o: [], y: [], g: [], c: [], b: [], v: [], p: [], w: [], k: [] };
+		    for (let row = 0; row < 9; row++) {
+		        for (let col = 0; col < 9; col++) {
+		            data[cells[row][col].clr].push("ABCDEFGHI"[col] + (row + 1));
+		        }
+		    }
+
+		    let string = "";
+		    for(const [key, value] of Object.entries(data)) {
+		        if(value.length == 0) continue;
+		        string += ` ${key} ${value.join(" ")}`
+		    }
+
+		    string = string.trim();
+			navigator.clipboard.writeText(string);
+			alert("Copied TP command!");
+		}
+
         </script>
         <style>
             table {
@@ -275,8 +307,8 @@
             .colour-g { background-color: #5F5; color: #000;}
             .colour-c { background-color: #5FF; color: #000;}
             .colour-b { background-color: #55F; color: #DDD;}
-            .colour-p { background-color: #85F; color: #DDD;}
-            .colour-i { background-color: #F8C; color: #000;}
+            .colour-v { background-color: #85F; color: #DDD;}
+            .colour-p { background-color: #F8C; color: #000;}
             .colour-w { background-color: #DDD; color: #000;}
             .colour-k { background-color: #222; color: #DDD;}
 
@@ -299,6 +331,7 @@
             .thick-button { width: 80px; }
             .thicker-button { width: 100px; }
             .error-span { color: #F00; }
+
         </style>
     </head>
     <body>
@@ -325,22 +358,23 @@
                         <button class="colour-g thin-button" onclick="setCellColour(selectedCell, 'g');">G</button>
                         <button class="colour-c thin-button" onclick="setCellColour(selectedCell, 'c');">C</button>
                         <button class="colour-b thin-button" onclick="setCellColour(selectedCell, 'b');">B</button>
+                        <button class="colour-v thin-button" onclick="setCellColour(selectedCell, 'v');">V</button>
                         <button class="colour-p thin-button" onclick="setCellColour(selectedCell, 'p');">P</button>
-                        <button class="colour-i thin-button" onclick="setCellColour(selectedCell, 'i');">I</button>
                         <button class="colour-w thin-button" onclick="setCellColour(selectedCell, 'w');">W</button>
                         <button class="colour-k thin-button" onclick="setCellColour(selectedCell, 'k');">K</button>
                     </div>
-                    Labels:
-                    <button class="colour-w thick-button" onclick="labelStyle='none'; updateLabels();">Neither</button>
-                    <button class="colour-w thick-button" onclick="labelStyle='clrs'; updateLabels();">Colours</button>
-                    <button class="colour-w thick-button" onclick="labelStyle='nums'; updateLabels();">Numbers</button>
+	                    Labels:
+	                    <button class="colour-w thick-button" onclick="labelStyle='none'; updateLabels();">Neither</button>
+	                    <button class="colour-w thick-button" onclick="labelStyle='clrs'; updateLabels();">Colours</button>
+	                    <button class="colour-w thick-button" onclick="labelStyle='nums'; updateLabels();">Numbers</button>
                     <div id="save-buttons-div" style="margin: 0%;">
-                        <button class="colour-w thin-button" onclick="makeSave();">Save</button>
+                    <button class="colour-w thin-button" onclick="makeSave();">Save</button>
                     </div>
                     <div style="text-align: right;">
                         <button class="colour-w thicker-button" onclick="resetGrid();">Reset grid</button>
                         <button class="colour-w thicker-button" onclick="eraseSaves();">Reset saves</button>
                     </div>
+					<button class="color-w thicker-button" id="copy-button" onclick="getTPString();">Copy answer</button>
                 </div>
             </div>
         </div>
