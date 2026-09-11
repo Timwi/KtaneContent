@@ -35,7 +35,7 @@ function setRules(rnd){
 function setDefaultRules(){
     selectedDrums = ["Hurricane", "DontThinkNow", "Sepia", "Aura", "Goodbye"];
     selectedBasses = ["Sepia", "Genius", "PipeMaze", "BehindLateAndWorseOff", "Mirxen"];
-    selectedChords = ["Scatter", "Genius", "FogEmeraldMoon", "MovingForward", "MovingForward2"];
+    selectedChords = ["Blizzard", "Genius", "FogEmeraldMoon", "MovingForward", "MovingForward2"];
     selectedLeads = ["CloudRuin2", "HeroicRiot", "MovingForward", "Harmonies", "PipeMaze"];
     selectedPrefixes = prefixes;
     selectedAdjectives = adjectives;
