@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Spectator Sport — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .left { float: left;}
+        .right { float: right; }
+        .left tr td, .right tr td { height: 0.95cm; padding: 0.2em;}
+
+        .score-table { width: 100%; }
+        .vert th { writing-mode: vertical-rl; }
+        .blue-back { background-color: #9999ff; color: black; }
+        .red-back { background-color: #ff9999; color: black }
+        #feed { padding-top: 1em; }
+        
+        .left, .right { 
+            td:first-child { background-color: #FFFB; }
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Spectator Sport</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Spectator Sport.svg" class="diagram">
+                <h2>On the Subject of Spectator Sport</h2>
+                <p class="flavour-text">“Oh dear, I’ve made quite a mess.”</p>
+                <p>When a <a href="../More/Ignore Table.html#mod=spectatorSport">non-ignored module</a> is solved, 2-4 kill messages will be shown. Note these down.</p>
+                <p>Once every non-ignored module has been solved, questions about the match will be asked. Answer these questions to solve the module.</p>
+                <p>Note these special rules:</p>
+                <ul>
+                    <li>When A kills B four times without dying, they become B's nemesis. If B then manages to kill A, the kill counts twice and the nemesis effect is removed. This is handled automatically by the interactive.</li>
+                    <li>The default game mode is Arena. However, if a notification references 'the intelligence' or 'the Control Point', the game mode is Capture the Intelligence or Capture Point, respectively. This doesn't change the "which team won" question, whichever team has the higher score wins, regardless of gamemode.</li>
+                </ul>
+                <div style="display: flex; justify-content: center;">
+                    <p>Gamemode: <select>
+                        <option>Arena</option>
+                        <option>Capture Point</option>
+                        <option>Capture Intelligence</option>
+                    </select></p>
+                </div>
+                <div style="display: flex;">
+                    <div style="width: 50%;">
+                        <table style="width: 100%;" id="blue-team">
+                            <tr><th class="blue-back">Team Blue</th><th colspan="3">0</th></tr>
+                            <tr><th></th><th style="width: 0;">K</th><th style="width: 0">D</th><th style="width: 0;">C</th></tr>
+                        </table>
+                    </div>
+                    <div style="width: 50%;">
+                        <table style="width: 100%;" id="red-team">
+                            <tr><th class="red-back">Team Red</th><th colspan="3">0</th></tr>
+                            <tr><th></th><th style="width: 0;">K</th><th style="width: 0">D</th><th style="width: 0;">C</th></tr>
+                        </table>
+                    </div>
+                </div>
+                <div style="display:flex; justify-content: center;">
+                    <p>
+                        <select id="killer"></select>
+                        <select id="weaponused"></select>
+                        <select id="iscrit">
+                            <option value=0>No crit</option>
+                            <option value=1>Crit</option>
+                        </select>
+                        <select id="killed"></select>
+                        <button onclick="addInfo()">Add</button>
+                    </p>
+                </div>
+                <div style="display: flex; justify-content: center;">
+                    <table id="streak-tracker">
+                        <tr class="vert"><td>Blue [streak] red</td><th class="red-back"></th><th class="red-back"></th><th class="red-back"></th><th class="red-back"></th><th class="red-back"></th><th class="red-back"></th><th class="red-back"></th></tr>
+                        <tr><th class="blue-back"></th><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                        <tr><th class="blue-back"></th><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                        <tr><th class="blue-back"></th><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                        <tr><th class="blue-back"></th><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                        <tr><th class="blue-back"></th><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                        <tr><th class="blue-back"></th><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                        <tr><th class="blue-back"></th><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 4</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Specator Sport</span>
+            </div>
+            <div class="page-content">
+                <p>These are the possible weapons. The Crit is a modifier that is used alongside another weapon, but otherwise have no effect.</p>
+                <div>
+                    <table class="left" id="left">
+                        <tr>
+                            <th>Weapon Icon</th>
+                            <th>Weapon Name</th>
+                            <th>Uses</th>
+                        </tr>
+                        <tr>
+                            <td><img id="w-01" class="centered-img" src="img/Spectator Sport/Backstab.png"></td>
+                            <td>Backstab</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Bat.png"></td>
+                            <td>Bat</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Black Box.png"></td>
+                            <td>Black Box</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Bonesaw.png"></td>
+                            <td>Bonesaw</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Bottle.png"></td>
+                            <td>Bottle</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Chargin Targe.png"></td>
+                            <td>Chargin Targe</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Cow Mangler 5000.png"></td>
+                            <td>Cow Mangler 5000</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Fire Axe.png"></td>
+                            <td>Fire Axe</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Fists.png"></td>
+                            <td>Fists</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Flame Thrower.png"></td>
+                            <td>Flame Thrower</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Flare Gun.png"></td>
+                            <td>Flare Gun</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Golden Frying Pan.png"></td>
+                            <td>Golden Frying Pan</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Grand Slam.png"></td>
+                            <td>Grand Slam</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Grenade Launcher.png"></td>
+                            <td>Grenade Launcher</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Gunslinger.png"></td>
+                            <td>Gunslinger</td>
+                            <td>0</td>
+                        </tr>
+                    </table>
+                    <table class="right" id="right">
+                        <tr>
+                            <th>Weapon Icon</th>
+                            <th>Weapon Name</th>
+                            <th>Uses</th>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Sniper Rifle(HS).png"></td>
+                            <td>Headshot (Sniper)</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Knife.png"></td>
+                            <td>Knife</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Kukri.png"></td>
+                            <td>Kukri</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Minigun.png"></td>
+                            <td>Minigun</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Revolver.png"></td>
+                            <td>Revolver</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Rocket Launcher.png"></td>
+                            <td>Rocket Launcher</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Scattergun.png"></td>
+                            <td>Scattergun</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Sentry.png"></td>
+                            <td>Sentry Gun</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Shovel.png"></td>
+                            <td>Shovel</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/SMG.png"></td>
+                            <td>SMG</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Sniper Rifle.png"></td>
+                            <td>Sniper Rifle</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Syringe Gun.png"></td>
+                            <td>Syringe Gun</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Widowmaker.png"></td>
+                            <td>Widowmaker</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Winger.png"></td>
+                            <td>Winger</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><img class="centered-img" src="img/Spectator Sport/Wrench.png"></td>
+                            <td>Wrench</td>
+                            <td>0</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 4</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Spectator Sport</span>
+            </div>
+            <div class="page-content">
+                <h4>Question Reference</h4>
+                <p>"Which player had the most kills in the round?"<br>
+                    The player with the highest kill (K) stat. Self-explanatory.</p>
+                <p>"Which player perished the most this round?"<br>
+                    The player with the highest death (D) stat.</p>
+                <p>"Which team has gained the victory in this round?"<br>
+                    The team with the higher kill count. Gamemode is irrelevant.</p>
+                <p>"Which gamemode was everyone playing?"<br>
+                    By default is "Arena", else is whatever was stated. Read, people.</p>
+                <p>"Which weapon was the most employed?"<br>
+                    The weapon that was used the most times to kill. Self-explanatory.</p>
+                <p>"How many critical hits were in this round?"<br>
+                    The total crit (C) stat from both teams.</p>
+                <p>"Which player managed to get the least amount of kills in the round?"<br>
+                    The player with the lowest kill stat from either team.</p>
+                <p>"How many players did [A] manage to deprive of life?"<br>
+                    The kill stat of player [A].</p>
+                <p>"How many times did [A] undergo the permanent cessation of all vital functions?"<br>
+                    The death stat of player [A].</p>
+                <p>"How many times was the [weapon] used to kill an enemy player?"</p>
+                <p>"How many times did player [A] kill player [B]?"</p>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 4</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Spectator Sport</span>
+            </div>
+            <div class="page-content">
+                <h4>Feed</h4>
+                <ul id="feed"></ul>
+            </div>
+            <div class="page-footer relative-footer">Page 4 of 4</div>
+        </div>
+    </div>
+    <script>
+        let streakTracker = document.getElementById("streak-tracker");
+        let blueteamplayers = [null, null, null, null, null, null, null]
+        let tableblue = document.getElementById("blue-team");
+        //initializes blue table
+        for (let i = 0; i < 7; i++) {
+            let row = tableblue.insertRow();
+            let dropdown = document.createElement("select");
+            let options = ['', '||||||||', 'Abort', 'AllUPPERCASE',  'allupercase', 'Alpha4UpDown', 'AsmallBaby', 'Blank', 'Bob', 'BunchOfLines', 'CrazyChalk', 'CrazyTalk', 'Cyan', 'Cyanix', 'Cypher', 'Diamonds', 'Dr_ex', 'FRKilo', 'FRQuilo', 'FastMath', 'FitDwarf', 'FluffyRuffian', 'Forget Maze', 'Geoff', 'GhostCoast', 'GhostSalt', 'Gnomeo', 'Hold', 'Its empty', 'Jeff', 'KrazyTalk', 'lowercase', 'Magenta', 'Mashomatics', 'MiB', 'Mickeroni', 'Morseomatics', 'Mr.Punchy', 'MrX', 'Noodle Legs', 'Nothing', 'OhNoesWoes', 'Press', 'QuickMath', 'Resent', 'Rick', 'Staircase', 'ThatOneKid', 'Tyler-Y', 'XxXSlayerxXx', 'xXxSlay3rXxX'];
+            options.forEach(option => {
+                let optionElement = document.createElement("option");
+                optionElement.value = option;
+                optionElement.textContent = option;
+                dropdown.onchange = function () {if (!blueteamplayers.includes(this.value) && !redteamplayers.includes(this.value)) {this.disabled = true; blueteamplayers[i] = this.value; updateKillInput(); document.getElementById("streak-tracker").rows[i+1].cells[0].textContent = this.value;}};
+                dropdown.appendChild(optionElement);
+            });
+            row.insertCell().appendChild(dropdown);
+            row.insertCell().textContent = "0";
+            row.insertCell().textContent = "0";
+            row.insertCell().textContent = "0";
+        };
+        let redteamplayers = [null, null, null, null, null, null, null]
+        let tablered = document.getElementById("red-team");
+        //initializes red table
+        for (let i = 0; i < 7; i++) {
+            let row = tablered.insertRow();
+            let dropdown = document.createElement("select");
+            let options = ['', '||||||||', 'Abort', 'AllUPPERCASE',  'allupercase', 'Alpha4UpDown', 'AsmallBaby', 'Blank', 'Bob', 'BunchOfLines', 'CrazyChalk', 'CrazyTalk', 'Cyan', 'Cyanix', 'Cypher', 'Diamonds', 'Dr_ex', 'FRKilo', 'FRQuilo', 'FastMath', 'FitDwarf', 'FluffyRuffian', 'Forget Maze', 'Geoff', 'GhostCoast', 'GhostSalt', 'Gnomeo', 'Hold', 'Its empty', 'Jeff', 'KrazyTalk', 'lowercase', 'Magenta', 'Mashomatics', 'MiB', 'Mickeroni', 'Morseomatics', 'Mr.Punchy', 'MrX', 'Noodle Legs', 'Nothing', 'OhNoesWoes', 'Press', 'QuickMath', 'Resent', 'Rick', 'Staircase', 'ThatOneKid', 'Tyler-Y', 'XxXSlayerxXx', 'xXxSlay3rXxX'];
+            options.forEach(option => {
+                let optionElement = document.createElement("option");
+                optionElement.value = option;
+                optionElement.textContent = option;
+                dropdown.onchange = function () {if (!blueteamplayers.includes(this.value) && !redteamplayers.includes(this.value)) {this.disabled = true; redteamplayers[i] = this.value; updateKillInput(); document.getElementById("streak-tracker").rows[0].cells[i+1].textContent = this.value;}};
+                dropdown.appendChild(optionElement);
+            });
+            row.insertCell().appendChild(dropdown);
+            row.insertCell().textContent = "0";
+            row.insertCell().textContent = "0";
+            row.insertCell().textContent = "0";
+        };
+        //initializes weapon selection
+        let weapons = ["Backstab","Bat","Black Box","Bonesaw","Bottle","Chargin Targe", "Cow Mangler 5000", "Fire Axe","Fists","Flame Thrower","Flare Gun","Golden Frying Pan","Grand Slam","Grenade Launcher","Gunslinger","Headshot","Knife","Kukri","Minigun","Revolver","Rocket Launcher","Scattergun","Sentry","Shovel","SMG","Sniper Rifle","Syringe Gun","Widowmaker","Winger","Wrench"];
+        let weaponused = document.getElementById("weaponused");
+        weapons.forEach(option => {
+            let optionElement = document.createElement("option");
+            optionElement.value = option;
+            optionElement.textContent = option;
+            weaponused.appendChild(optionElement);
+        });
+
+        function updateKillInput() {
+            killer = document.getElementById("killer");
+            killed = document.getElementById("killed");
+            killer.innerHTML = '';
+            killed.innerHTML = '';
+            blueteamplayers.forEach(player => {
+                let optionElement = document.createElement("option");
+                optionElement.value = player;
+                optionElement.textContent = player;
+                killer.appendChild(optionElement);
+                killed.appendChild(optionElement.cloneNode(true));
+            });
+            let spacer = document.createElement("option");
+            spacer.value = null;
+            killer.appendChild(spacer);
+            killed.appendChild(spacer.cloneNode(true));
+            redteamplayers.forEach(player => {
+                let optionElement = document.createElement("option");
+                optionElement.value = player;
+                optionElement.textContent = player;
+                killer.appendChild(optionElement);
+                killed.appendChild(optionElement.cloneNode(true));
+            });
+        };
+
+        function addInfo() {
+            let killer = document.getElementById("killer").value;
+            let killed = document.getElementById("killed").value;
+            let weapon = document.getElementById("weaponused").value;
+            let iscrit = document.getElementById("iscrit").value == 0 ? false : true;
+            let isdouble = false;
+            if (blueteamplayers.includes(killer) && parseInt(streakTracker.rows[blueteamplayers.indexOf(killer) + 1].cells[redteamplayers.indexOf(killed) + 1].textContent) <= -4) {isdouble = true;}
+            if (redteamplayers.includes(killer) && parseInt(streakTracker.rows[blueteamplayers.indexOf(killed) + 1].cells[redteamplayers.indexOf(killer) + 1].textContent) >= 4) {isdouble = true;}
+            if (killer == 'null' || killed == 'null') {return;}
+            if (blueteamplayers.includes(killer) && blueteamplayers.includes(killed)) {return;}
+            if (redteamplayers.includes(killer) && redteamplayers.includes(killed)) {return;}
+            //console.log(killer, killed, weapon, iscrit, isdouble)
+            let feed = document.getElementById("feed");
+            let newItem = document.createElement("li");
+
+            let weaponIcon = document.createElement("img");
+            if (weapon == "Headshot") {
+                weaponIcon.src = `img/Spectator Sport/Sniper Rifle(HS).png`
+            } else {
+            weaponIcon.src = `img/Spectator Sport/${weapon}.png`;
+            };
+
+            newItem.append(killer + " ");
+            newItem.append(weaponIcon);
+            if (iscrit) {
+                let critIcon = document.createElement("img");
+                critIcon.src = `img/Spectator Sport/Crit.png`;
+                newItem.append(critIcon);
+            };
+            if (isdouble) {
+                newItem.append("2x");
+            };
+            newItem.append(" " + killed);
+            feed.appendChild(newItem);
+
+            let useTableLeft = document.getElementById("left");
+            let useTableRight = document.getElementById("right");
+            if (weapons.indexOf(weapon) < 15) {
+                let currentCount = parseInt(useTableLeft.rows[weapons.indexOf(weapon) + 1].cells[2].textContent);
+                currentCount += 1;
+                useTableLeft.rows[weapons.indexOf(weapon) + 1].cells[2].textContent = currentCount;
+            } else {
+                let currentCount = parseInt(useTableRight.rows[weapons.indexOf(weapon) - 14].cells[2].textContent);
+                currentCount += 1;
+                useTableRight.rows[weapons.indexOf(weapon) - 14].cells[2].textContent = currentCount;
+            };
+            let scoreadd = 1;
+            if (isdouble) {scoreadd = 2;}
+            if (blueteamplayers.indexOf(killer) != -1) {
+                let ind = blueteamplayers.indexOf(killer);
+                let score = parseInt(tableblue.rows[ind + 2].cells[1].textContent);
+                score += scoreadd;
+                tableblue.rows[ind + 2].cells[1].textContent = score;
+                if (iscrit) {
+                    let critcount = parseInt(tableblue.rows[ind + 2].cells[3].textContent);
+                    critcount += 1;
+                    tableblue.rows[ind + 2].cells[3].textContent = critcount;
+                }
+            } else if (redteamplayers.indexOf(killer) != -1) {
+                let ind = redteamplayers.indexOf(killer);
+                let score = parseInt(tablered.rows[ind + 2].cells[1].textContent);
+                score += scoreadd;
+                tablered.rows[ind + 2].cells[1].textContent = score;
+                if (iscrit) {
+                    let critcount = parseInt(tablered.rows[ind + 2].cells[3].textContent);
+                    critcount += 1;
+                    tablered.rows[ind + 2].cells[3].textContent = critcount;
+                }
+            };
+
+            if (blueteamplayers.indexOf(killed) != -1) {
+                let ind = blueteamplayers.indexOf(killed);
+                let score = parseInt(tableblue.rows[ind + 2].cells[2].textContent);
+                score += 1;
+                tableblue.rows[ind + 2].cells[2].textContent = score;
+            } else if (redteamplayers.indexOf(killed) != -1) {
+                let ind = redteamplayers.indexOf(killed);
+                let score = parseInt(tablered.rows[ind + 2].cells[2].textContent);
+                score += 1;
+                tablered.rows[ind + 2].cells[2].textContent = score;
+            };
+
+            let killcolblue = document.querySelectorAll("#blue-team td:nth-child(2)");
+            let totalblue = Array.from(killcolblue).reduce((sum, cell) => {
+                return sum + Number(cell.textContent);
+            }, 0);
+            tableblue.rows[0].cells[1].textContent = totalblue;
+            let killcolred = document.querySelectorAll("#red-team td:nth-child(2)");
+            let totalred = Array.from(killcolred).reduce((sum, cell) => {
+                return sum + Number(cell.textContent);
+            }, 0);
+            tablered.rows[0].cells[1].textContent = totalred;
+
+            if (blueteamplayers.includes(killer)) {
+                let ind = redteamplayers.indexOf(killed);
+                let currStreak = parseInt(streakTracker.rows[blueteamplayers.indexOf(killer) + 1].cells[redteamplayers.indexOf(killed) + 1].textContent);
+                for (let i = 0; i < 7; i++) {
+                    streakTracker.rows[i+1].cells[ind+1].textContent = '0';
+                };
+                if (currStreak < 0) {
+                    streakTracker.rows[blueteamplayers.indexOf(killer) + 1].cells[ind + 1].textContent = '1';
+                } else {
+                    streakTracker.rows[blueteamplayers.indexOf(killer) + 1].cells[ind + 1].textContent = currStreak + 1;
+                }
+            } else {
+                let ind = blueteamplayers.indexOf(killed);
+                let currStreak = parseInt(streakTracker.rows[blueteamplayers.indexOf(killed) + 1].cells[redteamplayers.indexOf(killer) + 1].textContent);
+                for (let i = 0; i < 7; i++) {
+                    streakTracker.rows[ind + 1].cells[i+1].textContent = '0';
+                };
+                if (currStreak > 0) {
+                    streakTracker.rows[ind + 1].cells[redteamplayers.indexOf(killer) + 1].textContent = '-1';
+                } else {
+                    streakTracker.rows[ind + 1].cells[redteamplayers.indexOf(killer) + 1].textContent = currStreak - 1;
+                }
+            }
+        };
+
+    </script>
+</body>
+</html>
