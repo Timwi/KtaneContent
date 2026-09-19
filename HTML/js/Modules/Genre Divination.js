@@ -4,7 +4,7 @@ const bassNames = ["BehindLateAndWorseOff", "DivineRiot", "Genius", "HeroicRiot"
 const chordsNames = ["Blizzard", "FogEmeraldMoon", "Genius", "MovingForward", "MovingForward2", "Scatter", "Spirals"];
 const leadNames = ["CloudRuin", "CloudRuin2", "FogEmeraldMoon", "Harmonies", "HeroicRiot", "MovingForward", "PipeMaze"];
 
-// Those are used on the module, so it is also non recommended to translate them
+// Those are used on the module, so it is also not recommended to translate them
 const prefixes = ["Cyber", "Hyper-", "Hard", "Deep", "Bit-", "Hi-", "Drum", "Flash", "Auto", "Über", "Neo", "Off-", "Drop", "Lo-", "99-" ,"Speed", "Break", "Jump", "Acid", "Retro", "Sun-", "Ink-", "Micro", "Out", "Mix-", "Big", "Tera", "Self-", "Oily", "Primal"];
 const adjectives = ["Electro", "Rush", "Colour", "Pop", "Funk", "Sonic", "Show", "Synk", "Delta", "Simon", "Cortex", "30k", "Heart", "Liquid", "Progressive", "Duster", "Wave", "Sound", "Soul", "Concrete", "Room", "Urban", "Indie", "Tune", "Blast", "Screen", "Chaos", "Thunder", "Frost", "Plasma"];
 const styles = ["Bass", "Trance", "House", "Dance", "Fusion", "Symptom", "Spin", "& Crash", "Pulse", "Cipher", "Stack", "Dash", "Whiplash", "Murder", "Craftstep", "Trap", "Pride", "Beats", "Swing", "Pop", "Key", "Slab", "Burst", "Synchro", "Shot", "Forest", "Burn", "Cry", "Slap", "Drift"];
@@ -18,6 +18,8 @@ var selectedPrefixes;
 var selectedAdjectives;
 var selectedStyles;
 
+var answerEdgeworkOrders = [];
+
 function setRules(rnd){
     // Slice to make a copy and not shuffle the original array, then shuffle, then slice again to take only the first 5 elements
     selectedDrums = rnd.shuffleFisherYates(drumNames.slice()).slice(0,5);
@@ -28,6 +30,18 @@ function setRules(rnd){
     selectedPrefixes = rnd.shuffleFisherYates(prefixes.slice()).slice(0,25);
     selectedAdjectives = rnd.shuffleFisherYates(adjectives.slice()).slice(0,25);
     selectedStyles = rnd.shuffleFisherYates(styles.slice()).slice(0,25);
+
+	answerEdgeworkOrders = [];
+	for (var x = 0; x < 5; x ++){
+		for (var y = 0; y < 5; y ++){
+			for (var z = 0; z < 5; z ++){
+				if (x != y && x != z && y != z){
+					answerEdgeworkOrders.push([x, y , z]);
+				}
+			}
+		}
+	}
+	rnd.shuffleFisherYates(answerEdgeworkOrders);
 
     setSounds(rnd.seed);
 }
@@ -40,6 +54,7 @@ function setDefaultRules(){
     selectedPrefixes = prefixes;
     selectedAdjectives = adjectives;
     selectedStyles = styles;
+	answerEdgeworkOrders = [[0, 1, 2], [1, 2, 0], [2, 0, 1], [1, 0, 2], [2, 1, 0]];
     setSounds(1);
 }
 
@@ -88,4 +103,10 @@ function setSounds(ruleseedNumber){
             cells[i].innerText = PartsSelection[o][i];
         }
     }
+	
+	var answerOrderData = document.querySelectorAll(".audio-table td:nth-child(2)");
+	for (var i = 0; i < 5; i ++){
+		var edgework = answerEdgeworkOrders[i];
+		answerOrderData[i].innerHTML = `${GenreDivination.AnswerEdgework[edgework[0]]}<br>${GenreDivination.AnswerEdgework[edgework[1]]}<br>${GenreDivination.AnswerEdgework[edgework[2]]}`;
+	}
 }
