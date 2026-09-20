@@ -9022,7 +9022,26 @@ let parseData = [
 							}
 							dropdown[1].push(svg);
 						}
-						else { dropdown[1].push(line); }
+						else if (/[.X]{5,}/.test(line)){ 
+							var regexMatch = /[.X]{5,}/.exec(line);
+							var grid = regexMatch[0];
+							var gridLength = grid.length;
+
+							const svg = $SVG(`<svg class="giants-cipher inline" viewbox="0 0 ${gridLength} 1">`);
+							for (var x = 0; x < gridLength; x ++){
+								var lit = grid[x] == "." ? "dark" : "light";
+								const rect = $SVG(`<rect x=${x} y=0 width=1 height=1>`).appendTo(svg);
+								const circle = $SVG(`<circle class=${lit} cx=${x}.5 cy=0.5 r="0.4"`).appendTo(svg);
+							}
+							
+							// Wrap line into a Span to make it an object and allow inlined SVGs
+							var lineParts = line.split(grid);
+							var newLine = $('<span>').html(lineParts[0] + svg[0].outerHTML + lineParts[1]);
+							dropdown[1].push(newLine);
+						}
+						else {
+							dropdown[1].push(line);
+						}
 						line = readLine();
 					}
 
