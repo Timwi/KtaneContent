@@ -17114,6 +17114,11 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Petroglyph",
+		moduleID: "Petroglyph",
+		loggingTag: "Petrogylph",
+	},
+	{
 		moduleID: ["PianoKeys", "CruelPianoKeys", "FestivePianoKeys"],
 		loggingTag: ["Piano Keys", "Cruel Piano Keys", "Festive Piano Keys"],
 		matches: [
