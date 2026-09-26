@@ -8,7 +8,127 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
     <script src="js/jquery.3.7.0.min.js"></script>
+    <script>
+        let instBtnTap = "press and immediately release the XXX.";
+        let instBtnHold = "hold the XXX and refer to ‘Releasing a Held Button’.";
+        let instBtnClr = "XXX button";
+        let instBtnPos = "button in the XXX position";
+        let instBtnLabel = "button with the label XXX";
+        let instRelLSD = "the last seconds digit of the countdown timer is XXX.";
+        let instRelContain = "XXX is present on the countdown timer.";
+        let instRelSecSum = "the last digit of the sum of the two seconds digit of the countdown timer is XXX.";
+        let baseRefStageInst = "the button YYY the same ZZZ as you pressed in stage XXX";
+        let colors = [ "red", "yellow", "blue", "white" ];
+        let positions = [ "first", "second", "third", "fourth" ];
+        let labels = [ "ABORT", "DETONATE", "HOLD", "PRESS" ];
+        let allInstructions = [];
+        let rs1InstructionsMem = []; // Memory portion of Button Memory
+        let rs1InstructionsBtn = []; // Button portion of Button Memory
+        function GenerateAllInstructions()
+        {
+            if (allInstructions.length != 0) return;
+            // Generate memory instructions for Button Memory.
+            // position instructions
+            for (let x = 0; x < positions.length; x++)
+                allInstructions.push(instBtnPos.replace("XXX", positions[x]));
+            // label instructions
+            for (let x = 0; x < labels.length; x++)
+                allInstructions.push(instBtnLabel.replace("XXX", labels[x]));
+            // color instructions
+            for (let x = 0; x < colors.length; x++)
+                allInstructions.push(instBtnClr.replace("XXX", colors[x]));
+            // stage dependent instructions
+            for (let stg = 1; stg < 5; stg++)
+            {
+                allInstructions.push(baseRefStageInst.replace("YYY", "in").replace("ZZZ", "position").replace("XXX", stg));
+                allInstructions.push(baseRefStageInst.replace("YYY", "with").replace("ZZZ", "label").replace("XXX", stg));
+                allInstructions.push(baseRefStageInst.replace("YYY", "with").replace("ZZZ", "color").replace("XXX", stg));
+            }
+            // Log all those instructions.
+            //console.log(allInstructions);
+        }
+        function GetDefaultInstructions()
+        {
+            if (rs1InstructionsMem.length != 0) return;
+            let spansRSMem = $(".rsStgAction");
+            for (let x = 0; x < spansRSMem.length; x++)
+                rs1InstructionsMem.push(spansRSMem[x].innerText);
+            //console.log(rs1InstructionsMem);
+            let spansRSRel = $(".rsRelease");
+            for (let x = 0; x < spansRSRel.length; x++)
+                rs1InstructionsBtn.push(spansRSRel[x].innerText);
+            //console.log(rs1InstructionsBtn);
+        }
+        function setDefaultRules(rng)
+        {
+            GenerateAllInstructions();
+            GetDefaultInstructions();
+            // Revert back to default instructions here.
+            let spansRS = $(".rsStgAction");
+            for (let x = 0; x < spansRS.length; x++)
+                spansRS[x].innerText = rs1InstructionsMem[x];
+            let spansRSRel = $(".rsRelease");
+            for (let x = 0; x < spansRSRel.length; x++)
+                spansRSRel[x].innerText = rs1InstructionsBtn[x];
+        }
+        function setRules(rng)
+        {
+            GenerateAllInstructions();
+            GetDefaultInstructions();
+            // Do rule seed instructions for the memory portion here.
+            let usedCurRSInstMem = [];
+            for (let x = 0; x < 5; x++)
+            {
+                let allowedInstructions = allInstructions.slice(0, 12 + 3 * x);
+                if (x > 2)
+                    for (let y = 0; y < 3 * x; y++) // .concat() does work but somehow gets rid of duplicate strings. GDI
+                        allowedInstructions.push(allInstructions[12 + y]);
+                if (x == 4)
+                    allowedInstructions.splice(0, 12);
+                // Log the instructions that are used on this module.
+                //console.log(allowedInstructions);
+                // Do a shuffle.
+                rng.shuffleFisherYates(allowedInstructions);
+                //console.log(allowedInstructions);
+                let isHold = [ false, true, false, true ];
+                rng.shuffleFisherYates(isHold);
+                for (let y = 0; y < isHold.length; y++)
+                    if (isHold[y])
+                        usedCurRSInstMem.push(instBtnHold.replace("XXX", allowedInstructions[y]));
+                    else
+                        usedCurRSInstMem.push(instBtnTap.replace("XXX", allowedInstructions[y]));
+            }
+            // Handle the release instructions here.
+            let usedCurRSInstBtn = [];
+            let expDigit = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            rng.shuffleFisherYates(expDigit);
+            for (let x = 0; x < 4; x++)
+            {
+                switch (rng.nextMax(3))
+                {
+                    case 0:
+                    default:
+                        usedCurRSInstBtn.push(instRelLSD.replace("XXX", expDigit[x]));
+                        break;
+                    case 1:
+                        usedCurRSInstBtn.push(instRelContain.replace("XXX", expDigit[x]));
+                        break;
+                    case 2:
+                        usedCurRSInstBtn.push(instRelSecSum.replace("XXX", expDigit[x]));
+                        break;
+                }
+            }
+            // Set the new instructions as such.
+            let spansRSAct = $(".rsStgAction");
+            for (let x = 0; x < spansRSAct.length; x++)
+                spansRSAct[x].innerText = usedCurRSInstMem[x];
+            let spansRSRel = $(".rsRelease");
+            for (let x = 0; x < spansRSRel.length; x++)
+                spansRSRel[x].innerText = usedCurRSInstBtn[x];
+        }
+    </script>
     <style>
         .squeeze { margin-top: auto; margin-bottom: auto; }
     </style>
@@ -25,24 +145,25 @@
                 <h2>On the Subject of Button Memory</h2>
                 <p class="flavour-text">A match made in heaven. Hell? I think it’s heaven.</p>
                 <p>The module has four buttons in a row, a display, and five stage lights. The buttons are red, yellow, white and blue, and are labeled HOLD, PRESS, DETONATE and ABORT, though not necessarily in that order.<br>
+                    Due to budget cuts, only the first letter of the buttons’ labels are shown.<br>
                     Perform the correct action on the correct button to progress the module to the next stage. Complete all stages to disarm the module.<br>
                     Pressing an incorrect button or releasing the correct button at the wrong time will result in a strike and reset the module back to stage 1.<br>
                     Button positions are ordered from left to right.</p>
                 <h4>Stage 1</h4>
-                <p class="highlightable squeeze">If the display reads ABORT, hold the button in the fourth position and refer to ‘Releasing a Held Button’.</p>
-                <p class="highlightable squeeze">If the display reads DETONATE, press and immediately release the blue button.</p>
-                <p class="highlightable squeeze">If the display reads HOLD, press and immediately release the button in the first position.</p>
-                <p class="highlightable squeeze">If the display reads PRESS, hold the button in the second position and refer to ‘Releasing a Held Button’.</p>
+                <p class="highlightable squeeze">If the display reads ABORT, <span class="rsStgAction">hold the button in the fourth position and refer to ‘Releasing a Held Button’.</span></p>
+                <p class="highlightable squeeze">If the display reads DETONATE, <span class="rsStgAction">press and immediately release the blue button.</span></p>
+                <p class="highlightable squeeze">If the display reads HOLD, <span class="rsStgAction">press and immediately release the button in the first position.</span></p>
+                <p class="highlightable squeeze">If the display reads PRESS, <span class="rsStgAction">hold the button in the second position and refer to ‘Releasing a Held Button’.</span></p>
                 <h4>Stage 2</h4>
-                <p class="highlightable squeeze">If the display reads ABORT, press and immediately release the button with the same color as you pressed in stage 1.</p>
-                <p class="highlightable squeeze">If the display reads DETONATE, hold the button with the same label as you pressed in stage 1 and refer to ‘Releasing a Held Button’.</p>
-                <p class="highlightable squeeze">If the display reads HOLD, press and immediately release the button in the same position as you pressed in stage 1.</p>
-                <p class="highlightable squeeze">If the display reads PRESS, hold the blue button and refer to ‘Releasing a Held Button’.</p>
+                <p class="highlightable squeeze">If the display reads ABORT, <span class="rsStgAction">press and immediately release the button with the same color as you pressed in stage 1.</span></p>
+                <p class="highlightable squeeze">If the display reads DETONATE, <span class="rsStgAction">hold the button with the same label as you pressed in stage 1 and refer to ‘Releasing a Held Button’.</span></p>
+                <p class="highlightable squeeze">If the display reads HOLD, <span class="rsStgAction">press and immediately release the button in the same position as you pressed in stage 1.</span></p>
+                <p class="highlightable squeeze">If the display reads PRESS, <span class="rsStgAction">hold the blue button and refer to ‘Releasing a Held Button’.</span></p>
                 <h4>Stage 3</h4>
-                <p class="highlightable squeeze">If the display reads ABORT, press and immediately release the button with the same label as you pressed in Stage 2.</p>
-                <p class="highlightable squeeze">If the display reads DETONATE, press and immediately release the button in the same position as you pressed in Stage 1.</p>
-                <p class="highlightable squeeze">If the display reads HOLD, hold the button with the same color as you pressed in Stage 2 and refer to ‘Releasing a Held Button’.</p>
-                <p class="highlightable squeeze">If the display reads PRESS, hold the button with the same label as you pressed in Stage 1 and refer to ‘Releasing a Held Button’.</p>
+                <p class="highlightable squeeze">If the display reads ABORT, <span class="rsStgAction">press and immediately release the button with the same label as you pressed in Stage 2.</span></p>
+                <p class="highlightable squeeze">If the display reads DETONATE, <span class="rsStgAction">press and immediately release the button in the same position as you pressed in Stage 1.</span></p>
+                <p class="highlightable squeeze">If the display reads HOLD, <span class="rsStgAction">hold the button with the same color as you pressed in Stage 2 and refer to ‘Releasing a Held Button’.</span></p>
+                <p class="highlightable squeeze">If the display reads PRESS, <span class="rsStgAction">hold the button with the same label as you pressed in Stage 1 and refer to ‘Releasing a Held Button’.</span></p>
             </div>
             <div class="page-footer relative-footer">Page 1 of 2</div>
         </div>
@@ -53,22 +174,22 @@
             </div>
             <div class="page-content">
                 <h4>Stage 4</h4>
-                <p class="highlightable squeeze">If the display reads ABORT, hold the button with the same color as you pressed in Stage 2 and refer to ‘Releasing a Held Button’.</p>
-                <p class="highlightable squeeze">If the display reads DETONATE, hold the button in the same position as you pressed in Stage 1 and refer to ‘Releasing A Held Button’.</p>
-                <p class="highlightable squeeze">If the display reads HOLD, press and immediately release the button with the same label as you pressed in stage 2.</p>
-                <p class="highlightable squeeze">If the display reads PRESS, press and immediately release the button in the same position as you pressed in stage 3.</p>
+                <p class="highlightable squeeze">If the display reads ABORT, <span class="rsStgAction">hold the button with the same color as you pressed in Stage 2 and refer to ‘Releasing a Held Button’.</span></p>
+                <p class="highlightable squeeze">If the display reads DETONATE, <span class="rsStgAction">hold the button in the same position as you pressed in Stage 1 and refer to ‘Releasing A Held Button’.</span></p>
+                <p class="highlightable squeeze">If the display reads HOLD, <span class="rsStgAction">press and immediately release the button with the same label as you pressed in stage 2.</span></p>
+                <p class="highlightable squeeze">If the display reads PRESS, <span class="rsStgAction">press and immediately release the button in the same position as you pressed in stage 3.</span></p>
                 <h4>Stage 5</h4>
-                <p class="highlightable squeeze">If the display reads ABORT, press and immediately release the button with the same color as you pressed in Stage 4.</p>
-                <p class="highlightable squeeze">If the display reads DETONATE, hold the button with the same color as you pressed in Stage 3 and refer to ‘Releasing a Held Button’.</p>
-                <p class="highlightable squeeze">If the display reads HOLD, hold the button with the same label as you pressed in Stage 1 and refer to ‘Releasing a Held Button’.</p>
-                <p class="highlightable squeeze">If the display reads PRESS, press and immediately release the button with the same label as you pressed in Stage 2.</p>
+                <p class="highlightable squeeze">If the display reads ABORT, <span class="rsStgAction">press and immediately release the button with the same color as you pressed in Stage 4.</span></p>
+                <p class="highlightable squeeze">If the display reads DETONATE, <span class="rsStgAction">hold the button with the same color as you pressed in Stage 3 and refer to ‘Releasing a Held Button’.</span></p>
+                <p class="highlightable squeeze">If the display reads HOLD, <span class="rsStgAction">hold the button with the same label as you pressed in Stage 1 and refer to ‘Releasing a Held Button’.</span></p>
+                <p class="highlightable squeeze">If the display reads PRESS, <span class="rsStgAction">press and immediately release the button with the same label as you pressed in Stage 2.</span></p>
                 <h3>Releasing A Held Button</h3>
                 <p>If you start holding the button down, the stage light for the current stage will light up. Based on its color you must release the button at a specific point in time:</p>
                 <ul>
-                    <li><u>Red:</u> Release when the last seconds digit of the countdown timer is a 6.</li>
-                    <li><u>Yellow:</u> Release when the last seconds digit of the countdown timer is a 3.</li>
-                    <li><u>Blue:</u> Release when the last seconds digit of the countdown timer is an 8.</li>
-                    <li><u>Any other color:</u> Release when the last seconds digit of the countdown timer is a 4.</li>
+                    <li><u>Red:</u> Release when <span class="rsRelease">the last seconds digit of the countdown timer is a 6.</span></li>
+                    <li><u>Yellow:</u> Release when <span class="rsRelease">the last seconds digit of the countdown timer is a 3.</span></li>
+                    <li><u>Blue:</u> Release when <span class="rsRelease">the last seconds digit of the countdown timer is an 8.</span></li>
+                    <li><u>Any other color:</u> Release when <span class="rsRelease">the last seconds digit of the countdown timer is a 4.</span></li>
                 </ul>
             </div>
             <div class="page-footer relative-footer">Page 2 of 2</div>
