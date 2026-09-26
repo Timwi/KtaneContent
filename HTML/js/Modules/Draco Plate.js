@@ -91,32 +91,41 @@ window.onbeforeunload = function() {
 };  
 });
 
-
+var MagentaRotation;
+var manhattanOrder = [];
+var rulesOrder = [];
 
 function setRules(rnd){
-    let rulesOrder = [DracoPlate.Cyan, DracoPlate.Magenta, DracoPlate.Yellow];
+    rulesOrder = [DracoPlate.Cyan, DracoPlate.Magenta, DracoPlate.Yellow];
     rnd.shuffleFisherYates(rulesOrder);
-    var rules = document.getElementsByClassName("rules-data");
-    rules[0].innerHTML = DracoPlate.FirstRule(rulesOrder[0]);
-    rules[1].innerHTML = DracoPlate.SecondRule(rulesOrder[1]);
-    rules[2].innerHTML = DracoPlate.ThirdRule(rulesOrder[2]);
-    let manhattanOrder = [2, 4, 8, 1, 3, 5, 6, 7, 9 ];
-    rnd.shuffleFisherYates(manhattanOrder);
+	
+    manhattanOrder = rnd.shuffleFisherYates([2, 4, 8, 1, 3, 5, 6, 7, 9 ]);
 	manhattanOrder = manhattanOrder.slice(0,3).sort();
-    var manhattans = document.getElementsByClassName("manhattan-data");
-    manhattans[0].innerText = manhattanOrder[0];
-    manhattans[1].innerText = manhattanOrder[1];
-    manhattans[2].innerText = manhattanOrder[2];
+	
+	MagentaRotation = rnd.next(1,4)*90;
+	
+    showRules();
 }
 
 function setDefaultRules(){
-    let rulesOrder = [DracoPlate.Cyan, DracoPlate.Magenta, DracoPlate.Yellow];
-    var rules = document.getElementsByClassName("rules-data");
+    rulesOrder = [DracoPlate.Cyan, DracoPlate.Magenta, DracoPlate.Yellow];
+    manhattanOrder = [2, 4, 8];
+	
+	MagentaRotation = 180;
+	
+	showRules();
+}
+
+function showRules(){
+	var rules = document.getElementsByClassName("rules-data");
     rules[0].innerHTML = DracoPlate.FirstRule(rulesOrder[0]);
     rules[1].innerHTML = DracoPlate.SecondRule(rulesOrder[1]);
     rules[2].innerHTML = DracoPlate.ThirdRule(rulesOrder[2]);
-    var manhattans = document.getElementsByClassName("manhattan-data");
-    manhattans[0].innerText = 2;
-    manhattans[1].innerText = 4;
-    manhattans[2].innerText = 8;
+	
+	document.querySelector(".magenta-rotation").textContent = MagentaRotation;
+	
+	var manhattans = document.getElementsByClassName("manhattan-data");
+    manhattans[0].innerText = manhattanOrder[0];
+    manhattans[1].innerText = manhattanOrder[1];
+    manhattans[2].innerText = manhattanOrder[2];
 }
