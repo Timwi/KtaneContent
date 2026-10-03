@@ -17240,6 +17240,36 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "PianoParadoxModule",
+		loggingTag: "Piano Paradox",
+		matches: [
+			{
+				regex: /============ STAGE (\d+) ============/,
+				handler: function (matches, module) {
+					module.stageDropDown = [`Stage ${matches[1]}`, []]
+					module.push(module.stageDropDown);
+					return true;
+				}
+			},
+			{
+				regex: /Displayed note: .+\.|The required offset is \+\d+ semitones\.|The input for this stage is .+\./,
+				handler: function (matches, module) {
+					module.stageDropDown[1].push(matches.input);
+					return true;
+				}
+			},
+			{
+				regex: /===================================/,
+				handler: function (matches, module) {
+					return true;
+				}
+			},
+			{
+				regex: /.+/
+			}
+		]
+	},
+	{
 		moduleID: "pieModule",
 		loggingTag: "Pie",
 		matches: [
