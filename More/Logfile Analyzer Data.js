@@ -11871,6 +11871,104 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "MatchupChart",
+		loggingTag: "Matchup Chart",
+		matches: [
+			{
+				regex: /The module generated as such:/,
+				handler: function (matches, module) {
+					module.gridSize = 5;
+					module.effectiveTypes = readTaggedLines(4).map(l => l.split(' '));
+
+					//rowTypes: An array of string representing the types in the top row. Null means to be empty
+					//colTypes: Same as rowTypes but for the left column
+					//effectiveTypes: An array of how effective each type is in reading order
+					module.createTable = (rowTypes, colTypes, effectiveTypes) => {
+						const dimension = 50;
+						const table = $("<table>");
+
+						for(let row = 0; row < module.gridSize; row++) {
+							const tr = $('<tr>').appendTo(table);
+							for(let col = 0; col < module.gridSize; col++) {
+
+								//Deal with type cells
+								if(col == 0 || row == 0) {
+									const firstCell = row == 0 && col == 0;
+									const isCol = row == 0;
+									const borderColor = firstCell ? "none" : 
+														isCol ? "#5f57b7": "#cd5853";
+									const td = $('<td>')
+									.css("width", `${dimension}px`)
+									.css("height", `${dimension}px`)
+									.css("background-color", firstCell ? "none" : "#c0b2ab")
+									.css("border", `1px solid ${borderColor}`)
+									.appendTo(tr);
+
+									//Check if there's a image
+									const type = firstCell ? null : isCol ? colTypes[col - 1] : rowTypes[row - 1];
+									if(type != null) {
+										$('<img>').attr('src', `../HTML/img/Types/${type}_icon_SV.png`)
+										.css("display", "block")
+										.css("width", "100%")
+										.css("height", "100%")
+										.css("object-fit", "cover")
+										.appendTo(td);
+									}
+									continue;
+								}
+								//Deal with effectiveness cells
+								const char = effectiveTypes[row - 1][col - 1];
+								const th = $('<th>')
+								.css("border", `1px solid black`)
+								.appendTo(tr);
+
+								if(char != '.') {
+									const backgroundColor = char == '✓' ? '#090' : char === '✗' ? '#f00' : '#000';
+									th
+									.html(char)
+									.css('background-color', backgroundColor)
+									.css('color', '#fff')
+									.css("width", `${dimension}px`)
+									.css("height", `${dimension}px`)
+								}
+							}
+						}
+
+
+						return table;
+					}
+					
+					return true;
+				}
+			},
+			{
+				regex: /The (.+) type was automatically placed into screen (Row|Column)-(\d+) for you\./,
+				handler: function (matches, module) {
+					const emptyArr = () => new Array(module.gridSize - 1).fill(null);
+					let arr = emptyArr();
+					arr[(parseInt(matches[3]) - 1)] = matches[1];
+					const givenRow = matches[2] == 'Row';
+
+					const rowArr = givenRow ? arr : emptyArr();
+					const colArr = givenRow ? emptyArr() : arr;
+
+					module.push({label: 'The module generated as such:', obj: module.createTable(rowArr, colArr, module.effectiveTypes)});
+					return true;
+				}
+			},
+			{
+				regex: /One possible solution is: (.+) across the top, and (.+) on the left\./,
+				handler: function (matches, module) {
+					const rowArr = matches[2].split(', ');
+					const colArr = matches[1].split(', ');
+					module.push({label: 'One possible solution:', obj: module.createTable(rowArr, colArr, module.effectiveTypes)});
+					return true;
+				}
+			},
+			{ regex : /.+/ }
+		]
+	},
+	{
 		moduleID: "matchem",
 		loggingTag: "Match 'em",
 		matches: [
