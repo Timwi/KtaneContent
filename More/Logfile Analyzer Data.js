@@ -9535,6 +9535,24 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "TheHeart",
+		loggingTag: "The Heart",
+		matches: [
+			{
+				regex: /.+/,
+				handler: function(matches, module) {
+					const regex = /(\d+) seconds/g;
+					const result = matches.input.replaceAll(regex, (match) => {
+						const seconds = parseInt(match.match(regex));
+						return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
+					});
+					module.push(result);
+				}
+			}
+			
+		]
+	},
+	{
 		moduleID: "helloWorld",
 		loggingTag: "Hello, World!",
 		icon: "Hello, World!",
