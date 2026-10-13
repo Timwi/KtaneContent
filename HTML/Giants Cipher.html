@@ -8,25 +8,71 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css">
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script src="js/Modules/Giants Cipher.js"></script>
+    <script>
+        // Translator Notes: You can just translate the strings in here to make your translation ruleseed-compatible.
+        GiantsCipher = {
+            OrderRules: [
+                "the number of unlit indicators",
+                "the number of Serial Number digits",
+                "the number of lit indicators",
+                "the number of batteries",
+                "the number of port plates",
+                "the number of Serial Number letters",
+                "the number of ports",
+                "the number of battery holders",
+                "the number of modules, plus or minus 7 until in the range 0-6",
+                "the last digit of the Serial Number",
+                "the first digit of the Serial Number"],
+            AmRange: "A-M",
+            NzRange: "N-Z",
+            RCipherReplacementLocation: [
+                "A-B",
+                "B-C",
+                "C-D",
+                "D-E",
+            ],
+            DCipherStep(n){ return `Step ${n}: `;},
+            DCipherRule1(dir, amount, c1, c2, c3){ return `Take the outer 12 lights of the Canvas (excluding the center 3x1 rectangle). Cycle the lights <span class="ruleseed-data">${dir} ${amount}</span>, so that A1 ends up at <span class="ruleseed-data">${c1}</span>, A3 goes to <span class="ruleseed-data">${c2}</span>, E2 lands in <span class="ruleseed-data">${c3}</span>, etc.`;},
+            DCipherRule2(ord, dir){ return `Shift the <span class="ruleseed-data">${ord} row ${dir}</span> the same number of times as the number of steps you will do in Cipher D, looping back (shift 4 times if Cipher D is the second to apply, etc).`;},
+            DCipherRule3(){ return `Take the 5x3 representation of the Canvas below.\nFor each space marked with an X, invert the state of the light in your Canvas.\nYou can also think of this as XORing your Canvas with the Canvas provided below.`;},
+            DCipherRule4(col1, col2, col3, angle){ return `Rotate the 3x3 square covering the columns <span class="ruleseed-data">${col1}, ${col2} and ${col3}</span> a total of <span class="ruleseed-data">${angle}°</span> clockwise.`;},
+            DCipherRule5(n, dir, amount){ return `Do the opposite cycle you did in Step ${n}: rotate the outer 12 lights of the Canvas <span class="ruleseed-data">${dir} ${amount}</span>.`;},
+            DCipherRule6(dir, amount){ return `Shift every row <span class="ruleseed-data">${dir} ${amount}</span>. The Canvas loops around.`;},
+            DCipherRule7(dir){ return `Flip the Canvas <span class="ruleseed-data">${dir}</span>.`;},
+            PossibleClockDirections: ["clockwise", "counter-clockwise"],
+            PossibleNumberAmount: ["once", "twice", "thrice", "four times", "five times"],
+            PossibleOrdinal: ["first", "second", "third"],
+            PossibleHorizontalDirection: ["rightward", "leftward"],
+            PossibleVerticalDirection: ["downward", "upward"],
+            PossibleFlipDirection: ["horizontally", "vertically"]
+        }
+    </script>
     <style>
+        .canvas td {
+            text-align: -internal-center;
+            font-weight: bold;
+        }
         table {
-                margin: 1em auto;
-                border: none;
-            }
+            margin: 1em auto;
+            border: none;
+        }
+        .ruleseed-active .ruleseed-data  { font-weight: bold; text-decoration: underline; }
         .dot-pattern {
-                height: 75px;
-                border: 1px solid #222;
-                padding: .5em .6em;
-                margin-left:-1px;
-                margin-top:-1px;
-            }
+            height: 75px;
+            border: 1px solid #222;
+            padding: .5em .6em;
+            margin-left:-1px;
+            margin-top:-1px;
+        }
         .dark .dot-pattern {
             filter: invert(90%);
         }
         .dot-row{
-                display: flex;
-                justify-content: center;
-            }
+            display: flex;
+            justify-content: center;
+        }
         .binary-table { margin-bottom: 15mm; }
         b.direction {
             font-weight: normal;
@@ -50,12 +96,12 @@
                 <p>A series of 5 different pseudo-Ciphers (R, I, S, E, D) will be employed one after another to decrypt the final grid pattern. Which order the Ciphers are applied in depends on edgework:</p>
                 <ul>
                     <li>Order all five Ciphers based on the amount of edgework present, <b class="direction">from highest to lowest</b>:</li>
-                    <li>Cipher R uses number of unlit indicators.</li>
-                    <li>Cipher I uses number of Serial Number digits.</li>
-                    <li>Cipher S uses number of lit indicators.</li>
-                    <li>Cipher E uses number of batteries.</li>
-                    <li>Cipher D uses number of port plates.</li>
-                    <li><b class="direction">In case of a tie</b>, order the tied ones in the order R, I, S, E, D.</li>
+                    <li>Cipher R uses <span class="order-data ruleseed-data">the number of unlit indicators</span>.</li>
+                    <li>Cipher I uses <span class="order-data ruleseed-data">the number of Serial Number digits</span>.</li>
+                    <li>Cipher S uses <span class="order-data ruleseed-data">the number of lit indicators</span>.</li>
+                    <li>Cipher E uses <span class="order-data ruleseed-data">the number of batteries</span>.</li>
+                    <li>Cipher D uses <span class="order-data ruleseed-data">the number of port plates</span>.</li>
+                    <li><b class="direction">In case of a tie</b>, order the tied ones in the order <span class="order-tie-data ruleseed-data">R, I, S, E, D</span>.</li>
                 </ul>
                 <p>Apply all five Ciphers in the order obtained above.</p>
                 <p>After all five Ciphers have been applied, you should end up with one of the following five patterns formed of 7 dots, found on the module’s casing:</p>
@@ -91,59 +137,59 @@
             </div>
             <div class="page-content">
                 <p>Here is the location for each light in the Canvas, as a reference for later steps:</p>
-                <table>
+                <table class="canvas">
                     <tr>
-                        <th>A1</th>
-                        <th>B1</th>
-                        <th>C1</th>
-                        <th>D1</th>
-                        <th>E1</th>
+                        <td>A1</td>
+                        <td>B1</td>
+                        <td>C1</td>
+                        <td>D1</td>
+                        <td>E1</td>
                     </tr>
                     <tr>
-                        <th>A2</th>
-                        <th>B2</th>
-                        <th>C2</th>
-                        <th>D2</th>
-                        <th>E2</th>
+                        <td>A2</td>
+                        <td>B2</td>
+                        <td>C2</td>
+                        <td>D2</td>
+                        <td>E2</td>
                     </tr>
                     <tr>
-                        <th>A3</th>
-                        <th>B3</th>
-                        <th>C3</th>
-                        <th>D3</th>
-                        <th>E3</th>
+                        <td>A3</td>
+                        <td>B3</td>
+                        <td>C3</td>
+                        <td>D3</td>
+                        <td>E3</td>
                     </tr>
                 </table>
                 <h3>Cipher R:</h3>
                 <p>Take the Keyword on the bottom screen.</p>
-                <p>For each letter, if it is within the range A-M, replace it with an OFF light; or an ON light if it is within the range N-Z.</p>
-                <p>Convert this 6-light sequence into a 2x3 vertical rectangle (in reading order) and replace a side of the Canvas with this newly-obtained shape.</p>
-                <p>If there is at least 1 indicator containing a letter from “EGIR”, replace the leftmost side of the Canvas (columns A-B); otherwise replace the rightmost side of the Canvas (columns D-E).</p>
+                <p>For each letter, if it is within the range <span class="r-cipher-range ruleseed-data">A-M</span>, replace it with an OFF light; or an ON light if it is within the range <span class="r-cipher-range ruleseed-data">N-Z</span>.</p>
+                <p>Convert this 6-light sequence into a 2x3 vertical rectangle (in reading order) and replace a part of the Canvas with this newly-obtained shape.</p>
+                <p>If there is at least 1 indicator containing a letter from “EGIR”, replace the columns <span class="r-cipher-columns ruleseed-data">A-B</span>; otherwise replace the columns <span class="r-cipher-columns ruleseed-data">D-E</span>.</p>
                 <h3>Cipher I:</h3>
                 <p>Take the 5x3 representation of the Canvas below.</p>
                 <p>Move each numbered light to the next one in ascending numerical order (wrapping 8 to 1).<br>
                 The light in position #1 should end up in position #2; #2 in the position of #3, etc. until #8 ends up at position #1.</p>
-                <table>
+                <table class="i-cipher-table canvas">
                     <tr>
-                        <th>1</th>
-                        <th>.</th>
-                        <th>5</th>
-                        <th>.</th>
-                        <th>4</th>
+                        <td>1</td>
+                        <td>.</td>
+                        <td>5</td>
+                        <td>.</td>
+                        <td>4</td>
                     </tr>
                     <tr>
-                        <th>6</th>
-                        <th>.</th>
-                        <th>.</th>
-                        <th>.</th>
-                        <th>7</th>
+                        <td>6</td>
+                        <td>.</td>
+                        <td>.</td>
+                        <td>.</td>
+                        <td>7</td>
                     </tr>
                     <tr>
-                        <th>.</th>
-                        <th>2</th>
-                        <th>8</th>
-                        <th>3</th>
-                        <th>.</th>
+                        <td>.</td>
+                        <td>2</td>
+                        <td>8</td>
+                        <td>3</td>
+                        <td>.</td>
                     </tr>
                 </table>
             </div>
@@ -249,10 +295,10 @@
                 <p>Take the 5x3 representation of the Canvas below.</p>
                 <p>For each space marked with an X, invert the state of the light in your Canvas.</p>
                 <p>You can also think of this as XORing your Canvas with the Canvas provided below.</p>
-                <table>
-                    <tr><th>.</th><th>.</th><th>X</th><th>.</th><th>.</th></tr>
-                    <tr><th>.</th><th>X</th><th>X</th><th>X</th><th>.</th></tr>
-                    <tr><th>X</th><th>.</th><th>X</th><th>.</th><th>X</th></tr>
+                <table class="e-cipher-table canvas">
+                    <tr><td>.</td><td>.</td><td>X</td><td>.</td><td>.</td></tr>
+                    <tr><td>.</td><td>X</td><td>X</td><td>X</td><td>.</td></tr>
+                    <tr><td>X</td><td>.</td><td>X</td><td>.</td><td>X</td></tr>
                 </table>
             </div>
             <div class="page-footer relative-footer">Page 3 of 4</div>
@@ -272,21 +318,21 @@
                 If it is the fourth one you apply, do the first two steps only.<br>
                 If it is the last one you apply, do the first step only.
             </p>
-                <ul>
-                    <li><strong>Step 1:</strong> Take the outer 12 lights of the Canvas (excluding the center 3x1 rectangle). Cycle the lights clockwise thrice, so that A1 ends up at D1, A3 becomes B1, E2 becomes C3, etc.</li>
-                    <li><strong>Step 2:</strong> For each light in the second row, shift them to the right the same number of times as the number of steps you will do in Cipher D, looping back (shift right 4 times if Cipher D is the second to apply, etc).</li>
+                <ul class="d-cipher-steps">
+                    <li><b>Step 1:</b> Take the outer 12 lights of the Canvas (excluding the center 3x1 rectangle). Cycle the lights clockwise thrice, so that A1 ends up at D1, A3 goes to B1, E2 lands in C3, etc.</li>
+                    <li><b>Step 2:</b> Shift the second row rightward the same number of times as the number of steps you will do in Cipher D, looping back (shift 4 times if Cipher D is the second to apply, etc).</li>
                     <li>
-                        <strong>Step 3:</strong> Take the 5x3 representation of the Canvas below.<br>
+                        <b>Step 3:</b> Take the 5x3 representation of the Canvas below.<br>
                 For each space marked with an X, invert the state of the light in your Canvas.<br>
                 You can also think of this as XORing your Canvas with the Canvas provided below.<br>
-                <table>
-                    <tr><th>.</th><th>X</th><th>X</th><th>X</th><th>.</th></tr>
-                    <tr><th>X</th><th>.</th><th>.</th><th>.</th><th>X</th></tr>
-                    <tr><th>.</th><th>X</th><th>X</th><th>X</th><th>.</th></tr>
+                <table class="d-cipher-table canvas">
+                    <tr><td>.</td><td>X</td><td>X</td><td>X</td><td>.</td></tr>
+                    <tr><td>X</td><td>.</td><td>.</td><td>.</td><td>X</td></tr>
+                    <tr><td>.</td><td>X</td><td>X</td><td>X</td><td>.</td></tr>
                 </table>
             </li>
-                    <li><strong>Step 4:</strong> Rotate the center 3x3 square (the 9 tiles in the center, the columns B-C-D) a total of 180°.</li>
-                    <li><strong>Step 5:</strong> Do the opposite cycle you did in Step 1: counterclockwise thrice, so that D1 becomes A1, B1 becomes A3, and C3 becomes E2.</li>
+                    <li><b>Step 4:</b> Rotate the 3x3 square covering the columns B, C and D a total of 180° clockwise.</li>
+                    <li><b>Step 5:</b> Do the opposite cycle you did in Step 1: rotate the outer 12 lights of the Canvas counter-clockwise thrice..</li>
                 </ul>
             </div>
             <div class="page-footer relative-footer">Page 4 of 4</div>

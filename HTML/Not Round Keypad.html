@@ -1,0 +1,320 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Not Round Keypad — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        //words deliberately chosen to cause potential ambiguity when full sequence of letters is read; derived from _Password_'s word list
+        const words = [
+            "abbot", "abort", "about", "abuts", "after", "again", "aging", "alter", "apace", "argue", "aster", "barge", "beery",
+            "below", "bight", "blare", "blown", "blows", "blowy", "bound", "bouts", "cater", "chink", "chose", "clean", "clear",
+            "cloud", "colds", "could", "douse", "earns", "eater", "egret", "eight", "elbow", "emery", "ether", "every", "fairs",
+            "fever", "fight", "fires", "firms", "first", "firth", "fists", "flare", "flirt", "foist", "found", "fount", "frond",
+            "frost", "funds", "gains", "glace", "glare", "glean", "graft", "grain", "grant", "grate", "great", "greet", "hater",
+            "heirs", "hinge", "hitch", "horse", "hosed", "hoses", "hound", "hours", "house", "hying", "joint", "laced", "laces",
+            "lager", "lance", "large", "largo", "later", "leans", "leant", "learn", "leery", "lever", "light", "louse", "malls",
+            "marge", "might", "mould", "mound", "mouse", "nerve", "never", "newer", "night", "ocher", "other", "otter", "outer",
+            "paced", "paces", "pacey", "pagan", "paint", "panto", "pants", "pater", "peace", "pinto", "pints", "place", "plain",
+            "plait", "plane", "plank", "plans", "plant", "plate", "pleat", "point", "posit", "pound", "print", "react", "resat",
+            "right", "rites", "round", "rouse", "safer", "sally", "sarge", "scold", "sells", "sever", "shall", "shell", "shill",
+            "sight", "sills", "silly", "skill", "slant", "small", "smell", "sneer", "sound", "souse", "space", "spell", "spelt",
+            "spiel", "spill", "splat", "stall", "stile", "still", "stilt", "sting", "stink", "studs", "study", "sudsy", "swell",
+            "swill", "sword", "tater", "tease", "tense", "terse", "thank", "their", "theme", "there", "therm", "these", "thick",
+            "thigh", "thine", "thing", "think", "thins", "third", "thong", "those", "three", "threw", "tight", "tills", "tinge",
+            "treat", "treed", "trees", "trill", "trite", "twill", "tying", "voter", "wader", "wafer", "wager", "waste", "water",
+            "waver", "wheel", "where", "which", "white", "whore", "whorl", "whose", "winch", "witch", "wolds", "words", "wordy",
+            "world", "would", "wound", "wrist", "write", "writs", "wrote", "yearn"
+        ];
+        
+        const keypadImgs = [
+            "11-six", "13-at", "31-bt", "22-rightc", "14-ae", "23-leftc", "15-meltedthree", "28-balloon", "5-doublek", "12-squigglyn", "20-questionmark", "19-dragon", "6-omega", "4-smileyface", "30-upsidedowny", "27-tracks", "8-pumpkin", "7-squidknife", "21-paragraph", "2-filledstar", "26-cursive", "9-hookn", "1-copyright", "24-pitchfork", "16-euro", "3-hollowstar", "18-nwithhat"
+        ];
+              
+        const origIxs = [ 11, 14, 26, 3, 21, 13, 9, 0, 20, 12, 5, 7, 15, 18, 1, 24, 25, 8, 17, 10, 19, 23, 2, 4, 6, 16, 22 ];
+              
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+        }
+
+        function setRules(rnd) {
+            let list = [...words];
+            rnd.shuffleFisherYates(list);
+            let tds = Array.from(document.querySelectorAll(`.word-table td`));
+            for (let rw = 0; rw < 27; rw++) {
+                for (let cl = 0; cl < 8; cl++) {
+                    tds[rw * 9 + cl].innerText = list[rw * 8 + cl];
+                }
+            }
+
+            let imgElemsDiagram = document.querySelectorAll(`.dymbol img.symbol`);
+            let imgElemsTable = document.querySelectorAll(`.word-table img`);
+            let ixs = [...origIxs];
+            rnd.shuffleFisherYates(ixs);
+            for (let i = 0; i < ixs.length; i++) {
+                let img = keypadImgs[ixs[i]];
+                imgElemsDiagram[i].setAttribute('src', `img/Keypad/${img}.png`);
+                imgElemsTable[i].setAttribute('src', `img/Keypad/${img}.png`);
+            }
+        }
+    </script>
+    <style>
+        .semaphore-img {
+            float: right;
+            clear: right;
+            width: 6.6em;
+            margin-right: 2em;
+        }
+        .semaphore-line {
+            fill: none;
+            stroke: #000;
+            stroke-width: 1.14264;
+            stroke-linecap: round;
+        }
+        .semaphore-label {
+            font-family: "Special Elite", monospace;
+            font-size: 8.46667px;
+            text-anchor: middle;
+            fill: #000;
+        }
+        .tunnels-img { 
+            position: absolute;
+            width: 100%;
+            opacity: 25%;
+            transform: scaleY(-1);
+        }
+        .notround-img { 
+            width: 40%;
+            float: right;
+            clear: right;
+        }
+        .cube-img { width: 50%; }
+        .x-img { 
+            width: 40%;
+            float: right;
+            margin-top: 2em;
+        }
+        .dymbol {
+            position: relative;
+            width: 70%;
+            aspect-ratio: 1 / 1;
+            transform: scaleY(-1);
+        }
+        .symbol {
+            position: absolute;
+            transform: scaleY(-1);
+            transform-origin: top;
+            width: 13.6%;
+        }
+        .dark img:not(.diagram),.dark .semaphore-img { filter: invert(88%); }
+        .word-table {
+            font-size: 14.9px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: -0.4cm;
+            text-align: center;
+        }
+        .word-table th, .word-table td {
+            height: 28px;
+            padding: 0px 10px;
+        }
+        .small-symbol { width: 28px; }
+
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 3'; }
+
+        @media screen and (max-width: 560px) {
+            .semaphore-img {
+                margin-right: 0;
+            }
+            .dymbol {
+                width: calc(100% - 8em);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Not Round Keypad</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Round Keypad.svg" class="diagram">
+                <h2>On the Subject of Not Round Keypad</h2>
+                <p class="flavour-text">Dude this user experience is absolutely atrocious, why is it a wheel? 9/10</p>
+
+                <svg class="semaphore-img" viewBox="0 0 52.916665 211.66666">
+                    <path class="semaphore-line" d="M27.057016 10.416551v15.24l10.776307-10.776307M27.304998 63.288341v15.24h15.240003M27.057017 116.80368v15.24l10.776307 10.7763 M26.458323 169.96834v30.48"/>
+
+                    <text class="semaphore-label">
+                        <tspan x="11.965799" y="14.940294">W</tspan>
+                        <tspan x="41.060417" y="14.861744">T</tspan>
+                        <tspan x="46.950027" y="29.451429">O</tspan>
+                        <tspan x="40.901253" y="43.966698">H</tspan>
+                        <tspan x="26.462465" y="49.891449">A</tspan>
+                        <tspan x="11.907922" y="43.809601">G</tspan>
+                        <tspan x="5.9352179" y="29.302603">Z</tspan>
+
+                        <tspan x="11.887253" y="67.842499">X</tspan>
+                        <tspan x="26.400455" y="61.810265">J</tspan>
+                        <tspan x="40.967403" y="67.809418">U</tspan>
+                        <tspan x="46.904552" y="82.337105">P</tspan>
+                        <tspan x="40.940525" y="96.790352">I</tspan>
+                        <tspan x="26.537914" y="102.85152">B</tspan>
+                        <tspan x="11.945137" y="96.794487">N</tspan>
+                        <tspan x="5.9170303" y="82.242012">F</tspan>
+
+                        <tspan x="26.454201" y="114.77446">V</tspan>
+                        <tspan x="41.029415" y="120.63512">Y</tspan>
+                        <tspan x="46.967598" y="135.22688">Q</tspan>
+                        <tspan x="40.932262" y="149.67188">K</tspan>
+                        <tspan x="26.46867" y="155.7227">C</tspan>
+                        <tspan x="11.819044" y="149.79382">S</tspan>
+                        <tspan x="5.8860235" y="134.88995">M</tspan>
+                        <tspan x="12.027555" y="120.8129">E</tspan>
+
+                        <tspan x="26.491398" y="167.6312">D</tspan>
+                        <tspan x="11.930653" y="173.67584">L</tspan>
+                        <tspan x="5.9273529" y="188.1601">R</tspan>
+                        <tspan x="40.957058" y="202.70224">L</tspan>
+                        <tspan x="46.976887" y="188.1601">R</tspan>
+                        <tspan x="26.491398" y="208.68073">D</tspan>
+                    </text>
+                </svg>
+                <div class="dymbol">
+                    <img class="tunnels-img" src="img/Not Round Keypad/tunnels.svg">
+                    <img style="top: 85.04%; left: -0.85%;" class="symbol" src="img/Keypad/11-six.png">
+                    <img style="top: 85.04%; left: 35.72%;" class="symbol" src="img/Keypad/13-at.png">
+                    <img style="top: 85.04%; left: 72.71%;" class="symbol" src="img/Keypad/31-bt.png">
+                    <img style="top: 47.83%; left: -0.85%;" class="symbol" src="img/Keypad/22-rightc.png">
+                    <img style="top: 47.83%; left: 35.72%;" class="symbol" src="img/Keypad/14-ae.png">
+                    <img style="top: 47.83%; left: 72.71%;" class="symbol" src="img/Keypad/23-leftc.png">
+                    <img style="top: 11.69%; left: -0.85%;" class="symbol" src="img/Keypad/15-meltedthree.png">
+                    <img style="top: 11.69%; left: 35.72%;" class="symbol" src="img/Keypad/28-balloon.png">
+                    <img style="top: 11.69%; left: 72.71%;" class="symbol" src="img/Keypad/5-doublek.png">
+                    <img style="top: 92.9%; left: 7.44%;" class="symbol" src="img/Keypad/12-squigglyn.png">
+                    <img style="top: 92.9%; left: 43.37%;" class="symbol" src="img/Keypad/20-questionmark.png">
+                    <img style="top: 92.9%; left: 80.36%;" class="symbol" src="img/Keypad/19-dragon.png">
+                    <img style="top: 55.7%; left: 7.44%;" class="symbol" src="img/Keypad/6-omega.png">
+                    <img style="top: 55.7%; left: 43.37%;" class="symbol" src="img/Keypad/4-smileyface.png">
+                    <img style="top: 55.7%; left: 80.36%;" class="symbol" src="img/Keypad/30-upsidedowny.png">
+                    <img style="top: 19.56%; left: 7.44%;" class="symbol" src="img/Keypad/27-tracks.png">
+                    <img style="top: 19.56%; left: 43.37%;" class="symbol" src="img/Keypad/8-pumpkin.png">
+                    <img style="top: 19.56%; left: 80.36%;" class="symbol" src="img/Keypad/7-squidknife.png">
+                    <img style="top: 100.77%; left: 15.73%;" class="symbol" src="img/Keypad/21-paragraph.png">
+                    <img style="top: 100.77%; left: 51.66%;" class="symbol" src="img/Keypad/2-filledstar.png">
+                    <img style="top: 100.77%; left: 88.65%;" class="symbol" src="img/Keypad/26-cursive.png">
+                    <img style="top: 63.56%; left: 15.73%;" class="symbol" src="img/Keypad/9-hookn.png">
+                    <img style="top: 63.56%; left: 51.66%;" class="symbol" src="img/Keypad/1-copyright.png">
+                    <img style="top: 63.56%; left: 88.65%;" class="symbol" src="img/Keypad/24-pitchfork.png">
+                    <img style="top: 27.42%; left: 15.73%;" class="symbol" src="img/Keypad/16-euro.png">
+                    <img style="top: 27.42%; left: 51.66%;" class="symbol" src="img/Keypad/3-hollowstar.png">
+                    <img style="top: 27.42%; left: 88.65%;" class="symbol" src="img/Keypad/18-nwithhat.png">
+                </div>
+                <img class="notround-img" src="img/Not Round Keypad/not-round.svg">
+
+                <p>All 8 symbols on the keypad can be found in the diagram above. Find 3 symbols which form a SET; those whose coordinates on each axis of the cube are either all the same or all different.</p>
+                <p style="padding-right: 200px;">Hover over the buttons whose symbols are <b>not</b> within the SET. The lit LEDs when hovering over these buttons display a word in Semaphore when read clockwise. However, the button considered north for reading the sequence is <b>not</b> the button at true north. The orientation that produces a valid word in Semaphore determines the north button. Subsequent mentions of north in this manual refer to this button’s direction instead. Once the north button has been determined, use the diagram to the right to obtain an initial button trio. </p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Not Round Keypad</span>
+            </div>
+            <div class="page-content">
+                <p>Find your Semaphore word in the table below. Its row gives the starting position in the cube, indicated by the symbol at the end of that row. Its column gives the clockwise rotation to apply to the initial button trio. The resulting buttons form the final button trio.</p>
+                <table class="word-table">
+                    <tr><th>0°</th><th>45°</th><th>90°</th><th>135°</th><th>180°</th><th>225°</th><th>270°</th><th>315°</th><th class="corner"></th></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/11-six.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/13-at.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/31-bt.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/22-rightc.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/14-ae.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/23-leftc.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/15-meltedthree.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/28-balloon.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/5-doublek.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/12-squigglyn.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/20-questionmark.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/19-dragon.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/6-omega.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/4-smileyface.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/30-upsidedowny.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/27-tracks.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/8-pumpkin.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/7-squidknife.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/21-paragraph.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/2-filledstar.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/26-cursive.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/9-hookn.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/1-copyright.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/24-pitchfork.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/16-euro.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/3-hollowstar.png"></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td><img class="small-symbol" src="img/Keypad/18-nwithhat.png"></td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Not Round Keypad</span>
+            </div>
+            <div class="page-content">
+                <p>To determine which face the hovercraft initially faces, hover over each of the three buttons in the final button trio and note every LED position that lights up. Count the number of <b>distinct LED positions</b> across these buttons, <u>excluding the LED position corresponding to the north button.</u> Find this number on the cube diagram below: the face containing that number is the face the hovercraft faces.</p>
+
+                <img class="cube-img" src="img/Not Round Keypad/cube.svg">
+                <img class="x-img" src="img/Not Round Keypad/x.svg">
+
+                <p>For getting the orientation of your hovercraft relative to the face you’re looking at, where ‘up’ is indicated by the direction of the arrow of the obtained face above, get the median value of the shortest distance between the angles of the two LEDs around the circle, divided by 45°, for each set of lit LEDs when hovering over the final trio buttons. Multiply this median value by 90°, then rotate your hovercraft by that amount clockwise to get your final orientation.</p>
+
+                <p>Travel to the symbol on the north button by using the orthogonal buttons relative to the module to rotate the hovercraft in that direction. <b>As usual, after rotating the hovercraft, it will move one node forward.</b></p>
+
+                <p>To submit, press the diagonal button relative to the module corresponding to the type of volume of the cube the SET symbols took up in the tunnels, as shown in the image on the right. Thinner volumes take priority over the volume of the whole cube.</p>
+
+                <p>Crashing into a wall, submitting a wrong symbol, or pushing a diagonal button that is not the submit button will yield a strike. The initial state of the module returns upon a strike.</p>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+    </div>
+</body>
+</html>

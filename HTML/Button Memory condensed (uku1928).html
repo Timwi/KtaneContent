@@ -9,15 +9,135 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <script src="js/ktane-utils.js"></script>
     <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        let instBtnTap = "tap X";
+        let instBtnHold = "hold X";
+        let instBtnClr = "X";
+        let instBtnPos = "position X";
+        let instBtnLabel = "X";
+        let instRelLSD = "last is X";
+        let instRelContain = "X present";
+        let instRelSecSum = "last two digits sum is X/1X";
+        let baseRefStageInst = "stage X Z";
+        let colors = [ "red", "yellow", "blue", "white" ];
+        let positions = [ "1", "2", "3", "4" ];
+        let labels = [ "‘ABORT’", "‘DETONATE’", "‘HOLD’", "‘PRESS’" ];
+        let allInstructions = [];
+        let rs1InstructionsMem = []; // Memory portion of Button Memory
+        let rs1InstructionsBtn = []; // Button portion of Button Memory
+        function GenerateAllInstructions()
+        {
+            if (allInstructions.length != 0) return;
+            // Generate memory instructions for Button Memory.
+            // position instructions
+            for (let x = 0; x < positions.length; x++)
+                allInstructions.push(instBtnPos.replace("X", positions[x]));
+            // label instructions
+            for (let x = 0; x < labels.length; x++)
+                allInstructions.push(instBtnLabel.replace("X", labels[x]));
+            // color instructions
+            for (let x = 0; x < colors.length; x++)
+                allInstructions.push(instBtnClr.replace("X", colors[x]));
+            // stage dependent instructions
+            for (let stg = 1; stg < 5; stg++)
+            {
+                allInstructions.push(baseRefStageInst.replace("Z", "position").replace("X", stg));
+                allInstructions.push(baseRefStageInst.replace("Z", "label").replace("X", stg));
+                allInstructions.push(baseRefStageInst.replace("Z", "color").replace("X", stg));
+            }
+            // Log all those instructions.
+            //console.log(allInstructions);
+        }
+        function GetDefaultInstructions()
+        {
+            if (rs1InstructionsMem.length != 0) return;
+            let spansRSMem = $(".rsStgAction");
+            for (let x = 0; x < spansRSMem.length; x++)
+                rs1InstructionsMem.push(spansRSMem[x].innerText);
+            //console.log(rs1InstructionsMem);
+            let spansRSRel = $(".rsRelease");
+            for (let x = 0; x < spansRSRel.length; x++)
+                rs1InstructionsBtn.push(spansRSRel[x].innerText);
+            //console.log(rs1InstructionsBtn);
+        }
+        function setDefaultRules(rng)
+        {
+            GenerateAllInstructions();
+            GetDefaultInstructions();
+            // Revert back to default instructions here.
+            let spansRS = $(".rsStgAction");
+            for (let x = 0; x < spansRS.length; x++)
+                spansRS[x].innerText = rs1InstructionsMem[x];
+            let spansRSRel = $(".rsRelease");
+            for (let x = 0; x < spansRSRel.length; x++)
+                spansRSRel[x].innerText = rs1InstructionsBtn[x];
+        }
+        function setRules(rng)
+        {
+            GenerateAllInstructions();
+            GetDefaultInstructions();
+            // Do rule seed instructions for the memory portion here.
+            let usedCurRSInstMem = [];
+            for (let x = 0; x < 5; x++)
+            {
+                let allowedInstructions = allInstructions.slice(0, 12 + 3 * x);
+                if (x > 2)
+                    for (let y = 0; y < 3 * x; y++) // .concat() does work but somehow gets rid of duplicate strings. GDI
+                        allowedInstructions.push(allInstructions[12 + y]);
+                if (x == 4)
+                    allowedInstructions.splice(0, 12);
+                // Log the instructions that are used on this module.
+                //console.log(allowedInstructions);
+                // Do a shuffle.
+                rng.shuffleFisherYates(allowedInstructions);
+                //console.log(allowedInstructions);
+                let isHold = [ false, true, false, true ];
+                rng.shuffleFisherYates(isHold);
+                for (let y = 0; y < isHold.length; y++)
+                    if (isHold[y])
+                        usedCurRSInstMem.push(instBtnHold.replace("X", allowedInstructions[y]));
+                    else
+                        usedCurRSInstMem.push(instBtnTap.replace("X", allowedInstructions[y]));
+            }
+            // Handle the release instructions here.
+            let usedCurRSInstBtn = [];
+            let expDigit = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            rng.shuffleFisherYates(expDigit);
+            for (let x = 0; x < 4; x++)
+            {
+                switch (rng.nextMax(3))
+                {
+                    case 0:
+                    default:
+                        usedCurRSInstBtn.push(instRelLSD.replace("X", expDigit[x]));
+                        break;
+                    case 1:
+                        usedCurRSInstBtn.push(instRelContain.replace("X", expDigit[x]));
+                        break;
+                    case 2:
+                        usedCurRSInstBtn.push(instRelSecSum.replaceAll("X", expDigit[x]));
+                        break;
+                }
+            }
+            // Set the new instructions as such.
+            let spansRSAct = $(".rsStgAction");
+            for (let x = 0; x < spansRSAct.length; x++)
+                spansRSAct[x].innerText = usedCurRSInstMem[x];
+            let spansRSRel = $(".rsRelease");
+            for (let x = 0; x < spansRSRel.length; x++)
+                spansRSRel[x].innerText = usedCurRSInstBtn[x];
+        }
+    </script>
     <style>
-        .display { font-size: 18pt; }
+        .display { font-size: 16pt; }
         .column-left {
-            width: 49%;
+            width: 50%;
             box-sizing: border-box;
             float: left;
         }
         .column-right {
-            width: 49%;
+            width: 50%;
             float: right;
             clear: right;
         }
@@ -42,47 +162,47 @@
                 <div class="column-left">
                     <h3>Stage 1</h3>
                     <ul>
-                        <li><span class="display">ABORT</span> ⇒ hold position 4</li>
-                        <li><span class="display">DETONATE</span> ⇒ tap blue</li>
-                        <li><span class="display">HOLD</span> ⇒ tap position 1</li>
-                        <li><span class="display">PRESS</span> ⇒ hold position 2</li>
+                        <li><span class="display">ABORT</span> ⇒ <span class="rsStgAction">hold position 4</span></li>
+                        <li><span class="display">DETONATE</span> ⇒ <span class="rsStgAction">tap blue</span></li>
+                        <li><span class="display">HOLD</span> ⇒ <span class="rsStgAction">tap position 1</span></li>
+                        <li><span class="display">PRESS</span> ⇒ <span class="rsStgAction">hold position 2</span></li>
                     </ul>
                     <h3>Stage 2</h3>
                     <ul>
-                        <li><span class="display">ABORT</span> ⇒ tap stage 1 color</li>
-                        <li><span class="display">DETONATE</span> ⇒ hold stage 1 label</li>
-                        <li><span class="display">HOLD</span> ⇒ tap stage 1 position</li>
-                        <li><span class="display">PRESS</span> ⇒ hold blue</li>
+                        <li><span class="display">ABORT</span> ⇒ <span class="rsStgAction">tap stage 1 color</span></li>
+                        <li><span class="display">DETONATE</span> ⇒ <span class="rsStgAction">hold stage 1 label</span></li>
+                        <li><span class="display">HOLD</span> ⇒ <span class="rsStgAction">tap stage 1 position</span></li>
+                        <li><span class="display">PRESS</span> ⇒ <span class="rsStgAction">hold blue</span></li>
                     </ul>
                     <h3>Stage 3</h3>
                     <ul>
-                        <li><span class="display">ABORT</span> ⇒ tap stage 2 label</li>
-                        <li><span class="display">DETONATE</span> ⇒ tap stage 1 position</li>
-                        <li><span class="display">HOLD</span> ⇒ hold stage 2 color</li>
-                        <li><span class="display">PRESS</span> ⇒ hold stage 1 label</li>
+                        <li><span class="display">ABORT</span> ⇒ <span class="rsStgAction">tap stage 2 label</span></li>
+                        <li><span class="display">DETONATE</span> ⇒ <span class="rsStgAction">tap stage 1 position</span></li>
+                        <li><span class="display">HOLD</span> ⇒ <span class="rsStgAction">hold stage 2 color</span></li>
+                        <li><span class="display">PRESS</span> ⇒ <span class="rsStgAction">hold stage 1 label</span></li>
                     </ul>
                 </div>
                 <div class="column-right">
                     <h3>Stage 4</h3>
                     <ul>
-                        <li><span class="display">ABORT</span> ⇒ hold stage 2 color</li>
-                        <li><span class="display">DETONATE</span> ⇒ hold stage 1 position</li>
-                        <li><span class="display">HOLD</span> ⇒ tap stage 2 label</li>
-                        <li><span class="display">PRESS</span> ⇒ tap stage 3 position</li>
+                        <li><span class="display">ABORT</span> ⇒ <span class="rsStgAction">hold stage 2 color</span></li>
+                        <li><span class="display">DETONATE</span> ⇒ <span class="rsStgAction">hold stage 1 position</span></li>
+                        <li><span class="display">HOLD</span> ⇒ <span class="rsStgAction">tap stage 2 label</span></li>
+                        <li><span class="display">PRESS</span> ⇒ <span class="rsStgAction">tap stage 3 position</span></li>
                     </ul>
                     <h3>Stage 5</h3>
                     <ul>
-                        <li><span class="display">ABORT</span> ⇒ tap stage 4 color</li>
-                        <li><span class="display">DETONATE</span> ⇒ hold stage 3 color</li>
-                        <li><span class="display">HOLD</span> ⇒ hold stage 1 label</li>
-                        <li><span class="display">PRESS</span> ⇒ tap stage 2 label</li>
+                        <li><span class="display">ABORT</span> ⇒ <span class="rsStgAction">tap stage 4 color</span></li>
+                        <li><span class="display">DETONATE</span> ⇒ <span class="rsStgAction">hold stage 3 color</span></li>
+                        <li><span class="display">HOLD</span> ⇒ <span class="rsStgAction">hold stage 1 label</span></li>
+                        <li><span class="display">PRESS</span> ⇒ <span class="rsStgAction">tap stage 2 label</span></li>
                     </ul>
                     <h3>Releasing A Held Button</h3>
                     <ul>
-                        <li><span class="display">Red</span> ⇒ 6</li>
-                        <li><span class="display">Yellow</span> ⇒ 3</li>
-                        <li><span class="display">Blue</span> ⇒ 8</li>
-                        <li><span class="display">Other</span> ⇒ 4</li>
+                        <li><span class="display">Red</span> ⇒ <span class="rsRelease">last is 6</span></li>
+                        <li><span class="display">Yellow</span> ⇒ <span class="rsRelease">last is 3</span></li>
+                        <li><span class="display">Blue</span> ⇒ <span class="rsRelease">last is 8</span></li>
+                        <li><span class="display">Other</span> ⇒ <span class="rsRelease">last is 4</span></li>
                     </ul>
                 </div>
                 <h3></h3>

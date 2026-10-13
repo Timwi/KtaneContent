@@ -8983,6 +8983,97 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "GiantsCipher",
+		loggingTag: "Giants Cipher",
+		matches: [
+			{
+				regex: /=-= Beginning Cipher (.) =-=/,
+				handler: function (matches, module) {
+					var dropdown = [`=-= Cipher ${matches[1]} =-=`, []];
+					var line = readLine();
+
+					while (true)
+					{
+						// Handle the fake Logs that start with <Giants Cipher #1> instead of [Giants Cipher #1]
+						if (line[0] == '<'){
+							line = readLine();
+							continue;
+						}
+
+						// Remove the starting tag
+						line = /^[ \t]*\[(?:Assets\.Scripts\.(?:\w+\.)+)?.+?\] ?(.+)/.exec(line)[1];
+						
+						if (/=-= Beginning Cipher (.) =-=/.test(line) || line == "Press this pattern to solve the module:")
+						{
+							linen --; // Read line is a new cipher, or the end of the module. Go back up once
+							break;
+						}
+						else if (/^[.X]{5}/.test(line)){
+							const grid = [line];
+							grid.push(...readTaggedLines(2)); // transform the array into individual elements then add them
+							
+							const svg = $SVG('<svg class="giants-cipher" viewbox="0 0 5 3">');
+							for (var x = 0; x < 3; x ++){
+								for (var y = 0; y < 5; y ++){
+									var lit = grid[x][y] == "." ? "dark" : "light";
+									const rect = $SVG(`<rect x=${y} y=${x} width=1 height=1>`).appendTo(svg);
+									const circle = $SVG(`<circle class=${lit} cx=${y}.5 cy=${x}.5 r="0.4"`).appendTo(svg);
+								}
+							}
+							dropdown[1].push(svg);
+						}
+						else if (/[.X]{5,}/.test(line)){ 
+							var regexMatch = /[.X]{5,}/.exec(line);
+							var grid = regexMatch[0];
+							var gridLength = grid.length;
+
+							const svg = $SVG(`<svg class="giants-cipher inline" viewbox="0 0 ${gridLength} 1">`);
+							for (var x = 0; x < gridLength; x ++){
+								var lit = grid[x] == "." ? "dark" : "light";
+								const rect = $SVG(`<rect x=${x} y=0 width=1 height=1>`).appendTo(svg);
+								const circle = $SVG(`<circle class=${lit} cx=${x}.5 cy=0.5 r="0.4"`).appendTo(svg);
+							}
+							
+							// Wrap line into a Span to make it an object and allow inlined SVGs
+							var lineParts = line.split(grid);
+							var newLine = $('<span>').html(lineParts[0] + svg[0].outerHTML + lineParts[1]);
+							dropdown[1].push(newLine);
+						}
+						else {
+							dropdown[1].push(line);
+						}
+						line = readLine();
+					}
+
+					module.push(dropdown);
+					return true;
+				}
+			},
+			{
+				regex: /^[.X]/,
+				handler: function (matches, module) {
+					const colors = {"." : "#181818", "X" : "#e0e0b8"};
+
+					const grid = [matches.input];
+					grid.push(...readTaggedLines(2)); // transform the array into individual elements then add them
+
+					const svg = $SVG('<svg class="giants-cipher" viewbox="0 0 5 3">');
+					for (var x = 0; x < 3; x ++){
+						for (var y = 0; y < 5; y ++){
+							var value = grid[x][y];
+							var lit = grid[x][y] == "." ? "dark" : "light";
+							const rect = $SVG(`<rect x=${y} y=${x} width=1 height=1>`).appendTo(svg);
+							const circle = $SVG(`<circle class=${lit} cx=${y}.5 cy=${x}.5 r="0.4"`).appendTo(svg);
+						}
+					}
+					module.push({obj: svg});
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "giantsDrink",
 		loggingTag: "The Giant's Drink",
 		displayName: "The Giant’s Drink"
@@ -9441,6 +9532,24 @@ let parseData = [
 				}
 			},
 			{ regex: /.+/ }
+		]
+	},
+	{
+		moduleID: "TheHeart",
+		loggingTag: "The Heart",
+		matches: [
+			{
+				regex: /.+/,
+				handler: function(matches, module) {
+					const regex = /(\d+) seconds/g;
+					const result = matches.input.replaceAll(regex, (match) => {
+						const seconds = parseInt(match.match(regex));
+						return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
+					});
+					module.push(result);
+				}
+			}
+			
 		]
 	},
 	{
@@ -11777,6 +11886,104 @@ let parseData = [
 				}
 			},
 			{ regex: /.+/ }
+		]
+	},
+	{
+		moduleID: "MatchupChart",
+		loggingTag: "Matchup Chart",
+		matches: [
+			{
+				regex: /The module generated as such:/,
+				handler: function (matches, module) {
+					module.gridSize = 5;
+					module.effectiveTypes = readTaggedLines(4).map(l => l.split(' '));
+
+					//rowTypes: An array of string representing the types in the top row. Null means to be empty
+					//colTypes: Same as rowTypes but for the left column
+					//effectiveTypes: An array of how effective each type is in reading order
+					module.createTable = (rowTypes, colTypes, effectiveTypes) => {
+						const dimension = 50;
+						const table = $("<table>");
+
+						for(let row = 0; row < module.gridSize; row++) {
+							const tr = $('<tr>').appendTo(table);
+							for(let col = 0; col < module.gridSize; col++) {
+
+								//Deal with type cells
+								if(col == 0 || row == 0) {
+									const firstCell = row == 0 && col == 0;
+									const isCol = row == 0;
+									const borderColor = firstCell ? "none" : 
+														isCol ? "#5f57b7": "#cd5853";
+									const td = $('<td>')
+									.css("width", `${dimension}px`)
+									.css("height", `${dimension}px`)
+									.css("background-color", firstCell ? "none" : "#c0b2ab")
+									.css("border", `1px solid ${borderColor}`)
+									.appendTo(tr);
+
+									//Check if there's a image
+									const type = firstCell ? null : isCol ? colTypes[col - 1] : rowTypes[row - 1];
+									if(type != null) {
+										$('<img>').attr('src', `../HTML/img/Types/${type}_icon_SV.png`)
+										.css("display", "block")
+										.css("width", "100%")
+										.css("height", "100%")
+										.css("object-fit", "cover")
+										.appendTo(td);
+									}
+									continue;
+								}
+								//Deal with effectiveness cells
+								const char = effectiveTypes[row - 1][col - 1];
+								const th = $('<th>')
+								.css("border", `1px solid black`)
+								.appendTo(tr);
+
+								if(char != '.') {
+									const backgroundColor = char == '✓' ? '#090' : char === '✗' ? '#f00' : '#000';
+									th
+									.html(char)
+									.css('background-color', backgroundColor)
+									.css('color', '#fff')
+									.css("width", `${dimension}px`)
+									.css("height", `${dimension}px`)
+								}
+							}
+						}
+
+
+						return table;
+					}
+					
+					return true;
+				}
+			},
+			{
+				regex: /The (.+) type was automatically placed into screen (Row|Column)-(\d+) for you\./,
+				handler: function (matches, module) {
+					const emptyArr = () => new Array(module.gridSize - 1).fill(null);
+					let arr = emptyArr();
+					arr[(parseInt(matches[3]) - 1)] = matches[1];
+					const givenRow = matches[2] == 'Row';
+
+					const rowArr = givenRow ? arr : emptyArr();
+					const colArr = givenRow ? emptyArr() : arr;
+
+					module.push({label: 'The module generated as such:', obj: module.createTable(rowArr, colArr, module.effectiveTypes)});
+					return true;
+				}
+			},
+			{
+				regex: /One possible solution is: (.+) across the top, and (.+) on the left\./,
+				handler: function (matches, module) {
+					const rowArr = matches[2].split(', ');
+					const colArr = matches[1].split(', ');
+					module.push({label: 'One possible solution:', obj: module.createTable(rowArr, colArr, module.effectiveTypes)});
+					return true;
+				}
+			},
+			{ regex : /.+/ }
 		]
 	},
 	{
@@ -17114,6 +17321,11 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Petroglyph",
+		moduleID: "Petroglyph",
+		loggingTag: "Petrogylph",
+	},
+	{
 		moduleID: ["PianoKeys", "CruelPianoKeys", "FestivePianoKeys"],
 		loggingTag: ["Piano Keys", "Cruel Piano Keys", "Festive Piano Keys"],
 		matches: [
@@ -17140,6 +17352,36 @@ let parseData = [
 				handler: function (matches, module) {
 					module.Input.push(matches.input.replace('Jurrasic', 'Jurassic'));
 				}
+			}
+		]
+	},
+	{
+		moduleID: "PianoParadoxModule",
+		loggingTag: "Piano Paradox",
+		matches: [
+			{
+				regex: /============ STAGE (\d+) ============/,
+				handler: function (matches, module) {
+					module.stageDropDown = [`Stage ${matches[1]}`, []]
+					module.push(module.stageDropDown);
+					return true;
+				}
+			},
+			{
+				regex: /Displayed note: .+\.|The required offset is \+\d+ semitones\.|The input for this stage is .+\./,
+				handler: function (matches, module) {
+					module.stageDropDown[1].push(matches.input);
+					return true;
+				}
+			},
+			{
+				regex: /===================================/,
+				handler: function (matches, module) {
+					return true;
+				}
+			},
+			{
+				regex: /.+/
 			}
 		]
 	},
