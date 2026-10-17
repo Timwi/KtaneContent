@@ -11788,6 +11788,101 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "listeningPiano",
+		loggingTag: "Listening Piano Keys",
+		matches:[
+			{
+				regex: /The song is.+?\./,
+				handler: function (matches, module) {
+					module.firstRow = `<tr><td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
+						<td style="border: 1px solid black; background-color: black; width: 5vw; height: 5vh;"></td>
+						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
+						<td style="border: 1px solid black; background-color: black; width: 5vw; height: 5vh;"></td>
+						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
+						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
+						<td style="border: 1px solid black; background-color: black; width: 5vw; height: 5vh;"></td>
+						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
+						<td style="border: 1px solid black; background-color: black; width: 5vw; height: 5vh;"></td>
+						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
+						<td style="border: 1px solid black; background-color: black; width: 5vw; height: 5vh;"></td>
+						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td></tr>`
+					module.ValidStartNoteRange = readLine().match(/Acceptable starting notes\(inclusive\): (\d+) - (\d+)/);
+				}
+			},
+			{
+				regex: /The (?:highest|lowest) note of the song is \d+ notes (?:above|below) the starting note\. The played starting note puts this note out of range\. Striking and reselecting song\./,
+				handler: function (matches, module) {
+					module.push(matches[0]);
+					myTable = module.firstRow;
+					playedNote = readLine().match(/Key played: (\d+)/);
+
+					myTable += "<tr>";
+						for(i = 0; i < 12; i++)
+						{
+							myTable +=
+						`<td style="border: 1px solid black; background-color: ${i == playedNote[1] ? "red" : ((i >= module.ValidStartNoteRange[1] && i <= module.ValidStartNoteRange[2]) ? "lightgreen" : "white")}; width: 5vw; height: 5vh;"></td>`;
+						}
+					myTable += "</tr>";
+
+					myTable = "<table>" + myTable + "</table>";
+					tableObj = {obj: myTable, nobullet: true};
+					module.push(tableObj);
+					return true;
+				}
+			},
+			{
+				regex: /Played (?:.+) correctly\. Solved\./,
+				handler: function (matches, module) {
+					BlackKeys = [1, 3, 6, 8, 10];
+					module.push(matches[0]);
+					notesList = String(readLine().match(/Played notes\(correct\): (.+)/)[1]).split(", ");
+					myTable = module.firstRow;
+
+					notesList.forEach((element) => {
+						myTable += "<tr>";
+							for(i = 0; i < 12; i++)
+							{
+								myTable +=
+							`<td style="border: 1px solid black; background-color: ${i == element ? "green" : (BlackKeys.includes(i) ? "lightgray" : "white")}; width: 5vw; height: 5vh;"></td>`;
+							}
+						myTable += "</tr>";
+					});
+
+					myTable = "<table>" + myTable + "</table>";
+					tableObj = {obj: myTable, nobullet: true};
+					module.push(tableObj);
+					return true;
+				}
+			},
+			{
+				regex: /Played an incorrect note\. Striking and reselecting song\./,
+				handler: function(matches, module) {
+					BlackKeys = [1, 3, 6, 8, 10];
+					module.push(matches[0]);
+					notesList = String(readLine().match(/Played notes\(incorrect\): (.+)/)[1]).split(", ");
+					myTable = module.firstRow;
+					j = 1;
+					notesList.forEach((element) => {
+						myTable += "<tr>";
+							for(i = 0; i < 12; i++)
+							{
+								myTable +=
+							`<td style="border: 1px solid black; background-color: ${i == element ? (j == notesList.length ? "red" : "green") : (BlackKeys.includes(i) ? "lightgray" : "white")}; width: 5vw; height: 5vh;"></td>`;
+							}
+						myTable += "</tr>";
+						j++;
+					});
+
+					myTable = "<table>" + myTable + "</table>";
+					tableObj = {obj: myTable, nobullet: true};
+					module.push(tableObj);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "literalMaze",
 		loggingTag: "Literal Maze",
 		matches: [
