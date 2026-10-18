@@ -11794,18 +11794,18 @@ let parseData = [
 			{
 				regex: /The song is.+?\./,
 				handler: function (matches, module) {
-					module.firstRow = `<tr><td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
-						<td style="border: 1px solid black; background-color: black; width: 5vw; height: 5vh;"></td>
-						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
-						<td style="border: 1px solid black; background-color: black; width: 5vw; height: 5vh;"></td>
-						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
-						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
-						<td style="border: 1px solid black; background-color: black; width: 5vw; height: 5vh;"></td>
-						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
-						<td style="border: 1px solid black; background-color: black; width: 5vw; height: 5vh;"></td>
-						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td>
-						<td style="border: 1px solid black; background-color: black; width: 5vw; height: 5vh;"></td>
-						<td style="border: 1px solid black; background-color: white; width: 5vw; height: 5vh;"></td></tr>`
+					module.firstRow = `<tr><td style='background-color: white'"></td>
+						<td style='background-color: black'></td>
+						<td style='background-color: white'></td>
+						<td style='background-color: black'></td>
+						<td style='background-color: white'></td>
+						<td style='background-color: white'></td>
+						<td style='background-color: black'></td>
+						<td style='background-color: white'></td>
+						<td style='background-color: black'></td>
+						<td style='background-color: white'></td>
+						<td style='background-color: black'></td>
+						<td style='background-color: white'></td></tr>`
 					module.ValidStartNoteRange = readLine().match(/Acceptable starting notes\(inclusive\): (\d+) - (\d+)/);
 				}
 			},
@@ -11819,8 +11819,9 @@ let parseData = [
 					myTable += "<tr>";
 						for(i = 0; i < 12; i++)
 						{
+							let cellColor = i == playedNote[1] ? "red" : ((i >= module.ValidStartNoteRange[1] && i <= module.ValidStartNoteRange[2]) ? "lightgreen" : "white");
 							myTable +=
-						`<td style="border: 1px solid black; background-color: ${i == playedNote[1] ? "red" : ((i >= module.ValidStartNoteRange[1] && i <= module.ValidStartNoteRange[2]) ? "lightgreen" : "white")}; width: 5vw; height: 5vh;"></td>`;
+						`<td style="background-color: ${cellColor};"></td>`;
 						}
 					myTable += "</tr>";
 
@@ -11842,13 +11843,14 @@ let parseData = [
 						myTable += "<tr>";
 							for(i = 0; i < 12; i++)
 							{
+								let cellColor = i == element ? "green" : (BlackKeys.includes(i) ? "lightgray" : "white");
 								myTable +=
-							`<td style="border: 1px solid black; background-color: ${i == element ? "green" : (BlackKeys.includes(i) ? "lightgray" : "white")}; width: 5vw; height: 5vh;"></td>`;
+							`<td style="background-color: ${cellColor};"></td>`;
 							}
 						myTable += "</tr>";
 					});
 
-					myTable = "<table>" + myTable + "</table>";
+					myTable = "<table class='listening-pk'>" + myTable + "</table>";
 					tableObj = {obj: myTable, nobullet: true};
 					module.push(tableObj);
 					return true;
