@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>6-Bit Assembly — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .opcode-table {
+            font-size: .9rem;
+            td:nth-child(1), td:nth-child(2) { font-family: "Fragment Mono", monospace; }
+            td:nth-child(2) { width: 5rem; }
+        }
+        .explanation { color: gray; }
+        
+        @font-face {
+            font-family: '6Bit';
+            src: url('font/6bit.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        .references { font-family: '6Bit', monospace; }
+        .hstack { justify-content: left; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">6-Bit Assembly</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/6-Bit Assembly.svg" class="diagram">
+                <h2>On the Subject of 6-Bit Assembly</h2>
+                <p class="flavour-text">Thought <a href="https://ktane.timwi.de/HTML/Markscript.html">Markscript</a> was tedious? Check this thing out! Well, at least it has a lot more commands...</p>
+                <p>This module uses ☼ as prefix of octal values. Every byte is 6 bits and every word is 2 bytes.</p>
+                <p>This module consists of 3 screens: Data screen, Command screen, Binary screen; and 2 buttons: 0 and 1.</p>
+                <p>Initially, the data screen shows 64 bytes of the DATA block and also 64 bytes of the COLOR block. COLOR is immutable. If you hover over the symbol in DATA block, the Command screen will show you the word that consists of the DATA byte in higher byte of word and the COLOR byte in lower byte of word.</p>
+                <p>Pressing the Binary screen will show you the PROG0 block, whopping 64 words of memory for your very own program!
+                    That’s not enough for you? Don’t worry! Pressing the Binary screen when the current input is 1 will
+                    send you to the other program block, because there’s two of them. There’s also PROG1 - another 64 words of memory!
+                </p>
+                <p>While seeing PROG0/PROG1, you may input the opcode for a desired command. When you finish inputting the 12-bit string, module will show you the assembly command for your opcode. After that, press 1 to accept the input and insert/replace the command, or 0 to cancel the input. However, if the opcode is not valid, then module will show its octal value with a question mark (for example: ☼3300?).</p>
+                <p>To go back to DATA, press Binary when the input is empty. To clear the input - press Command. However, if you
+                    try to clear the input that is already empty, you will change the insertion mode (INSERT/REPLACE), where the default is REPLACE.
+                    To delete the command at the cursor, press Binary when the input is 0. To run the code, press Command when seeing DATA.
+                    To stop running, press Command again.
+                </p>
+                <p>Your goal is to write some code that not only successfully completes the task, but also safely stops the program
+                    by going into an infinite loop (the easiest solution for that is <code>RJMP ☼00</code> in the place where you want to stop the program).
+                    Remember that if the CPU goes out of either block or meets an unknown opcode, the module will strike. These are the only 2 cases of the module striking.
+                    THE CPU IS <b>NOT GOING TO</b> AUTOMATICALLY JUMP TO PROG1 IF IT GOES BEYOND ☼77 AT PROG0!
+                </p>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 8</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">6-Bit Assembly</span>
+            </div>
+            <div class="page-content">
+                <h2>Parameters</h2>
+                <p>Everything is zero-indexed in this section.</p>
+                <p>
+                    Take the column at the position of the zeroth vowel in the serial number, otherwise - the zeroth even digit of the serial number, otherwise position 6. From this column, take only the COLOR bytes from top to bottom. The zeroth byte modulo &lt;number of tasks - 1&gt; is the task number. Don’t forget to convert to decimal. The first through the seventh bytes are called the parameters for the task.
+                    Going from top to bottom from the first byte, if that byte modulo ☼10 is equal to any previous byte modulo ☼10, then add ☼01 to current byte and modulo it by ☼100. If any parameter is equal to ☼00, add ☼10 to it.
+                </p>
+                <p>R0-R7 are the registers that store some values, A* refers the address (☼00-☼77), V* means the constant value (☼00-☼77), N* also means some constant, it’s ☼00-☼77 unless stated otherwise. Data[A*] means the byte of DATA at address A*. All values mentioned in a statement are the initial ones (before the program runs), unless stated otherwise. The ranges of bytes wrap around: the byte after ☼77 is ☼00.</p>
+                <p>*a means that the value is taken from the zeroth parameter, *b - from the first parameter, ..., *g - from the sixth parameter.</p>
+                <p>To get the variable in its range, modulo it by the number of possible values for this variable and add the smallest possible value for this variable, unless stated otherwise.</p>
+
+                <h2>Tasks</h2>
+                <p>The number of tasks is <u>26</u>, the list goes as follows:</p>
+                <table>
+                    <tr><th>Task №</th><th>Problem Statement</th></tr>
+                    <tr><td>0</td><td>Rearrange the values of [Ra, Rb, Rc] so that Ra contains the smallest value, Rc - the largest value, Rb - the remaining value.</td></tr>
+                    <tr><td>1</td><td>Set Rd to the median of [Ra, Rb, Rc].</td></tr>
+                    <tr><td>2</td><td>Set Rb to the number of Collatz conjecture mod64 steps until Ra gets to 1. In case of an infinite number of steps, set Rb to 63.</td></tr>
+                    <tr><td>3</td><td>Set Rc to |Ra - Rb|, Rd to (Ra + Rb) mod 64, and Re to 1 if Ra + Rb is even, otherwise to 0.</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 8</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">6-Bit Assembly</span>
+            </div>
+            <div class="page-content">
+                <table>
+                    <tr><th>Task №</th><th>Problem Statement</th></tr>
+                    <tr><td>4</td><td>Rotate the 6-bit value of Ra by Nb bits (Nb is 0-5): to the left if Vc is even, to the right if Vc is odd.</td></tr>
+                    <tr><td>5</td><td>Set Rb to the number of ‘1’ bits in Ra.</td></tr>
+                    <tr><td>6</td><td>Set Rb to 1 if Ra is a power of two (1, 2, 4, 8, 16 or 32), otherwise set Rb to 0.</td></tr>
+                    <tr><td>7</td><td>Set Data[Ac] to (Data[Aa] + Data[Ab]) mod 64. Set Rd to 1 if Data[Aa] + Data[Ab] is at least 64 (carry occurred), otherwise to 0.</td></tr>
+                    <tr><td>8</td><td>If Ra &gt; Rb, swap the values of Ra and Rb. Otherwise, leave them unchanged.</td></tr>
+                    <tr><td>9</td><td>Set Rc to 1 if Data[Aa] &gt; Vb, to 0 if Data[Aa] = Vb, and to ☼77 (-1) if Data[Aa] &lt; Vb.</td></tr>
+                    <tr><td>10</td><td>Set Rc to the sum of Nb bytes of DATA starting at Aa, modulo 64.</td></tr>
+                    <tr><td>11</td><td>Set Rc to the maximum value among Nb bytes of DATA starting at Aa.</td></tr>
+                    <tr><td>12</td><td>Set Rd to the address of the first byte equal to Vc among Nb bytes of DATA starting at Aa. If there is no such byte, set Rd to ☼77.</td></tr>
+                    <tr><td>13</td><td>For each Nb byte of DATA starting at Aa: set the byte to Vc if its address is even, or to Vd if its address is odd.</td></tr>    
+                    <tr><td>14</td><td>Reverse the order of bits in each of Nb bytes of DATA starting at Aa (bit 0 ↔ bit 5, bit 1 ↔ bit 4, bit 2 ↔ bit 3).</td></tr>
+                    <tr><td>15</td><td>Split Nb bytes of DATA starting at Aa into consecutive pairs (1st and 2nd, 3rd and 4th, ...). Set Rc to the sum of |x - y| over all pairs, modulo 64, where x and y are the bytes of a pair. If Nb is odd, the last byte has no pair and is added as is.</td></tr>
+                    <tr><td>16</td><td>Copy Nb bytes of DATA starting at Aa to Nb bytes starting at Ac in reverse order: the last byte of the source becomes the first byte of the destination, and so on.</td></tr>
+                    <tr><td>17</td><td>Set Rc to 1 if Nb bytes of DATA starting at Aa are sorted in non-descending order, otherwise to 0. Nb is 2-4.</td></tr>
+                    <tr><td>18</td><td>Let L be the smaller and H the larger of Vb and Vc. Set Rd to 0 if Ra &lt; L, to 1 if L &le; Ra &le; H, and to 2 if Ra &gt; H.</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 3 of 8</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">6-Bit Assembly</span>
+            </div>
+            <div class="page-content">
+                <table>
+                    <tr><th>Task №</th><th>Problem Statement</th></tr>
+                    <tr><td>19</td><td>Among Nb bytes of DATA starting at Aa, count the local maxima: bytes that are not the first or the last byte of the range and are strictly greater than both of their neighbours. Set Rc to that count. If Nb is less than 3, set Rc to 0.</td></tr>
+                    <tr><td>20</td><td>Replace each Nb byte of DATA starting at Aa with its remainder of division by Vc.</td></tr>
+                    <tr><td>21</td><td>Set Rc to the average of Nb bytes of DATA starting at Aa, rounded down. The sum is not reduced modulo 64.</td></tr>
+                    <tr><td>22</td><td>Add Nc bytes of DATA starting at Ab to Nc bytes starting at Aa element by element (1st to 1st, 2nd to 2nd, ...), modulo 64. The results replace the bytes starting at Aa.</td></tr>
+                    <tr><td>23</td><td>Set Rc to the number of bytes among Nb bytes of DATA starting at Aa that are strictly greater than the average of those Nb bytes (rounded down). Nb is ☼01-☼77.</td></tr>
+                    <tr><td>24</td><td>Sort Nb bytes of DATA starting at Aa in non-descending order, in place.</td></tr>
+                    <tr><td>25</td><td>Shift Nb bytes of DATA starting at Aa one position to the right: each byte moves to the next address, and the byte at Aa becomes Vc. The byte that was last in the range (before the shift) must be saved to Rd. Nb is ☼01-☼77.</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 4 of 8</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">6-Bit Assembly</span>
+            </div>
+            <div class="page-content">
+                <h2>Notes on architecture of CPU</h2>
+                <p>Each opcode is 1 word long, no exceptions. P is the value that is stored inside the R7 register and used as address.</p>
+                <p>Flags are stored inside their own register. There are three flags:</p>
+                    <ul>
+                        <li>Z - Zero flag. Sets when the resulting value equals to ☼00.</li>
+                        <li>C - Carry flag. Toggles when the overflow or underflow occurs.</li>
+                        <li>N - Negative flag. Sets when the resulting value is more than ☼37.</li>
+                    </ul>
+
+                <h2>Opcodes</h2>
+                <p>Translations are based on the AVR Instruction Set.</p>
+                <p>In the Flags column, uppercase C means setting the flag, lowercase c means toggling the flag. There are 31 commands that are supported by CPU. The list goes as follows:</p>
+                <table class="opcode-table">
+                    <tr><th>Command</th><th>Opcode</th><th>Description</th><th>Flags</th></tr>
+                    <tr><td>NOP</td><td>000 000 000 000</td><td><code>No operation</code><br/><span class="explanation">Does nothing.</span></td><td>-</td></tr>
+                    <tr><td>MOV Rx, Ry</td><td>000 000 xxx yyy</td><td><code>Move</code><br/><span class="explanation">Copies the value of Ry into Rx.</span></td><td>-</td></tr>
+                    <tr><td>ADD Rx, Ry</td><td>000 001 xxx yyy</td><td><code>Add</code><br/><span class="explanation">Changes the value of Rx with the sum of values of Rx and Ry.</span></td><td>ZcN</td></tr>
+                    <tr><td>SUB Rx, Ry</td><td>000 010 xxx yyy</td><td><code>Subtract</code><br/><span class="explanation">Changes the value of Rx with the value Ry subtracted from the value of Rx.</span></td><td>ZcN</td></tr>
+                    <tr><td>CMP Rx, Ry</td><td>000 011 xxx yyy</td><td><code>Compare</code><br/><span class="explanation">Compares Ry to Rx by subtracting Ry from Rx but not changing any values.</span></td><td>ZcN</td></tr>
+                    <tr><td>AND Rx, Ry</td><td>000 100 xxx yyy</td><td><code>AND</code><br/><span class="explanation">Stores the value of the logical AND of Ry and Rx into Rx.</span></td><td>ZN</td></tr>
+                    <tr><td>OR Rx, Ry</td> <td>000 101 xxx yyy</td><td><code>OR</code><br/><span class="explanation">Stores the value of the logical OR of Ry and Rx into Rx.</span></td><td>ZN</td></tr>
+                    </table>
+            </div>
+            <div class="page-footer relative-footer">Page 5 of 8</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">6-Bit Assembly</span>
+            </div>
+            <div class="page-content">
+                <table class="opcode-table">
+                    <tr><th>Command</th><th>Opcode</th><th>Description</th><th>Flags</th></tr>
+                    <tr><td>EOR Rx, Ry</td><td>000 110 xxx yyy</td><td><code>Exclusive OR</code><br/><span class="explanation">Stores the value of the logical XOR of Ry and Rx into Rx.</span></td><td>ZN</td></tr>
+                    <tr><td>NOT Rx</td><td>000 111 000 xxx</td><td><code>NOT</code><br/><span class="explanation">Inverts the value of Rx. In other words, set Rx’s value to (☼77 - Rx’s value).</span></td><td>ZN</td></tr>
+                    <tr><td>LD Rx, P</td><td>000 111 001 xxx</td><td><code>Load</code><br/><span class="explanation">Loads the value from address P into Rx.</span></td><td>-</td></tr>
+                    <tr><td>ST P, Rx</td><td>000 111 010 xxx</td><td><code>Store</code><br/><span class="explanation">Sets the value from Rx into address P.</span></td><td>-</td></tr>
+                    <tr><td>LSL Rx</td><td>000 111 011 xxx</td><td><code>Logical shift - Left</code><br/><span class="explanation">Shifts Rx to the left. The bit that is shifted out goes in the flag C.</span></td><td>ZC</td></tr>
+                    <tr><td>LSR Rx</td><td>000 111 100 xxx</td><td><code>Logical shift - Right</code><br/><span class="explanation">Shifts Rx to the right. The bit that is shifted out goes in the flag C.</span></td><td>ZC</td></tr>
+
+                    <tr><td>ROL Rx</td><td>000 111 101 xxx</td><td><code>Rotate - Left</code><br/><span class="explanation">Shifts Rx to the left, last bit being set to C, and the bit that is shifted out being stored in the flag C.</span></td><td>ZC</td></tr>
+                    <tr><td>ROR Rx</td><td>000 111 110 xxx</td><td><code>Rotate - Right</code><br/><span class="explanation">Shifts Rx to the right, first bit being set to C, and the bit that is shifted out being stored in the flag C.</span></td><td>ZC</td></tr>
+                    <tr><td>RJMP #i</td><td>001 000 iii iii</td><td><code>Relative jump</code><br/><span class="explanation">Adds #i to Program Counter modulo ☼100. PC does not increment after that.</span></td><td>-</td></tr>
+                    <tr><td>BREQ #i</td><td>001 001 iii iii</td><td><code>Branch on equal</code><br/><span class="explanation">If flag Z is set, does RJMP #i.</span></td><td>-</td></tr>
+                    <tr><td>BRNE #i</td><td>001 010 iii iii</td><td><code>Branch on not equal</code><br/><span class="explanation">If flag Z is not set, does RJMP #i.</span></td><td>-</td></tr>
+                    <tr><td>BRCS #i</td><td>001 011 iii iii</td><td><code>Branch on carry set</code><br/><span class="explanation">If flag C is set, does RJMP #i.</span></td><td>-</td></tr>
+                    <tr><td>BRCC #i</td><td>001 100 iii iii</td><td><code>Branch on carry clear</code><br/><span class="explanation">If flag C is not set, does RJMP #i.</span></td><td>-</td></tr>
+                    <tr><td>BRMI #i</td><td>001 101 iii iii</td><td><code>Branch on minus</code><br/><span class="explanation">If flag N is set, does RJMP #i.</span></td><td>-</td></tr>
+                    <tr><td>BRPL #i</td><td>001 110 iii iii</td><td><code>Branch on plus</code><br/><span class="explanation">If flag N is not set, does RJMP #i.</span></td><td>-</td></tr>
+                    </table>
+            </div>
+            <div class="page-footer relative-footer">Page 6 of 8</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">6-Bit Assembly</span>
+            </div>
+            <div class="page-content">
+                <table class="opcode-table">
+                    <tr><th>Command</th><th>Opcode</th><th>Description</th><th>Flags</th></tr>
+                    <tr><td>JOP addr</td><td>001 111 aaa aaa</td><td><code>Jump to other page</code><br/><span class="explanation">Changes the Program Counter to addr, while changing the page to read code from.</span></td><td>-</td></tr>
+                    <tr><td>DJZ Rx, #i</td><td>010 xxx iii iii</td><td><code>Decrement and jump on zero</code><br/><span class="explanation">Decrements Rx, if Rx equals to 0 after that, does RJMP #i.</span></td><td>-</td></tr>
+                    <tr><td>LDI Rx, #i</td> <td>100 0xx iii iii</td><td><code>Load immediate</code><br/><span class="explanation">Loads #i into Rx. Rx is R4-R7.</span></td><td>-</td></tr>
+                    <tr><td>ADDI Rx, #i</td><td>100 1xx iii iii</td><td><code>Add immediate</code><br/><span class="explanation">Adds #i to Rx. Rx is R4-R7.</span></td><td>ZcN</td></tr>
+                    <tr><td>SUBI Rx, #i</td><td>101 0xx iii iii</td><td><code>Subtract immediate</code><br/><span class="explanation">Subtracts #i from Rx. Rx is R4-R7.</span></td><td>ZcN</td></tr>
+                    <tr><td>CMPI Rx, #i</td><td>101 1xx iii iii</td><td><code>Compare immediate</code><br/><span class="explanation">Compares #i with Rx, similarly to CMP. Rx is R4-R7.</span></td><td>ZcN</td></tr>
+                    <tr><td>ANDI Rx, #i</td><td>110 0xx iii iii</td><td><code>AND immediate</code><br/><span class="explanation">Does the logical AND of #i and Rx. Rx is R4-R7.</span></td><td>ZN</td></tr>
+                    <tr><td>ORI Rx, #i</td> <td>110 1xx iii iii</td><td><code>OR immediate</code><br/><span class="explanation">Does the logical OR of #i and Rx. Rx is R4-R7.</span></td><td>ZN</td></tr>
+                    <tr><td>EORI Rx, #i</td><td>111 0xx iii iii</td><td><code>Exclusive OR immediate</code><br/><span class="explanation">Does the logical XOR of #i and Rx. Rx is R4-R7.</span></td><td>ZN</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Page 7 of 8</div>
+        </div>
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">6-Bit Assembly</span>
+            </div>
+            <div class="page-content">
+                <h2>Color and character references</h2>
+                <div class="hstack">
+                    <table class="references">
+                        <tr><th colspan="9">COLORS</th></tr>
+                        <tr><th></th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr>
+                        <tr><th>0</th><td style="background-color: #000"><td style="background-color: #005"><td style="background-color: #00A"><td style="background-color: #00F"><td style="background-color: #050"><td style="background-color: #055"><td style="background-color: #05A"><td style="background-color: #05F"></tr>
+                        <tr><th>1</th><td style="background-color: #0A0"><td style="background-color: #0A5"><td style="background-color: #0AA"><td style="background-color: #0AF"><td style="background-color: #0F0"><td style="background-color: #0F5"><td style="background-color: #0FA"><td style="background-color: #0FF"></tr>
+                        <tr><th>2</th><td style="background-color: #500"><td style="background-color: #505"><td style="background-color: #50A"><td style="background-color: #50F"><td style="background-color: #550"><td style="background-color: #555"><td style="background-color: #55A"><td style="background-color: #55F"></tr>
+                        <tr><th>3</th><td style="background-color: #5A0"><td style="background-color: #5A5"><td style="background-color: #5AA"><td style="background-color: #5AF"><td style="background-color: #5F0"><td style="background-color: #5F5"><td style="background-color: #5FA"><td style="background-color: #5FF"></tr>
+                        <tr><th>4</th><td style="background-color: #A00"><td style="background-color: #A05"><td style="background-color: #A0A"><td style="background-color: #A0F"><td style="background-color: #A50"><td style="background-color: #A55"><td style="background-color: #A5A"><td style="background-color: #A5F"></tr>
+                        <tr><th>5</th><td style="background-color: #AA0"><td style="background-color: #AA5"><td style="background-color: #AAA"><td style="background-color: #AAF"><td style="background-color: #AF0"><td style="background-color: #AF5"><td style="background-color: #AFA"><td style="background-color: #AFF"></tr>
+                        <tr><th>6</th><td style="background-color: #F00"><td style="background-color: #F05"><td style="background-color: #F0A"><td style="background-color: #F0F"><td style="background-color: #F50"><td style="background-color: #F55"><td style="background-color: #F5A"><td style="background-color: #F5F"></tr>
+                        <tr><th>7</th><td style="background-color: #FA0"><td style="background-color: #FA5"><td style="background-color: #FAA"><td style="background-color: #FAF"><td style="background-color: #FF0"><td style="background-color: #FF5"><td style="background-color: #FFA"><td style="background-color: #FFF"></tr>
+                    </table>
+                    <table class="references">
+                        <tr><th colspan="9">CHARS</th></tr>
+                        <tr><th></th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr>
+                        <tr><th>0</th><td>_</td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td><td>g</td></tr>
+                        <tr><th>1</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr>
+                        <tr><th>2</th><td>8</td><td>9</td><td>.</td><td>,</td><td>!</td><td>@</td><td>#</td><td>$</td></tr>
+                        <tr><th>3</th><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td><td>G</td><td>H</td></tr>
+                        <tr><th>4</th><td>I</td><td>J</td><td>K</td><td>L</td><td>M</td><td>N</td><td>O</td><td>P</td></tr>
+                        <tr><th>5</th><td>Q</td><td>R</td><td>S</td><td>T</td><td>U</td><td>V</td><td>W</td><td>X</td></tr>
+                        <tr><th>6</th><td>Y</td><td>Z</td><td>^</td><td>&</td><td>*</td><td>-</td><td>+</td><td>=</td></tr>
+                        <tr><th>7</th><td>~</td><td>?</td><td>&lt;</td><td>&gt;</td><td>[</td><td>]</td><td>(</td><td>)</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="page-footer relative-footer">Page 8 of 8</div>
+        </div>
+    </div>
+</body>
+</html>

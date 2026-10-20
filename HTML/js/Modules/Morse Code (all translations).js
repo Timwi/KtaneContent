@@ -623,6 +623,7 @@ let translatedMorseMappings = {
 		[ 'я', '.-.-' ]
 	],
 	'zh-CN': ENGLISH_MAPPING,
+	'zh-HK': ENGLISH_MAPPING,
 	'zh-TW': ENGLISH_MAPPING,
 };
 
