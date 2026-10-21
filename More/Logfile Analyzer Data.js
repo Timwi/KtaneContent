@@ -11854,7 +11854,7 @@ let parseData = [
 						}
 					myTable += "</tr>";
 
-					myTable = "<table>" + myTable + "</table>";
+					myTable = "<table class='listening-pk'>" + myTable + "</table>";
 					tableObj = {obj: myTable, nobullet: true};
 					module.push(tableObj);
 					return true;
@@ -11894,11 +11894,11 @@ let parseData = [
 					myTable = module.firstRow;
 					j = 1;
 					notesList.forEach((element) => {
-						myTable += "<tr>";
+						myTable += "<tr>"; 
 							for(i = 0; i < 12; i++)
 							{
 								myTable +=
-							`<td style="border: 1px solid black; background-color: ${i == element ? (j == notesList.length ? "red" : "green") : (BlackKeys.includes(i) ? "lightgray" : "white")}; width: 5vw; height: 5vh;"></td>`;
+							`<td style="background-color: ${i == element ? (j == notesList.length ? "red" : "green") : (BlackKeys.includes(i) ? "lightgray" : "white")}; width: 5vw; height: 5vh;"></td>`;
 							}
 						myTable += "</tr>";
 						j++;
