@@ -9560,7 +9560,6 @@ let parseData = [
 			{
 				regex: /The screen said:/,
 				handler: function(matches, module){
-					let dropdown = ["The screen said:", []]
 					let CloseCount = 0;
 					let FullText = "";
 					for(let i = 0; CloseCount < 2; i++)
@@ -9572,9 +9571,8 @@ let parseData = [
 						}
 						FullText += line + "\n";
 					}
-					dropdown[1].push({obj:`<pre><b><i>${FullText}</i></b></pre>`, nobullet: true});
-					module.push("The screen said:");
-					module.push({obj: pre(FullText), nobullet: true});
+					
+					module.push({ label: "The screen said:", obj: pre(FullText) });
 					return true;
 				}
 			},
@@ -9583,10 +9581,15 @@ let parseData = [
 				handler: function(matches, module)
 				{
 					myTable = "";
-					const DisplayColours = ["#ff6464", "#d1b547", "#64ff64", "#597aff"];
-					const Colours = ["red", "yellow", "green", "blue"];
+					const DisplayColours = { "red":"#ff6464", "yellow":"#d1b547", "green":"#64ff64", "blue":"#597aff" };
 					const ColourMatches = readTaggedLine().match(/The buttons were coloured: (red|yellow|green|blue), (red|yellow|green|blue), (red|yellow|green|blue), (red|yellow|green|blue)/);
-					myTable += (`<tr><th style="border: 2px solid black;">Condition:</th><th style="border: 2px solid black;">Flip if true:</th><th style="border: 2px solid black;">True?</th><th style="border: 2px solid black; background-color: ${DisplayColours[Colours.indexOf(ColourMatches[1])]}; color: black;">${matches[1]}\n(${ColourMatches[1]})</th><th style="border: 2px solid black; background-color: ${DisplayColours[Colours.indexOf(ColourMatches[2])]}; color: black;">${matches[2]}\n(${ColourMatches[2]})</th><th style="border: 2px solid black; background-color: ${DisplayColours[Colours.indexOf(ColourMatches[3])]}; color: black;">${matches[3]}\n(${ColourMatches[3]})</th><th style="border: 2px solid black; background-color: ${DisplayColours[Colours.indexOf(ColourMatches[4])]}; color: black;">${matches[4]}\n(${ColourMatches[4]})</th></tr>`);
+					myTable += 	(`<tr>	<th>Condition:</th><th>Flip if true:</th>
+										<th>True?</th>
+										<th class='color' style="background-color: ${DisplayColours[ColourMatches[1]]}">${matches[1]}\n(${ColourMatches[1]})</th>
+										<th class='color' style="background-color: ${DisplayColours[ColourMatches[2]]}">${matches[2]}\n(${ColourMatches[2]})</th>
+										<th class='color' style="background-color: ${DisplayColours[ColourMatches[3]]}">${matches[3]}\n(${ColourMatches[3]})</th>
+										<th class='color' style="background-color: ${DisplayColours[ColourMatches[4]]}">${matches[4]}\n(${ColourMatches[4]})</th>
+								</tr>`);
 					const Title = readTaggedLine();
 
 					//False is off, True is on
@@ -9605,10 +9608,22 @@ let parseData = [
 								FlipText[i] = "Flip!";
 							}
 						}
-						myTable += (`<tr><td style=\"border: 1px solid black;\">${Condition}</td><td style=\"border: 1px solid black;\">${FlipIfTrue}</td><td style=\"border: 1px solid black; background-color: ${Truth == "True" ? "green" : "red"};\">${Truth}</td><td style=\"border: 1px solid black; background-color: ${module.lightStates[0] ? "white" : "black"}; color: ${module.lightStates[0] ? "black" : "white"}\">${FlipText[0]}</td><td style=\"border: 1px solid black; background-color: ${module.lightStates[1] ? "white" : "black"}; color: ${module.lightStates[1] ? "black" : "white"}\">${FlipText[1]}</td><td style=\"border: 1px solid black; background-color: ${module.lightStates[2] ? "white" : "black"}; color: ${module.lightStates[2] ? "black" : "white"}\">${FlipText[2]}</td><td style=\"border: 1px solid black; background-color: ${module.lightStates[3] ? "white" : "black"}; color: ${module.lightStates[3] ? "black" : "white"}\">${FlipText[3]}</td><tr>`);
+						myTable += (`<tr>	<td>${Condition}</td>
+											<td>${FlipIfTrue}</td>
+											<td class='${Truth == "True" ? "green" : "red" }'       >${Truth}</td>
+											<td class='${module.lightStates[0] ? "white" : "black"}'>${FlipText[0]}</td>
+											<td class='${module.lightStates[1] ? "white" : "black"}'>${FlipText[1]}</td>
+											<td class='${module.lightStates[2] ? "white" : "black"}'>${FlipText[2]}</td>
+											<td class='${module.lightStates[3] ? "white" : "black"}'>${FlipText[3]}</td>
+										<tr>`);
 					});
-					myTable += (`<tr><td colspan="3" style="border: 1px solid black;"><b>Answer</b></td><td style=\"border: 1px solid black; background-color: ${module.lightStates[0] ? "white" : "black"};"></td><td style=\"border: 1px solid black; background-color: ${module.lightStates[1] ? "white" : "black"};"></td><td style=\"border: 1px solid black; background-color: ${module.lightStates[2] ? "white" : "black"};"></td><td style=\"border: 1px solid black; background-color: ${module.lightStates[3] ? "white" : "black"};"></td></tr>`);
-					myTable = "<table>" + myTable + "</table>";
+					myTable += (`<tr>	<td colspan="3"><b>Answer</b></td>
+										<td class='${module.lightStates[0] ? "white" : "black"}'></td>
+										<td class='${module.lightStates[1] ? "white" : "black"}'></td>
+										<td class='${module.lightStates[2] ? "white" : "black"}'></td>
+										<td class='${module.lightStates[3] ? "white" : "black"}'></td>
+									</tr>`);
+					myTable = "<table class='hello-world'>" + myTable + "</table>";
 					module.tableHTML = myTable;
 					module.push(Title);
 					module.tableObj = {obj: myTable, nobullet: true};
@@ -9637,7 +9652,14 @@ let parseData = [
 					module.inputDropdown[1].push(matches[0]);
 					if(module.wrong != true)
 					{
-						module.tableHTML = module.tableHTML.replace(/<\/table>/, `<tr><td colspan="3" style="border: 1px solid black; background-color: red"><b>Your Answer(Incorrect)</b></td><td style=\"border: 1px solid black; background-color: ${matches[1] == "on" ? "white" : "black"};"></td><td style=\"border: 1px solid black; background-color: ${matches[2] == "on" ? "white" : "black"};"></td><td style=\"border: 1px solid black; background-color: ${matches[3] == "on" ? "white" : "black"};"></td><td style=\"border: 1px solid black; background-color: ${matches[4] == "on" ? "white" : "black"};"></td></tr></table>`);
+						module.tableHTML = module.tableHTML.replace(/<\/table>/, 
+											`<tr>	<td colspan="3" class='green'><b>Your Answer(Incorrect)</b></td>
+													<td class='${matches[1] == "on" ? "white" : "black"}'></td>
+													<td class='${matches[2] == "on" ? "white" : "black"}'></td>
+													<td class='${matches[3] == "on" ? "white" : "black"}'></td>
+													<td class='${matches[4] == "on" ? "white" : "black"}'></td>
+												</tr>
+											</table>`);
 						module.tableObj.obj = module.tableHTML;
 						module.wrong = true;
 					}
@@ -9649,7 +9671,14 @@ let parseData = [
 				handler: function(matches, module){
 					if(module.wrong != true)
 					{
-						module.tableHTML = module.tableHTML.replace(/<\/table>/, `<tr><td colspan="3" style="border: 1px solid black; background-color: green"><b>Your Answer(Correct)</b></td><td style=\"border: 1px solid black; background-color: ${module.lightStates[0] ? "white" : "black"};"></td><td style=\"border: 1px solid black; background-color: ${module.lightStates[1] ? "white" : "black"};"></td><td style=\"border: 1px solid black; background-color: ${module.lightStates[2] ? "white" : "black"};"></td><td style=\"border: 1px solid black; background-color: ${module.lightStates[3] ? "white" : "black"};"></td></tr></table>`);
+						module.tableHTML = module.tableHTML.replace(/<\/table>/, 
+											`<tr>	<td colspan="3" class='green'><b>Your Answer(Correct)</b></td>
+													<td class='${module.lightStates[0] ? "white" : "black"}'></td>
+													<td class='${module.lightStates[1] ? "white" : "black"}'></td>
+													<td class='${module.lightStates[2] ? "white" : "black"}'></td>
+													<td class='${module.lightStates[3] ? "white" : "black"}'></td>
+											</tr>
+										</table>`);
 						module.tableObj.obj = module.tableHTML;
 					}
 					module.inputDropdown[1].push(matches[0]);
