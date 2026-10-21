@@ -2226,7 +2226,7 @@ let parseData = [
 					}
 
 					function makeBBGSVG(buClr, txt, txtClr) {
-						const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='-10 -15 100 70'>`)
+						const svg = $(`<svg class='bamboozling-button-grid' xmlns='http://www.w3.org/2000/svg' viewbox='-10 -15 100 70'>`)
 
 						for(var r = 0; r < 4; r++){
 							for(var c = 0; c < 4; c++){
