@@ -10602,10 +10602,7 @@ let parseData = [
 	{
 		displayName: "The Jewel Vault",
 		moduleID: "jewelVault",
-		loggingTag: "Jewel Wheels",
-		matches: [
-			{ regex: /.+/ }
-		]
+		loggingTag: "Jewel Wheels"
 	},
 	{
 		moduleID: "JuxtacoloredSquaresModule",
