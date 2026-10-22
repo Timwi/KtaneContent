@@ -242,6 +242,7 @@ let SouvenirModuleData = [
 	{ name: "Guess Who?",	id: "GuessWho",	questions: ["Which colors flashed “YES”?"] },
 	{ name: "Gyromaze",	id: "gyromaze",	questions: ["What were the LED colors?"] },
 	{ name: "Halli Galli",	id: "halliGalli",	questions: ["Which fruit were there five of?", "What were the relevant counts?"] },
+	{ name: "The Heptabutton",	id: "heptabutton",	questions: ["What was the label of the button?", "What was the color of the button in each stage?"] },
 	{ name: "Hereditary Base Notation",	id: "hereditaryBaseNotationModule",	questions: ["What was the number on the bottom display?"] },
 	{ name: "The Hexabutton",	id: "hexabutton",	questions: ["What color was the button when held?", "What Morse Code letter was transmitted?"] },
 	{ name: "Hexamaze",	id: "HexamazeModule",	questions: ["What was the color of the pawn?"] },

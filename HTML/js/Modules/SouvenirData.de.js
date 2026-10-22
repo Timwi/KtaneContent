@@ -235,6 +235,7 @@ let SouvenirModuleData = [
 	{ original: "Gyromaze",	name: "Gyrolabyrinth",	id: "gyromaze",	questions: ["Welche LED hatte welche Farbe?"] },
 	{ original: "Halli Galli",	name: "Halli Galli",	id: "halliGalli",	questions: ["Von welcher Frucht gab es fünf?", "Was waren die maßgeblichen Anzahlen?"] },
 	{ original: "Main Page",	name: "Hauptseite",	id: "mainpage",	questions: ["Welche Farbe und Nachricht war (nicht) auf der Blase sichtbar?", "Von welcher Hauptseite war Homestar, der Hintergrund und die Effekte der Tasten?"] },
+	{ original: "The Heptabutton",	name: "DerHeptaknopf",	id: "heptabutton",	questions: ["Was stand auf dem Knopf?", "Welche Farbe hatte der Knopf in welcher Stufe?"] },
 	{ original: "Hereditary Base Notation",	name: "Hereditary Base Notation",	id: "hereditaryBaseNotationModule",	questions: ["Welche Zahl war auf dem unteren Display?"] },
 	{ original: "The Hexabutton",	name: "DerHexaknopf",	id: "hexabutton",	questions: ["Welche Farbe hatte die Taste beim Gedrückthalten?", "Welcher Buchstabe wurde als Morsezeichen übermittelt?"] },
 	{ original: "Hexamaze",	name: "Hexalabyrinth",	id: "HexamazeModule",	questions: ["Welche Farbe hatte die Spielfigur?"] },

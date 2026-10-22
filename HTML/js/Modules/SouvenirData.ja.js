@@ -242,6 +242,7 @@ let SouvenirModuleData = [
 	{ original: "Guess Who?",	name: "だーれだ？",	id: "GuessWho",	questions: ["「YES」が表示された色は？"] },
 	{ original: "Gyromaze",	name: "ジャイロ迷路",	id: "gyromaze",	questions: ["LEDの色は？"] },
 	{ original: "Halli Galli",	name: "ハリガリ",	id: "halliGalli",	questions: ["5個あった果物は？", "使用した分け方は？"] },
+	{ original: "The Heptabutton",	name: "The Heptabutton",	id: "heptabutton",	questions: ["What was the label of the button?", "What was the color of the button in each stage?"] },
 	{ original: "Hereditary Base Notation",	name: "遺伝的基数表記",	id: "hereditaryBaseNotationModule",	questions: ["下部のディスプレーに表示された数字は？"] },
 	{ original: "The Hexabutton",	name: "六角形ボタン",	id: "hexabutton",	questions: ["長押し中のボタンの色は？", "送信されたモールス信号の文字は？"] },
 	{ original: "Hexamaze",	name: "六角迷路",	id: "HexamazeModule",	questions: ["ポーンの色は？"] },
