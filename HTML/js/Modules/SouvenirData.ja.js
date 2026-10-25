@@ -132,6 +132,7 @@ let SouvenirModuleData = [
 	{ original: "Critters",	name: "クリッターズ",	id: "CrittersModule",	questions: ["色は？"] },
 	{ original: "Cruel Binary",	name: "残忍二進数",	id: "CruelBinary",	questions: ["表示された単語は？"] },
 	{ original: "Cruel Keypads",	name: "残忍キーパッド",	id: "CruelKeypads",	questions: ["各ステージのキーにあったシンボルは？", "各ステージのバーの色は？"] },
+	{ original: "Cruel Simulacrum",	name: "Cruel Simulacrum",	id: "CruelSimulacrum",	questions: ["What was the colour of the prompt?", "What were the colours of the blobs?", "What were the colour of each LED?", "What were the light movements?"] },
 	{ original: "The cRule",	name: "残忍ルール",	id: "the_cRule",	questions: ["最初に埋められていたセルは？"] },
 	{ original: "Cryptic Cycle",	name: "暗号サイクル",	id: "crypticCycle",	questions: ["ダイヤルが指していた方向は？", "ダイヤルに書かれていた英字は？"] },
 	{ original: "Cryptic Keypad",	name: "暗号化キーパッド",	id: "GSCrypticKeypad",	questions: ["各キーのラベルと方角は？"] },

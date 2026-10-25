@@ -254,6 +254,7 @@ let SouvenirModuleData = [
 	{ original: "Hold Ups",	name: "Hold Ups",	id: "KritHoldUps",	questions: ["Welchen Namen hatte welcher Schatten?"] },
 	{ original: "Cruel Keypads",	name: "Höllische Tastenfelder",	id: "CruelKeypads",	questions: ["Welche Symbole waren in welcher Stufe auf welcher Taste?", "In welcher Stufe hatte der Balken welche Farbe?"] },
 	{ original: "Cruel Binary",	name: "Höllisches Binärsystem",	id: "CruelBinary",	questions: ["Welches Wort war auf dem Display?"] },
+	{ original: "Cruel Simulacrum",	name: "Höllisches Scheinbild",	id: "CruelSimulacrum",	questions: ["Welche Farbe hatte die Vorgabe?", "Welche Farben hatten die Klumpen?", "Welche LED hatte welche Farbe?", "Wie hat sich das Licht bewegt?"] },
 	{ original: "Game of Life Cruel",	name: "Höllisches Spiel des Lebens",	id: "GameOfLifeCruel",	questions: ["Welche Farbkombinationen kamen vor?"] },
 	{ original: "Holographic Memory",	name: "Holographisches Gedächtnis",	id: "holographicMemory",	questions: ["Auf welcher Seite erschien welches Symbol?"] },
 	{ original: "HyperForget",	name: "HyperForget",	id: "HyperForget",	questions: ["Welche Rotationen kamen vor?"] },

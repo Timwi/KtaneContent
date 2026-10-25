@@ -206,6 +206,7 @@ let SouvenirModuleData = [
 	{ original: "Critters",	name: "Critters",	id: "CrittersModule",	questions: ["Какой был цвет?"] },
 	{ original: "Cruel Binary",	name: "Cruel Binary",	id: "CruelBinary",	questions: ["Какое слово было показано?"] },
 	{ original: "Cruel Keypads",	name: "Cruel Keypads",	id: "CruelKeypads",	questions: ["What symbols were on the keys in each stage?", "What was the color of the bar in each stage?"] },
+	{ original: "Cruel Simulacrum",	name: "Cruel Simulacrum",	id: "CruelSimulacrum",	questions: ["What was the colour of the prompt?", "What were the colours of the blobs?", "What were the colour of each LED?", "What were the light movements?"] },
 	{ original: "The cRule",	name: "The cRule",	id: "the_cRule",	questions: ["Which cells were prefilled at the start?"] },
 	{ original: "Cryptic Cycle",	name: "Cryptic Cycle",	id: "crypticCycle",	questions: ["Какое было сообщение и ответ?", "What was written on each dial?"] },
 	{ original: "Cryptic Keypad",	name: "Cryptic Keypad",	id: "GSCrypticKeypad",	questions: ["Какие символы и стороны света были указаны на клавишах?"] },
