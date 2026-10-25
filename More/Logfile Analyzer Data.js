@@ -6403,6 +6403,54 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "duckKonundrum",
+		loggingTag: "Duck Konundrum",
+		matches: [
+			{
+				regex: /Displaying Stage (\d+)\. It says:/,
+				handler: function(matches, module) {
+					module.currentDropdown = [`Stage ${matches[1]}`, []]
+					module.push(module.currentDropdown)
+					return true;
+				} 
+			},
+			{
+				regex: /===============================================/,
+				handler: function(matches, module) {
+					return true;
+				}
+			},
+			{
+				regex: /The question was.+/,
+				handler: function(matches, module) {
+					if(module.questionNum === undefined) {
+						module.questionNum = 0;
+					}
+					module.questionNum++;
+					console.log(module.questionNum)
+					module.currentDropdown = [`Question ${module.questionNum}`, []]
+					// module.currentDropdown = [`Question ${module.questionNum}`, [matches.input]]
+
+					module.push(module.currentDropdown)
+					return true;
+				}
+			},
+			{
+				regex: /Module solved! Poggers!/,
+				handler: function(matches, module) {
+					module.push(matches.input)
+					return true;
+				}
+			},
+			{ 
+				regex: /.+/,
+				handler: function(matches, module) {
+					module.currentDropdown[1].push(matches.input);
+				}
+			}
+		]
+	},
+	{
 		displayName: "Dungeon",
 		moduleID: "dungeon",
 		loggingTag: "Dungeon",
