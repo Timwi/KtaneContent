@@ -6509,46 +6509,79 @@ let parseData = [
 		moduleID: "duckKonundrum",
 		loggingTag: "Duck Konundrum",
 		matches: [
-			{
-				regex: /Displaying Stage (\d+)\. It says:/,
-				handler: function(matches, module) {
-					module.currentDropdown = [`Stage ${matches[1]}`, []]
-					module.push(module.currentDropdown)
-					return true;
-				}
-			},
-			{
-				regex: /===============================================/,
-				handler: function(matches, module) {
-					return true;
-				}
-			},
-			{
-				regex: /The question was.+/,
-				handler: function(matches, module) {
-					if(module.questionNum === undefined) {
-						module.questionNum = 0;
-					}
-					module.questionNum++;
-					console.log(module.questionNum)
-					module.currentDropdown = [`Question ${module.questionNum}`, []]
-					// module.currentDropdown = [`Question ${module.questionNum}`, [matches.input]]
-
-					module.push(module.currentDropdown)
-					return true;
-				}
-			},
-			{
+			{ 
 				regex: /Module solved! Poggers!/,
-				handler: function(matches, module) {
-					module.push(matches.input)
-					return true;
-				}
-			},
-			{
-				regex: /.+/,
-				handler: function(matches, module) {
-					module.currentDropdown[1].push(matches.input);
+				handler: function (matches, module) {
+					const pageDiv = $('<div>').addClass("duck-konundrum")
+
+					const chairPositions = {
+						"TL": `left: 125px; top: 68.5417px;`,
+						"TR": `left: 375px; top: 68.5417px;`,
+						"R": `left: 500px; top: 350px;`,
+						"BR": `left: 375px; top: 631.458px;`,
+						"BL": `left: 125px; top: 631.458px;`,
+						"L": `left: 0px; top: 350px;`
+					}
+
+					function getTR(leftLabel, backgroundColor, rightLabel) {
+						const capitalizedBG = backgroundColor.toUpperCase()[0] + backgroundColor.toLowerCase().slice(1)
+						
+						let tr = $('<tr>');
+
+						$('<th>')
+							.text(leftLabel)
+							.appendTo(tr);
+							
+						const actualRightLabel = rightLabel !== undefined ? rightLabel : capitalizedBG
+
+						$('<th>')
+							.text(actualRightLabel)
+							.addClass(backgroundColor)
+							.appendTo(tr);
+
+						return tr
+					}
+
+					function createChair(chairPosition, isArmChair, hasYou, hasDuck, hasWoopie, seatColor, bottomColor, number, numberColor) {
+						const chairDiv = $('<div>')
+						.addClass("chair-group vstack")
+						.attr(`style`, chairPosition)
+						.appendTo(pageDiv)
+
+						// image
+						$('<div>')
+						.addClass(`chair ${isArmChair ? "armchair" : "plainchair"}`)
+						.appendTo(chairDiv)
+
+						// Duck / You / Woopie Cusion Label
+						boolArr = [hasYou, hasDuck, hasWoopie]
+						let label = ['You','Duck','Woopie Cusion'].filter((_, ix) => boolArr[ix]).join("/")
+						$('<label>')
+							.text(label)
+							.appendTo(chairDiv)
+
+						// table
+						const table = $('<table>')
+						.appendTo(chairDiv)
+
+						getTR("Seat", seatColor).appendTo(table);
+						getTR("Bottom", bottomColor).appendTo(table);
+						getTR("Number", numberColor, number).appendTo(table);
+					}
+
+					createChair(chairPositions["TL"], true, false, false, false, "red", "yellow", 1, "blue")
+					createChair(chairPositions["TR"], false, false, false, false, "red", "yellow", 1, "blue")
+					createChair(chairPositions["R"], false, false, false, false, "red", "yellow", 1, "blue")
+					createChair(chairPositions["BR"], false, false, false, false, "red", "yellow", 1, "blue")
+					createChair(chairPositions["BL"], false, false, false, false, "red", "yellow", 1, "blue")
+					createChair(chairPositions["L"], false, false, false, false, "red", "yellow", 1, "blue")
+						
+						
+					module.pages = [{ label: "Mock up", obj: pageDiv }];
+
+
+
+					makeCycleableDisplays(module.pages, module)
 				}
 			}
 		]
