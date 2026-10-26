@@ -6566,7 +6566,14 @@ let parseData = [
 
 						getTR("Seat", seatColor).appendTo(table);
 						getTR("Bottom", bottomColor).appendTo(table);
-						getTR("Number", numberColor, number).appendTo(table);
+						getTR("Number", "none", number).appendTo(table);
+						getTR("Number Color", numberColor).appendTo(table);
+					}
+
+					function createCan() {
+						$('<img>')
+
+						// <img src="img/DuckKonundrum/WateringCan.svg" class="controls smallcan"></img>
 					}
 
 					createChair(chairPositions["TL"], true, false, false, false, "red", "yellow", 1, "blue")
