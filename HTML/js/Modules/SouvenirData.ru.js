@@ -377,6 +377,7 @@ let SouvenirModuleData = [
 	{ original: "Magenta Cipher",	name: "Magenta Cipher",	id: "magentaCipher",	questions: ["Что было на каждом экране?"] },
 	{ original: "Mahjong",	name: "Mahjong",	id: "MahjongModule",	questions: ["Какие были две первые сопоставленные пары?"] },
 	{ original: "Main Page",	name: "Main Page",	id: "mainpage",	questions: ["Какие цвета и фразы присутствовали И отсутствовали на модуле?", "Откуда были взяты Homestar, фон и эффекты кнопок?"] },
+	{ original: "Malfunctions",	name: "Malfunctions",	id: "malfunctions",	questions: ["What were the numbers and letter shown at the top?"] },
 	{ original: "Maritime Flags",	name: "Maritime Flags",	id: "MaritimeFlagsModule",	questions: ["Какой пеленг был передан?", "Какой позывной был передан?"] },
 	{ original: "Maritime Semaphore",	name: "Maritime Semaphore",	id: "MaritimeSemaphoreModule",	questions: ["Где была фиктивная конфигурация?", "Какие буквы были переданы?"] },
 	{ original: "The Maroon Button",	name: "The Maroon Button",	id: "MaroonButtonModule",	questions: ["What was A?"] },

@@ -326,6 +326,7 @@ let SouvenirModuleData = [
 	{ original: "Magenta Cipher",	name: "マゼンタ暗号",	id: "magentaCipher",	questions: ["各ディスプレーの文字は？"] },
 	{ original: "Mahjong",	name: "麻雀パズル",	id: "MahjongModule",	questions: ["左下のタイルは？"] },
 	{ original: "Main Page",	name: "Main Page",	id: "mainpage",	questions: ["表示された/されなかった吹き出しの色とメッセージは？", "Homestar、背景、ボタンの効果はどれ？"] },
+	{ original: "Malfunctions",	name: "Malfunctions",	id: "malfunctions",	questions: ["What were the numbers and letter shown at the top?"] },
 	{ original: "Maritime Flags",	name: "海上旗",	id: "MaritimeFlagsModule",	questions: ["どの方角を示していた？", "どのコールサインを送信していた？"] },
 	{ original: "Maritime Semaphore",	name: "海上セマフォア信号",	id: "MaritimeSemaphoreModule",	questions: ["ダミーの位置は？", "受信した英字は？"] },
 	{ original: "The Maroon Button",	name: "栗色ボタン",	id: "MaroonButtonModule",	questions: ["Aは？"] },

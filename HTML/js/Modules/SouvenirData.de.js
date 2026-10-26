@@ -170,6 +170,7 @@ let SouvenirModuleData = [
 	{ original: "Faerie Fires",	name: "Feenfeuer",	id: "FaerieFiresModule",	questions: ["Welche Farbe und Tonhöhe hatten die Feen?"] },
 	{ original: "The Missing Letter",	name: "DerFehlende Buchstabe",	id: "theMissingLetter",	questions: ["Welcher Buchstabe hat gefehlt?"] },
 	{ original: "Error Codes",	name: "Fehlercodes",	id: "errorCodes",	questions: ["Welcher Fehlercode war aktiv?"] },
+	{ original: "Malfunctions",	name: "Fehlfunktionen",	id: "malfunctions",	questions: ["Welche Zahlen und welcher Buchstabe standen oben?"] },
 	{ original: "Mssngv Wls",	name: "Fhlndv Kl",	id: "MssngvWls",	questions: ["Welcher Vokal hat gefehlt?"] },
 	{ original: "Character Slots",	name: "Figurenkabinett",	id: "characterSlots",	questions: ["Wer war in welcher Stufe in welchem Fensterchen zu sehen?"] },
 	{ original: "FizzBuzz",	name: "FizzBuzz",	id: "fizzBuzzModule",	questions: ["Welche Zahlen waren auf den Displays?"] },
