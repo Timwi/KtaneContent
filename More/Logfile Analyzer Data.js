@@ -6514,13 +6514,15 @@ let parseData = [
 				handler: function (matches, module) {
 					const pageDiv = $('<div>').addClass("duck-konundrum")
 
+					//todo chang the string interpoltion into a single number
+					//todo convert this to be in the style file
 					const chairPositions = {
-						"TL": `left: 125px; top: 68.5417px;`,
-						"TR": `left: 375px; top: 68.5417px;`,
-						"R": `left: 500px; top: 350px;`,
-						"BR": `left: 375px; top: 631.458px;`,
-						"BL": `left: 125px; top: 631.458px;`,
-						"L": `left: 0px; top: 350px;`
+						"TL": `left: ${125 - 30}px; top: -5.4583px;`,
+						"TR": `left: ${375 - 30}px; top: -5.4583px;`,
+						"R": `left: ${500 - 30}px; top: 208px;`,
+						"BR": `left: ${375 - 30}px; top: 411.458px;`,
+						"BL": `left: ${125 - 30}px; top: 411.458px;`,
+						"L": `left: ${0 - 30}px; top: 208px;`
 					}
 
 					function getTR(leftLabel, backgroundColor, rightLabel) {
@@ -6562,7 +6564,7 @@ let parseData = [
 
 						// table
 						const table = $('<table>')
-						.appendTo(chairDiv)
+							.appendTo(chairDiv)
 
 						getTR("Seat", seatColor).appendTo(table);
 						getTR("Bottom", bottomColor).appendTo(table);
@@ -6570,10 +6572,21 @@ let parseData = [
 						getTR("Number Color", numberColor).appendTo(table);
 					}
 
-					function createCan() {
-						$('<img>')
+					function createCan(size, canColor, contentColor) {
+						//watering can image
+						$('<img>').attr('src', "../HTML/img/DuckKonundrum/WateringCan.svg")
+							.addClass(`${size}can controls`)
+							.appendTo(pageDiv)
 
-						// <img src="img/DuckKonundrum/WateringCan.svg" class="controls smallcan"></img>
+						// table
+						const table = $('<table>')
+							.addClass(`controls color-table can-table ${size}`)
+							.appendTo(pageDiv)
+
+						getTR("Can", canColor).appendTo(table);
+						getTR("Contents", contentColor).appendTo(table);
+
+
 					}
 
 					createChair(chairPositions["TL"], true, false, false, false, "red", "yellow", 1, "blue")
@@ -6582,6 +6595,10 @@ let parseData = [
 					createChair(chairPositions["BR"], false, false, false, false, "red", "yellow", 1, "blue")
 					createChair(chairPositions["BL"], false, false, false, false, "red", "yellow", 1, "blue")
 					createChair(chairPositions["L"], false, false, false, false, "red", "yellow", 1, "blue")
+
+					createCan("small", "orange", "green");
+					createCan("med", "None", "brown");
+					createCan("large", "None", "None");
 						
 						
 					module.pages = [{ label: "Mock up", obj: pageDiv }];
