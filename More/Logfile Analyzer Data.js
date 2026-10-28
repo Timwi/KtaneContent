@@ -6512,102 +6512,147 @@ let parseData = [
 			{ 
 				regex: /Module solved! Poggers!/,
 				handler: function (matches, module) {
-					const pageDiv = $('<div>').addClass("duck-konundrum")
-
-					//todo chang the string interpoltion into a single number
-					//todo convert this to be in the style file
-					const chairPositions = {
-						"TL": `left: ${125 - 30}px; top: -5.4583px;`,
-						"TR": `left: ${375 - 30}px; top: -5.4583px;`,
-						"R": `left: ${500 - 30}px; top: 208px;`,
-						"BR": `left: ${375 - 30}px; top: 411.458px;`,
-						"BL": `left: ${125 - 30}px; top: 411.458px;`,
-						"L": `left: ${0 - 30}px; top: 208px;`
+					function getDefaultChair (isArmChair) {
+						return {
+							isArmChair,
+							inChair: [],
+							seatColor: "None",
+							bottomColor: "None",
+							number: null,
+							numberColor: "None"
+						}
 					}
 
-					function getTR(leftLabel, backgroundColor, rightLabel) {
-						const capitalizedBG = backgroundColor.toUpperCase()[0] + backgroundColor.toLowerCase().slice(1)
-						
-						let tr = $('<tr>');
-
-						$('<th>')
-							.text(leftLabel)
-							.appendTo(tr);
-							
-						const actualRightLabel = rightLabel !== undefined ? rightLabel : capitalizedBG
-
-						$('<th>')
-							.text(actualRightLabel)
-							.addClass(backgroundColor)
-							.appendTo(tr);
-
-						return tr
+					function getDefaultCan (size) {
+						return {
+							size,
+							can: "None",
+							content: "None"
+						}
+					}
+					module.modInfo = {
+						armChair: getDefaultChair(true),
+						TRChair: getDefaultChair(false),
+						RChair: getDefaultChair(false),
+						BRChair: getDefaultChair(false),
+						BLChair: getDefaultChair(false),
+						LChair: getDefaultChair(false),
+						smallCan: getDefaultCan("small"),
+						medCan: getDefaultCan("med"),
+						largeCan: getDefaultCan("large"),
+						LFootColor: "None",
+						RFootColor: "None",
+						LHandColor: "None",
+						RHandColor: "None",
+						buttColor: "None",
+						duckName: null,
+						duckFeetColor: "None",
+						LCount: 0,
+						LColor: "None",
+						currentAction: "Sitting"
 					}
 
-					function createChair(chairPosition, isArmChair, hasYou, hasDuck, hasWoopie, seatColor, bottomColor, number, numberColor) {
-						const chairDiv = $('<div>')
-						.addClass("chair-group vstack")
-						.attr(`style`, chairPosition)
-						.appendTo(pageDiv)
+					function getStagePage(label, modInfo) {
+						const pageDiv = $('<div>').addClass("duck-konundrum")
+						//todo convert this to be in the style file
+						const chairPositions = {
+							"TL": `left: 95px; top: -5.4583px;`,
+							"TR": `left: 345px; top: -5.4583px;`,
+							"R": `left: 470px; top: 208px;`,
+							"BR": `left: 345px; top: 411.458px;`,
+							"BL": `left: 95px; top: 411.458px;`,
+							"L": `left: -30px; top: 208px;`
+						}
+						function getTR(leftLabel, backgroundColor, rightLabel) {
+							const capitalizedBG = backgroundColor.toUpperCase()[0] + backgroundColor.toLowerCase().slice(1)
+							let tr = $('<tr>');
+							$('<th>')
+								.text(leftLabel)
+								.appendTo(tr);
+								
+							const actualRightLabel = rightLabel != undefined ? rightLabel : capitalizedBG
+							$('<th>')
+								.text(actualRightLabel)
+								.addClass(backgroundColor)
+								.appendTo(tr);
+							return tr
+						}
+						function createChair(chairPosition, chair) {
+							const chairDiv = $('<div>')
+								.addClass("chair-group vstack")
+								.attr(`style`, chairPosition)
+								.appendTo(pageDiv)
 
-						// image
-						$('<div>')
-						.addClass(`chair ${isArmChair ? "armchair" : "plainchair"}`)
-						.appendTo(chairDiv)
+							// image
+							$('<div>')
+								.addClass(`chair ${chair.isArmChair ? "armchair" : "plainchair"}`)
+								.appendTo(chairDiv)
 
-						// Duck / You / Woopie Cusion Label
-						boolArr = [hasYou, hasDuck, hasWoopie]
-						let label = ['You','Duck','Woopie Cusion'].filter((_, ix) => boolArr[ix]).join("/")
-						$('<label>')
-							.text(label)
-							.appendTo(chairDiv)
+							//Label
+							const strArr = ['You','Duck','Woopie Cusion'];
+							const label = strArr.filter(x => chair.inChair.includes(x)).join("/")
+							$('<label>')
+								.text(label)
+								.appendTo(chairDiv)
+								
+							// table
+							const table = $('<table>').appendTo(chairDiv)
+							getTR("Seat", chair.seatColor).appendTo(table);
+							getTR("Bottom", chair.bottomColor).appendTo(table);
+							getTR("Number", "none", chair.number).appendTo(table);
+							getTR("Number Color", chair.numberColor).appendTo(table);
+						}
+						function createCan(can) {
+							//watering can image
+							$('<img>').attr('src', "../HTML/img/DuckKonundrum/WateringCan.svg")
+								.addClass(`${can.size}can controls`)
+								.appendTo(pageDiv)
 
-						// table
-						const table = $('<table>')
-							.appendTo(chairDiv)
+							// table
+							const table = $('<table>')
+								.addClass(`controls color-table can-table ${can.size}`)
+								.appendTo(pageDiv)
 
-						getTR("Seat", seatColor).appendTo(table);
-						getTR("Bottom", bottomColor).appendTo(table);
-						getTR("Number", "none", number).appendTo(table);
-						getTR("Number Color", numberColor).appendTo(table);
+							getTR("Can", can.can).appendTo(table);
+							getTR("Contents", can.content).appendTo(table);
+						}
+
+						createChair(chairPositions["TL"], modInfo.armChair)
+						createChair(chairPositions["TR"], modInfo.TRChair)
+						createChair(chairPositions["R"],  modInfo.RChair)
+						createChair(chairPositions["BR"], modInfo.BRChair)
+						createChair(chairPositions["BL"], modInfo.BLChair)
+						createChair(chairPositions["L"],  modInfo.LChair)
+
+						createCan(modInfo.smallCan)
+						createCan(modInfo.medCan)
+						createCan(modInfo.largeCan)
+
+						const messages = [[
+							"Other stage information", [
+								`You are ${modInfo.currentAction}`,
+								["Forehead Ls", [`Count: ${modInfo.LCount}`, `Color: ${modInfo.LColor}`]],
+								["Body part colors",  [
+									`Right Foot: ${modInfo.RFootColor}`, 
+									`Left Foot: ${modInfo.LFootColor}`, 
+									`Right Hand: ${modInfo.RHandColor}`, 
+									`Left Hand: ${modInfo.LHandColor}`,
+									`Butt: ${modInfo.RHandColor}` ]],
+									`Duck's Name: ${modInfo.duckName ?? "None"}`,
+									`Duck's feet color: ${modInfo.duckFeetColor}`
+							]
+						]];
+
+						return { label, obj: pageDiv, messages };
 					}
 
-					function createCan(size, canColor, contentColor) {
-						//watering can image
-						$('<img>').attr('src', "../HTML/img/DuckKonundrum/WateringCan.svg")
-							.addClass(`${size}can controls`)
-							.appendTo(pageDiv)
-
-						// table
-						const table = $('<table>')
-							.addClass(`controls color-table can-table ${size}`)
-							.appendTo(pageDiv)
-
-						getTR("Can", canColor).appendTo(table);
-						getTR("Contents", contentColor).appendTo(table);
-
-
-					}
-
-					createChair(chairPositions["TL"], true, false, false, false, "red", "yellow", 1, "blue")
-					createChair(chairPositions["TR"], false, false, false, false, "red", "yellow", 1, "blue")
-					createChair(chairPositions["R"], false, false, false, false, "red", "yellow", 1, "blue")
-					createChair(chairPositions["BR"], false, false, false, false, "red", "yellow", 1, "blue")
-					createChair(chairPositions["BL"], false, false, false, false, "red", "yellow", 1, "blue")
-					createChair(chairPositions["L"], false, false, false, false, "red", "yellow", 1, "blue")
-
-					createCan("small", "orange", "green");
-					createCan("med", "None", "brown");
-					createCan("large", "None", "None");
-						
-						
-					module.pages = [{ label: "Mock up", obj: pageDiv }];
-
-
-
+					
+					
+					module.pages = [getStagePage("Mock up", module.modInfo)];
 					makeCycleableDisplays(module.pages, module)
 				}
-			}
+			},
+			{ regex: /.+/ }
 		]
 	},
 	{
