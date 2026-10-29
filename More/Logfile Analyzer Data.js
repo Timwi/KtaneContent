@@ -7137,6 +7137,163 @@ let parseData = [
 		loggingTag: "Date Finder"
 	},
 	{
+		displayName: "Fist Plate",
+		moduleID: "FistPlate",
+		loggingTag: "Fist Plate",
+		matches: [
+			{
+				regex: /Initializing Module/,
+				handler: function (matches, module) {
+					module.drawGrid = function(){
+						// Do not LFA for older logs as it'll break them
+						if (!module.immovableObject) { module.stop = "stop"; return true; }
+						
+						// Markers are global so they need to have unique IDs for each instance of the module
+						linen--;
+						let moduleId = readLine().match(/\d+/)[0]
+						
+						let svg = '<svg viewbox="0.2 0.2 9.2 9.2" class="fist-plate">';
+						svg += `<defs> <marker id="fistPlateArrow${moduleId}" markerHeight="1" markerWidth="1" orient="auto" overflow="visible" viewBox="0 0 1 1"> <path d="m2.9 0-4.3 2.5v-5Z"></path> </marker> </defs>`;
+						const redirectionData = {
+							"Up": {"colour": "#FF444480", "svgDir": "v-", "svgHoriOffset": 0.25, "svgVertOffset": 0.9 },
+							"Down": {"colour": "#1C6CF080", "svgDir": "v", "svgHoriOffset": 0.25, "svgVertOffset": 0.6 },
+							"Left": {"colour": "#44FF4480", "svgDir": "h-", "svgHoriOffset": 0.4, "svgVertOffset": 0.8 },
+							"Right": {"colour": "#FFFF4480", "svgDir": "h", "svgHoriOffset": 0.1, "svgVertOffset": 0.8 },
+						};
+						const movementDirections = {
+							"Up": "v-",
+							"Down": "v",
+							"Left": "h-",
+							"Right": "h",
+						};
+						for (var r = 0; r < 9; r++){
+							for (var c = 0; c < 9; c++){
+								if (r == 0){
+									if (c == 0){ continue;}
+									// Letter
+									svg += `<text font-size="0.4px" dominant-baseline="central" x="${c + 0.5}" y="${r + 0.5}" text-anchor="middle">${".ABCDEFGH"[c]}</text>`;
+								}
+								else if (c == 0){
+									// Number
+									svg += `<text font-size="0.4px" dominant-baseline="central" x="${c + 0.5}" y="${r + 0.5}" text-anchor="middle">${r}</text>`;
+								}
+								else{
+									// Prepare data + fill
+									let coordinate = `${".ABCDEFGH"[c]}${r}`;
+									let isVoid = module.voidedTiles.includes(coordinate);
+									let direction = (module.redirectStations[coordinate]) ? redirectionData[module.redirectStations[coordinate]] : undefined;
+									let fill = isVoid ? "#808080A0" : (direction ? direction["colour"] : "none");
+									svg += `<rect x="${c}" y="${r}" width="1" height="1" fill="${fill}"/>`;
+									// Add the small arrow in bottom-left if needed
+									if (direction){
+										svg += `<path d="M${c + direction["svgHoriOffset"]} ${r + direction["svgVertOffset"]}${direction["svgDir"]}0.25" marker-end="url(#fistPlateArrow${moduleId})"></path>`;
+									}
+								}
+							}
+						}
+						// Draw movement arrows
+						let previousCoordinate;
+						for (var movement of module.movements){
+							let coordinate = movement.slice(0,2);
+							let numberOfVoids = parseInt(movement.slice(3,4));
+							let direction = movement.slice(5);
+							let xPos = ".ABCDEFGH".indexOf(coordinate.slice(0,1));
+							let yPos = parseInt(coordinate.slice(1,2));
+							// Voids
+							switch (direction){
+								case "Up": xPos += 0.5; yPos += numberOfVoids + 1.4;break;
+								case "Down": xPos += 0.5; yPos += - numberOfVoids - 0.4; break;
+								case "Left": xPos += numberOfVoids + 1.4; yPos += 0.5; break;
+								case "Right": xPos += - numberOfVoids - 0.4; yPos += 0.5; break;
+							}
+							svg += `<path class="movement" d="M${xPos} ${yPos}${movementDirections[direction]}${numberOfVoids + 0.6}" marker-end="url(#fistPlateArrow${moduleId})"></path>`;
+							previousCoordinate = coordinate; // Save the coordinate where the Object was before
+						}
+						
+						// Draw board exit arrow
+						if (module.exitBoard){
+							let numberOfVoids = parseInt(module.exitBoard.slice(0,1));
+							let direction = module.exitBoard.slice(2);
+							let xPos = ".ABCDEFGH".indexOf(previousCoordinate.slice(0,1));
+							let yPos = parseInt(previousCoordinate.slice(1,2));
+							switch (direction){
+								case "Up": xPos += 0.5; yPos += 0.4;break;
+								case "Down": xPos += 0.5; yPos += 0.6; break;
+								case "Left": xPos += 0.4; yPos += 0.5; break;
+								case "Right": xPos += 0.6; yPos += 0.5; break;
+							}
+							svg += `<path class="movement" d="M${xPos} ${yPos}${movementDirections[direction]}${numberOfVoids + 0.6}" marker-end="url(#fistPlateArrow${moduleId})"></path>`;
+						}
+						
+						// ImmovbleObject
+						svg += `<circle cx="${".ABCDEFGH".indexOf(module.immovableObject.slice(0,1)) + 0.5}" cy="${parseInt(module.immovableObject.slice(1,2)) + 0.5}" r="0.3"></circle>`;
+						
+						svg += '</svg>'
+						module.push({label: "Grid with movements:", obj: svg});
+					}
+					
+					module.movements = [];
+					module.push(matches.input);
+					return true;
+				}
+			},
+			{
+				regex: /Starting Coordinate of the Unstoppable Force is ([A-H][1-8]), going (Up|Down|Left|Right). Coordinate of the Immovable Object is ([A-H][1-8])/,
+				handler: function (matches, module) {
+					module.push(matches.input);
+					module.immovableObject = matches[3];
+					return true;
+				}
+			},
+			{
+				regex: /Voided Tiles will get generated in tiles ([A-H][1-8]).([A-H][1-8]).([A-H][1-8]).([A-H][1-8]).([A-H][1-8]).([A-H][1-8])/,
+				handler: function (matches, module) {
+					module.push(matches.input);
+					module.voidedTiles = matches.splice(1);
+					return true;
+				}
+			},
+			{
+				regex: /The non-voided Redirect Stations now have those directions: (.+)/,
+				handler: function (matches, module) {
+					if (!module.immovableObject) {module.push(matches.input); return true;}
+					module.redirectStations = {};
+					const redirectStationsArray = matches[1].split(" ");
+					for (var i = 0; i < redirectStationsArray.length; i ++){
+						module.redirectStations[`${redirectStationsArray[i].slice(0,2)}`] = `${redirectStationsArray[i].slice(3)}`;
+					}
+					return true;
+				}
+			},
+			{
+				regex: /The Unstoppable Force moved (Up|Down|Left|Right) into tile ([A-H][1-8]), passing (\d+) Voided cells/,
+				handler: function (matches, module) {
+					// E3_2_Left
+					module.movements.push(`${matches[2]}_${matches[3]}_${matches[1]}`);
+					return true;
+				}
+			},
+			{
+				regex: /The Unstoppable Force has reached the Immovable Object!|The Unstoppable Force entered an Infinite Loop!/,
+				handler: function (matches, module) {
+					module.drawGrid();
+					module.push(matches.input);
+					return true;
+				}
+			},
+			{
+				regex: /The Unstoppable Force left the board while moving (Up|Down|Left|Right), passing (\d) Voided cells/,
+				handler: function (matches, module) {
+					module.exitBoard = `${matches[2]}_${matches[1]}`; // Store Voids + direction that left the board: 2_Down
+					module.drawGrid();
+					module.push(matches.input);
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: 'FittingInModule',
 		loggingTag: 'Fitting In',
 		matches: [
