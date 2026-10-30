@@ -25012,6 +25012,72 @@ let parseData = [
 		]
 	},
 	{
+		displayName: "Untangle",
+		moduleID: "untangle",
+		loggingTag: "Untangle",
+		matches: [
+			{
+				regex: /Generating an untangle with/,
+				handler: function (matches, module) {
+					module.lines = [];
+					return true;
+				}
+			},
+			{
+				regex: /Line: ([A-E][1-5]-[A-E][1-5])/,
+				handler: function (matches, module) {
+					module.lines.push(matches[1]);
+					
+					// Check if this is the last line to create the SVG
+					if (/^\[Untangle /.test(readLine()) == false){
+						// Linear Gradients (defined later) must have a unique ID to exist, so we'll use moduleId;
+						linen -= 2;
+						let moduleId = readLine().match(/\d+/)[0];
+						
+						let colours = {};						
+						function getColourFrag(){
+							return ["00", "11", "22", "33", "44", "55", "66", "77", "88", "99", "AA", "BB", "CC", "DD", "EE", "FF"][Math.floor(Math.random() * 16)];
+						}
+						// Prepare the peg colours.
+						for (var i = 0; i < 5; i ++){
+							for (var j = 0; j < 5; j++){
+								let coord = `${"ABCDE"[i]}${j+1}`;
+								colours[coord] = `#${getColourFrag()}${getColourFrag()}${getColourFrag()}`;
+							}
+						}
+						let svg = '<svg viewbox="-0.2 -0.2 4.4 4.4" class="untangle">';
+						// Create lines
+						for (let l of module.lines){
+							let coord1 = l.slice(0,2);
+							let coord2 = l.slice(3);
+							let x1 = "ABCDE".indexOf(coord1[0]);
+							let x2 = "ABCDE".indexOf(coord2[0]);
+							let y1 = parseInt(coord1[1]) - 1;
+							let y2 = parseInt(coord2[1]) - 1;
+							// Gradients use the bounding box of the line and use coordinates 0-100% from top-left to bottom-right, regardless of line orientation;
+							// so the x1 x2 y1 y2 values might need to be reversed or set to 0 depending on orientation and if the line's purely vertical/horizontal
+							svg += `<linearGradient id="untangle${moduleId}_${l}" x1="${x1 <= x2 ? 0 : 100}%" x2="${x1 < x2 ? 100 : 0}%" y1="${y1 <= y2 ? 0 : 100}%" y2="${y1 < y2 ? 100 : 0}%"> <stop offset="5%" stop-color="${colours[coord1]}"/> <stop offset="95%" stop-color="${colours[coord2]}"/> </linearGradient>`;
+							// Linear Gradients use the area to shade, so the line can't be perfectly horizontal nor vertical, so offset by 0.001
+							svg += `<path render-order="-1" d="M${x1+0.001} ${y1+0.001} ${x2} ${y2}" stroke="url(#untangle${moduleId}_${l})" stroke-width="0.06"></path>`;
+							
+						}
+						// Draw the pegs OVER the lines (SVG draw order is purely based on order in the file)
+						for (var i = 0; i < 5; i ++){
+							for (var j = 0; j < 5; j++){
+								let coord = `${"ABCDE"[i]}${j+1}`;
+								svg += `<circle cx="${i}" cy="${j}" r="0.1" fill="${colours[coord]}" stroke-width="0.01" stroke="#0004"></circle>`;
+							}
+						}
+						module.push({label: `Generating an Untangle with ${module.lines.length} lines. Solution is as follows (colours not accurate to the module):`, obj: svg})
+					}
+					else {linen--;}
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "USA",
 		loggingTag: "USA Maze",
 		displayName: "USA Maze",
