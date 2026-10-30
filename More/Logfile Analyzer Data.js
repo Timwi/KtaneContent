@@ -2297,7 +2297,7 @@ let parseData = [
 
 					module.push(module.currentDropdown);
 					module.currentDropdown[1].push("The module shows the following:");
-					makeCycleableDisplays(pages, module.currentDropdown[1], true);
+					makeCycleableDisplays({pages, module: module.currentDropdown[1], loopDisplays: true});
 					module.currentDropdown[1].push(stageDataLines[5], stageDataLines[7], stageDataLines[8], stageDataLines[10], stageDataLines[12], stageDataLines[13]);
 
 					let buttons = stageDataLines.slice(0, 4).join('').trim().split(' ');
@@ -6509,147 +6509,216 @@ let parseData = [
 		moduleID: "duckKonundrum",
 		loggingTag: "Duck Konundrum",
 		matches: [
-			{ 
-				regex: /Module solved! Poggers!/,
+
+			{
+				regex: /Displaying Stage (\d+)\. It says:/,
 				handler: function (matches, module) {
-					function getDefaultChair (isArmChair) {
-						return {
-							isArmChair,
-							inChair: [],
-							seatColor: "None",
-							bottomColor: "None",
-							number: null,
-							numberColor: "None"
+					if(!module.modInfo) {
+						function getDefaultChair (isArmChair) {
+							return {
+								isArmChair,
+								inChair: [],
+								seatColor: "None",
+								bottomColor: "None",
+								number: null,
+								numberColor: "None"
+							}
 						}
-					}
 
-					function getDefaultCan (size) {
-						return {
-							size,
-							can: "None",
-							content: "None"
+						function getDefaultCan (size) {
+							return {
+								size,
+								can: "None",
+								content: "None"
+							}
 						}
-					}
-					module.modInfo = {
-						armChair: getDefaultChair(true),
-						TRChair: getDefaultChair(false),
-						RChair: getDefaultChair(false),
-						BRChair: getDefaultChair(false),
-						BLChair: getDefaultChair(false),
-						LChair: getDefaultChair(false),
-						smallCan: getDefaultCan("small"),
-						medCan: getDefaultCan("med"),
-						largeCan: getDefaultCan("large"),
-						LFootColor: "None",
-						RFootColor: "None",
-						LHandColor: "None",
-						RHandColor: "None",
-						buttColor: "None",
-						duckName: null,
-						duckFeetColor: "None",
-						LCount: 0,
-						LColor: "None",
-						currentAction: "Sitting"
-					}
 
-					function getStagePage(label, modInfo) {
-						const pageDiv = $('<div>').addClass("duck-konundrum")
-						//todo convert this to be in the style file
-						const chairPositions = {
-							"TL": `left: 95px; top: -5.4583px;`,
-							"TR": `left: 345px; top: -5.4583px;`,
-							"R": `left: 470px; top: 208px;`,
-							"BR": `left: 345px; top: 411.458px;`,
-							"BL": `left: 95px; top: 411.458px;`,
-							"L": `left: -30px; top: 208px;`
+						module.getChairIndex = (line) => {
+							const match = line.match(/chair (\d+) chairs clockwise from the armchair/);
+							return match ? Number(match[1]) : -1;
+						} 
+
+						module.pages = []
+
+						module.modInfo = {
+							armChair: getDefaultChair(true),
+							TRChair: getDefaultChair(false),
+							RChair: getDefaultChair(false),
+							BRChair: getDefaultChair(false),
+							BLChair: getDefaultChair(false),
+							LChair: getDefaultChair(false),
+							smallCan: getDefaultCan("small"),
+							medCan: getDefaultCan("med"),
+							largeCan: getDefaultCan("large"),
+							LFootColor: "None",
+							RFootColor: "None",
+							LHandColor: "None",
+							RHandColor: "None",
+							buttColor: "None",
+							duckName: null,
+							duckFeetColor: "None",
+							LCount: 0,
+							LColor: "None",
+							currentAction: "Sitting"
 						}
-						function getTR(leftLabel, backgroundColor, rightLabel) {
-							const capitalizedBG = backgroundColor.toUpperCase()[0] + backgroundColor.toLowerCase().slice(1)
-							let tr = $('<tr>');
-							$('<th>')
-								.text(leftLabel)
-								.appendTo(tr);
+
+						module.chairPositions = ["armChair", "TRChair", "RChair", "BRChair", "BLChair", "LChair"];
+
+						module.modifyModInfo = (line) => {
+							function changeObjectChair(object, index) {
+								//remove the object from another chairs
+								module.chairPositions.forEach(position => {
+									const chair = module.modInfo[position];
+									chair.inChair = chair.inChair.filter(obj => obj !== object);
+								});
 								
-							const actualRightLabel = rightLabel != undefined ? rightLabel : capitalizedBG
-							$('<th>')
-								.text(actualRightLabel)
-								.addClass(backgroundColor)
-								.appendTo(tr);
-							return tr
-						}
-						function createChair(chairPosition, chair) {
-							const chairDiv = $('<div>')
-								.addClass("chair-group vstack")
-								.attr(`style`, chairPosition)
-								.appendTo(pageDiv)
+								//Add the object to the selected chair
+								index = index % module.chairPositions.length;
+								const selectedChair = module.modInfo[module.chairPositions[index]];
+								selectedChair.inChair.push(object);
 
-							// image
-							$('<div>')
-								.addClass(`chair ${chair.isArmChair ? "armchair" : "plainchair"}`)
-								.appendTo(chairDiv)
+								console.log(`Added ${object} to ${selectedChair}`)
+								console.log(selectedChair.inChair)
+							}
 
-							//Label
-							const strArr = ['You','Duck','Woopie Cusion'];
-							const label = strArr.filter(x => chair.inChair.includes(x)).join("/")
-							$('<label>')
-								.text(label)
-								.appendTo(chairDiv)
-								
-							// table
-							const table = $('<table>').appendTo(chairDiv)
-							getTR("Seat", chair.seatColor).appendTo(table);
-							getTR("Bottom", chair.bottomColor).appendTo(table);
-							getTR("Number", "none", chair.number).appendTo(table);
-							getTR("Number Color", chair.numberColor).appendTo(table);
-						}
-						function createCan(can) {
-							//watering can image
-							$('<img>').attr('src', "../HTML/img/DuckKonundrum/WateringCan.svg")
-								.addClass(`${can.size}can controls`)
-								.appendTo(pageDiv)
+							let match = line.match(/You should sit on the (armchair|chair \d chairs clockwise from the armchair)\. The duck should sit on the (same chair as you|chair \d clockwise from the armchair)\./)
 
-							// table
-							const table = $('<table>')
-								.addClass(`controls color-table can-table ${can.size}`)
-								.appendTo(pageDiv)
+							if(match) {
+								const youChairIndex = match[1] == "armchair" ? 0 : module.getChairIndex(match[1])
+								const duckChairIndex =  match[2] == "same chair as you" ? youChairIndex : getChairIndex(match[2])
 
-							getTR("Can", can.can).appendTo(table);
-							getTR("Contents", can.content).appendTo(table);
+								changeObjectChair("You", youChairIndex);
+								changeObjectChair("Duck", duckChairIndex);
+							}
 						}
 
-						createChair(chairPositions["TL"], modInfo.armChair)
-						createChair(chairPositions["TR"], modInfo.TRChair)
-						createChair(chairPositions["R"],  modInfo.RChair)
-						createChair(chairPositions["BR"], modInfo.BRChair)
-						createChair(chairPositions["BL"], modInfo.BLChair)
-						createChair(chairPositions["L"],  modInfo.LChair)
+						module.getStagePage = (label, modInfo) => {
+							const pageDiv = $('<div>').addClass("duck-konundrum")
+							//todo convert this to be in the style file
+							const chairPositions = {
+								"TL": `left: 95px; top: -5.4583px;`,
+								"TR": `left: 345px; top: -5.4583px;`,
+								"R": `left: 470px; top: 208px;`,
+								"BR": `left: 345px; top: 411.458px;`,
+								"BL": `left: 95px; top: 411.458px;`,
+								"L": `left: -30px; top: 208px;`
+							}
+							function getTR(leftLabel, backgroundColor, rightLabel) {
+								const capitalizedBG = backgroundColor.toUpperCase()[0] + backgroundColor.toLowerCase().slice(1)
+								let tr = $('<tr>');
+								$('<th>')
+									.text(leftLabel)
+									.appendTo(tr);
+									
+								const actualRightLabel = rightLabel != undefined ? rightLabel : capitalizedBG
+								$('<th>')
+									.text(actualRightLabel)
+									.addClass(backgroundColor)
+									.appendTo(tr);
+								return tr
+							}
+							function createChair(chairPosition, chair) {
+								const chairDiv = $('<div>')
+									.addClass("chair-group vstack")
+									.attr(`style`, chairPosition)
+									.appendTo(pageDiv)
 
-						createCan(modInfo.smallCan)
-						createCan(modInfo.medCan)
-						createCan(modInfo.largeCan)
+								// image
+								$('<div>')
+									.addClass(`chair ${chair.isArmChair ? "armchair" : "plainchair"}`)
+									.appendTo(chairDiv)
 
-						const messages = [[
-							"Other stage information", [
-								`You are ${modInfo.currentAction}`,
-								["Forehead Ls", [`Count: ${modInfo.LCount}`, `Color: ${modInfo.LColor}`]],
-								["Body part colors",  [
-									`Right Foot: ${modInfo.RFootColor}`, 
-									`Left Foot: ${modInfo.LFootColor}`, 
-									`Right Hand: ${modInfo.RHandColor}`, 
-									`Left Hand: ${modInfo.LHandColor}`,
-									`Butt: ${modInfo.RHandColor}` ]],
+								//Label
+								const strArr = ['You','Duck','Woopie Cusion'];
+								const label = strArr.filter(x => chair.inChair.includes(x)).join("/")
+								$('<label>')
+									.text(label)
+									.appendTo(chairDiv)
+									
+								// table
+								const table = $('<table>').appendTo(chairDiv)
+								getTR("Seat", chair.seatColor).appendTo(table);
+								getTR("Bottom", chair.bottomColor).appendTo(table);
+								getTR("Number", "none", chair.number).appendTo(table);
+								getTR("Number Color", chair.numberColor).appendTo(table);
+							}
+							function createCan(can) {
+								//watering can image
+								$('<img>').attr('src', "../HTML/img/DuckKonundrum/WateringCan.svg")
+									.addClass(`${can.size}can controls`)
+									.appendTo(pageDiv)
+
+								// table
+								const table = $('<table>')
+									.addClass(`controls color-table can-table ${can.size}`)
+									.appendTo(pageDiv)
+
+								getTR("Can", can.can).appendTo(table);
+								getTR("Contents", can.content).appendTo(table);
+							}
+
+							createChair(chairPositions["TL"], modInfo.armChair)
+							createChair(chairPositions["TR"], modInfo.TRChair)
+							createChair(chairPositions["R"],  modInfo.RChair)
+							createChair(chairPositions["BR"], modInfo.BRChair)
+							createChair(chairPositions["BL"], modInfo.BLChair)
+							createChair(chairPositions["L"],  modInfo.LChair)
+
+							createCan(modInfo.smallCan)
+							createCan(modInfo.medCan)
+							createCan(modInfo.largeCan)
+
+							const messages = [[
+								"Other stage information", [
+									`You are ${modInfo.currentAction}`,
 									`Duck's Name: ${modInfo.duckName ?? "None"}`,
 									`Duck's feet color: ${modInfo.duckFeetColor}`
-							]
-						]];
+									["Forehead Ls", [`Count: ${modInfo.LCount}`, `Color: ${modInfo.LColor}`]],
+									["Body part colors",  [
+										`Right Foot: ${modInfo.RFootColor}`, 
+										`Left Foot: ${modInfo.LFootColor}`, 
+										`Right Hand: ${modInfo.RHandColor}`, 
+										`Left Hand: ${modInfo.LHandColor}`,
+										`Butt: ${modInfo.RHandColor}` ]],
+								]
+							]];
 
-						return { label, obj: pageDiv, messages };
+							return { label, obj: pageDiv, messages };
+						}						
+					}
+
+					//todo keep reading lines until hitting the ==
+					const lines = []
+					let line;
+					do 
+					{
+						line = readTaggedLine()
+						lines.push(line);
+					} while (line !== "===============================================");
+
+					lines.pop();
+
+					//todo if there isn't any information beside the instructions, parse the instructions
+					if(lines.length == 1) {
+						module.modifyModInfo(lines[0])
+					}
+					else {
+						for(let i = 1; i < lines.length; i++) {
+							module.modifyModInfo(lines[i])
+						}
+					}
+
+
+					//create a page object
+					module.pages.push(module.getStagePage(`Stage ${matches[1]}: ${lines[0]}`, module.modInfo))
+
+					//todo if this is the first time, push the slide show. Otherwise update the display
+					if(module.pages.length == 1) {
+						makeCycleableDisplays({pages: module.pages, module, loopDisplays: true, fontSize: "14px"});
 					}
 
 					
-					
-					module.pages = [getStagePage("Mock up", module.modInfo)];
-					makeCycleableDisplays(module.pages, module)
+					return true;
 				}
 			},
 			{ regex: /.+/ }
@@ -17816,7 +17885,7 @@ let parseData = [
 					module.pages.push({ obj: makeSVG(grid), label: label});
 					if(module.pages.length != 4) return true;
 
-					makeCycleableDisplays(module.pages, module, false);
+					makeCycleableDisplays({page: module.pages, module});
 					return true;
 				}
 			},
@@ -26670,7 +26739,7 @@ let parseData = [
 					let globalPath = module.readLine();
 					let localPaths = readLines(2).map(l => l.match(/Local path for .+ solved modules: (.+)/)[1]);
 					module.keyDropdown[1].push([match[0], [globalPath, ["Local Paths", [`Even solved modules: ${localPaths[0]}`, `Odd solved modules: ${localPaths[1]}`]]]]);
-					module.cycleableDisplay = makeCycleableDisplays(module.pages, module.keyDropdown[1]);
+					module.cycleableDisplay = makeCycleableDisplays({pages: module.pages, module: module.keyDropdown[1]});
 					return true;
 				}
 			},

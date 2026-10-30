@@ -1357,7 +1357,7 @@ function GetBomb() {
 //      messages: An array of messages to show on a specific page
 // @params module: The module obj used to tell which specific module we are in. Helps to deal with duplicates of the same module
 // @params loopDisplays: If true, allows the user to wrap around from the last display to the first and vice versa
-function makeCycleableDisplays(pages, module, loopDisplays = false) {
+function makeCycleableDisplays({pages, module, loopDisplays = false, fontSize = "20px"}) {
 
     const topDiv = $('<div>').addClass("cyclable-disp-top");
     const leftButton = $('<button>')
@@ -1376,9 +1376,11 @@ function makeCycleableDisplays(pages, module, loopDisplays = false) {
 
     const label = $('<div>')
         .text("label test")
+        .attr("style", `font-size: ${fontSize}`)
         .addClass("cyclable-disp-label")
         .appendTo(topDiv);
 
+    console.log(fontSize)
     const bottomDiv = $('<div>').addClass("cyclable-disp-bottom")
 
     var curPage = 0;
