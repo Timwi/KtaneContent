@@ -3011,7 +3011,7 @@ let parseData = [
 			{
 				regex: /^Shifting symbol table to the left by (\d)\.$/,
 				handler: function (matches, module) {
-					const mod = (x, n) => { return ((x % n) + n) % n }						
+					const mod = (x, n) => { return ((x % n) + n) % n }
 					const shift = parseInt(matches[1]);
 					const dimension = 40;
 					const radius = 10;
@@ -4742,7 +4742,7 @@ let parseData = [
 
 					let svg = $("<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 960 720' class='cruel-boolean-wires'>");
 					let wiresColor = wireColorDict[module.wireColor];
-					
+
 					for (let w = 0; w < 20; w++) {
 						let path = $SVG("<path>").addClass('wire')
 									.attr("stroke", wiresColor)
@@ -6317,7 +6317,7 @@ let parseData = [
 							"Y" :"#fbe72e",
 							"V" :"#000"
 					};
-					
+
 					const grid = $SVG('<svg class="game-of-life" viewBox="0 0 8 8">');
 					if (match[2] == "Yellow") { linen += 9; }; // skip Distance Field log
 					const map = readTaggedLines(8).map(row => row.replace(/\[Draco Plate #\d+\] /g, '').split(""));
@@ -6340,7 +6340,7 @@ let parseData = [
 						if (cell == "w") rect.css("fill", "#f9f1ff");
 						else if (cell == "k") rect.css("fill", "#38333f");
 					});
-					
+
 					module.push({ label: match[1], obj: grid});
 					return true;
 				}
@@ -6412,7 +6412,7 @@ let parseData = [
 					module.currentDropdown = [`Stage ${matches[1]}`, []]
 					module.push(module.currentDropdown)
 					return true;
-				} 
+				}
 			},
 			{
 				regex: /===============================================/,
@@ -6442,7 +6442,7 @@ let parseData = [
 					return true;
 				}
 			},
-			{ 
+			{
 				regex: /.+/,
 				handler: function(matches, module) {
 					module.currentDropdown[1].push(matches.input);
@@ -8167,7 +8167,7 @@ let parseData = [
 				regex: /You pressed \d, expected \d\.|That is incorrect, strike and reset!/,
 				handler: function (match, module) {
 					if(module.inputs == undefined) {
-						module.inputs = ["Inputs", []]; 
+						module.inputs = ["Inputs", []];
 						module.push(module.inputs);
 					}
 					module.inputs[1].push(match.input);
@@ -9050,7 +9050,7 @@ let parseData = [
 
 						// Remove the starting tag
 						line = /^[ \t]*\[(?:Assets\.Scripts\.(?:\w+\.)+)?.+?\] ?(.+)/.exec(line)[1];
-						
+
 						if (/=-= Beginning Cipher (.) =-=/.test(line) || line == "Press this pattern to solve the module:")
 						{
 							linen --; // Read line is a new cipher, or the end of the module. Go back up once
@@ -9059,7 +9059,7 @@ let parseData = [
 						else if (/^[.X]{5}/.test(line)){
 							const grid = [line];
 							grid.push(...readTaggedLines(2)); // transform the array into individual elements then add them
-							
+
 							const svg = $SVG('<svg class="giants-cipher" viewbox="0 0 5 3">');
 							for (var x = 0; x < 3; x ++){
 								for (var y = 0; y < 5; y ++){
@@ -9070,7 +9070,7 @@ let parseData = [
 							}
 							dropdown[1].push(svg);
 						}
-						else if (/[.X]{5,}/.test(line)){ 
+						else if (/[.X]{5,}/.test(line)){
 							var regexMatch = /[.X]{5,}/.exec(line);
 							var grid = regexMatch[0];
 							var gridLength = grid.length;
@@ -9081,7 +9081,7 @@ let parseData = [
 								const rect = $SVG(`<rect x=${x} y=0 width=1 height=1>`).appendTo(svg);
 								const circle = $SVG(`<circle class=${lit} cx=${x}.5 cy=0.5 r="0.4"`).appendTo(svg);
 							}
-							
+
 							// Wrap line into a Span to make it an object and allow inlined SVGs
 							var lineParts = line.split(grid);
 							var newLine = $('<span>').html(lineParts[0] + svg[0].outerHTML + lineParts[1]);
@@ -9270,6 +9270,66 @@ let parseData = [
 				}
 			},
 			{ regex: /.+/ }
+		]
+	},
+	{
+		moduleID: 'grayHexabuttons',
+		loggingTag: 'Gray Hexabuttons',
+		matches: [
+			{
+				regex: /Hint: Button (.*) has (function|value) [1-6A-F]\./,
+				handler: function (matches, module) {
+					if (!module.GrayHexaInfo)
+						module.GrayHexaInfo = { hints: [] };
+					module.GrayHexaInfo.hints.push({ btn: matches[1], kind: matches[2] });
+					return true;
+				}
+			},
+			{
+				regex: /Values: ([1-6 ]+)/,
+				handler: function (matches, module) {
+					module.GrayHexaInfo.values = matches[1].split(' ').map(str => parseInt(str));
+					return true;
+				}
+			},
+			{
+				regex: /Functions: ([A-F ]+)/,
+				handler: function(matches, module) {
+					module.GrayHexaInfo.functions = matches[1].split(' ');
+					return true;
+				}
+			},
+			{
+				regex: /Results: (.+)/,
+				handler: function(matches, module) {
+					let results = matches[1].split(', ');
+					let table = $('<table>').addClass('gray-hexabuttons');
+
+					let headerRow = $('<tr>').appendTo(table);
+					$('<th class="corner">').appendTo(headerRow);
+					$('<th>').text('Value').appendTo(headerRow);
+					$('<th>').text('Function').appendTo(headerRow);
+					$('<th>').text('Result').appendTo(headerRow);
+
+					let btnNames = 'TL,TR,ML,MR,BL,BR'.split(',');
+					for (let btn = 0; btn < 6; btn++) {
+						let row = $('<tr>').appendTo(table);
+						$('<th>').text(btnNames[btn]).appendTo(row);
+						$(`<td${module.GrayHexaInfo.hints.some(hint => hint.btn === btnNames[btn] && hint.kind === 'value') ? ' class="hinted"' : ''}>`).text(module.GrayHexaInfo.values[btn]).appendTo(row);
+						$(`<td${module.GrayHexaInfo.hints.some(hint => hint.btn === btnNames[btn] && hint.kind === 'function') ? ' class="hinted"' : ''}>`).text(module.GrayHexaInfo.functions[btn]).appendTo(row);
+						$('<td>').text(results[btn]).appendTo(row);
+					}
+					module.push({ label: "Solution (highlighted are hinted on the module):", obj: table });
+					return true;
+				}
+			},
+			{
+				regex: /.+/,
+				handler: function(matches, module) {
+					module.push(matches[0]);
+					return false;
+				}
+			}
 		]
 	},
 	{
@@ -9597,7 +9657,7 @@ let parseData = [
 					module.push(result);
 				}
 			}
-			
+
 		]
 	},
 	{
@@ -9619,7 +9679,7 @@ let parseData = [
 						}
 						FullText += line + "\n";
 					}
-					
+
 					module.push({ label: "The screen said:", obj: pre(FullText) });
 					return true;
 				}
@@ -9700,7 +9760,7 @@ let parseData = [
 					module.inputDropdown[1].push(matches[0]);
 					if(module.wrong != true)
 					{
-						module.tableHTML = module.tableHTML.replace(/<\/table>/, 
+						module.tableHTML = module.tableHTML.replace(/<\/table>/,
 											`<tr>	<td colspan="3" class='green'><b>Your Answer(Incorrect)</b></td>
 													<td class='${matches[1] == "on" ? "white" : "black"}'></td>
 													<td class='${matches[2] == "on" ? "white" : "black"}'></td>
@@ -9719,7 +9779,7 @@ let parseData = [
 				handler: function(matches, module){
 					if(module.wrong != true)
 					{
-						module.tableHTML = module.tableHTML.replace(/<\/table>/, 
+						module.tableHTML = module.tableHTML.replace(/<\/table>/,
 											`<tr>	<td colspan="3" class='green'><b>Your Answer(Correct)</b></td>
 													<td class='${module.lightStates[0] ? "white" : "black"}'></td>
 													<td class='${module.lightStates[1] ? "white" : "black"}'></td>
@@ -11939,7 +11999,7 @@ let parseData = [
 					myTable = module.firstRow;
 					j = 1;
 					notesList.forEach((element) => {
-						myTable += "<tr>"; 
+						myTable += "<tr>";
 							for(i = 0; i < 12; i++)
 							{
 								myTable +=
@@ -12084,7 +12144,7 @@ let parseData = [
 								if(col == 0 || row == 0) {
 									const firstCell = row == 0 && col == 0;
 									const isCol = row == 0;
-									const borderColor = firstCell ? "none" : 
+									const borderColor = firstCell ? "none" :
 														isCol ? "#5f57b7": "#cd5853";
 									const td = $('<td>')
 									.css("width", `${dimension}px`)
@@ -12126,7 +12186,7 @@ let parseData = [
 
 						return table;
 					}
-					
+
 					return true;
 				}
 			},
@@ -15057,7 +15117,7 @@ let parseData = [
 			{
 				regex: /Given net:/,
         handler: function (_, module) {
-					
+
 					linen--;
 					let moduleId = readLine().match(/\d+/);
 					let lines = readTaggedLines(6);
@@ -15069,7 +15129,7 @@ let parseData = [
 					}
 
 					lines = lines.filter(ln => ln.match(/\[|\{/) != null);
-					
+
 					const CELL_DIMENSION = 25;
           const svg = $(`<svg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 300 ${CELL_DIMENSION*lines.length}'>`).addClass("net-positive");
 
@@ -15090,7 +15150,7 @@ let parseData = [
 									.attr("y", lix*CELL_DIMENSION)
 									.attr("fill", cl[0] == '[' ? "#5a5600" : "#cac000")
 								.appendTo(svg);
-								
+
 								if (cl.length == 3) {
 									$SVG("<text>")
 										.attr("x", cix*CELL_DIMENSION + (CELL_DIMENSION/2))
@@ -15105,7 +15165,7 @@ let parseData = [
 					module.push({ label: "Given net:", obj: svg, nobullet: true });
 
 					return true;
-					
+
 				}
 			},
 			{
@@ -15160,7 +15220,7 @@ let parseData = [
 					const grid = readLines(6).map(l => l.replace(/\[Nomai #\d+\] \d /, ''));
 					const values = grid.map(r => r.substring(1, 12).split(' '));
 					const fills = { 'x': '#222', '0': '#A00', '1': '#888' };
-					
+
 					let table = `<table class='nomai'> <tr> <td>to→<br>from↓</td>`;
 
 					for (let ix = 0; ix < 6; ix++) {
@@ -17606,21 +17666,21 @@ let parseData = [
 						let color = readTaggedLine().match(/White/) ? '#FFF' : '#F00';
 						grid.push(color);
 						// Add in empty space in status light corner.
-						if (i == 3) 
+						if (i == 3)
 							grid.push('#F0F');
-					} 
+					}
 					let table = $('<table>').addClass('pixel-art');
-					
+
 					for (let row = 0; row < 5; row++) {
 						var tr = $('<tr>').appendTo(table);
 						for (let col = 0; col < 5; col++) {
 							// Skip gap in status light position.
-							if (row == 0 && col == 4) 
+							if (row == 0 && col == 4)
 								continue;
 							$('<td>').css('background-color', grid[5 * row + col]).appendTo(tr);
 						}
 					}
-					
+
 					module.push({ label: "Solution: ", obj: table });
 				}
 			}
