@@ -1380,7 +1380,6 @@ function makeCycleableDisplays({pages, module, loopDisplays = false, fontSize = 
         .addClass("cyclable-disp-label")
         .appendTo(topDiv);
 
-    console.log(fontSize)
     const bottomDiv = $('<div>').addClass("cyclable-disp-bottom")
 
     var curPage = 0;
