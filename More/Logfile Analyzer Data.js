@@ -6580,6 +6580,9 @@ let parseData = [
 									case "your left hand":
 										return ["LHandColor"];
 
+									case "both of your feet":
+										return ["LFootColor", "RFootColor"]
+
 									case "all of your body parts that are touching the chair":
 										const actionBodyPart = {
 											"Sitting": ["buttColor"],
@@ -6667,7 +6670,7 @@ let parseData = [
 							match = line.match(/The (.+) watering can is now (.+)-colored\./)
 							if(match) {
 								const can = canSizeObj[match[1]]
-								can.can = match[2]
+								can.can = match[2] == "no" ? "None" : match[2]
 							}
 
 							//Fill the watering can with paint
