@@ -6514,6 +6514,9 @@ let parseData = [
 				regex: /Displaying Stage (\d+)\. It says:/,
 				handler: function (matches, module) {
 					if(!module.modInfo) {
+
+						module.hokeyPokeyParts = ["RFoot", "LFoot", "RHand", "LHand", "Butt"]
+
 						function getDefaultChair (isArmChair) {
 							return {
 								isArmChair,
@@ -6561,12 +6564,14 @@ let parseData = [
 							duckFeetColor: "None",
 							LCount: 0,
 							LColor: "None",
-							currentAction: "Sitting"
+							currentAction: "Sitting",
+							hokeyPokeyPart: null,
+							hokeyPokeyStep: null,
 						}
 
 						module.chairPositions = ["armChair", "TRChair", "RChair", "BRChair", "BLChair", "LChair"];
 
-						module.modifyModInfo = (line) => {
+						module.modifyModInfo = (line, stageLine) => {
 							function getBodyParts(line) {
 								switch(line) {
 									case "your right hand":
@@ -6607,15 +6612,34 @@ let parseData = [
 							if(match) {
 								const youChairIndex = match[1] == "armchair" ? 0 : module.getChairIndex(match[1])
 								const duckChairIndex =  match[2] == "same chair as you" ? youChairIndex : getChairIndex(match[2])
-
 								changeObjectChair("You", youChairIndex);
 								changeObjectChair("Duck", duckChairIndex);
 							}
 
+							//you move chairs
+							match = line.match(/You are now in the (.+)/)
+							if(match) {
+								const index = module.getChairIndex(match[1])
+								changeObjectChair("You", index);
+							}
+
+							//the duck moves chairs
+							match = line.match(/The duck is now in the (.+)./)
+							if(match) {
+								const index = module.getChairIndex(match[1])
+								changeObjectChair("Duck", index);
+							}
+
+							//Do the hokey pokey
+							if(line.includes("Do the Hokey Pokey very, very slowly")) {
+								module.modInfo.hokeyPokeyPart = module.hokeyPokeyParts[0];
+								module.modInfo.hokeyPokeyStep = 1;
+							}
+
 							const cansObj = {
-									"small": module.modInfo.smallCan,
-									"medium": module.modInfo.medCan,
-									"large": module.modInfo.largeCan
+									"smallest": module.modInfo.smallCan,
+									"medium-sized": module.modInfo.medCan,
+									"largest": module.modInfo.largeCan
 							}
 
 							//Paint body parts
@@ -6633,17 +6657,41 @@ let parseData = [
 							}
 							
 							//Paint the watering can
-							match = line.match(/The (.+)-sized watering can is now (.+)-colored\./)
+							match = line.match(/The (.+) watering can is now (.+)-colored\./)
 							if(match) {
 								const can = cansObj[match[1]]
 								can.can = match[2]
 							}
 
 							//Fill the watering can with paint
-							match = line.match(/The (.+)-sized watering can is now filled with (.+) paint\./)
+							match = line.match(/The (.+) watering can is now filled with (.+) paint\./)
 							if(match) {
+								//if the stage says "dump", figure out which can was dumped and remove the paint inside
+								let dumpMatch;
+								if(stageLine !== undefined) {
+									dumpMatch = stageLine.match(/Dump all of the paint from (.+) into .+\./)
+									if(dumpMatch) {
+										let dumpCan;
+										const cans = [module.modInfo.smallCan, module.modInfo.medCan, module.modInfo.largeCan]
+										switch(dumpMatch[1]) {
+											case "the only painted watering can":
+												dumpCan = cans.find(c => c.can != "None")
+												break;
+											case "the only unpainted watering can":
+												dumpCan = cans.find(c => c.can == "None")
+												break;
+											case "the only watering can with paint in it":
+												dumpCan = cans.find(c => c.content != "None")
+												break;
+											case "the only empty watering can":
+												dumpCan = cans.find(c => c.content == "None")
+												break;
+										}
+										dumpCan.content = "None";
+									}
+								}
 								const can = cansObj[match[1]]
-								can.content = match[2]
+								can.content = match[2] == "no" ? "None" : match[2]
 							}
 
 							//Paint a number on chair
@@ -6685,6 +6733,12 @@ let parseData = [
 										module.modInfo.currentAction = "Handstanding"
 										break;
 								}
+							}
+
+							//duck name
+							match = line.match(/The duck's name is (.+)\./)
+							if(match) {
+								module.modInfo.duckName = match[1]
 							}
 						} 
 
@@ -6783,6 +6837,15 @@ let parseData = [
 							getTR("LHand", modInfo.LHandColor).appendTo(bodyTable);
 							getTR("Butt", modInfo.buttColor).appendTo(bodyTable);
 
+							//hokey pokey table
+							const hokeyTable = $('<table>')
+								.addClass("controls hokey")
+								.attr("style", "left: 216px; top: 650px;")
+								.appendTo(pageDiv)
+							getTR("Hokey Pokey Step", "none", modInfo.hokeyPokeyStep ?? "N/A").appendTo(hokeyTable);
+							getTR("Hokey Pokey Part", "none", modInfo.hokeyPokeyPart ?? "N/A").appendTo(hokeyTable)
+
+
 							//Current action
 							$('<label>')
 									.text(`Current action: ${modInfo.currentAction}`)
@@ -6804,17 +6867,41 @@ let parseData = [
 
 					lines.pop();
 
+					//if the hokey pokey was started, move onto the next step
+					if(module.modInfo.hokeyPokeyPart !== null) {
+						let steps = module.modInfo.hokeyPokeyStep;
+						const part = module.modInfo.hokeyPokeyPart;
+
+						//increment the steps
+						steps++;
+						//if the steps go above 4, go to the next part
+						if(steps >= 5) {
+							module.modInfo.hokeyPokeyStep = 1;
+							module.modInfo.hokeyPokeyPart = module.hokeyPokeyParts[module.hokeyPokeyParts.indexOf(part) + 1];
+						}
+						else {
+							module.modInfo.hokeyPokeyStep = steps;
+						}
+
+						//if we ran out of parts, stop doing the hokey pokey
+						if(module.modInfo.hokeyPokeyPart === undefined) {
+							module.modInfo.hokeyPokeyStep = null;
+							module.modInfo.hokeyPokeyPart = null;
+						}
+					}
+
 					//if there isn't any information beside the instructions, parse the instructions
 					if(lines.length == 1) {
 						module.modifyModInfo(lines[0])
 					}
 					else {
 						for(let i = 1; i < lines.length; i++) {
-							module.modifyModInfo(lines[i])
+							//todo if it is the first line, give the stage line just in case
+							module.modifyModInfo(lines[i], i == 1 ? lines[0] : undefined)
 							console.log(lines[i])
 						}
 					}
-
+					
 
 					//create a page object
 					module.pages.push(module.getStagePage(`Stage ${matches[1]}: ${lines[0]}`, module.modInfo))
