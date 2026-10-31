@@ -6614,7 +6614,7 @@ let parseData = [
 							}
 
 							//You and duck sit in chairs
-							let match = line.match(/You should sit on the (armchair|chair \d chairs clockwise from the armchair)\. The duck should sit on the (same chair as you|chair \d clockwise from the armchair)\./)
+							let match = line.match(/You should sit on the (armchair|chair \d chairs clockwise from the armchair)\. The duck should sit on the (same chair as you|chair \d chairs clockwise from the armchair)\./)
 							if(match) {
 								const youChairIndex = match[1] == "armchair" ? 0 : module.getChairIndex(match[1])
 								const duckChairIndex =  match[2] == "same chair as you" ? youChairIndex : getChairIndex(match[2])
