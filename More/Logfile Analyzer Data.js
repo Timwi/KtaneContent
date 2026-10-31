@@ -6630,13 +6630,20 @@ let parseData = [
 								changeObjectChair("Duck", index);
 							}
 
+							//Woopie Cushion is moved/placed
+							match = line.match(/The whoopee cushion is on the (.+)\./)
+							if(match) {
+								const index = module.getChairIndex(match[1])
+								changeObjectChair("Woopie Cushion", index);
+							}
+
 							//Do the hokey pokey
 							if(line.includes("Do the Hokey Pokey very, very slowly")) {
 								module.modInfo.hokeyPokeyPart = module.hokeyPokeyParts[0];
 								module.modInfo.hokeyPokeyStep = 1;
 							}
 
-							const cansObj = {
+							const canSizeObj = {
 									"smallest": module.modInfo.smallCan,
 									"medium-sized": module.modInfo.medCan,
 									"largest": module.modInfo.largeCan
@@ -6659,7 +6666,7 @@ let parseData = [
 							//Paint the watering can
 							match = line.match(/The (.+) watering can is now (.+)-colored\./)
 							if(match) {
-								const can = cansObj[match[1]]
+								const can = canSizeObj[match[1]]
 								can.can = match[2]
 							}
 
@@ -6687,10 +6694,28 @@ let parseData = [
 												dumpCan = cans.find(c => c.content == "None")
 												break;
 										}
+
+
+										//if undefined, 
+										if(dumpCan == undefined) {
+											//check for a specific can color
+											let match2 = dumpMatch[1].match(/the watering can that's painted with (.+) paint/)
+
+											if(match2) {
+												dumpCan = cans.find(c => c.can == match2[1])
+											}
+
+											//check for size
+											match2 = dumpMatch[1].match(/the (.+) watering can/)
+											if(match2) {
+												dumpCan = canSizeObj[match2[1]]
+											}
+
+										}
 										dumpCan.content = "None";
 									}
 								}
-								const can = cansObj[match[1]]
+								const can = canSizeObj[match[1]]
 								can.content = match[2] == "no" ? "None" : match[2]
 							}
 
@@ -6742,7 +6767,7 @@ let parseData = [
 							}
 						} 
 
-						module.getStagePage = (label, modInfo) => {
+						module.getStagePage = (label, modInfo, messages) => {
 							const pageDiv = $('<div>').addClass("duck-konundrum")
 							//todo convert this to be in the style file
 							const chairPositions = {
@@ -6779,7 +6804,7 @@ let parseData = [
 									.appendTo(chairDiv)
 
 								//Label
-								const strArr = ['You','Duck','Woopie Cusion'];
+								const strArr = ['You','Duck','Woopie Cushion'];
 								const label = strArr.filter(x => chair.inChair.includes(x)).join("/")
 								$('<label>')
 									.text(label)
@@ -6852,9 +6877,11 @@ let parseData = [
 									.attr("style", "position: absolute; left: 222px; top: 629px;")
 									.appendTo(pageDiv)
 
-							return { label, obj: pageDiv, messages: [] };
+							return { label, obj: pageDiv, messages };
 						}						
 					}
+
+					
 
 					//keep reading lines until hitting the ==
 					const lines = []
@@ -6890,21 +6917,23 @@ let parseData = [
 						}
 					}
 
+					let messages = [];
+
 					//if there isn't any information beside the instructions, parse the instructions
 					if(lines.length == 1) {
 						module.modifyModInfo(lines[0])
 					}
 					else {
 						for(let i = 1; i < lines.length; i++) {
-							//todo if it is the first line, give the stage line just in case
+							//if it is the first line, give the stage line just in case
 							module.modifyModInfo(lines[i], i == 1 ? lines[0] : undefined)
-							console.log(lines[i])
+							messages.push(lines[i]);
 						}
 					}
 					
 
 					//create a page object
-					module.pages.push(module.getStagePage(`Stage ${matches[1]}: ${lines[0]}`, module.modInfo))
+					module.pages.push(module.getStagePage(`Stage ${matches[1]}: ${lines[0]}`, module.modInfo, messages))
 
 					//if this is the first time, push the slide show.
 					if(module.pages.length == 1) {
