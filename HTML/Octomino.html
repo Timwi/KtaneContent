@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Octomino — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        .color-ind {
+            width: 8px;
+            height: 8px;
+            border: solid 4px;
+            margin-bottom: 2px;
+            background-color: black;
+            box-shadow: black 0 0 0 4px;
+            margin-right: 4px;
+        }
+
+        .color-ind.circle {
+            border-radius: 50%;
+        }
+
+        table td {
+            text-align: center;
+        }
+
+        table td>div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .shadow-1 {
+            font-weight: bold;
+            text-shadow: 2px 2px 1px #0007;
+        }
+
+        .dark .shadow-1 {
+            text-shadow: 2px 2px 1px #fff7;
+        }
+
+        .shadow-2 {
+            font-weight: bold;
+            text-shadow: 0px 0px 1px #0007, 3px 3px 2px #f007, -3px 3px 2px #0b0, 0 -4px 2px #00f7;
+        }
+
+        .dark .shadow-2 {
+            text-shadow: 0px 0px 1px #fff, 3px 3px 2px #f00, -3px 3px 2px #0f0, 0 -4px 2px #77f;
+        }
+
+        .stage-display {
+            position: relative;
+            width: 16px;
+            height: 16px;
+            margin-bottom: 2px;
+            border-radius: 50%;
+            border: solid 4px black;
+            background: conic-gradient(lime calc(var(--i) * 20%), black 0);
+            box-shadow: 0 0 2px 1px white;
+        }
+
+        .stage-display::after {
+            content: "";
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: black;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <div class="section" id="manual">
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Octomino</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Octomino.svg" class="diagram"
+                    style="box-shadow: 0 0 16px #000; width: 192px; height: 192px; opacity: 100%;">
+                <h2>On the Subject of Octomino</h2>
+                <p class="flavour-text">Don’t let the path make you forget where the end is.</p>
+                <p>
+                    An <b>octomino</b> is a shape made of eight equal square cells connected edge-to-edge.
+                    Depending on the stage, the shape will be a
+                    2D, <span class="shadow-1">3D</span>, or <span class="shadow-2">4D</span> octomino.
+                </p>
+                <p style="margin-bottom: 0;">Each cell has a unique color:</p>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="color-ind" style="border-color: red;"></span>
+                                    <span>Red</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind" style="border-color: lime;"></span>
+                                    <span>Green</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind" style="border-color: blue;"></span>
+                                    <span>Blue</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind" style="border-color: cyan;"></span>
+                                    <span>Cyan</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="color-ind" style="border-color: magenta;"></span>
+                                    <span>Magenta</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind" style="border-color: yellow;"></span>
+                                    <span>Yellow</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind" style="border-color: white;"></span>
+                                    <span>White</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind" style="border-color: #7F00FF;"></span>
+                                    <span>Purple</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    The buttons along the top of the module correspond to the cells’ colors.
+                    Once a stage begins, each button will be assigned a unique color.
+                </p>
+                <h3>Controls</h3>
+                <ul style="margin-top: 4px;">
+                    <li>
+                        <b>Control buttons</b>: The eight buttons along the top of the module.
+                        Use them to move across the octomino’s cells.
+                    </li>
+                    <li>
+                        <b>Reset button</b>: Hold it for two seconds to reset the module.
+                        The reset function is only available while the timer is not running.
+                        This returns the module to Stage 1, resets the timer, and generates a new octomino puzzle.
+                        The button also displays the current stage progress (green inner sector)
+                        and information about the current stage’s offset (outer ring).
+                    </li>
+                    <li><b>Rotation button</b>: Located at the bottom-right. Use it to rotate the octomino.</li>
+                </ul>
+                <h3>Final/Start Buttons & Offsets</h3>
+                <p style="margin-bottom: 0;">
+                    Before a stage begins, one of the eight control buttons is lit.
+                    This is the <b>final button</b>. The <b>start button</b> is determined by the offset.
+                    The color of the offset indicator on the reset button (outer ring)
+                    identifies which value to use for the offset:
+                </p>
+                <table style="margin-bottom: 8px;" align="center">
+                    <tbody>
+                        <tr>
+                            <td><b>COLOR</b></td>
+                            <td>
+                                <div>
+                                    <span class="color-ind circle" style="border-color: red;"></span>
+                                    <span>Red</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind circle" style="border-color: lime;"></span>
+                                    <span>Green</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind circle" style="border-color: blue;"></span>
+                                    <span>Blue</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind circle" style="border-color: cyan;"></span>
+                                    <span>Cyan</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind circle" style="border-color: magenta;"></span>
+                                    <span>Magenta</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>VALUE</b></td>
+                            <td>Strikes</td>
+                            <td>Solved modules</td>
+                            <td>Ports</td>
+                            <td>Indicators</td>
+                            <td>Batteries</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table align="center">
+                    <tbody>
+                        <tr>
+                            <td><b>COLOR</b></td>
+                            <td>
+                                <div>
+                                    <span class="color-ind circle" style="border-color: yellow;"></span>
+                                    <span>Yellow</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind circle" style="border-color: white;"></span>
+                                    <span>White</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="color-ind circle" style="border-color: #7F00FF;"></span>
+                                    <span>Purple</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>VALUE</b></td>
+                            <td>Stage number</td>
+                            <td>Last Serial Number digit</td>
+                            <td>Total modules</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    If multiple offset colors are displayed,
+                    calculate the offset for each color separately and add the values together.
+                </p>
+            </div>
+            <div class="page-footer relative-footer" id="first-page-number">Page 1 of 2</div>
+        </div>
+
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Octomino</span>
+            </div>
+            <div class="page-content">
+                <p style="margin-bottom: 0;">
+                    The offset determines how many positions to count from the final button to find the start button.
+                </p>
+                <ol style="margin-top: 0; margin-bottom: 0;">
+                    <li>Locate the final button.</li>
+                    <li>
+                        Determine the counting direction from the button layout: If the leftmost button is
+                        <b>above the horizontal midpoint</b> of the button layout, count to the left.
+                        Otherwise, count to the right.
+                    </li>
+                    <li>
+                        Starting from the final button, move by the number of positions indicated by the offset.
+                        The button where you finish counting is the start button.
+                        If the count passes the end of the button layout,
+                        continue from the opposite end (<b>wrap around</b>).
+                    </li>
+                </ol>
+                <p style="margin-top: 0;">
+                    Press the start button to begin the stage. All eight buttons will be assigned unique colors,
+                    and the button you pressed will become the <b>current button</b>.
+                </p>
+                <h3>Movement Rules</h3>
+                <p>
+                    The color of the current button corresponds to the current cell on the octomino.
+                    You may press a button only if its corresponding cell is <b>adjacent</b> to the current cell.
+                    Diagonal contact does not count as adjacency.
+                    If any unvisited cells are adjacent to the current cell,
+                    you <b>must</b> press the button corresponding to the leftmost of those unvisited cells,
+                    based on the positions of the buttons along the top of the module.
+                    If no unvisited cells are adjacent to the current cell,
+                    you may press any button corresponding to an adjacent cell.
+                    A button is considered <b>unvisited</b> if it has not yet been pressed during the current stage.
+                </p>
+                <p>
+                    Once every button has been pressed at least once, make sure the final cell is the current cell,
+                    then press its button again to complete the stage.
+                </p>
+                <h3>Stages</h3>
+                <p style="margin-bottom: 0;">
+                    The green sector on the reset button indicates your progress through the stages.
+                    You have 90 seconds to complete all five stages.
+                    After each stage is completed, the elapsed time is halved.
+                </p>
+                <table align="center">
+                    <tbody>
+                        <tr>
+                            <td>Stage</td>
+                            <td>Octomino</td>
+                            <td>Offset</td>
+                            <td>Timer behavior</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="stage-display" style="--i: 0"></span>
+                                    <span>1</span>
+                                </div>
+                            </td>
+                            <td>2D</td>
+                            <td>
+                                <div>
+                                    <span class="color-ind circle" style="border-color: lime;"></span>
+                                    <span>Green</span>
+                                </div>
+                            </td>
+                            <td rowspan="3">Starts when / Paused until<br />the start button is pressed</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="stage-display" style="--i: 1"></span>
+                                    <span>2</span>
+                                </div>
+                            </td>
+                            <td class="shadow-1">3D</td>
+                            <td>
+                                <div>
+                                    <span class="color-ind circle" style="border-color: yellow;"></span>
+                                    <span>Yellow</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="stage-display" style="--i: 2"></span>
+                                    <span>3</span>
+                                </div>
+                            </td>
+                            <td class="shadow-2">4D</td>
+                            <td>Random Offset</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="stage-display" style="--i: 3"></span>
+                                    <span>4</span>
+                                </div>
+                            </td>
+                            <td class="shadow-1">3D</td>
+                            <td>2 Random Offsets</td>
+                            <td rowspan="2">No pause between stages</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="stage-display" style="--i: 4"></span>
+                                    <span>5</span>
+                                </div>
+                            </td>
+                            <td>2D</td>
+                            <td>3 Random Offsets</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="page-footer relative-footer" id="first-page-number">Page 2 of 2</div>
+        </div>
+    </div>
+</body>
+</html>
