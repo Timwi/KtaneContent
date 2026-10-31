@@ -6846,39 +6846,58 @@ let parseData = [
 							createCan(modInfo.medCan)
 							createCan(modInfo.largeCan)
 
+							const hStack = $('<div>').addClass("hstack").appendTo(pageDiv)
+
+							const vStackArr = Array.from({ length: 3 }, (_) => $('<div>').addClass("vstack").appendTo(hStack));
+
 							//Duck table
 							const duckTable = $('<table>')
-								.addClass("controls color-table name")
-								.attr(`style`, `left: -30px; top: 630px`)
-								.appendTo(pageDiv)
+								.addClass("color-table name")
+								// .attr(`style`, `left: -30px; top: 630px`)
+								.appendTo(vStackArr[0])
 							getTR("Duck's Name", "none", modInfo.duckName ?? "N/A").appendTo(duckTable);
 							getTR("Duck's Feet", modInfo.duckFeetColor).appendTo(duckTable)
+
+							// L Table
+							const LTable = $('<table>')
+								.addClass("color-table forehead")
+								.appendTo(vStackArr[0])
+							getTR("Forehead Ls", "none", modInfo.LCount).appendTo(LTable);
+							getTR("L Color", modInfo.LColor).appendTo(LTable);
+
+
+							//Current action
+							$('<label>')
+									.text(`Current action: ${modInfo.currentAction}`)
+									// .attr("style", "position: absolute; left: 222px; top: 629px;")
+									.appendTo(vStackArr[1])
+
+							//hokey pokey table
+							const hokeyTable = $('<table>')
+								.addClass("hokey")
+								// .attr("style", "left: 216px; top: 650px;")
+								.appendTo(vStackArr[1])
+							getTR("Hokey Pokey Step", "none", modInfo.hokeyPokeyStep ?? "N/A").appendTo(hokeyTable);
+							getTR("Hokey Pokey Part", "none", modInfo.hokeyPokeyPart ?? "N/A").appendTo(hokeyTable);
+
+
 						
 							// body table
 							const bodyTable = $('<table>')
-								.addClass("controls color-table you-table")
-								.attr("style", "left: 525px; top: 630px;")
-								.appendTo(pageDiv)
+								.addClass("color-table you-table")
+								// .attr("style", "left: 525px; top: 630px;")
+								.appendTo(vStackArr[2])
 							getTR("RFoot", modInfo.RFootColor).appendTo(bodyTable);
 							getTR("LFoot", modInfo.LFootColor).appendTo(bodyTable);
 							getTR("RHand", modInfo.RHandColor).appendTo(bodyTable);
 							getTR("LHand", modInfo.LHandColor).appendTo(bodyTable);
 							getTR("Butt", modInfo.buttColor).appendTo(bodyTable);
 
-							//hokey pokey table
-							const hokeyTable = $('<table>')
-								.addClass("controls hokey")
-								.attr("style", "left: 216px; top: 650px;")
-								.appendTo(pageDiv)
-							getTR("Hokey Pokey Step", "none", modInfo.hokeyPokeyStep ?? "N/A").appendTo(hokeyTable);
-							getTR("Hokey Pokey Part", "none", modInfo.hokeyPokeyPart ?? "N/A").appendTo(hokeyTable)
+							
 
+							
 
-							//Current action
-							$('<label>')
-									.text(`Current action: ${modInfo.currentAction}`)
-									.attr("style", "position: absolute; left: 222px; top: 629px;")
-									.appendTo(pageDiv)
+							
 
 							return { label, obj: pageDiv, messages };
 						}						
