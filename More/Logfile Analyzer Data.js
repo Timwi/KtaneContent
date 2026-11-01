@@ -6535,6 +6535,8 @@ let parseData = [
 							}
 						}
 
+						function modulo(n, max) { return ((n % max) + max) % max; }
+
 						module.getChairIndex = (line) => {
 							const match = line.match(/chair (\d+) chair(?:s)* (.+) from the armchair/);
 							return !match ? -1 : 
@@ -6572,7 +6574,11 @@ let parseData = [
 
 						module.modifyModInfo = (line, stageLine) => {
 							function getBodyParts(line) {
+								if(line.includes("your only painted body part")) {
+								debugger
+							}
 								switch(line) {
+									
 									case "your right hand":
 										return ["RHandColor"];
 									case "your left hand":
@@ -6587,6 +6593,8 @@ let parseData = [
 										return ["LFootColor", "RFootColor"]
 									case "your butt cheeks":
 										return ["buttColor"]
+									case "your only painted body part":
+										return [["LFootColor", "RFootColor", "LHandColor", "RHandColor", "buttColor"].find(p => module.modInfo[p] != "None")];
 									case "all of your body parts that are touching the chair":
 										const actionBodyPart = {
 											"Sitting": ["buttColor"],
@@ -6613,13 +6621,40 @@ let parseData = [
 								const selectedChair = getChair(index)
 								selectedChair.inChair.push(object);
 							}
-
-							//You and duck sit in chairs
-							let match = line.match(/You should sit on the (armchair|chair \d chairs clockwise from the armchair)\. The duck should sit on the (same chair as you|chair \d chairs clockwise from the armchair)\./)
+							//You sit a chair
+							let match = line.match(/You should sit on the (armchair|chair \d chairs clockwise from the armchair)\./)
+							let youChairIndex;
 							if(match) {
-								const youChairIndex = match[1] == "armchair" ? 0 : module.getChairIndex(match[1])
-								const duckChairIndex =  match[2] == "same chair as you" ? youChairIndex : module.getChairIndex(match[2])
+								youChairIndex = match[1] == "armchair" ? 0 : module.getChairIndex(match[1])
 								changeObjectChair("You", youChairIndex);
+							}
+
+							//The duck sits in a chair
+							match = line.match(/The duck should sit on the (same chair as you|chair (\d) chair(?:s)? (.+) from (the armchair|you))\./)
+							if(match) {
+								let duckChairIndex;
+				
+								//same chair as you
+								if(match[1] == "same chair as you") {
+									duckChairIndex = youChairIndex;
+								}
+
+								else {
+									let amount = match[2]
+
+									//convet counter-clock into clock 
+									if(match[3].includes("counter")) {
+										amount = modulo(module.chairPositions.length - amount, module.chairPositions.length)
+									}
+
+									//if from you, apply you offset
+									if(match[4] == "you") {
+										amount = (amount + youChairIndex) % module.chairPositions.length
+									}
+
+									duckChairIndex = amount;
+								}
+
 								changeObjectChair("Duck", duckChairIndex);
 							}
 
