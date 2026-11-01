@@ -6585,7 +6585,8 @@ let parseData = [
 										return ["RFootColor"]
 									case "both of your feet":
 										return ["LFootColor", "RFootColor"]
-
+									case "your butt cheeks":
+										return ["buttColor"]
 									case "all of your body parts that are touching the chair":
 										const actionBodyPart = {
 											"Sitting": ["buttColor"],
@@ -6753,12 +6754,8 @@ let parseData = [
 								chair.bottomColor = match[2];
 							}
 
-							if(line == "The Hokey Pokey rule activated! The seat of the chair 3 chairs clockwise from the armchair is now orange.") {
-								debugger
-							}
-
 							//paint the seat of the chair
-							match = line.match(/The seat of the (.+) is now (.+)(?:-.+)*\./)
+							match = line.match(/The seat of the (.+) is now (.+?)(?:-.+)?\./)
 							if(match) {
 								const index = module.getChairIndex(match[1]);
 								const chair = getChair(index);
