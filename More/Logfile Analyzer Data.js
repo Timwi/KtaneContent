@@ -6671,7 +6671,7 @@ let parseData = [
 							}
 
 							//Woopie Cushion is moved/placed
-							match = line.match(/The whoopee cushion is on the (.+)\./)
+							match = line.match(/The whoopee cushion is now on (.+)\./)
 							if(match) {
 								const index = module.getChairIndex(match[1])
 								changeObjectChair("Woopie Cushion", index);
@@ -6725,7 +6725,14 @@ let parseData = [
 							match = line.match(/The (.+) watering can is now (.+)-colored\./)
 							if(match) {
 								const can = canSizeObj[match[1]]
-								can.can = match[2] == "no" ? "None" : match[2]
+								can.can = match[2]
+							}
+
+							//Unpaint the watering can
+							match = line.match(/The (.+) watering can is now unpainted\./)
+							if(match) {
+								const can = canSizeObj[match[1]]
+								can.can = "None"
 							}
 
 							//Fill the watering can with paint
@@ -6743,7 +6750,7 @@ let parseData = [
 							}
 
 							//Paint a number on chair
-							match = line.match(/The back of the (.+) now has a (.+)-colored (\d) on it\./)
+							match = line.match(/The back of the (.+) now has a (.+)-colored (\d+) on it\./)
 							if(match) {
 								const index = module.getChairIndex(match[1])
 								const chair = getChair(index)
