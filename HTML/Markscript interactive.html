@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Markscript — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <style>
+        div.controlMenu {
+            z-index: 1;
+            position: fixed;
+            background-color: #29adff80;
+            left: 1em;
+            max-width: 450px;
+        }
+
+        table {
+            z-index: 1;
+            position: fixed;
+            background-color: #ff77a880;
+            right: 1em;
+        }
+
+        textarea {
+            background-color: #000;
+            color: #fff;
+            height: 730px;
+        }
+
+        p.pointer, textarea, span.code {
+            font-family: "Fira Code";
+            font-size: 24px;
+            color: #00bb41;
+        }
+
+        p.pointer {
+            float: left;
+            margin: 0.2em 0.5em 0em 0em;
+            line-height: 29px;
+        }
+
+        :not(.dark) .pointer { color: navy; }
+        .dark .pointer { color: gold; }
+
+        span.code { font-size: 16px; }
+
+        h3.infoText {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="controlMenu">
+        <p>
+            <button onclick="pressPlayPause()" id="playPause">Run</button>
+            <button onclick="step()" id="stepButton">--</button>
+            <button onclick="halt()" id="haltButton">--</button>
+            Speed: <input type="number" id="speedBox" min="0" max="60000" value="250" title="In milliseconds per instruction"/>
+        </p>
+
+        <h3 class="infoText" id="infoText"><i>Additional info will appear here.</i></h3>
+    </div>
+    <table id="variableTable">
+        <tr><th>Name</th><th>Value</th></tr>
+    </table>
+    <div class="section">
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Markscript</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/Markscript.svg" class="diagram">
+                <h2>On the Subject of Markscript</h2>
+                <p class="flavour-text">Turing complete on the inside, wacky stripes on the outside.</p>
+                <p><a href="#secondPage">▼ Jump to program box ▼</a></p>
+                <h3>Syntax used by this manual</h3>
+                <p>All text is converted to all-caps and has excess whitespace trimmed before execution. Keywords that remain unchanged for each type of line will be shown in lower-case below.</p>
+                <ul>
+                    <li>
+                        Comments: <span class="code">;COMMENT</span>
+                        <ul>
+                            <li>Can be added to the end of any line, with the comment being ignored when the line is executed. Refer to the <a href="../HTML/Markscript.html">original manual</a> for limitations with comments.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        Values: <span class="code">123</span> or <span class="code">VARNAME</span>
+                        <ul>
+                            <li>Numbers can be negative by prepending <span class="code">-</span>.</li>
+                            <li>Names are limited to letters A-Z only.</li>
+                            <li>Places where values are used below will simply be shown as <span class="code">VAL</span>.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        Variable declaration: <span class="code">var NAME &lt;- VAL</span> or <span class="code">var NAME = VAL</span>
+                        <ul>
+                            <li>That <span class="code">&lt;-</span> is the characters <span class="code">&lt;</span> and <span class="code">-</span> side-by-side. They're combined into one as a "ligature" by the font in this manual.</li>
+                            <li>Alternatively, you can use <span class="code">=</span> instead of <span class="code">&lt;-</span>; this is more typical of actual programming languages and should be familiar to you if you've played either <i>Lines of Code</i> or <i>Not Red Arrows</i>.</li>
+                            <li>Places where variables (i.e. just a number cannot be used) are used below will simply be shown as <span class="code">VRB</span>.</li>
+                        </ul>
+                    </li>
+                    <li>Variable assignment: <span class="code">NAME &lt;- VAL</span> or <span class="code">NAME = VAL</span></li>
+                    <li>
+                        If statement: <span class="code">if VRB &lt; VAL</span>, <span class="code">if VRB = VAL</span>, or <span class="code">if VRB &gt; VAL</span>
+                        <ul>
+                            <li>I recommend prepending the subsequent two lines with <span class="code">&nbsp;n:</span> and <span class="code">&nbsp;y:</span> as a reminder of which line runs next. These additions will be ignored during execution similar to comments. <i>Remember that if the <span class="code">&nbsp;n:</span> line is not a jump, the next line to be run is the <span class="code">&nbsp;y:</span> line.</i></li>
+                            <li>If you're using the alternative <span class="code">=</span> syntax for assignment, don't get this mixed up with an if statement containing <span class="code">=</span>, it's still a comparison, not an assignment!</li>
+                        </ul>
+                    </li>
+                    <li>Jump: <span class="code">goto COMMENT</span></li>
+                    <li>
+                        Addition: <span class="code">VRB &lt;- VRB + VAL</span> or <span class="code">VRB = VRB + VAL</span>
+                        <ul>
+                            <li>To match the behavior of what an actual Markscript program is capable of for this line, the two variables above must match. If they don't, an error will be displayed.</li>
+                        </ul>
+                    </li>
+                    <li>Return: <span class="code">return VAL</span></li>
+                    <li>
+                        Breakpoint: <span class="code">#</span>
+                        <ul>
+                            <li>This is a feature unique to this manual for help with debugging. Placing a <span class="code">#</span> in your code will pause execution at the line it appears on. This is useful if you would like to look through a specific section slowly without needing to wait for prior sections to process at that speed.</li>
+                            <li>A breakpoint will pause <i>every</i> time this line is reached, not just the first.</li>
+                            <li>Attempting to press "Cont." while on a line with a breakpoint will not work, use "Step" instead.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="page-footer relative-footer">Page 1 of 2</div>
+        </div>
+        <div class="page page-bg-01" id="secondPage">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Markscript</span>
+            </div>
+            <div class="page-content">
+                <p class="pointer" id="pointer">&nbsp;</p>
+                <textarea class="programBox" id="programBox" cols="32"></textarea>
+            </div>
+            <div class="page-footer relative-footer">Page 2 of 2</div>
+        </div>
+    </div>
+    <script>
+        const programBox = document.getElementById("programBox");
+        const pointerP = document.getElementById("pointer");
+        const playPauseButton = document.getElementById("playPause");
+        const stepButton = document.getElementById("stepButton");
+        const haltButton = document.getElementById("haltButton");
+        const infoText = document.getElementById("infoText");
+        const speedBox = document.getElementById("speedBox");
+        let variableTable = document.getElementById("variableTable");
+        let playPauseState = true;
+        let programRunning = false;
+        let programPaused = false;
+        let program;
+        let currentLine;
+        let comments = [];
+        let variables = [];
+        let stopPoints = [];
+        let process;
+        let lineAction;
+        let speed;
+
+        function pressPlayPause() {
+            if (playPauseState) {
+                //play
+                if (programRunning) {
+                    programPaused = false;
+                } else {
+                    runProgram();
+                    programBox.style = `height: ${(program.length + 1) * 29}px;`;
+                    programBox.disabled = true;
+                }
+                playPauseButton.innerText = "Pause";
+                stepButton.innerText = "--";
+                haltButton.innerText = "Halt";
+            } else {
+                //pause
+                programPaused = true;
+                playPauseButton.innerText = "Cont.";
+                stepButton.innerText = "Step";
+            }
+            playPauseState = !playPauseState;
+        }
+
+        function runProgram() {
+            currentLine = 0;
+            program = programBox.value.split('\n').map(str => str.toUpperCase());
+            variables = [];
+            comments = [];
+            stopPoints = program.map(ln => ln.includes('#'));
+            infoText.innerText = "Please wait...";
+            program.forEach(ln => {
+                let splitAtSemi = ln.split(';');
+                comments.push(splitAtSemi.length == 2 ? splitAtSemi[1].trim() : null);
+            });
+            programRunning = true;
+            speed = speedBox.value;
+            process = setInterval(runLineIfNotPaused, speed);
+        }
+
+        function runLineIfNotPaused() {
+            if (!programPaused) { runLine(); }
+        }
+
+        function step() {
+            if (programRunning && programPaused) { runLine(); }
+        }
+
+        function runLine() {
+            updatePointer(currentLine);
+
+            if (stopPoints[currentLine] && !programPaused) {
+                programPaused = true;
+                playPauseButton.innerText = "Cont.";
+                stepButton.innerText = "Step";
+                playPauseState = !playPauseState;
+                infoText.innerText = "Paused at specified line.";
+                return;
+            }
+
+            lineAction = false;
+
+            let line = program[currentLine].replaceAll('#', ' ').split(';')[0].trim();
+            if (line.includes(':')) {
+                line = line.split(':')[1].trim(); //so 'n:' and 'y:' have no effect
+            }
+            line = line.replace(/\s+/g, ' ');
+
+            let tokens = line.split(' ');
+            let regexes = [
+                /^VAR [A-Z]+ (<-|=) (-?\d+|[A-Z]+)$/,
+                /^[A-Z]+ (<-|=) (-?\d+|[A-Z]+)$/,
+                /^IF [A-Z]+ [<=>] (-?\d+|[A-Z]+)$/,
+                /^GOTO [A-Z]+$/,
+                /^[A-Z]+ (<-|=) [A-Z]+ \+ (-?\d+|[A-Z]+)$/,
+                /^RETURN (-?\d+|[A-Z]+)$/
+            ];
+
+            regexes.forEach((rx, ix) => {
+                if (line.match(rx)) {
+                    let varName;
+                    let varToken;
+                    let varValue;
+
+                    switch (ix) {
+                        case 0:
+                            varName = tokens[1];
+                            if (variables.find(v => v.name == varName)) {
+                                markEnd(`Can't create variable "${varName}" as the name is already in use.`);
+                                return;
+                            }
+                            varToken = tokens[3];
+                            if (varToken.match(/^-?\d+$/)) {
+                                varValue = Number.parseInt(varToken);
+                            } else {
+                                if (!variables.find(v => v.name == varToken)) {
+                                    markEnd(`Can't assign value of "${varToken}" as there is no variable with that name.`);
+                                    return;
+                                } else {
+                                    varValue = variables.find(v => v.name == varToken).value;
+                                }
+                            }
+                            variables.push({
+                                name: varName,
+                                value: varValue
+                            });
+                            currentLine += 1;
+                            continueProgram();
+                            return;
+
+                        case 1:
+                            varName = tokens[0];
+                            if (!variables.find(v => v.name == varName)) {
+                                markEnd(`Can't assign value to "${varName}" as there is no variable with that name.`);
+                                return;
+                            }
+                            varToken = tokens[2];
+                            if (varToken.match(/^-?\d+$/)) {
+                                varValue = Number.parseInt(varToken);
+                            } else {
+                                if (!variables.find(v => v.name == varToken)) {
+                                    markEnd(`Can't assign value of "${varToken}" as there is no variable with that name.`);
+                                    return;
+                                } else {
+                                    varValue = variables.find(v => v.name == varToken).value;
+                                }
+                            }
+                            variables.find(v => v.name == varName).value = varValue;
+                            currentLine += 1;
+                            continueProgram();
+                            return;
+
+                        case 2:
+                            varName = tokens[1];
+                            if (!variables.find(v => v.name == varName)) {
+                                markEnd(`Can't compare to "${varName}" as there is no variable with that name.`);
+                                return;
+                            }
+                            varToken = tokens[3];
+                            if (varToken.match(/^-?\d+$/)) {
+                                varValue = Number.parseInt(varToken);
+                            } else {
+                                if (!variables.find(v => v.name == varToken)) {
+                                    markEnd(`Can't use "${varToken}" for comparison as there is no variable with that name.`);
+                                    return;
+                                } else {
+                                    varValue = variables.find(v => v.name == varToken).value;
+                                }
+                            }
+                            switch (tokens[2]) {
+                                case '>':
+                                    currentLine += (variables.find(v => v.name == varName).value > varValue ? 2 : 1);
+                                break;
+                                case '=':
+                                    currentLine += (variables.find(v => v.name == varName).value == varValue ? 2 : 1);
+                                break;
+                                case '<':
+                                    currentLine += (variables.find(v => v.name == varName).value < varValue ? 2 : 1);
+                                break;
+                            }
+                            continueProgram();
+                            return;
+
+                        case 3:
+                            varName = tokens[1]; //ignore the fact this is technically a comment i do not care
+                            if (!comments.includes(varName)) {
+                                markEnd(`Can't jump to "${varName}" as there is no comment with that text.`);
+                                return;
+                            }
+                            currentLine = comments.indexOf(varName);
+                            continueProgram();
+                            return;
+
+                        case 4:
+                            if (tokens[0] != tokens[2]) {
+                                markEnd(`Valid add instructions in this syntax must have the assigned to variable (${tokens[0]}) and first addend (${tokens[2]}) match.`);
+                                return;
+                            }
+                            varName = tokens[0];
+                            if (!variables.find(v => v.name == varName)) {
+                                markEnd(`Can't add to "${varName}" as there is no variable with that name.`);
+                                return;
+                            }
+                            varToken = tokens[4];
+                            if (varToken.match(/^-?\d+$/)) {
+                                varValue = Number.parseInt(varToken);
+                            } else {
+                                if (!variables.find(v => v.name == varToken)) {
+                                    markEnd(`Can't add "${varToken}" as there is no variable with that name.`);
+                                    return;
+                                } else {
+                                    varValue = variables.find(v => v.name == varToken).value;
+                                }
+                            }
+                            variables.find(v => v.name == varName).value += varValue;
+                            currentLine += 1;
+                            continueProgram();
+                            return;
+
+                        case 5:
+                            varToken = tokens[1];
+                            if (varToken.match(/^-?\d+$/)) {
+                                varValue = Number.parseInt(varToken);
+                            } else {
+                                if (!variables.find(v => v.name == varToken)) {
+                                    markEnd(`Can't return "${varToken}" as there is no variable with that name.`);
+                                    return;
+                                } else {
+                                    varValue = variables.find(v => v.name == varToken).value;
+                                }
+                            }
+                            markEnd(`Returned ${varValue}.`);
+                            return;
+                    }
+                }
+            });
+            if (!lineAction) {
+                if (line != "") {
+                    markEnd(`Cannot parse the syntax on this line.`);
+                    return;
+                }
+                currentLine += 1;
+                continueProgram();
+                return;
+            }
+        }
+
+        function continueProgram() {
+            lineAction = true;
+            updateVariableTable();
+            if (currentLine >= program.length) {
+                markEnd(`Reached the bottom of the program without a returned value.`);
+            }
+        }
+
+        function markEnd(s) {
+            lineAction = true;
+            infoText.innerText = s;
+            halt();
+        }
+
+        function halt() {
+            clearInterval(process);
+            programRunning = false;
+            playPauseState = true;
+            playPauseButton.innerText = "Run";
+            stepButton.innerText = "--";
+            haltButton.innerText = "--";
+            programBox.disabled = false;
+        }
+
+        function updatePointer(p) {
+            let s = `${Array(p).fill("<br>").join("")}→`;
+            pointerP.innerHTML = s;
+        }
+
+        function updateVariableTable() {
+            let table = document.createElement("table");
+            let topRow = document.createElement("tr");
+            let nameTh = document.createElement("th");
+            nameTh.innerText = "Name";
+            let valueTh = document.createElement("th");
+            valueTh.innerText = "Value";
+            topRow.appendChild(nameTh);
+            topRow.appendChild(valueTh);
+            table.appendChild(topRow);
+            variables.forEach(v => {
+                let varRow = document.createElement("tr");
+                let nameTd = document.createElement("td");
+                nameTd.innerText = v.name;
+                let valueTd = document.createElement("td");
+                valueTd.innerText = v.value;
+                varRow.appendChild(nameTd);
+                varRow.appendChild(valueTd);
+                table.appendChild(varRow);
+            });
+            table.id = "variableTable";
+            variableTable.replaceWith(table);
+            variableTable = document.getElementById("variableTable");
+        }
+    </script>
+</body>
+</html>
