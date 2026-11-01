@@ -6619,6 +6619,7 @@ let parseData = [
 								const selectedChair = getChair(index)
 								selectedChair.inChair.push(object);
 							}
+
 							//You sit a chair
 							let match = line.match(/You should sit on the (armchair|chair \d chairs clockwise from the armchair)\./)
 							let youChairIndex;
@@ -6736,7 +6737,7 @@ let parseData = [
 							}
 
 							//Fill the watering can with paint
-							match = line.match(/(?:The Hokey Pokey rule activated! )?The (.+) watering can is now filled with (.+) paint/)
+							match = line.match(/(?:The .+ rule activated! )?The (.+) watering can is now filled with (.+) paint/)
 							if(match) {
 								const can = canSizeObj[match[1]]
 								can.content = match[2] == "no" ? "None" : match[2]
