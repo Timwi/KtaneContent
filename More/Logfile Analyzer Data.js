@@ -6572,11 +6572,8 @@ let parseData = [
 
 						module.chairPositions = ["armChair", "TRChair", "RChair", "BRChair", "BLChair", "LChair"];
 
-						module.modifyModInfo = (line, stageLine) => {
+						module.modifyModInfo = (line) => {
 							function getBodyParts(line) {
-								if(line.includes("your only painted body part")) {
-								debugger
-							}
 								switch(line) {
 									
 									case "your right hand":
@@ -6727,49 +6724,15 @@ let parseData = [
 							//Fill the watering can with paint
 							match = line.match(/The (.+) watering can is now filled with (.+) paint\./)
 							if(match) {
-								//if the stage says "dump", figure out which can was dumped and remove the paint inside
-								let dumpMatch;
-								if(stageLine !== undefined) {
-									dumpMatch = stageLine.match(/Dump all of the paint from (.+) into .+\./)
-									if(dumpMatch) {
-										let dumpCan;
-										const cans = [module.modInfo.smallCan, module.modInfo.medCan, module.modInfo.largeCan]
-										switch(dumpMatch[1]) {
-											case "the only painted watering can":
-												dumpCan = cans.find(c => c.can != "None")
-												break;
-											case "the only unpainted watering can":
-												dumpCan = cans.find(c => c.can == "None")
-												break;
-											case "the only watering can with paint in it":
-												dumpCan = cans.find(c => c.content != "None")
-												break;
-											case "the only empty watering can":
-												dumpCan = cans.find(c => c.content == "None")
-												break;
-										}
-
-										//if undefined, 
-										if(dumpCan == undefined) {
-											//check for a specific can color
-											let match2 = dumpMatch[1].match(/the watering can that's painted with (.+) paint/)
-
-											if(match2) {
-												dumpCan = cans.find(c => c.can == match2[1])
-											}
-
-											//check for size
-											match2 = dumpMatch[1].match(/the (.+) watering can/)
-											if(match2) {
-												dumpCan = canSizeObj[match2[1]]
-											}
-
-										}
-										dumpCan.content = "None";
-									}
-								}
 								const can = canSizeObj[match[1]]
 								can.content = match[2] == "no" ? "None" : match[2]
+							}
+
+							//Dump watering cans
+							match = line.match(/The (.+) watering can now has nothing inside\./)
+							if(match) {
+								const can = canSizeObj[match[1]]
+								can.content = "None"
 							}
 
 							//Paint a number on chair
@@ -6997,8 +6960,7 @@ let parseData = [
 					}
 					else {
 						for(let i = 1; i < lines.length; i++) {
-							//if it is the first line, give the stage line just in case
-							module.modifyModInfo(lines[i], i == 1 ? lines[0] : undefined)
+							module.modifyModInfo(lines[i])
 							messages.push(lines[i]);
 						}
 					}
