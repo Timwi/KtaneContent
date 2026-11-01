@@ -6708,8 +6708,14 @@ let parseData = [
 								module.modInfo.LCount++
 							}
 
+							//increment L count
+							match = line.match(/"Paint (.+) Ls on your forehead, in the color that you're supposed to be painting them with\."/)
+							if(match) {
+								module.modInfo.LCount += Number(match[1])
+							}
+
 							//Wash the body parts
-							match = line.match(/Now (.+) is\/are unpainted\./);
+							match = line.match(/Now (.+) (?:is|are) unpainted\./);
 							if(match) {
 								const bodyParts = getBodyParts(match[1]);
 								bodyParts.forEach(part => module.modInfo[part] = "None")
