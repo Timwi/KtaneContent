@@ -6621,7 +6621,7 @@ let parseData = [
 							}
 
 							//You sit a chair
-							let match = line.match(/You should sit on the (armchair|chair \d chairs clockwise from the armchair)\./)
+							let match = line.match(/You should sit on the (armchair|chair (\d) chair(?:s)? clockwise from the armchair)\./)
 							let youChairIndex;
 							if(match) {
 								youChairIndex = match[1] == "armchair" ? 0 : module.getChairIndex(match[1])
@@ -6674,8 +6674,13 @@ let parseData = [
 							//Woopie Cushion is moved/placed
 							match = line.match(/The whoopee cushion is now on (.+)\./)
 							if(match) {
-								const index = module.getChairIndex(match[1])
-								changeObjectChair("Woopie Cushion", index);
+								if(match[1] == "the armchair") {
+									changeObjectChair("Woopie Cushion", 0);
+								}
+								else {
+									const index = module.getChairIndex(match[1])
+									changeObjectChair("Woopie Cushion", index);
+								}
 							}
 
 							const canSizeObj = {
