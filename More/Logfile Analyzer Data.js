@@ -12085,40 +12085,57 @@ let parseData = [
 			{
 				regex: /The song is.+?\./,
 				handler: function (matches, module) {
-					module.firstRow = `<tr><td style='background-color: white'"></td>
-						<td style='background-color: black'></td>
-						<td style='background-color: white'></td>
-						<td style='background-color: black'></td>
-						<td style='background-color: white'></td>
-						<td style='background-color: white'></td>
-						<td style='background-color: black'></td>
-						<td style='background-color: white'></td>
-						<td style='background-color: black'></td>
-						<td style='background-color: white'></td>
-						<td style='background-color: black'></td>
-						<td style='background-color: white'></td></tr>`
-					module.ValidStartNoteRange = readLine().match(/Acceptable starting notes\(inclusive\): (\d+) - (\d+)/);
+					module.firstRow = `<tr><th style='background-color: white; color: black'>C</th>
+						<th style='background-color: black; color: white'>C♯</th>
+						<th style='background-color: white; color: black'>D</th>
+						<th style='background-color: black; color: white'>D♯</th>
+						<th style='background-color: white; color: black'>E</th>
+						<th style='background-color: white; color: black'>F</th>
+						<th style='background-color: black; color: white'>F♯</th>
+						<th style='background-color: white; color: black'>G</th>
+						<th style='background-color: black; color: white'>G♯</th>
+						<th style='background-color: white; color: black'>A</th>
+						<th style='background-color: black; color: white'>A♯</th>
+						<th style='background-color: white; color: black'>B</th></tr>`;
+					if (!module.PushList)
+					{
+						module.PushList = [];
+					}
+					module.PushList.push([matches[0], []]);
+					module.push(module.PushList[module.PushList.length - 1]);
+					return true;
 				}
 			},
 			{
-				regex: /The (?:highest|lowest) note of the song is \d+ notes (?:above|below) the starting note\. The played starting note puts this note out of range\. Striking and reselecting song\./,
+				regex: /Acceptable starting notes \(inclusive\): (.+) - (.+)/,
 				handler: function (matches, module) {
-					module.push(matches[0]);
+					let range = [null, null];
+					module.notes = "C, C♯, D, D♯, E, F, F♯, G, G♯, A, A♯, B".split(', ');
+					range[0] = module.notes.indexOf(matches[1]);
+					range[1] = module.notes.indexOf(matches[2]);
+					module.ValidStartNoteRange = range;
+					return true;
+				}
+			},
+			{
+				regex: /The (?:highest|lowest).+ \((.+)\).+/,
+				handler: function (matches, module) {
+					module.PushList[module.PushList.length - 1][1].push(matches[0]);
 					myTable = module.firstRow;
-					playedNote = readLine().match(/Key played: (\d+)/);
-
+					playedNote = module.notes.indexOf(matches[1]);
 					myTable += "<tr>";
 						for(i = 0; i < 12; i++)
 						{
-							let cellColor = i == playedNote[1] ? "red" : ((i >= module.ValidStartNoteRange[1] && i <= module.ValidStartNoteRange[2]) ? "lightgreen" : "white");
+							let cellColor = i == playedNote ? "red" : ((i >= module.ValidStartNoteRange[0] && i <= module.ValidStartNoteRange[1]) ? "lightgreen" : "white");
 							myTable +=
-						`<td style="background-color: ${cellColor};"></td>`;
+						`<td style="background-color: ${cellColor}; color: black; text-align: center;">${cellColor == "red" ? "✘" : ""}</td>`;
 						}
 					myTable += "</tr>";
 
 					myTable = "<table class='listening-pk'>" + myTable + "</table>";
 					tableObj = {obj: myTable, nobullet: true};
-					module.push(tableObj);
+					module.PushList[module.PushList.length - 1][0] = "(Striked) " + module.PushList[module.PushList.length - 1][0];
+					module.PushList[module.PushList.length - 1][1].push(tableObj);
 					return true;
 				}
 			},
@@ -12126,8 +12143,8 @@ let parseData = [
 				regex: /Played (?:.+) correctly\. Solved\./,
 				handler: function (matches, module) {
 					BlackKeys = [1, 3, 6, 8, 10];
-					module.push(matches[0]);
-					notesList = String(readLine().match(/Played notes\(correct\): (.+)/)[1]).split(", ");
+					module.PushList[module.PushList.length - 1][1].push(matches[0]);
+					notesList = String(readLine().match(/Played notes \(correct\): (.+)/)[1]).split(", ");
 					myTable = module.firstRow;
 
 					notesList.forEach((element) => {
@@ -12143,16 +12160,17 @@ let parseData = [
 
 					myTable = "<table class='listening-pk'>" + myTable + "</table>";
 					tableObj = {obj: myTable, nobullet: true};
-					module.push(tableObj);
+					module.PushList[module.PushList.length - 1][1].push(tableObj);
 					return true;
 				}
 			},
 			{
-				regex: /Played an incorrect note\. Striking and reselecting song\./,
+				regex: /Played an incorrect .+/,
 				handler: function(matches, module) {
 					BlackKeys = [1, 3, 6, 8, 10];
-					module.push(matches[0]);
-					notesList = String(readLine().match(/Played notes\(incorrect\): (.+)/)[1]).split(", ");
+					module.PushList[module.PushList.length - 1][1].push(matches[0]);
+					notesList = String(readLine().match(/Played notes \(incorrect\): (.+)/)[1]).split(", ");
+					CorrectPitch = readLine().match(/Correct note: (\d+)/)[1];
 					myTable = module.firstRow;
 					j = 1;
 					notesList.forEach((element) => {
@@ -12160,19 +12178,24 @@ let parseData = [
 							for(i = 0; i < 12; i++)
 							{
 								myTable +=
-							`<td style="background-color: ${i == element ? (j == notesList.length ? "red" : "green") : (BlackKeys.includes(i) ? "lightgray" : "white")}; width: 5vw; height: 5vh;"></td>`;
+							`<td style="background-color: ${i == element ? (j == notesList.length ? "red" : "green") : (j == notesList.length && i == CorrectPitch ? "lightgreen" : (BlackKeys.includes(i) ? "lightgray" : "white"))}; color: black; text-align: center; width: 5vw; height: 5vh;">${j == notesList.length ? (i == element ? "✘" : (i == CorrectPitch ? "✔" : "")) : ""}</td>`;
 							}
 						myTable += "</tr>";
 						j++;
 					});
-
-					myTable = "<table>" + myTable + "</table>";
+					myTable = "<table class='listening-pk'>" + myTable + "</table>";
 					tableObj = {obj: myTable, nobullet: true};
-					module.push(tableObj);
+					module.PushList[module.PushList.length - 1][0] = "(Striked) " + module.PushList[module.PushList.length - 1][0];
+					module.PushList[module.PushList.length - 1][1].push(tableObj);
 					return true;
 				}
 			},
-			{ regex: /.+/ }
+			{	regex: /.+/,
+				handler: function(matches, module) {
+					module.PushList[module.PushList.length - 1][1].push(matches[0]);
+					return true;
+				}
+			}
 		]
 	},
 	{
