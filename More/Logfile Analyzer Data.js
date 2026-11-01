@@ -6512,6 +6512,7 @@ let parseData = [
 			{
 				regex: /Displaying Stage (\d+)\. It says:/,
 				handler: function (matches, module) {
+					//todo add a line to when the woopie cushion is moved
 					if(!module.modInfo) {
 
 						module.hokeyPokeyParts = ["RFoot", "LFoot", "RHand", "LHand", "Butt"]
@@ -6676,12 +6677,6 @@ let parseData = [
 								changeObjectChair("Woopie Cushion", index);
 							}
 
-							//Do the hokey pokey
-							if(line.includes("Do the Hokey Pokey very, very slowly")) {
-								module.modInfo.hokeyPokeyPart = module.hokeyPokeyParts[0];
-								module.modInfo.hokeyPokeyStep = 1;
-							}
-
 							const canSizeObj = {
 									"smallest": module.modInfo.smallCan,
 									"medium-sized": module.modInfo.medCan,
@@ -6689,7 +6684,7 @@ let parseData = [
 							}
 
 							//Paint body parts
-							match = line.match(/Now (.+) is\/are (.+)-colored\./)
+							match = line.match(/Now (.+) (?:is|are) (.+)-colored\./)
 							if(match) {
 								const bodyParts = getBodyParts(match[1]);
 								bodyParts.forEach(part => module.modInfo[part] = match[2])
@@ -6699,6 +6694,12 @@ let parseData = [
 							match = line.match(/From now on, every time .+ paint an L on your forehead with (.+)\.\"/)
 							if(match) {
 								module.modInfo.LColor = match[1]
+							}
+
+							//Wash the Ls
+							match = line.match(/"Wash (.+) of the Ls off of your forehead\./)
+							if(match) {
+								module.modInfo.LCount -= match[1]
 							}
 
 							//increment L count
@@ -6722,7 +6723,7 @@ let parseData = [
 							}
 
 							//Fill the watering can with paint
-							match = line.match(/The (.+) watering can is now filled with (.+) paint\./)
+							match = line.match(/(?:The Hokey Pokey rule activated! )?The (.+) watering can is now filled with (.+) paint/)
 							if(match) {
 								const can = canSizeObj[match[1]]
 								can.content = match[2] == "no" ? "None" : match[2]
@@ -6929,6 +6930,8 @@ let parseData = [
 
 					lines.pop();
 
+					
+
 					//if the hokey pokey was started, move onto the next step
 					if(module.modInfo.hokeyPokeyPart !== null) {
 						let steps = module.modInfo.hokeyPokeyStep;
@@ -6964,8 +6967,13 @@ let parseData = [
 							messages.push(lines[i]);
 						}
 					}
-					
 
+					//Do the hokey pokey (Do this outside the thing to loop since we want this to happen regardless if there's messages)
+					if(lines[0].includes("Do the Hokey Pokey very, very slowly")) {
+						module.modInfo.hokeyPokeyPart = module.hokeyPokeyParts[0];
+						module.modInfo.hokeyPokeyStep = 1;
+					}
+					
 					//create a page object
 					module.pages.push(module.getStagePage(`Stage ${matches[1]}: ${lines[0]}`, module.modInfo, messages))
 
