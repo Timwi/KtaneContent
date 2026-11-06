@@ -55,7 +55,7 @@
         }
         .selected {background-color: black !important; color: white;}
         .changed {background-color: #fbb;}
-        button:hover , .plugboard:hover {
+        button:hover {
             background-color: black;
             color: white;
         }
@@ -379,7 +379,7 @@
                 <td class="reflectorB">P</td>
                 <td class="reflectorB">M</td>
             </tr>
-            <tr><td class="empty" colspan="28" style="text-align: center;">Auto-turn: <input class="auto-turn-checkbox" type="checkbox"></td></tr>
+            <tr><td class="empty" colspan="28" style="text-align: center;">Auto-turn: <input class="auto-turn-checkbox" type="checkbox"> Letter switching: <input class ="letter-switching-checkbox" type="checkbox"></td></tr>
         </table>
     </div>
             <div class="page-footer relative-footer">Page 1 of 7</div>
@@ -755,23 +755,31 @@
             };
             UpdateInteractive();
 
-            // NOTE: plugs are 1-indexed for whatever reason
             const plugboard = document.querySelectorAll(".interactive tr")[0];
             const plugs = plugboard.querySelectorAll("td");
             plugs.forEach((cell, index) => {if (cell.textContent) {
                 cell.classList.add("plugboard"); 
                 cell.addEventListener("click", () => {changePlugboard(index)});
-                cell.addEventListener("mouseenter", function() {}); 
-                cell.addEventListener("mouseleave", function() {});
+                cell.addEventListener("mouseenter", function() {
+                    if (localStorage.getItem("enigma-interactive-letter-switching") == "true") {
+                        cell.style.backgroundColor = "black";
+                        cell.style.color = "white";
+                    }
+                });
+                cell.addEventListener("mouseleave", function() {
+                    cell.style.backgroundColor = "";
+                    cell.style.color = "";
+                });
             }});
-
             var selectedPos = null;
             function changePlugboard(pos) {
-                if (!selectedPos) {
+                if (localStorage.getItem("enigma-interactive-letter-switching") == "true")
+                {
+                    if (!selectedPos) {
                     selectedPos = pos;
                     plugs[pos].classList.add("selected");
                     plugs[pos].classList.add("changed");
-                } else {
+                    } else {
                     const char1 = plugs[selectedPos].textContent;
                     const char2 = plugs[pos].textContent;
                     plugs[pos].textContent = char1;
@@ -779,13 +787,18 @@
                     plugs[selectedPos].classList.remove("selected");
                     plugs[pos].classList.add("changed");
                     selectedPos = null;
+                    }                
                 }
             }
-
             $(function () {
                 $(".auto-turn-checkbox").on("change", function () {
                     localStorage.setItem("enigma-interactive-auto-turn", $(this).prop("checked"));
                 }).prop("checked", localStorage.getItem("enigma-interactive-auto-turn") == "true").change();
+            });
+            $(function () {
+                $(".letter-switching-checkbox").on("change", function () {
+                    localStorage.setItem("enigma-interactive-letter-switching", $(this).prop("checked"));
+                }).prop("checked", localStorage.getItem("enigma-interactive-letter-switching") == "true").change();
             });
         </script>
     </div>
