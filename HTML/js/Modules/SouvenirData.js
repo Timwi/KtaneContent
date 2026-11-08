@@ -559,6 +559,7 @@ let SouvenirModuleData = [
 	{ name: "Simon Supports",	id: "simonSupports",	questions: ["What tie colors flashed for each topic?"] },
 	{ name: "Simon Swizzles",	id: "simonSwizzles",	questions: ["Where were ON and OFF?", "What was the hidden binary number?"] },
 	{ name: "Simple Hexabuttons",	id: "simpleHexabuttons",	questions: ["What was the number/letter heard?"] },
+	{ name: "Simpleton’t",	id: "notsimple",	questions: ["What were the flashed binary numbers?"] },
 	{ name: "Simply Simon",	id: "simplysimon",	questions: ["Which colors flashed in each stage?"] },
 	{ name: "Simultaneous Simons",	id: "simultaneousSimons",	questions: ["Which colors flashed on each of the Simons?"] },
 	{ name: "SixTen",	id: "sixten",	questions: ["What were the cycle delays and directions (vertical and each channel)?"] },

@@ -559,6 +559,7 @@ let SouvenirModuleData = [
 	{ original: "Simon Supports",	name: "サイモンの支持",	id: "simonSupports",	questions: ["各トピックで点滅したネクタイの色は？"] },
 	{ original: "Simon Swizzles",	name: "Simon Swizzles",	id: "simonSwizzles",	questions: ["オンとオフの位置は？", "隠された二進数は？"] },
 	{ original: "Simple Hexabuttons",	name: "Simple Hexabuttons",	id: "simpleHexabuttons",	questions: ["What was the number/letter heard?"] },
+	{ original: "Simpleton’t",	name: "Simpleton’t",	id: "notsimple",	questions: ["What were the flashed binary numbers?"] },
 	{ original: "Simply Simon",	name: "シンプルサイモン",	id: "simplysimon",	questions: ["各ステージで点滅した色は？"] },
 	{ original: "Simultaneous Simons",	name: "同時サイモン",	id: "simultaneousSimons",	questions: ["各サイモンでどの色が点滅した？"] },
 	{ original: "SixTen",	name: "SixTen",	id: "sixten",	questions: ["What were the cycle delays and directions (vertical and each channel)?"] },

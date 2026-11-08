@@ -284,6 +284,7 @@ let SouvenirModuleData = [
 	{ original: "Maroon Cipher",	name: "Kastanien-Geheimschrift",	id: "maroonCipher",	questions: ["Was stand auf welchem Display?"] },
 	{ original: "The Maroon Button",	name: "DerKastanienknopf",	id: "MaroonButtonModule",	questions: ["Was war A?"] },
 	{ original: "KayMazey Talk",	name: "KayMazey Talk",	id: "KMazeyTalk",	questions: ["Was war das Start- und Zielwort?"] },
+	{ original: "Simpleton’t",	name: "Keinfaltspinsel",	id: "notsimple",	questions: ["Welche Binärzahlen leuchteten auf?"] },
 	{ original: "Know Your Way",	name: "Kenne Den Weg",	id: "KnowYourWay",	questions: ["In welche Richtung zeigte der Pfeil?", "Welche LED war grün?"] },
 	{ original: "Kooky Keypad",	name: "Kirres Tastenfeld",	id: "kookyKeypadModule",	questions: ["Welche Farbe hatten die LEDs?"] },
 	{ original: "Not Piano Keys",	name: "Klavier Mal Anders",	id: "notPianoKeys",	questions: ["Welche Symbole waren zu sehen?"] },
