@@ -11,15 +11,29 @@
     <script src="js/jquery.3.7.0.min.js"></script>
     <script src="js/ruleseed.js"></script>
     <style>
-        svg circle { 
-            stroke: #000; 
+        svg circle.button-circle {
+            stroke: #000;
             stroke-width: 3;
-            margin-bottom:0;
-            fill:transparent;
+            fill: transparent;
         }
-        .dark svg circle { stroke: #DDD; }
-        svg circle.filledIn { fill: #000; }
-        .dark svg circle.filledIn { fill: #DDD; }
+
+        .dark svg circle.button-circle {
+            stroke: #DDD;
+        }
+
+        svg circle.rule-fill {
+            stroke: none;
+            fill: transparent;
+            pointer-events: none;
+        }
+
+        svg circle.rule-fill.filledIn {
+            fill: #000;
+        }
+
+        .dark svg circle.rule-fill.filledIn {
+            fill: #DDD;
+        }
 
         .main {
             float: left;
@@ -29,12 +43,25 @@
         }
     </style>
     <script>
+        //Fix, just make each diagram twice, one for the highlights one for the rule fills.
+        function prepareCircles() {
+            document.querySelectorAll("svg[id^='diagram'] circle:not(.rule-fill, .button-circle)").forEach(circle => {
+                circle.classList.add("button-circle");
+
+                const background = circle.cloneNode(false);
+                background.setAttribute("class", "rule-fill");
+                circle.before(background);
+            });
+        }
+    
         function setDefaultRules(rnd){
-            for(var i = 0; i < 12; i++){ // so that the buttons don’t remain highlighted when changing to a different ruleseed
-                for(var j = 0; j < 12; j++){
-                    document.getElementById(`diagram${i}`).classList.add("highlightable");
-                    document.getElementById(`diagram${i}`).classList.remove("filledIn");
-                }
+            prepareCircles();
+            for (let i = 0; i < 12; i++) {
+                const diagram = document.getElementById(`diagram${i}`);
+
+                diagram.querySelectorAll(".rule-fill").forEach(circle => {
+                    circle.classList.remove("filledIn");
+                });
             }
             var rulesRuleSeed1 = ["The serial number contains a vowel","The bomb has a\nlit FRK indicator","The serial number does\nnot contain a vowel","The bomb has at\nleast 1 AA battery","The bomb has at\nmost 1 D battery","The bomb has a\nPS/2 port","There are at\nleast 4 red buttons","The quantity of blue and green buttons is the same","The quantity of\nblack buttons is odd","There are no buttons\nof a unique color","There are 5 different colors of buttons","There is at most 1\nwhite button"];
             var filledInRuleSeed1 = [
@@ -54,17 +81,18 @@
             for(var i = 0; i < 12; i++){
                 document.getElementById(`rule${i}`).innerText = rulesRuleSeed1[i];
                 for(var fill of filledInRuleSeed1[i]){
-                    const ele = document.getElementById(`diagram${i}`).children[fill];
-                    ele.classList.add("highlightable");
+                    const ele = document.getElementById(`diagram${i}`).querySelectorAll(".rule-fill")[fill];
+
                     ele.classList.add("filledIn");
                 }
             }
         }
         function setRules(rnd){
+            prepareCircles();
             var colors = ["red", "blue", "green", "white", "black"];
             var ports = ["a DVI", "a parallel", "a PS/2", "an RJ-45", "a serial", "a Stereo RCA"];
             var indicatorLights = ["an unlit", "a lit"];
-            var indicatorLabels = ["SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK"];
+            var indicatorLabels = ["SND", "CLR", "CAR", "IND", "FRQ", "SIG", "NSA", "MSA", "TRN", "BOB", "FRK", "NLL"];
             var batteries = ["D", "AA"];
             var ruleTemplatesEdgework = [
                                     "The serial number contains a vowel",
@@ -87,11 +115,8 @@
             rnd.shuffleFisherYates(ruleTemplatesEdgework);
             rnd.shuffleFisherYates(ruleTemplatesButtons);
             var ruleTemplates = ruleTemplatesEdgework.concat(ruleTemplatesButtons);
-            for(var i = 0; i < 12; i++){ // so that the buttons don’t remain highlighted when changing to a different ruleseed
-                for(var j = 0; j < 12; j++){
-                    document.getElementById(`diagram${i}`).children[j].classList.remove("filledIn");
-                    document.getElementById(`diagram${i}`).children[j].className = "highlightable";
-                }
+            for (let i = 0; i < 12; i++) {
+                document.getElementById(`diagram${i}`).querySelectorAll(".rule-fill").forEach(circle => circle.classList.remove("filledIn"));
             }
             for(var i = 0; i < 12; i++){
                 if(ruleTemplates[i].includes("_")){
@@ -135,25 +160,25 @@
                 document.getElementById(`rule${i}`).innerText = ruleTemplates[i];
                 var filledInCircle = rnd.next(0, 12);
                 if(ruleTemplates.indexOf("The serial number contains a vowel") < i && ruleTemplates[i] === "The serial number does not contain a vowel"){
-                    while(document.getElementById(`diagram${ruleTemplates.indexOf("The serial number contains a vowel")}`).children[filledInCircle].style.fill === "rgb(0, 0, 0)"){
+                    while(document.getElementById(`diagram${ruleTemplates.indexOf("The serial number contains a vowel")}`).querySelectorAll(".rule-fill")[filledInCircle].classList.contains("filledIn")){
                         filledInCircle = rnd.next(0, 12);
                     }
                 }
                 if(ruleTemplates.indexOf("The serial number does not contain a vowel") < i && ruleTemplates[i] === "The serial number contains a vowel"){
-                    while(document.getElementById(`diagram${ruleTemplates.indexOf("The serial number does not contain a vowel")}`).children[filledInCircle].style.fill === "rgb(0, 0, 0)"){
+                    while(document.getElementById(`diagram${ruleTemplates.indexOf("The serial number does not contain a vowel")}`).querySelectorAll(".rule-fill")[filledInCircle].classList.contains("filledIn")){
                         filledInCircle = rnd.next(0, 12);
                     }
                 }
-                const ele = document.getElementById(`diagram${i}`).children[filledInCircle];
-                ele.classList.add("highlightable");
+                const ele = document.getElementById(`diagram${i}`).querySelectorAll(".rule-fill")[filledInCircle];
+
                 ele.classList.add("filledIn");
                 if(i > 5){
                     var filledInCircle2;
                     do{
                         filledInCircle2 = rnd.next(0, 12);
                     }while(filledInCircle2 === filledInCircle);
-                    const ele = document.getElementById(`diagram${i}`).children[filledInCircle2];
-                    ele.classList.add("highlightable");
+                    const ele = document.getElementById(`diagram${i}`).querySelectorAll(".rule-fill")[filledInCircle2];
+
                     ele.classList.add("filledIn");
                 }
             }
