@@ -173,6 +173,7 @@ let SouvenirModuleData = [
 	{ original: "Dreamcipher",	name: "夢想暗号",	id: "ksmDreamcipher",	questions: ["表示されたグリフは？", "初期のバイナリ文字列は？"] },
 	{ original: "The Duck",	name: "アヒル",	id: "theDuck",	questions: ["カーテンの色は？"] },
 	{ original: "Dumb Waiters",	name: "小荷物専用昇降機",	id: "dumbWaiters",	questions: ["どのプレイヤーが存在した？"] },
+	{ original: "Dysfunctions",	name: "Dysfunctions",	id: "lvDysfunctions",	questions: ["What were the factors and restrictions?"] },
 	{ original: "Earthbound",	name: "MOTHER",	id: "EarthboundModule",	questions: ["背景は？", "表示されたモンスターは？"] },
 	{ original: "eeB gnillepS",	name: "ービ・グンリペス",	id: "eeBgnilleps",	questions: ["綴るべき単語は？"] },
 	{ original: "Eight",	name: "八",	id: "eight",	questions: ["小さなディスプレーの最後の数字は？", "最後に破壊された数字の位置は？", "最後に表示された数字は？"] },

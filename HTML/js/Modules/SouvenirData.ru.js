@@ -140,6 +140,7 @@ let SouvenirModuleData = [
 	{ original: "Dreamcipher",	name: "Dreamcipher",	id: "ksmDreamcipher",	questions: ["What were the displayed glyphs?", "What was the initial binary string?"] },
 	{ original: "The Duck",	name: "The Duck",	id: "theDuck",	questions: ["What was the color of the curtain?"] },
 	{ original: "Dumb Waiters",	name: "Dumb Waiters",	id: "dumbWaiters",	questions: ["Какие игроки присутствовали?"] },
+	{ original: "Dysfunctions",	name: "Dysfunctions",	id: "lvDysfunctions",	questions: ["What were the factors and restrictions?"] },
 	{ original: "Earthbound",	name: "Earthbound",	id: "EarthboundModule",	questions: ["Какой был фон?", "Какой монстр был показан?"] },
 	{ original: "eeB gnillepS",	name: "eeB gnillepS",	id: "eeBgnilleps",	questions: ["Какое слово нужно было прописать?"] },
 	{ original: "Eight",	name: "Eight",	id: "eight",	questions: ["Какая была последняя цифра на маленьком экране?", "Какая была позиция у последней сломанной цифры?", "Какое было последнее показанное число?"] },

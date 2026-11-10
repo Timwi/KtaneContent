@@ -138,6 +138,7 @@ let SouvenirModuleData = [
 	{ original: "Third Base",	name: "Drittes Mal",	id: "ThirdBase",	questions: ["Welche Wörter standen auf dem Display?"] },
 	{ original: "Topsy Turvy",	name: "Drunter und Drüber",	id: "topsyTurvy",	questions: ["Welches Wort war am Anfang auf dem Display?"] },
 	{ original: "Stupid Slots",	name: "Dummer Automat",	id: "stupidSlots",	questions: ["Welcher Pfeil hatte welchen Wert?"] },
+	{ original: "Dysfunctions",	name: "Dysfunktion",	id: "lvDysfunctions",	questions: ["Welche Faktoren und Einschränkungen kamen vor?"] },
 	{ original: "Earthbound",	name: "Earthbound",	id: "EarthboundModule",	questions: ["Was war der Hintergrund?", "Welches Monster war zu sehen?"] },
 	{ original: "Corners",	name: "Ecken",	id: "CornersModule",	questions: ["Welche Farbe hatten die Ecken?"] },
 	{ original: "eeB gnillepS",	name: "eeB gnillepS",	id: "eeBgnilleps",	questions: ["Die Schreibweise welches Wortes wurde verlangt?"] },
