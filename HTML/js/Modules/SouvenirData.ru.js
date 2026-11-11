@@ -198,6 +198,7 @@ let SouvenirModuleData = [
 	{ original: "Ghost Movement",	name: "Ghost Movement",	id: "ghostMovement",	questions: ["Где был Pac-Man и призраки?"] },
 	{ original: "Giants Cipher",	name: "Giants Cipher",	id: "GiantsCipher",	questions: ["What was the displayed keyword?"] },
 	{ original: "Girlfriend",	name: "Girlfriend",	id: "Girlfriend",	questions: ["Какой язык был выбран?"] },
+	{ original: "Glass Cactus",	name: "Glass Cactus",	id: "GlassCactus",	questions: ["Which direction was the breeze rotating?", "What were the breeze's movements?", "Which colour was the least/most and second-least/most present?"] },
 	{ original: "The Glitched Button",	name: "The Glitched Button",	id: "GlitchedButtonModule",	questions: ["What was the cycling bit sequence?"] },
 	{ original: "Goofy’s Game",	name: "Goofy’s Game",	id: "goofysgame",	questions: ["Какие числа были показаны в Морзе?"] },
 	{ original: "Grand Piano",	name: "Grand Piano",	id: "grandPiano",	questions: ["Какие ноты были даны?"] },

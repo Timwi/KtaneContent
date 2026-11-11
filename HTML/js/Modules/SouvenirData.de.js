@@ -227,6 +227,7 @@ let SouvenirModuleData = [
 	{ original: "Stacked Sequences",	name: "Gestapelte Folgen",	id: "stackedSequences",	questions: ["Welche Signale kamen in der kombinierten Folge vor?"] },
 	{ original: "The Glitched Button",	name: "DerGestörte Knopf",	id: "GlitchedButtonModule",	questions: ["Wie lautete die zyklische Bitfolge?"] },
 	{ original: "Divided Squares",	name: "Geteilte Kacheln",	id: "DividedSquaresModule",	questions: ["Welche Farbe erschien, als das korrekte Quadrat betätigt wurde?"] },
+	{ original: "Glass Cactus",	name: "Glaskaktus",	id: "GlassCactus",	questions: ["Wie rum hat sich die Windbö gedreht?", "Wie hat sich die Windbö bewegt?", "Welche Farbe kam am häufigsten, zweithäufigsten, zweitseltensten und seltensten vor?"] },
 	{ original: "Simultaneous Simons",	name: "Gleichzeitige Simons",	id: "simultaneousSimons",	questions: ["Welche Farben sind auf welchem Simon aufgeleuchtet?"] },
 	{ original: "The Bulb",	name: "DieGlühlampe",	id: "TheBulbModule",	questions: ["War die Glühlampe am Anfang an?"] },
 	{ original: "Not The Bulb",	name: "DieGlühlampe Mal Anders",	id: "notTheBulb",	questions: ["Welches Wort wurde übermittelt?", "Welche Farbe hatte die Glühlampe?", "Welches Material hatte der Schraubsockel?"] },

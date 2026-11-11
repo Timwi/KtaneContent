@@ -238,6 +238,7 @@ let SouvenirModuleData = [
 	{ original: "Ghost Movement",	name: "ゴーストの移動",	id: "ghostMovement",	questions: ["パックマンとゴーストの位置は？"] },
 	{ original: "Giants Cipher",	name: "巨大暗号",	id: "GiantsCipher",	questions: ["表示されたキーワードは？"] },
 	{ original: "Girlfriend",	name: "ガールフレンド",	id: "Girlfriend",	questions: ["選択された言語は？"] },
+	{ original: "Glass Cactus",	name: "Glass Cactus",	id: "GlassCactus",	questions: ["Which direction was the breeze rotating?", "What were the breeze's movements?", "Which colour was the least/most and second-least/most present?"] },
 	{ original: "The Glitched Button",	name: "グリッチボタン",	id: "GlitchedButtonModule",	questions: ["循環しているビットのシーケンスは？"] },
 	{ original: "Goofy’s Game",	name: "グーフィーのゲーム",	id: "goofysgame",	questions: ["モールス信号で表示された数字は？"] },
 	{ original: "Grand Piano",	name: "グランドピアノ",	id: "grandPiano",	questions: ["与えられた音は？"] },
