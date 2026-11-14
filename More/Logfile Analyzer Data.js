@@ -20242,6 +20242,33 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "Symbstructions",
+		loggingTag: "Symbstructions",
+		matches: [
+			{
+				regex: /^Creating puzzle \((.+), (\d+)\)$/,
+				handler: (matches, module) => {
+					const puzzleType = matches[1],
+						puzzleId = matches[2],
+						puzzleTag = `<${puzzleType} #${puzzleId}> `,
+						puzzleLines = lines
+							.filter(line => line.startsWith(puzzleTag))
+							.map(line => line.replace(puzzleTag, ""));
+
+					const list = $("<ul>");
+					for (const line of puzzleLines) $("<li>").text(line).appendTo(list);
+
+					module.push({
+						label: `${puzzleType} #${puzzleId}`,
+						obj: list,
+						expandable: true,
+						expanded: true,
+					});
+				},
+			},
+		],
+	},
+	{
 		displayName: "Synesthesia",
 		moduleID: "synesthesia",
 		loggingTag: "Synesthesia",
