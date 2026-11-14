@@ -20252,6 +20252,7 @@ let parseData = [
 						puzzleId = matches[2],
 						puzzleTag = `<${puzzleType} #${puzzleId}> `,
 						puzzleLines = lines
+							.slice(linen)
 							.filter(line => line.startsWith(puzzleTag))
 							.map(line => line.replace(puzzleTag, ""));
 
