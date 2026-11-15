@@ -317,6 +317,7 @@ let SouvenirModuleData = [
 	{ original: "The Multiverse Hotline",	name: "The Multiverse Hotline",	id: "MultiverseHotline",	questions: ["What was the universe origin and its initial number?"] },
 	{ original: "Mystery Module",	name: "Mystery Module",	id: "mysterymodule",	questions: ["Какой модуль требовалось решить первым?"] },
 	{ original: "Mystic Square",	name: "Mystic Square",	id: "MysticSquareModule",	questions: ["Где находился череп?"] },
+	{ original: "Name Changer",	name: "Name Changer",	id: "nameChanger",	questions: ["What was the starting word?"] },
 	{ original: "Naming Conventions",	name: "Naming Conventions",	id: "NamingConventions",	questions: ["Какая была надпись на первой кнопке?"] },
 	{ original: "Navigation Determination",	name: "Navigation Determination",	id: "NavigationDeterminationModule",	questions: ["Какой цвет и надпись были у лабиринта?"] },
 	{ original: "Navinums",	name: "Navinums",	id: "navinums",	questions: ["Какие направления были нажаты?", "Какая была исходная цифра посередине?"] },

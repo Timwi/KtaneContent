@@ -378,6 +378,7 @@ let SouvenirModuleData = [
 	{ original: "Murder",	name: "殺人",	id: "murder",	questions: ["容疑者と武器は？", "遺体は何処で見つかった？"] },
 	{ original: "Mystery Module",	name: "ミステリーモジュール",	id: "mysterymodule",	questions: ["最初に解除するように指示されたモジュールは？"] },
 	{ original: "Mystic Square",	name: "神秘スクエア",	id: "MysticSquareModule",	questions: ["初期状態の中央の数字は？"] },
+	{ original: "Name Changer",	name: "Name Changer",	id: "nameChanger",	questions: ["What was the starting word?"] },
 	{ original: "Naming Conventions",	name: "命名規則",	id: "NamingConventions",	questions: ["最初のボタンのラベルは？"] },
 	{ original: "Navigation Determination",	name: "ナビ決定",	id: "NavigationDeterminationModule",	questions: ["迷路の色とラベルは？"] },
 	{ original: "Navinums",	name: "ナビ数字",	id: "navinums",	questions: ["どの方向ボタンが押された？", "最初の中央の数字は？"] },

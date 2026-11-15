@@ -388,6 +388,7 @@ let SouvenirModuleData = [
 	{ original: "Mystery Module",	name: "Mystery-Modul",	id: "mysterymodule",	questions: ["Die Entschärfung welches Moduls wurde als erstes verlangt?"] },
 	{ original: "Mystic Square",	name: "Mystisches Quadrat",	id: "MysticSquareModule",	questions: ["Welche Ziffer war am Anfang in der Mitte?"] },
 	{ original: "Naming Conventions",	name: "Namenskonventionen",	id: "NamingConventions",	questions: ["Was stand auf der ersten Taste?"] },
+	{ original: "Name Changer",	name: "Namenswechsler",	id: "nameChanger",	questions: ["Was war das Anfangswort?"] },
 	{ original: "Navigation Determination",	name: "Navigation Determination",	id: "NavigationDeterminationModule",	questions: ["Welche Farbe und Beschriftung hatte das Labyrinth?"] },
 	{ original: "Navinums",	name: "Navinummern",	id: "navinums",	questions: ["Welche Richtungstasten wurden gedrückt?", "Welche Ziffer war am Anfang in der Mitte?"] },
 	{ original: "The Necronomicon",	name: "DasNecronomicon",	id: "necronomicon",	questions: ["Welche Kapitelnummern kamen vor?"] },

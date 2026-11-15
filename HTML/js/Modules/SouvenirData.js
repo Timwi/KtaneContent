@@ -378,6 +378,7 @@ let SouvenirModuleData = [
 	{ name: "Murder",	id: "murder",	questions: ["Which were the suspects and weapons?", "Where was the body found?"] },
 	{ name: "Mystery Module",	id: "mysterymodule",	questions: ["Which module was the first requested to be solved?"] },
 	{ name: "Mystic Square",	id: "MysticSquareModule",	questions: ["What digit was initially in the center?"] },
+	{ name: "Name Changer",	id: "nameChanger",	questions: ["What was the starting word?"] },
 	{ name: "Naming Conventions",	id: "NamingConventions",	questions: ["What was the label of the first button?"] },
 	{ name: "Navigation Determination",	id: "NavigationDeterminationModule",	questions: ["What were the color and label of the maze?"] },
 	{ name: "Navinums",	id: "navinums",	questions: ["Which directional buttons were pressed?", "What was the initial middle digit?"] },
