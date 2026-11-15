@@ -43,6 +43,7 @@ let SouvenirModuleData = [
 	{ original: "Bakery",	name: "クッキー屋",	id: "bakery",	questions: ["存在したメニュー商品はどれ？"] },
 	{ original: "Bamboozled Again",	name: "再錯綜",	id: "bamboozledAgain",	questions: ["それぞれの正しいボタンの色とテキストは？", "表示された各メッセージを解読した時のテキストと色は？"] },
 	{ original: "Bamboozling Button",	name: "錯綜ボタン",	id: "bamboozlingButton",	questions: ["各ステージのボタンの色は？", "各ステージのボタンのラベルは？", "各ステージのディスプレーとその色は？"] },
+	{ original: "Bamboozling Button Grid",	name: "Bamboozling Button Grid",	id: "bamboozlingButtonGrid",	questions: ["What was on the displays and in what color in each step of the cycle in each stage?"] },
 	{ original: "Bar Charts",	name: "棒グラフ",	id: "GSBarCharts",	questions: ["バーの長さ、色、ラベルは？", "カテゴリは？", "単位は？"] },
 	{ original: "Barcode Cipher",	name: "バーコード暗号",	id: "BarcodeCipherModule",	questions: ["画面上の数字は？", "各バーコードが示すエッジワークは？", "各バーコードの回答は？"] },
 	{ original: "Bartending",	name: "バーテンディング",	id: "BartendingModule",	questions: ["どの材料がどの位置にあった？"] },

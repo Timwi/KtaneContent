@@ -34,6 +34,7 @@ let SouvenirModuleData = [
 	{ original: "The Azure Button",	name: "The Azure Button",	id: "AzureButtonModule",	questions: ["What were T and the other displayed cards?", "What was M?", "What were the arrows?"] },
 	{ original: "Bakery",	name: "Bakery",	id: "bakery",	questions: ["Какая выпечка присутствовала?"] },
 	{ original: "Bamboozling Button",	name: "Bamboozling Button",	id: "bamboozlingButton",	questions: ["Какого цвета была кнопка на каждом этапе?", "Какие надписи были на кнопке на каждом этапе?", "Какие сообщения были на экране на каждом этапе и какого цвета?"] },
+	{ original: "Bamboozling Button Grid",	name: "Bamboozling Button Grid",	id: "bamboozlingButtonGrid",	questions: ["What was on the displays and in what color in each step of the cycle in each stage?"] },
 	{ original: "Bar Charts",	name: "Bar Charts",	id: "GSBarCharts",	questions: ["Какая была высота, цвет и надпись у каждого столбца?", "Какая была категория?", "Какая была единица измерения?"] },
 	{ original: "Barcode Cipher",	name: "Barcode Cipher",	id: "BarcodeCipherModule",	questions: ["Какое число было на экране?", "Какой компонент бомбы был представлен каждым штрих кодом?", "Какой был ответ для каждого штрих кода?"] },
 	{ original: "Bartending",	name: "Bartending",	id: "BartendingModule",	questions: ["Какие ингредиенты были в какой позиции?"] },

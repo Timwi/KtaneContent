@@ -2189,9 +2189,11 @@ let parseData = [
 			{
 				regex: /The grid has the buttons:/,
 				handler: function (match, module) {
-					if(!module.attemptNum){ module.attemptNum = 0; }
+					if (!module.pressedButtons) module.pressedButtons = [];
+					if (!module.stagePressedButtons) module.stagePressedButtons = [];
+					if (!module.attemptNum) module.attemptNum = 0;
 					module.attemptNum++;
-					module.currentDropdown = [`Attempt ${module.attemptNum}`, []];
+					module.currentDropdown = [`Attempt ${module.attemptNum} (stage ${((module.pressedButtons.length/4)|0) + 1})`, []];
 
 					var stageDataLines = readTaggedLines(14);
 					var pages = [];
@@ -2297,13 +2299,114 @@ let parseData = [
 					module.currentDropdown[1].push("The module shows the following:");
 					makeCycleableDisplays(pages, module.currentDropdown[1], true);
 					module.currentDropdown[1].push(stageDataLines[5], stageDataLines[7], stageDataLines[8], stageDataLines[10], stageDataLines[12], stageDataLines[13]);
+
+					let buttons = stageDataLines.slice(0, 4).join('').trim().split(' ');
+					let rawReqs = [
+						stageDataLines[8].replace(/^The first set of desired properties are /, '').trim().split(', '),
+						stageDataLines[13].replace(/^The second set of desired properties are /, '').trim().split(', ')
+					];
+					let reqs = rawReqs
+						.map(req => req
+							.map(str => {
+								let m1 = /^([BGYR])([12345])$/.exec(str);
+								if (m1)
+									return { color: m1[1], cycle: m1[2]-1, isColor: true };
+								let m2 = /^([12345])([12345])$/.exec(str);
+								if (m2)
+									return { cycle1: m2[1]-1, cycle2: m2[2]-1, isColor: false };
+								return null;
+							}));
+					for (let i = 0; i < reqs[1].length; i++)
+						if (reqs[1][i] === null)
+						{
+							let obj = { color: reqs[0][i].color, cycle: (reqs[0][i].cycle + 1) % 5, isColor: true };
+							reqs[1][i] = obj;
+							rawReqs[1][i] = `${obj.color}${obj.cycle + 1}`;
+						}
+
+					// Determine all possible valid button presses
+					let validButtons = [];
+					let total = 1;
+					for (let btn = 0; btn < 4; btn++)
+					{
+						let arr = buttons.map((_, c) => c).filter(btnIx => {
+							if (module.pressedButtons.includes(btnIx))
+								return false;
+							for (let req of reqs)
+							{
+								if (req[btn].isColor && buttons[btnIx][req[btn].cycle] !== req[btn].color)
+									return false;
+								if (!req[btn].isColor && buttons[btnIx][req[btn].cycle1] !== buttons[btnIx][req[btn].cycle2])
+									return false;
+							}
+							return true;
+						});
+						validButtons.push(arr);
+						total *= arr.length;
+					}
+					// Find a combination of button presses that has no repeats
+					let validCombination = Array(total).fill(null)
+						.map((_, i) =>
+						{
+							let j = i;
+							let btn1 = validButtons[0][j % validButtons[0].length];
+							j = (j / validButtons[0].length) | 0;
+							let btn2 = validButtons[1][j % validButtons[1].length];
+							j = (j / validButtons[1].length) | 0;
+							let btn3 = validButtons[2][j % validButtons[2].length];
+							j = (j / validButtons[2].length) | 0;
+							let btn4 = validButtons[3][j];
+							return [btn1, btn2, btn3, btn4];
+						})
+						.filter(btns => new Set(btns).size === 4)[0]
+						.map(ix => `${String.fromCharCode(65 + (ix % 4))}${((ix / 4)|0) + 1}`)
+						.join(', ');
+					module.currentDropdown[1].push(`Possible solution: ${validCombination}`);
+					module.mostRecentReqs = rawReqs;
 					return true;
 				}
 			},
 			{
-				regex: /Button .+|Error: .+/,
+				regex: /Button (\d+) pressed, its properties are: (.+), (.+)/,
+				handler: function (match, module) {
+					let wrong = false;
+					for (let prop = 0; prop < 2; prop++)
+					{
+						let m = /^([A-Z])([A-Z])$/.exec(match[prop + 2]);
+						if (m && m[1] !== m[2])
+							wrong = true;
+						else if (!m && match[prop + 2] !== module.mostRecentReqs[prop][module.stagePressedButtons.length])
+							wrong = true;
+					}
+					if (wrong)
+						module.stagePressedButtons = [];
+					else
+					{
+						module.stagePressedButtons.push(match[1] - 1);
+						if (module.stagePressedButtons.length === 4)
+						{
+							module.pressedButtons.push(...module.stagePressedButtons);
+							module.stagePressedButtons = [];
+						}
+					}
+					module.currentDropdown[1].push(`${match[0]} (${wrong ? "incorrect" : "correct"})`);
+					return true;
+				}
+			},
+			{
+				regex: /Error: .+|Manual reset initiated/,
 				handler: function (match, module){
 					module.currentDropdown[1].push(match[0]);
+					module.stagePressedButtons = [];
+					return true;
+				}
+			},
+			{
+				regex: /Resetting to stage 1/,
+				handler: function (match, module){
+					module.currentDropdown[1].push(match[0]);
+					module.stagePressedButtons = [];
+					module.pressedButtons = [];
 					return true;
 				}
 			}
@@ -7147,11 +7250,11 @@ let parseData = [
 					module.drawGrid = function(){
 						// Do not LFA for older logs as it'll break them
 						if (!module.immovableObject) { module.stop = "stop"; return true; }
-						
+
 						// Markers are global so they need to have unique IDs for each instance of the module
 						linen--;
 						let moduleId = readLine().match(/\d+/)[0]
-						
+
 						let svg = '<svg viewbox="0.2 0.2 9.2 9.2" class="fist-plate">';
 						svg += `<defs> <marker id="fistPlateArrow${moduleId}" markerHeight="1" markerWidth="1" orient="auto" overflow="visible" viewBox="0 0 1 1"> <path d="m2.9 0-4.3 2.5v-5Z"></path> </marker> </defs>`;
 						const redirectionData = {
@@ -7209,7 +7312,7 @@ let parseData = [
 							svg += `<path class="movement" d="M${xPos} ${yPos}${movementDirections[direction]}${numberOfVoids + 0.6}" marker-end="url(#fistPlateArrow${moduleId})"></path>`;
 							previousCoordinate = coordinate; // Save the coordinate where the Object was before
 						}
-						
+
 						// Draw board exit arrow
 						if (module.exitBoard){
 							let numberOfVoids = parseInt(module.exitBoard.slice(0,1));
@@ -7224,14 +7327,14 @@ let parseData = [
 							}
 							svg += `<path class="movement" d="M${xPos} ${yPos}${movementDirections[direction]}${numberOfVoids + 0.6}" marker-end="url(#fistPlateArrow${moduleId})"></path>`;
 						}
-						
+
 						// ImmovbleObject
 						svg += `<circle cx="${".ABCDEFGH".indexOf(module.immovableObject.slice(0,1)) + 0.5}" cy="${parseInt(module.immovableObject.slice(1,2)) + 0.5}" r="0.3"></circle>`;
-						
+
 						svg += '</svg>'
 						module.push({label: "Grid with movements:", obj: svg});
 					}
-					
+
 					module.movements = [];
 					module.push(matches.input);
 					return true;
@@ -25295,14 +25398,14 @@ let parseData = [
 				regex: /Line: ([A-E][1-5]-[A-E][1-5])/,
 				handler: function (matches, module) {
 					module.lines.push(matches[1]);
-					
+
 					// Check if this is the last line to create the SVG
 					if (/^\[Untangle /.test(readLine()) == false){
 						// Linear Gradients (defined later) must have a unique ID to exist, so we'll use moduleId;
 						linen -= 2;
 						let moduleId = readLine().match(/\d+/)[0];
-						
-						let colours = {};						
+
+						let colours = {};
 						function getColourFrag(){
 							return ["00", "11", "22", "33", "44", "55", "66", "77", "88", "99", "AA", "BB", "CC", "DD", "EE", "FF"][Math.floor(Math.random() * 16)];
 						}
@@ -25327,7 +25430,7 @@ let parseData = [
 							svg += `<linearGradient id="untangle${moduleId}_${l}" x1="${x1 <= x2 ? 0 : 100}%" x2="${x1 < x2 ? 100 : 0}%" y1="${y1 <= y2 ? 0 : 100}%" y2="${y1 < y2 ? 100 : 0}%"> <stop offset="5%" stop-color="${colours[coord1]}"/> <stop offset="95%" stop-color="${colours[coord2]}"/> </linearGradient>`;
 							// Linear Gradients use the area to shade, so the line can't be perfectly horizontal nor vertical, so offset by 0.001
 							svg += `<path render-order="-1" d="M${x1+0.001} ${y1+0.001} ${x2} ${y2}" stroke="url(#untangle${moduleId}_${l})" stroke-width="0.06"></path>`;
-							
+
 						}
 						// Draw the pegs OVER the lines (SVG draw order is purely based on order in the file)
 						for (var i = 0; i < 5; i ++){

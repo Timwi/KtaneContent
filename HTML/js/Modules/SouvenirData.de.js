@@ -674,6 +674,7 @@ let SouvenirModuleData = [
 	{ original: "Scramboozled Eggain",	name: "Wieder Mal Das Ei Gerührt",	id: "ScramboozledEggainModule",	questions: ["Wie lauteten die verschlüsselten Wörter?"] },
 	{ original: "Bamboozling Button",	name: "Wieder Übern Knopf Gehauen",	id: "bamboozlingButton",	questions: ["Welche Farbe hatte die Taste in welcher Stufe?", "Welche Aufschrift hatte die Taste in welcher Stufe?", "Was wurde in welcher Stufe auf dem Display angezeigt und in welcher Farbe?"] },
 	{ original: "Bamboozled Again",	name: "Wieder Übers Ohr Gehauen",	id: "bamboozledAgain",	questions: ["Welche Farben und Aufschriften hatten die Tasten am Anfang?", "Welche Farben und Dekodierergebnisse hatten die Anzeigen auf dem Display?"] },
+	{ original: "Bamboozling Button Grid",	name: "Wieder Übers Tastenfeld Gehauen",	id: "bamboozlingButtonGrid",	questions: ["Was stand in welcher Farbe in welchem Schritt der Folge in welcher Stufe auf welchem Display?"] },
 	{ original: "Semamorse",	name: "Winkermorse",	id: "semamorse",	questions: ["Für den Startwert kam welcher Morsebuchstabe, welcher Winkerbuchstabe und welche Farbe zum Einsatz?"] },
 	{ original: "Jumble Cycle",	name: "Wirrwarr-Gemeinschrift",	id: "jumbleCycle",	questions: ["In welche Richtung zeigten die Drehknöpfe?", "Was stand auf den Drehknöpfen?"] },
 	{ original: "Wolf, Goat, and Cabbage",	name: "Wolf, Ziege und Kohl",	id: "wolfGoatCabbageModule",	questions: ["Welche Kreaturen kamen vor?"] },
