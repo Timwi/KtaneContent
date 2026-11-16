@@ -19,6 +19,7 @@ let SouvenirModuleData = [
 	{ original: "A Letter",	name: "A Letter",	id: "LetterModule",	questions: ["Какая была начальная буква?"] },
 	{ original: "Alfa-Bravo",	name: "Alfa-Bravo",	id: "alfa_bravo",	questions: ["Какая последняя цифра была на маленьком экране?"] },
 	{ original: "Algorithmia",	name: "Algorithmia",	id: "algorithmia",	questions: ["Какие были начальная и целевая позиции?", "Какого цвета был светодиод?", "Какие числа присутствовали в зерне?"] },
+	{ original: "Allmighty Sinnoh",	name: "Allmighty Sinnoh",	id: "AllmightySinnoh",	questions: ["Which plates were initially marked?"] },
 	{ original: "Alphabetical Ruling",	name: "Alphabetical Ruling",	id: "alphabeticalRuling",	questions: ["Какие буквы и числа были показаны на каждом этапе?"] },
 	{ original: "Alphabet Numbers",	name: "Alphabet Numbers",	id: "alphabetNumbers",	questions: ["Какие числа были на кнопках на каждом этапе?"] },
 	{ original: "Alphabet Tiles",	name: "Alphabet Tiles",	id: "AlphabetTiles",	questions: ["Какие буквы были показаны в каждом цикле?", "Какая буква отсутствовала?"] },

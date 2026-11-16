@@ -27,6 +27,7 @@ let SouvenirModuleData = [
 	{ name: "Alfa-Bravo",	id: "alfa_bravo",	questions: ["What was the last digit on the small display?"] },
 	{ name: "Algebra",	id: "algebra",	questions: ["What were the first two equations?"] },
 	{ name: "Algorithmia",	id: "algorithmia",	questions: ["What were the starting and goal positions?", "What color was the bulb?", "Which numbers were present in the seed?"] },
+	{ name: "Allmighty Sinnoh",	id: "AllmightySinnoh",	questions: ["Which plates were initially marked?"] },
 	{ name: "Alphabetical Ruling",	id: "alphabeticalRuling",	questions: ["What were the letters and numbers displayed in each stage?"] },
 	{ name: "Alphabet Numbers",	id: "alphabetNumbers",	questions: ["What were the numbers on the buttons in each stage?"] },
 	{ name: "Alphabet Tiles",	id: "AlphabetTiles",	questions: ["What were the letters shown during each cycle?", "What was the missing letter?"] },

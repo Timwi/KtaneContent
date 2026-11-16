@@ -33,6 +33,7 @@ let SouvenirModuleData = [
 	{ original: "Alfa-Bravo",	name: "Alfa-Bravo",	id: "alfa_bravo",	questions: ["Welche Ziffer war zuletzt auf dem kleinen Display?"] },
 	{ original: "Algebra",	name: "Algebra",	id: "algebra",	questions: ["Was waren die ersten zwei Gleichungen?"] },
 	{ original: "Algorithmia",	name: "Algorithmia",	id: "algorithmia",	questions: ["Wo war die Start- und Zielposition?", "Welche Farbe hatte die Glühlampe?", "Welche Zahlen kamen im Seedcode vor?"] },
+	{ original: "Allmighty Sinnoh",	name: "Allmighty Sinnoh",	id: "AllmightySinnoh",	questions: ["Welche Platten waren anfänglich markiert?"] },
 	{ original: "Alphabetical Ruling",	name: "Alphabetical Ruling",	id: "alphabeticalRuling",	questions: ["Welche Buchstaben und Ziffern kamen in welcher Stufe vor?"] },
 	{ original: "Alphabet Tiles",	name: "Alphabet-Kacheln",	id: "AlphabetTiles",	questions: ["Welche Buchstaben kamen in welchem Zyklus vor?", "Welcher Buchstabe hat gefehlt?"] },
 	{ original: "Alphabet Numbers",	name: "Alphabet Numbers",	id: "alphabetNumbers",	questions: ["Welche Zahlen waren in welcher Stufe auf den Tasten?"] },

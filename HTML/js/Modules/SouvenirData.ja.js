@@ -27,6 +27,7 @@ let SouvenirModuleData = [
 	{ original: "Alfa-Bravo",	name: "アルファブラボー",	id: "alfa_bravo",	questions: ["小さなディスプレーの最後の数字は？"] },
 	{ original: "Algebra",	name: "方程式",	id: "algebra",	questions: ["1~2番目の方程式は？"] },
 	{ original: "Algorithmia",	name: "アルゴリズム",	id: "algorithmia",	questions: ["スタートとゴールの位置は？", "色付き電球の色は？", "シード内にあった数字は？"] },
+	{ original: "Allmighty Sinnoh",	name: "Allmighty Sinnoh",	id: "AllmightySinnoh",	questions: ["Which plates were initially marked?"] },
 	{ original: "Alphabetical Ruling",	name: "アルファベットルール",	id: "alphabeticalRuling",	questions: ["各ステージで表示された文字と数字は？"] },
 	{ original: "Alphabet Numbers",	name: "アルファベット番号",	id: "alphabetNumbers",	questions: ["各ステージでボタンに記されていた番号は？"] },
 	{ original: "Alphabet Tiles",	name: "アルファベットタイル",	id: "AlphabetTiles",	questions: ["各サイクルで何の文字が表示されていた？", "欠けていた英字は？"] },
