@@ -30,6 +30,7 @@
                 <select id="bombList">
                     <option disabled selected value id='fs'>Loading...</option>
                 </select>
+                <input type="file" accept="application/json" id="profileInput" style="display: none;"/>
 
                 <h3 id="qtmcu" style="margin-bottom: .3cm"></h3>
                 <div class="souvenir" id="questionBatch"></div>
@@ -41,16 +42,13 @@
         {
             let bombData = [];
             let bombList = document.getElementById('bombList');
-            let questionBatch = document.getElementById('questionBatch');
+            let profileInput = document.getElementById('profileInput');
             let qtmcu = document.getElementById('qtmcu');
+            let questionBatch = document.getElementById('questionBatch');
             let warningSvg = document.getElementById('warning');
 
-            let showAllModules = { name: "(Show all modules)", moduleList: [], poolPresent: false };
-            for (let m = 0; m < SouvenirModuleData.length; m++)
-            {
-                showAllModules.moduleList.push(SouvenirModuleData[m].id);
-            }
-            bombData.push(showAllModules);
+            bombData.push({ name: "(Input profile)", moduleList: null, poolPresent: false });
+            bombData.push({ name: "(Show all modules)", moduleList: SouvenirModuleData.map(e => e.id), poolPresent: false });
 
             let request = await fetch("https://bombs.samfun.dev/json/missions");
             let reqText = await request.text();
@@ -85,7 +83,8 @@
                     });
                     if (!souvenirPresent) { souvenirPresent = souvenirCount > 0; }
                     if (!twoSouvenirs) { twoSouvenirs = souvenirCount == 2; }
-                    if (souvenirCount) {
+                    if (souvenirCount) 
+                    {
                         modList.push(...bombModules);
                     }
                 });
@@ -110,16 +109,60 @@
 
             document.getElementById('fs').innerHTML = 'Select mission';
 
-            bombList.addEventListener("change", (event) =>
+            bombList.addEventListener("change", () =>
+            {
+                profileInput.style.display = bombData[bombList.value].name == "(Input profile)" ? "inherit" : "none";
+                if (bombData[bombList.value].name == "(Input profile)") 
+                {
+                    qtmcu.textContent = "";
+                    questionBatch.innerHTML = "";
+                    return; 
+                }
+
+                displayQuestions(bombData[bombList.value]);
+            });
+
+            profileInput.addEventListener("change", (ev) => {
+                const file = ev.target.files[0];
+
+                if (!file) return;
+
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    const data = JSON.parse(content);
+                    useProfile(data);
+                };
+
+                reader.readAsText(file);
+            });
+
+            function useProfile(file) 
+            {
+                if (Object.hasOwn(file, "Operation") && Object.hasOwn(file, "EnabledList")) 
+                {
+                    displayQuestions({ moduleList: file.EnabledList, poolPresent: false });
+                } else if (Object.hasOwn(file, "Operation") && Object.hasOwn(file, "DisabledList")) 
+                {
+                    alert("Your profile needs to be an Expert profile.");
+                } else 
+                {
+                    alert("JSON file does not look like a KTANE profile.");
+                }
+            }
+
+            function displayQuestions(moduleSetData) 
             {
                 qtmcu.textContent = "Questions that may come up:";
                 questionBatch.innerHTML = "";
                 warningSvg.style.width = "0px";
                 warningSvg.innerHTML = '<path fill="none" stroke="#000" stroke-miterlimit="3" stroke-width="1.26" d="m8.47 2.12 7.33 12.7H1.13zm0 3.44v5.29m0 1.05v1.33"/>';
-                let modList = bombData[bombList.value].moduleList;
-                let poolPresence = bombData[bombList.value].poolPresent;
+                let modList = moduleSetData.moduleList;
+                let poolPresence = moduleSetData.poolPresent;
                 let warningMessages = new Set();
                 let vanillaList = [];
+                let supportedTotal = 0;
 
                 if (modList.includes("ALL_VANILLA_SOLVABLE"))
                 {
@@ -151,7 +194,7 @@
                             nameDiv.innerHTML = data.name.slice(4) + "<span class=\"the\">&nbsp;(The)</span>";
                             if (data.name == "The Sequencyclopedia")
                             {
-                                nameDiv.style = "transform: scaleX(.95); transform-origin: left 50%";
+                                nameDiv.style = "transform: scaleX(.9); transform-origin: left 50%";
                             }
                         } else
                         {
@@ -170,11 +213,21 @@
 
                         questionBatch.appendChild(moduleDiv);
 
-                        if (poolPresence)
-                        {
-                            warningMessages.add("Your bomb may not necessarily contain every module given below.");
-                        }
+                        supportedTotal++;
                     }
+                }
+
+                if (supportedTotal == 0) 
+                {
+                    qtmcu.textContent = "";
+                    let noneText = document.createElement("p");
+                    noneText.textContent = "(There are no Souvenir supported modules.)";
+                    questionBatch.appendChild(noneText);
+                }
+
+                if (poolPresence)
+                {
+                    warningMessages.add("Your bomb may not necessarily contain every module given below.");
                 }
 
                 if (modList.includes("ALL_MODS_SOLVABLE") || modList.includes("ALL_SOLVABLE"))
@@ -185,9 +238,9 @@
                 if (warningMessages.size > 0)
                 {
                     warningSvg.style.width = "64px";
-                    warningSvg.innerHTML += `<title>${[...warningMessages].join('&#xa;&#xa;')}<${''}/title>`;
+                    warningSvg.innerHTML += `<title>${[...warningMessages].join('&#xa;&#xa;')}</title>`;
                 }
-            });
+            }
         }
         fetchBombData();
     </script>
