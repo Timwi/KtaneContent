@@ -9387,6 +9387,120 @@ let parseData = [
 		displayName: "The Giant’s Drink"
 	},
 	{
+		moduleID: "GlassCactus",
+		loggingTag: "Glass Cactus",
+		displayName: "Glass Cactus",
+		matches: [
+			{
+				regex: /Using Rule Seed/,
+				handler: function (matches, module) {
+					module.solution = [];
+					module.push(matches.input);
+					return true;
+				}
+			},
+			{
+				regex: /(Red|Green|Blue|Yellow) spike in the sequence is in (North|South|East|West|North-East|North-West|South-East|South-West) (outer|outermost|middle-outer|middle-inner|inner|innermost) circle/,
+				handler: function (matches, module) {
+					const cols = {
+						"North": 0,
+						"South": 4,
+						"East": 2,
+						"West": 6,
+						"North-East": 1,
+						"North-West": 7,
+						"South-East": 3,
+						"South-West": 5
+					};
+					const rows = {
+						"outer": 0,
+						"outermost": 0,
+						"middle-outer": 1,
+						"middle-inner": 2,
+						"inner": 3,
+						"innermost": 3
+					};
+					module.solution.push( { "col": cols[matches[2]], "row": rows[matches[3]] } );
+					return true;
+				}
+			},
+			{
+				regex: /The Glass Cactus' spikes, starting at the outermost North, going clockwise then inner, is: ((Blue *|Red *|Green *|Yellow *){32})/,
+				handler: function (matches, module) {
+					var colours = {
+						"R": "#ff4444",
+						"G": "#44ff44",
+						"B": "#4444ff",
+						"Y": "#ffff44"
+					}
+					function getColourFrag(){ return ["00", "11", "22", "33", "44", "55", "66", "77", "88", "99", "AA", "BB", "CC", "DD", "EE", "FF"][Math.floor(Math.random() * 16)]; }
+					
+					var colourSequence = matches[1].split(" ");
+					
+					let svg =
+						`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 270 270" class="glass-cactus">
+							<circle class="outer" cx="125" cy="125" r="100" fill="#${getColourFrag()}${getColourFrag()}${getColourFrag()}10" stroke="#000" stroke-width="4"/>
+							<path fill="none" stroke="#000" opacity="30%" stroke-dasharray="1.015 2" d="m54.3 54.3 141.4 141.4m-141.4 0L195.7 54.3M125 25v200M25 125h200m-75.5 0a24.5 24.5 0 0 1-24.5 24.5 24.5 24.5 0 0 1-24.5-24.5 24.5 24.5 0 0 1 24.5-24.5 24.5 24.5 0 0 1 24.5 24.5Zm24.5 0a49 49 0 0 1-49 49 49 49 0 0 1-49-49 49 49 0 0 1 49-49 49 49 0 0 1 49 49Zm24.5 0a73.5 73.5 0 0 1-73.5 73.5A73.5 73.5 0 0 1 51.5 125 73.5 73.5 0 0 1 125 51.5a73.5 73.5 0 0 1 73.5 73.5Z"/>
+							<g stroke="#000" class="spikes-data">
+								<path fill="${colours[colourSequence[00][0]]}" d="M122 13.5v11.3h6.4V13.5l-3.2-10.7z"></path>
+								<path fill="${colours[colourSequence[01][0]]}" d="m201.9 43.9-8 8 4.5 4.5 8-8 5.2-9.8z"></path>
+								<path fill="${colours[colourSequence[02][0]]}" d="M236.8 121.8h-11.3v6.4h11.3l10.6-3.2z"/>
+								<path fill="${colours[colourSequence[03][0]]}" d="m206.4 201.6-8-8-4.5 4.5 8 8 9.8 5.3z"/>
+								<path fill="${colours[colourSequence[04][0]]}" d="M128.4 236.5v-11.3h-6.3v11.3l3.1 10.7z"/>
+								<path fill="${colours[colourSequence[05][0]]}" d="m48.6 206.1 8-8-4.5-4.4-8 8-5.3 9.7z"/>
+								<path fill="${colours[colourSequence[06][0]]}" d="M13.7 128.2H25v-6.3H13.7L3 125z"></path>
+								<path fill="${colours[colourSequence[07][0]]}" d="m44.1 48.4 8 8 4.5-4.5-8-8-9.8-5.3z"></path>
+								<path fill="${colours[colourSequence[08][0]]}" d="M122 45v6.6c1.1 1 5.5 1 6.4 0V45l-3.2-9.3z"></path>
+								<path fill="${colours[colourSequence[09][0]]}" d="m179.6 66.2-4.7 4.7c0 1.4 3.1 4.5 4.5 4.5l4.7-4.7 4.3-8.8z"></path>
+								<path fill="${colours[colourSequence[10][0]]}" d="M205.2 121.8h-6.6c-1 1-1 5.5 0 6.4h6.6l9.3-3.2z"></path>
+								<path fill="${colours[colourSequence[11][0]]}" d="m184 179.3-4.6-4.6c-1.4 0-4.6 3-4.5 4.5l4.7 4.6 8.8 4.3z"></path>
+								<path fill="${colours[colourSequence[12][0]]}" d="M128.4 205v-6.6c-1-1-5.4-1-6.3 0v6.6l3.1 9.3z"></path>
+								<path fill="${colours[colourSequence[13][0]]}" d="m71 183.8 4.6-4.7c0-1.4-3.1-4.5-4.5-4.4l-4.7 4.6-4.3 8.8z"></path>
+								<path fill="${colours[colourSequence[14][0]]}" d="M45.2 128.2h6.6c1-1 1-5.5 0-6.4h-6.6L36 125z"></path>
+								<path fill="${colours[colourSequence[15][0]]}" d="m66.4 70.7 4.7 4.6c1.4 0 4.6-3 4.5-4.4l-4.7-4.7-8.8-4.3z"></path>
+								<path fill="${colours[colourSequence[16][0]]}" d="M122 72v4.1c0 2.5 6.4 2.6 6.4 0V72l-3.2-8.2z"></path>
+								<path fill="${colours[colourSequence[17][0]]}" d="m160.5 85.3-3 2.9c-1.7 1.8 2.7 6.3 4.5 4.5l3-3 3.5-8z"></path>
+								<path fill="${colours[colourSequence[18][0]]}" d="M178.2 121.8h-4c-2.6 0-2.7 6.4 0 6.4h4l8.3-3.2z"></path>
+								<path fill="${colours[colourSequence[19][0]]}" d="m165 160.2-3-2.9c-1.7-1.8-6.3 2.7-4.4 4.5l2.9 3 8 3.5z"></path>
+								<path fill="${colours[colourSequence[20][0]]}" d="M128.4 178v-4c0-2.5-6.3-2.6-6.3 0v4.1l3.1 8.2z"></path>
+								<path fill="${colours[colourSequence[21][0]]}" d="m90 164.7 3-2.9c1.7-1.7-2.7-6.3-4.6-4.5l-2.9 3-3.5 8z"></path>
+								<path fill="${colours[colourSequence[22][0]]}" d="M72.2 128.2h4.2c2.5 0 2.5-6.4 0-6.4h-4.2L64 125z"></path>
+								<path fill="${colours[colourSequence[23][0]]}" d="m85.5 89.8 3 2.9c1.7 1.8 6.3-2.7 4.4-4.5l-2.9-3-8-3.5z"></path>
+								<path fill="${colours[colourSequence[24][0]]}" d="M122 98.2v2.5c0 4.6 6.4 4.4 6.4 0v-2.5l-3.2-5.5z"></path>
+								<path fill="${colours[colourSequence[25][0]]}" d="m142 103.8-1.8 1.8c-3.2 3.2 1.4 7.6 4.5 4.4a23 23 0 0 1 1.7-1.7l1.7-6.2z"></path>
+								<path fill="${colours[colourSequence[26][0]]}" d="M152 121.8h-2.4c-4.6 0-4.4 6.4 0 6.4h2.4l5.6-3.2z"></path>
+								<path fill="${colours[colourSequence[27][0]]}" d="m146.4 141.7-1.7-1.7c-3.2-3.3-7.6 1.4-4.5 4.5a23 23 0 0 1 1.7 1.7l6.2 1.7z"></path>
+								<path fill="${colours[colourSequence[28][0]]}" d="M128.4 151.8v-2.5c0-4.5-6.4-4.4-6.3 0v2.5l3.1 5.5z"></path>
+								<path fill="${colours[colourSequence[29][0]]}" d="M108.6 146.2s0-.2 1.7-1.7c3.2-3.3-1.4-7.7-4.5-4.5a23 23 0 0 1-1.7 1.7l-1.7 6.2z"></path>
+								<path fill="${colours[colourSequence[30][0]]}" d="M98.5 128.2h2.4c4.6 0 4.4-6.4 0-6.4h-2.4l-5.6 3.2z"></path>
+								<path fill="${colours[colourSequence[31][0]]}" d="m104 108.3 1.8 1.7c3.2 3.3 7.6-1.3 4.5-4.4a23 23 0 0 1-1.7-1.8l-6.2-1.7z"></path>
+							</g>`;
+					
+					const distances = [112, 81, 54, 26];
+					const radii = [15, 13, 11, 10];
+					
+					for (var i = 0; i < 5; i ++){
+						var radius = radii[module.solution[i]["row"]];
+						var dist = distances[module.solution[i]["row"]];
+						var angle = module.solution[i]["col"];
+						angle = (12-angle)%8; // convert to trig: counterclock, starting right/east
+						angle = angle * Math.PI / 4; // convert [0-7] to radian
+						var y = 125 + dist * Math.cos(angle);
+						var x = 125 + dist * Math.sin(angle);
+						var colour = colours[colourSequence[module.solution[i]["row"] * 8 + module.solution[i]["col"]][0]];
+						svg += `<circle cx="${x}" cy="${y}" r="${radius}" fill="none" stroke="#000"></circle>`;
+						svg += `<text x="${x-1.5*radius*Math.sin(angle)}" y="${y-1.5*radius*Math.cos(angle)}">${i+1}</text>`
+					}
+					svg += "</svg>"
+					module.push(matches.input); // ""Colourblind Support""
+					module.push({label: "One possible valid sequence of spikes on the Module is:", obj: svg});
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: "graffitiNumbers",
 		loggingTag: "Graffiti Numbers",
 		matches: [
