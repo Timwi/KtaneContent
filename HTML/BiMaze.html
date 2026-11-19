@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="initial-scale=1">
+    <title>BiMaze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src='js/ruleseed.js'></script>
+    <script src="js/jquery.3.7.0.min.js"></script>
+    <script src="js/Utilities/svg-utils.js"></script>
+    <style>
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        svg {
+            width: 200px;
+        }
+
+        .dark svg :is(line, circle.big, path):not(.bimaze-wall) {
+            stroke: #DDD;
+        }
+
+        .dark svg circle:not(.big) {
+            fill: #DDD;
+        }
+
+        .bimaze-fix {
+            display: inline-block;
+            font-family: 'Brush Script MT', 'Comic Sans MS', cursive;
+            z-index: 1;
+            color: #9f0000;
+        }
+
+        .dark .bimaze-fix {
+            color: #ff5f5f;
+        }
+
+        .vanilla-fix {
+            text-decoration: line-through;
+            text-decoration-color: #7f0000;
+            text-decoration-thickness: 2px;
+            opacity: 70%;
+            user-select: none;
+        }
+
+        .dark .vanilla-fix {
+            text-decoration-color: #9f0000;
+        }
+
+        #bimaze-header-title {
+            vertical-align: top;
+        }
+
+        #mazes>svg {
+            opacity: 25%;
+        }
+
+        #bimazes {
+            padding-top: 10px;
+        }
+
+        #bimaze-rules {
+            position: absolute;
+            width: calc(100% - 24px);
+            height: 200px;
+            padding-left: 8px;
+            z-index: 1;
+            paint-order: stroke fill;
+            background-color: #ffffffbf;
+
+            @supports (-webkit-text-stroke: 8px white) {
+                background-color: transparent;
+                -webkit-text-stroke: 8px white;
+            }
+        }
+
+        .dark #bimaze-rules {
+            background-color: #222222bf;
+
+            @supports (-webkit-text-stroke: 8px black) {
+                background-color: transparent;
+                -webkit-text-stroke: 8px black;
+            }
+        }
+    </style>
+    <script>
+        function removeWalls(m1, m2) {
+            if (m1.x - m2.x == 1) {
+                m1.wallLeft = false;
+                m2.wallRight = false;
+            }
+            if (m1.x - m2.x == -1) {
+                m1.wallRight = false;
+                m2.wallLeft = false;
+            }
+            if (m1.y - m2.y == 1) {
+                m1.wallUp = false;
+                m2.wallDown = false;
+            }
+            if (m1.y - m2.y == -1) {
+                m1.wallDown = false;
+                m2.wallUp = false;
+            }
+        }
+
+        class Maze {
+            constructor() {
+                /** @type {{x:number;y:number;visited:boolean;wallUp:boolean;wallDown:boolean;wallLeft:boolean;wallRight:boolean}[][]} */
+                this.CellGrid = new Array(6);
+                this.indicators = [];
+                for (let i = 0; i < 6; i++) {
+                    this.CellGrid[i] = new Array(6);
+                    for (let j = 0; j < 6; j++)
+                        this.CellGrid[i][j] = { x: i, y: j, visited: false, wallUp: true, wallDown: true, wallLeft: true, wallRight: true };
+                }
+            }
+
+            BuildMaze(rnd, candidateIndicators) {
+                for (let i = 0; i < 6; i++) {
+                    for (let j = 0; j < 6; j++) {
+                        if (i > 0) rnd.nextDouble();
+                        if (j > 0) rnd.nextDouble();
+                    }
+                }
+                this.PopulateMaze(rnd);
+                this.indicators = [];
+                let ix = rnd.next(0, candidateIndicators.length);
+                this.indicators.push(candidateIndicators[ix]);
+                candidateIndicators.splice(ix, 1);
+                ix = rnd.next(0, candidateIndicators.length);
+                this.indicators.push(candidateIndicators[ix]);
+                candidateIndicators.splice(ix, 1);
+            }
+
+            PopulateMaze(rnd) {
+                let x = rnd.next(0, 6);
+                let y = rnd.next(0, 6);
+                this.VisitCell(this.CellGrid[x][y], [], rnd);
+            }
+
+            VisitCell(cell, cellStack, rnd) {
+                while (cell != null) {
+                    cell.visited = true;
+                    let mazeCell = this.GetNextNeigbour(cell, rnd);
+                    if (mazeCell != null) {
+                        removeWalls(cell, mazeCell);
+                        cellStack.push(cell);
+                    }
+                    else if (cellStack.length > 0)
+                        mazeCell = cellStack.pop();
+                    cell = mazeCell;
+                }
+            }
+
+            GetNextNeigbour(cell, rnd) {
+                let list = [];
+                if (cell.x > 0 && !this.CellGrid[cell.x - 1][cell.y].visited) list.push(this.CellGrid[cell.x - 1][cell.y]);
+                if (cell.x < 5 && !this.CellGrid[cell.x + 1][cell.y].visited) list.push(this.CellGrid[cell.x + 1][cell.y]);
+                if (cell.y > 0 && !this.CellGrid[cell.x][cell.y - 1].visited) list.push(this.CellGrid[cell.x][cell.y - 1]);
+                if (cell.y < 5 && !this.CellGrid[cell.x][cell.y + 1].visited) list.push(this.CellGrid[cell.x][cell.y + 1]);
+                return list.length > 0 ? list[rnd.next(0, list.length)] : null;
+            }
+
+            /**
+             * @param {Maze | undefined} origin
+             * @param {MonoRandom} rnd
+             */
+            ToSVG(origin, rnd) {
+                let svg = '';
+                let bimazeFixes = '';
+                for (let i = 0; i < 6; i++) {
+                    for (let j = 0; j < 6; j++) {
+                        let mazeCell = this.CellGrid[i][j];
+                        let x = i * 50;
+                        let y = j * 50;
+                        svg += `<circle cx='${x + 25}' cy='${y + 25}' r='3' fill='black' />`;
+                        for (let k = 0; k < this.indicators.length; k++)
+                            if (this.indicators[k].x === i && this.indicators[k].y === j)
+                                svg += `<circle cx='${x + 25}' cy='${y + 25}' r='15' class='big' stroke='black' fill='none' stroke-width='1.5' />`;
+                        if (mazeCell.wallUp) {
+                            const isOriginal = !origin || origin.CellGrid[i][j].wallUp;
+                            const strokeWidth = j === 0 ? 10 : isOriginal ? 3 : 5;
+                            // const strokeWidth = j === 0 ? 10 : 3;
+                            const strokeColor = !origin || origin.CellGrid[i][j].wallUp ? 'black' : '#df3f3f';
+                            // const strokeColor = 'black';
+                            let x1 = x - 1.3;
+                            let y1 = y;
+                            let x2 = x + 51.3;
+                            let y2 = y;
+                            if (!isOriginal) {
+                                x1 -= rnd.nextDouble() * 5;
+                                y1 += (rnd.nextDouble() - 0.5) * 10;
+                                x2 += rnd.nextDouble() * 5;
+                                y2 += (rnd.nextDouble() - 0.5) * 10;
+                            }
+                            const props = [
+                                `x1='${x1}'`,
+                                `y1='${y1}'`,
+                                `x2='${x2}'`,
+                                `y2='${y2}'`,
+                                `stroke-width='${strokeWidth}'`,
+                                `stroke='${strokeColor}'`,
+                                `fill='none'`,
+                                `class='${!isOriginal ? 'bimaze-wall' : ''}'`,
+                            ].join(' ');
+                            const elem = `<line ${props}/>`;
+                            if (isOriginal) svg += elem;
+                            else bimazeFixes += elem;
+                        }
+                        if (mazeCell.wallLeft) {
+                            const isOriginal = !origin || origin.CellGrid[i][j].wallLeft;
+                            const strokeWidth = i === 0 ? 10 : isOriginal ? 3 : 5;
+                            // const strokeWidth = i === 0 ? 10 : 3;
+                            const strokeColor = !origin || origin.CellGrid[i][j].wallLeft ? 'black' : '#df3f3f';
+                            // const strokeColor = 'black';
+                            let x1 = x;
+                            let y1 = y - 1.3;
+                            let x2 = x;
+                            let y2 = y + 51.3;
+                            if (!isOriginal) {
+                                x1 += (rnd.nextDouble() - 0.5) * 10;
+                                y1 -= rnd.nextDouble() * 5;
+                                x2 += (rnd.nextDouble() - 0.5) * 10;
+                                y2 += rnd.nextDouble() * 5;
+                            }
+                            const props = [
+                                `x1='${x1}'`,
+                                `y1='${y1}'`,
+                                `x2='${x2}'`,
+                                `y2='${y2}'`,
+                                `stroke-width='${strokeWidth}'`,
+                                `stroke='${strokeColor}'`,
+                                `fill='none'`,
+                                `class='${!isOriginal ? 'bimaze-wall' : ''}'`,
+                            ].join(' ');
+                            const elem = `<line ${props}/>`;
+                            if (isOriginal) svg += elem;
+                            else bimazeFixes += elem;
+                        }
+                    }
+                }
+                svg += `<path stroke-width='10' stroke='black' fill='none' d='M0 0h300v300h-300z'/>`;
+                svg += bimazeFixes;
+                return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'>${svg}</svg>`;
+            }
+        }
+
+        function setRules(rnd) {
+            console.log('seed = ' + rnd.seed);
+            let mazeIndicators = [];
+            for (let i = 0; i < 6; i++)
+                for (let j = 0; j < 6; j++)
+                    mazeIndicators.push({ x: i, y: j });
+
+            $('#mazes').html('');
+            $('#bimazes').html('');
+            /** @type {Maze[]} */
+            let origins = [];
+            for (let i = 0; i < 9; i++) {
+                let maze = new Maze();
+                maze.BuildMaze(rnd, mazeIndicators);
+                origins.push(maze);
+            }
+            const bimazes = buildBiMazes(rnd, origins);
+            for (let i = 0; i < 9; i++) {
+                const maze = bimazes[i];
+                let svg = $(maze.ToSVG(origins[i], new MonoRandom(rnd.seed)));
+                if (i < 3) {
+                    $('#mazes').append(svg);
+                } else {
+                    for (let x = 0; x < 6; x++)
+                        for (let y = 0; y < 6; y++) {
+                            svg.append(MakeSvgElem('rect', {
+                                class: "highlightable", width: 50, height: 50, x: (x * 50), y: (y * 50), fill: "transparent"
+                            }));
+                        }
+                    $('#bimazes').append(svg);
+                }
+            }
+        }
+
+        function setDefaultRules(rnd) {
+            setRules(rnd);
+            document.getElementsByClassName("page-header-section-title")[0].innerHTML = `
+                <span class="bimaze-fix" id="bimaze-header-title">BiMaze</span>
+                <span class="vanilla-fix">Maze</span>
+            `;
+        }
+
+        /**
+         * @typedef {Object} MonoRandom
+         * @property {(f:number,t:number)=>number} next
+         * @property {()=>number} nextDouble
+         * @property {<T>(list:T[])=>void} shuffleFisherYates
+         */
+
+        const DX = [1, 0, -1, 0];
+        const DY = [0, -1, 0, 1];
+        /** @type {(keyof Maze)[]} */
+        const WALL_PROPS = ['wallRight', 'wallUp', 'wallLeft', 'wallDown'];
+        const WALL_CHECKERS = [
+            [[0, 0], [0, 1]],
+            [[0, 0], [-1, 0]],
+            [[-1, 0], [-1, 1]],
+            [[-1, 1], [0, 1]],
+        ];
+
+        const BIMAZE_UTILS = {
+            /**
+             * @param {number} x
+             * @param {number} y
+             * @returns {boolean}
+             */
+            isInGrid: (x, y) => x >= 0 && x < 6 && y >= 0 && y < 6,
+            /**
+             * @param {Maze} maze
+             * @param {number} blX
+             * @param {number} blY
+             * @returns {number}
+             * @dev Also counts outside cells as filly walled
+             */
+            countWallsAroundCellCross: (maze, blX, blY) => {
+                let result = 0;
+                for (let dd = 0; dd < 4; dd++) {
+                    if (!BIMAZE_UTILS.isInGrid(blX, blY) || maze.CellGrid[blX][blY][WALL_PROPS[dd]]) result += 1;
+                    blX += DX[dd];
+                    blY += DY[dd];
+                }
+                return result;
+            },
+            /**
+             * @param {Maze} maze
+             * @param {number} x
+             * @param {number} y
+             * @returns {number}
+             */
+            countWalls: (maze, x, y) => {
+                let result = 0;
+                for (let dd = 0; dd < 4; dd++) if (maze.CellGrid[x][y][WALL_PROPS[dd]]) result += 1;
+                return result;
+            },
+            /**
+             * @param {Maze} maze
+             * @param {{x:number;y:number}} from
+             * @param {{x:number;y:number;dd:number}|undefined} ignoreWall
+             */
+            calculateRoomSize: (maze, from, ignoreWall) => {
+                const q = [from];
+                const v = new Set([from.y * 6 + from.x]);
+                let result = 1;
+                while (q.length > 0) {
+                    const { x, y } = q.pop();
+                    for (let dd = 0; dd < 4; dd++) {
+                        if (maze.CellGrid[x][y][WALL_PROPS[dd]] && (!ignoreWall || x !== ignoreWall.x || y !== ignoreWall.y || dd !== ignoreWall.dd)) continue;
+                        const next = { x: x + DX[dd], y: y + DY[dd] };
+                        const encNext = next.y * 6 + next.x;
+                        if (v.has(encNext)) continue;
+                        result += 1;
+                        q.push(next);
+                        v.add(encNext);
+                    }
+                }
+                return result;
+            },
+            /** @typedef {{resultingRoomSize: number;createsNonConnectedWall:boolean;connectsTo1CellRoom:boolean;hasWallInOrigin:boolean}} WallRemovalResult */
+            /**
+             * @param {Maze} maze
+             * @param {number} x
+             * @param {number} y
+             * @param {number} dd
+             * @param {Maze} origin
+             * @return {WallRemovalResult}
+             */
+            calculateWallRemovalResult: (bimaze, x, y, dd, origin) => {
+                const resultingRoomSize = BIMAZE_UTILS.calculateRoomSize(bimaze, { x, y }, { x, y, dd });
+                const createsNonConnectedWall = WALL_CHECKERS[dd].some(([dx, dy]) => BIMAZE_UTILS.countWallsAroundCellCross(bimaze, x + dx, y + dy) <= 2);
+                const xx = x + DX[dd];
+                const yy = y + DY[dd];
+                const connectsTo1CellRoom = BIMAZE_UTILS.isInGrid(xx, yy) && BIMAZE_UTILS.countWalls(bimaze, xx, yy) === 4;
+                const hasWallInOrigin = origin.CellGrid[x][y][WALL_PROPS[dd]];
+                return { resultingRoomSize, createsNonConnectedWall, connectsTo1CellRoom, hasWallInOrigin };
+            },
+            /**
+             * @param {Maze} maze
+             * @returns {number}
+             */
+            countTotalInnerWalls: (maze) => {
+                let result = 0;
+                for (let x = 0; x < 6; x++) for (let y = 0; y < 6; y++) {
+                    if (x < 5 && maze.CellGrid[x][y].wallRight) result += 1;
+                    if (y < 5 && maze.CellGrid[x][y].wallDown) result += 1;
+                }
+                return result;
+            },
+            /**
+             * @param {Maze} mazeA
+             * @param {Maze} mazeB
+             * @param {{rnd?:{next:(min:number,max:number)=>number};q?:{x:number;y:number}[];visitedCells?:boolean[][]}|undefined} params
+             * @returns {number} visited cells count
+             */
+            tryTraverse: (mazeA, mazeB, params = {}) => {
+                const rnd = params.rnd ?? { next: (from, to) => Math.floor(Math.random() * (to - from)) + from };
+                const q = params.q ?? [{ x: 0, y: 0 }];
+                const visitedCells = params.visitedCells ?? Array.from({ length: 6 }, () => new Array(6).fill(false));
+                let result = visitedCells.reduce((acc, col) => acc + col.reduce((acc, e) => acc + (e ? 1 : 0), 0), 0);
+                while (q.length > 0) {
+                    const qInd = rnd.next(0, q.length);
+                    const { x, y } = q[qInd];
+                    const lastQ = q.pop();
+                    if (qInd < q.length) q[qInd] = lastQ;
+                    for (let dd = 0; dd < 4; dd++) {
+                        const adj = { x: x + DX[dd], y: y + DY[dd] };
+                        if (!BIMAZE_UTILS.isInGrid(adj.x, adj.y)) continue;
+                        if (visitedCells[adj.x][adj.y]) continue;
+                        if (mazeA.CellGrid[x][y][WALL_PROPS[dd]] && mazeB.CellGrid[x][y][WALL_PROPS[dd]]) continue;
+                        visitedCells[adj.x][adj.y] = true;
+                        result += 1;
+                        q.push(adj);
+                    }
+                }
+                return result;
+            },
+            /**
+             * @param {Maze} maze
+             * @returns {number}
+             */
+            hashMaze: (maze) => {
+                let result = 0n;
+                for (let x = 0; x < 6; x++) for (let y = 0; y < 6; y++) {
+                    if (x < 5) result = result << 1n | (maze.CellGrid[x][y].wallRight ? 1n : 0n);
+                    if (y < 5) result = result << 1n | (maze.CellGrid[x][y].wallDown ? 1n : 0n);
+                }
+                return result;
+            },
+        }
+
+        /**
+         * @param {MonoRandom} rnd
+         * @param {Maze[]} mazes
+         */
+        function buildBiMazes(rnd, mazes) {
+            const SKIP_MAZES = 3;
+            const bimazesList = Array.from({ length: mazes.length }, () => new Maze());
+            for (let i = 0; i < bimazesList.length; i++) {
+                if (i < SKIP_MAZES) {
+                    bimazesList[i] = mazes[i];
+                    continue;
+                }
+                const bimaze = bimazesList[i];
+                const origin = mazes[i];
+                bimaze.indicators = origin.indicators;
+                const posList = Array.from({ length: 36 }, (_, i) => i);
+                rnd.shuffleFisherYates(posList);
+                for (const pos of posList) {
+                    const x = pos % 6;
+                    const y = Math.floor(pos / 6);
+                    const cell = bimaze.CellGrid[x][y];
+                    const originCell = origin.CellGrid[x][y];
+                    if (WALL_PROPS.some(p => !cell[p])) continue;
+                    /** @type {number[]} */
+                    let dds = [];
+                    if (x < 5) dds.push(0);
+                    if (y > 0) dds.push(1);
+                    if (x > 0) dds.push(2);
+                    if (y < 5) dds.push(3);
+                    let candidates = dds.map((dd) => ({ dd, ...BIMAZE_UTILS.calculateWallRemovalResult(bimaze, x, y, dd, origin) }));
+                    if (candidates.some(c => !c.hasWallInOrigin)) candidates = candidates.filter(c => !c.hasWallInOrigin);
+                    if (candidates.some(c => c.connectsTo1CellRoom)) candidates = candidates.filter(c => c.connectsTo1CellRoom);
+                    if (candidates.some(c => !c.createsNonConnectedWall)) candidates = candidates.filter(c => !c.createsNonConnectedWall);
+                    const minResultingRoomSize = Math.min(...candidates.map(c => c.resultingRoomSize));
+                    candidates = candidates.filter(c => c.resultingRoomSize === minResultingRoomSize);
+                    const ind = rnd.next(0, candidates.length);
+                    const dd = candidates[ind].dd;
+                    cell[WALL_PROPS[dd]] = false;
+                    bimaze.CellGrid[x + DX[dd]][y + DY[dd]][WALL_PROPS[(dd + 2) % 4]] = false;
+                }
+            }
+            const innerWallsCount = Array.from({ length: 9 }, (_, i) => i < 3 ? 0 : BIMAZE_UTILS.countTotalInnerWalls(bimazesList[i]));
+            const bimazePairsList = Array.from({ length: 36 }, (_, i) => i);
+            rnd.shuffleFisherYates(bimazePairsList);
+            for (const pairId of bimazePairsList) {
+                const ai = pairId % 6;
+                const bi = Math.floor(pairId / 6);
+                if (bi <= ai) continue;
+                const mazeAIndex = ai + 3;
+                const mazeBIndex = bi + 3;
+                const mazeA = bimazesList[mazeAIndex];
+                const mazeB = bimazesList[mazeBIndex];
+                const originA = mazes[mazeAIndex];
+                const originB = mazes[mazeBIndex];
+                const visitedCells = Array.from({ length: 6 }, () => Array.from({ length: 6 }).fill(false));
+                const start = { x: rnd.next(0, 6), y: rnd.next(0, 6) };
+                visitedCells[start.x][start.y] = true;
+                const q = [start];
+                while (true) {
+                    const visitedCellsCount = BIMAZE_UTILS.tryTraverse(mazeA, mazeB, { rnd, q, visitedCells });
+                    if (visitedCellsCount === 36) break;
+                    /** @type {{x:number;y:number;dd:number;mazeIndex:number}[]} */
+                    let wallCandidatesToRemove = [];
+                    for (let x = 0; x < 6; x++) for (let y = 0; y < 6; y++) for (let dd = 0; dd < 4; dd++) {
+                        const adj = { x: x + DX[dd], y: y + DY[dd] };
+                        if (!BIMAZE_UTILS.isInGrid(adj.x, adj.y)) continue;
+                        if (!visitedCells[x][y]) continue;
+                        if (visitedCells[adj.x][adj.y]) continue;
+                        wallCandidatesToRemove.push({ x, y, dd, mazeIndex: mazeAIndex });
+                        wallCandidatesToRemove.push({ x, y, dd, mazeIndex: mazeBIndex });
+                    }
+                    const wallRemovalResults = wallCandidatesToRemove.map(({ x, y, dd, mazeIndex }) =>
+                        BIMAZE_UTILS.calculateWallRemovalResult(bimazesList[mazeIndex], x, y, dd, mazes[mazeIndex])
+                    );
+                    let wallCandidatesToRemoveIndices = Array.from({ length: wallCandidatesToRemove.length }, (_, i) => i);
+                    if (wallCandidatesToRemoveIndices.some(i => !wallRemovalResults[i].hasWallInOrigin)) {
+                        wallCandidatesToRemoveIndices = wallCandidatesToRemoveIndices.filter(i => !wallRemovalResults[i].hasWallInOrigin);
+                    }
+                    if (wallCandidatesToRemoveIndices.some(i => wallRemovalResults[i].connectsTo1CellRoom)) {
+                        wallCandidatesToRemoveIndices = wallCandidatesToRemoveIndices.filter(i => wallRemovalResults[i].connectsTo1CellRoom);
+                    }
+                    if (wallCandidatesToRemoveIndices.some(i => !wallRemovalResults[i].createsNonConnectedWall)) {
+                        wallCandidatesToRemoveIndices = wallCandidatesToRemoveIndices.filter(i => !wallRemovalResults[i].createsNonConnectedWall);
+                    }
+                    const minResultingRoomSize = Math.min(...wallCandidatesToRemoveIndices.map(i => wallRemovalResults[i].resultingRoomSize));
+                    wallCandidatesToRemoveIndices = wallCandidatesToRemoveIndices.filter(i => wallRemovalResults[i].resultingRoomSize === minResultingRoomSize);
+                    const maxInnerWallsCount = Math.max(...wallCandidatesToRemoveIndices.map(i => innerWallsCount[wallCandidatesToRemove[i].mazeIndex]));
+                    wallCandidatesToRemoveIndices = wallCandidatesToRemoveIndices.filter(i => innerWallsCount[wallCandidatesToRemove[i].mazeIndex] == maxInnerWallsCount);
+                    const rm = wallCandidatesToRemove[wallCandidatesToRemoveIndices[rnd.next(0, wallCandidatesToRemoveIndices.length)]];
+                    bimazesList[rm.mazeIndex].CellGrid[rm.x][rm.y][WALL_PROPS[rm.dd]] = false;
+                    bimazesList[rm.mazeIndex].CellGrid[rm.x + DX[rm.dd]][rm.y + DY[rm.dd]][WALL_PROPS[(rm.dd + 2) % 4]] = false;
+                    innerWallsCount[rm.mazeIndex] -= 1;
+                    q.push({ x: rm.x, y: rm.y });
+                }
+            }
+            /** @typedef {{mazeIndex:number;x:number;y:number;dd:number;roomSize:number}} WallCandidateToAdd
+            /** @type {WallCandidateToAdd[]} */
+            const wallCandidatesToAdd = [];
+            for (let mazeIndex = 3; mazeIndex < 9; mazeIndex++) {
+                const bimaze = bimazesList[mazeIndex];
+                for (let x = 0; x < 6; x++) for (let y = 0; y < 6; y++) {
+                    if (x < 5 && !bimaze.CellGrid[x][y].wallRight && BIMAZE_UTILS.countWalls(bimaze, x, y) < 3 && BIMAZE_UTILS.countWalls(bimaze, x + 1, y) < 3) {
+                        wallCandidatesToAdd.push({ mazeIndex, x, y, dd: 0, roomSize: BIMAZE_UTILS.calculateRoomSize(bimaze, { x, y }) });
+                    }
+                    if (y < 5 && !bimaze.CellGrid[x][y].wallDown && BIMAZE_UTILS.countWalls(bimaze, x, y) < 3 && BIMAZE_UTILS.countWalls(bimaze, x, y + 1) < 3) {
+                        wallCandidatesToAdd.push({ mazeIndex, x, y, dd: 3, roomSize: BIMAZE_UTILS.calculateRoomSize(bimaze, { x, y }) });
+                    }
+                }
+            }
+            while (wallCandidatesToAdd.length > 0) {
+                const maxRoomSize = Math.max(...wallCandidatesToAdd.map(e => e.roomSize));
+                /** @type {[number,WallCandidateToAdd][]} */
+                let candidates = wallCandidatesToAdd.map((e, i) => [i, e]).filter(([_, e]) => e.roomSize === maxRoomSize);
+                const minWallsCount = Math.min(...candidates.map(([_, c]) => innerWallsCount[c.mazeIndex]));
+                candidates = candidates.filter(([_, c]) => innerWallsCount[c.mazeIndex] === minWallsCount);
+                const [candidateIndex, rndCandidate] = candidates[rnd.next(0, candidates.length)];
+                const recalculatedRoomSize = BIMAZE_UTILS.calculateRoomSize(bimazesList[rndCandidate.mazeIndex], { x: rndCandidate.x, y: rndCandidate.y });
+                if (recalculatedRoomSize !== maxRoomSize) {
+                    rndCandidate.roomSize = recalculatedRoomSize;
+                    continue;
+                }
+                const bimaze = bimazesList[rndCandidate.mazeIndex];
+                if (
+                    BIMAZE_UTILS.countWalls(bimaze, rndCandidate.x, rndCandidate.y) < 3 &&
+                    BIMAZE_UTILS.countWalls(bimaze, rndCandidate.x + DX[rndCandidate.dd], rndCandidate.y + DY[rndCandidate.dd]) < 3
+                ) {
+                    bimaze.CellGrid[rndCandidate.x][rndCandidate.y][WALL_PROPS[rndCandidate.dd]] = true;
+                    bimaze.CellGrid[rndCandidate.x + DX[rndCandidate.dd]][rndCandidate.y + DY[rndCandidate.dd]][WALL_PROPS[(rndCandidate.dd + 2) % 4]] = true;
+                    innerWallsCount[rndCandidate.mazeIndex] += 1;
+                    const bimazeIndexesToCheck = Array.from({ length: 6 }, (_, i) => i + 3).filter(i =>
+                        i !== rndCandidate.mazeIndex && bimazesList[i].CellGrid[rndCandidate.x][rndCandidate.y][WALL_PROPS[rndCandidate.dd]]
+                    );
+                    let remove = false;
+                    for (const otherMazeIndex of bimazeIndexesToCheck) {
+                        if (BIMAZE_UTILS.tryTraverse(bimaze, bimazesList[otherMazeIndex], { rnd }) === 36) continue;
+                        remove = true;
+                        break;
+                    }
+                    if (remove) {
+                        bimaze.CellGrid[rndCandidate.x][rndCandidate.y][WALL_PROPS[rndCandidate.dd]] = false;
+                        bimaze.CellGrid[rndCandidate.x + DX[rndCandidate.dd]][rndCandidate.y + DY[rndCandidate.dd]][WALL_PROPS[(rndCandidate.dd + 2) % 4]] = false;
+                        innerWallsCount[rndCandidate.mazeIndex] -= 1;
+                    }
+                }
+                const lastCandidate = wallCandidatesToAdd.pop();
+                if (candidateIndex < wallCandidatesToAdd.length) wallCandidatesToAdd[candidateIndex] = lastCandidate;
+            }
+            return bimazesList;
+        }
+    </script>
+</head>
+
+<body>
+    <div class='section'>
+        <div class='page page-bg-03'>
+            <div class='page-header'>
+                <span class='page-header-doc-title'>
+                    Keep Talking and Nobody Explodes <span class="bimaze-fix" style="line-height: 0;">Mod</span>
+                </span>
+                <span class='page-header-section-title'>BiMaze</span></span>
+            </div>
+            <div class='page-footer absolute-footer'></div>
+            <div class='page-content' style="position:relative;">
+                <img src='img/Component/Maze.svg' class='diagram'>
+                <h2>
+                    On the Subject of<span class="vanilla-fix"> Mazes </span>
+                    <span class="bimaze-fix" style="line-height: 0">BiMazes</span></span>
+                </h2>
+                <p class='flavour-text bimaze-fix' style="position:absolute;translate:0 8px;">
+                    Uhhh. Are you sure this maze is solvable? It feels like someone added too many extra walls.
+                </p>
+                <p class="comment vanilla-fix">
+                    This seems to be some kind of maze, probably stolen off of a restaurant placemat.
+                </p>
+                <ul>
+                    <li>
+                        Find
+                        <span style="position: relative;">
+                            <span class="vanilla-fix">the maze</span>
+                            <span class="bimaze-fix" style="position:absolute;top:-16px;left:-4px;width:max-content">
+                                two mazes
+                            </span>
+                        </span>
+                        with matching circular markings.
+                    </li>
+                    <li>
+                        The defuser must navigate the white light to the
+                        <span class="vanilla-fix">red</span> triangle using the arrow buttons.
+                    </li>
+                    <li>
+                        <strong>Warning:</strong> Do not cross the lines shown in the maze.
+                        These lines are invisible on the bomb.
+                    </li>
+                </ul>
+                <div id="bimaze-rules" class="bimaze-fix">
+                    <ul>
+                        <li>
+                            If the triangle is red, defuser is in a maze indicated by the first marking<br />
+                            (in reading order).
+                        </li>
+                        <li>If the triangle is green, defuser is in a maze indicated by the second marking.</li>
+                        <li>
+                            When an arrow button is pressed, the defuser moves in the indicated direction
+                            and then switches to the other maze.
+                        </li>
+                        <li>
+                            If an arrow button is held down for one second, the defuser moves without switching mazes.
+                        </li>
+                    </ul>
+                </div>
+                <div class="grid" id="mazes"></div>
+                <div class="grid" id="bimazes"></div>
+            </div>
+            <div class='page-footer relative-footer'>Page 1 of 1</div>
+        </div>
+    </div>
+</body>
+
+</html>
