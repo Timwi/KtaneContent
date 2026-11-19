@@ -31,16 +31,19 @@ function setRules(rnd){
 function applyData(){
 	const spikes = document.querySelectorAll(".spikes-data path");
 	const colours = {"R": "#f44", "G": "#4f4", "B": "#44f", "Y": "#ff4"};
-	
+	const colourblind = document.querySelectorAll(".colourblind-text tspan");
+		
 	// Outer 4 Spikes
 	for (var i = 0; i < 4; i ++){
 		spikes[i].setAttribute("fill", colours[outer[i]])
+		colourblind[i].textContent = outer[i];
 	}
 	
 	// Each column of those 4 spikes in order
 	for (var i = 0; i < 4; i ++){
 		for (var j = 0; j < 3; j++){
 			spikes[i*3 + j + 4].setAttribute("fill", colours[inner[i][j]]);
+			colourblind[i*3 + j + 4].textContent = inner[i][j];
 		}
 	}
 	
@@ -48,6 +51,7 @@ function applyData(){
 	for (var i = 0; i < 3; i ++){
 		for (var j = 0; j < 4; j++){
 			spikes[i*4 + j + 16].setAttribute("fill", colours[leftovers[i][j]]);
+			colourblind[i*4 + j + 16].textContent = leftovers[i][j];
 		}
 	}
 	
