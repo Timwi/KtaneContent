@@ -6576,7 +6576,6 @@ let parseData = [
 						module.modifyModInfo = (line) => {
 							function getBodyParts(line) {
 								switch(line) {
-									
 									case "your right hand":
 										return ["RHandColor"];
 									case "your left hand":
@@ -6775,6 +6774,14 @@ let parseData = [
 								const chair = getChair(index);
 								chair.bottomColor = match[2];
 							}
+
+							match = line.match(/(?:The .+ rule activated! )?The bottom of the (.+) is now (.+)\./)
+							if(match) {
+								const index = module.getChairIndex(match[1]);
+								const chair = getChair(index);
+								chair.bottomColor = match[2];
+							}
+
 
 							//paint the seat of the chair
 							match = line.match(/The seat of the (.+) is now (.+?)(?:-.+)?\./)
