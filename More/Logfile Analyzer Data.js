@@ -6629,13 +6629,17 @@ let parseData = [
 							}
 
 							//The duck sits in a chair
-							match = line.match(/The duck should sit on the (same chair as you|chair (\d) chair(?:s)? (.+) from (the armchair|you))\./)
+							match = line.match(/The duck should sit on the (armchair|same chair as you|chair (\d) chair(?:s)? (.+) from (the armchair|you))\./)
 							if(match) {
 								let duckChairIndex;
 				
 								//same chair as you
 								if(match[1] == "same chair as you") {
 									duckChairIndex = youChairIndex;
+								}
+
+								else if (match[1] == "armchair") {
+									duckChairIndex = 0;
 								}
 
 								else {
