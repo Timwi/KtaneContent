@@ -1061,6 +1061,351 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "3DerMaze",
+		loggingTag: "3Der Maze",
+		matches: [
+			{
+				regex: /The solution direction is(?:.+)/,
+				handler: function (matches, module)
+				{
+					//i should be increased only after an SVG is pushed
+					module.i = 0;
+					module.Maze = [[[], [], [], []], [[], [], [], []], [[], [], [], []], [[], [], [], []]];
+					for(let j = 0; j < 4; j++)
+					{
+						for(let k = 0; k < 4; k++)
+						{
+							for(let l = 0; l < 4; l++)
+							{
+								module.Maze[j][k][l] = readLine();
+							}
+						}
+					}
+					module.mazeSVG = `
+						<svg width="470" height="450" viewBox="-6 -3 210 214" class="centered-img">
+
+							<!-- Faint maze lines -->
+							<rect x="10" y="40" width="150" height="150"class="ThreeDer-base-lines"/>
+							<rect x="10" y="90" width="150" height="50" class="ThreeDer-base-lines"/>
+							<rect x="60" y="40" width="50" height="150" class="ThreeDer-base-lines"/>
+							
+							<rect x="20" y="30" width="150" height="150"class="ThreeDer-base-lines"/>
+							<rect x="20" y="80" width="150" height="50" class="ThreeDer-base-lines"/>
+							<rect x="70" y="30" width="50" height="150" class="ThreeDer-base-lines"/>
+
+							<rect x="30" y="20" width="150" height="150"class="ThreeDer-base-lines"/>
+							<rect x="30" y="70" width="150" height="50" class="ThreeDer-base-lines"/>
+							<rect x="80" y="20" width="50" height="150" class="ThreeDer-base-lines"/>
+
+							<rect x="40" y="10" width="150" height="150"class="ThreeDer-base-lines"/>
+							<rect x="40" y="60" width="150" height="50" class="ThreeDer-base-lines"/>
+							<rect x="90" y="10" width="50" height="150" class="ThreeDer-base-lines"/>
+
+							<path d="M 10 190 L 40 160 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m 20 180 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30
+							m 20 180 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m 20 180 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30" class="ThreeDer-base-lines"/>
+
+							<!-- Axis labels -->
+							<text x="0" y="44" class="ThreeDer-axis-labels">3</text>
+							<text x="0" y="94" class="ThreeDer-axis-labels">2</text>
+							<text x="0" y="144" class="ThreeDer-axis-labels">1</text>
+							<text x="0" y="194" class="ThreeDer-axis-labels">0</text>
+
+							<text x="198" y="164" class="ThreeDer-axis-labels">3</text>
+							<text x="188" y="174" class="ThreeDer-axis-labels">2</text>
+							<text x="178" y="184" class="ThreeDer-axis-labels">1</text>
+							<text x="168" y="194" class="ThreeDer-axis-labels">0</text>
+
+							<text x="7" y="203" class="ThreeDer-axis-labels">0</text>
+							<text x="57" y="203" class="ThreeDer-axis-labels">1</text>
+							<text x="107" y="203" class="ThreeDer-axis-labels">2</text>
+							<text x="157" y="203" class="ThreeDer-axis-labels">3</text>
+
+							<text x="82" y="207" class="ThreeDer-bold-text">x</text>
+							<text x="-5" y="118" class="ThreeDer-bold-text">y</text>
+							<text x="185" y="185" class="ThreeDer-bold-text">z</text>
+							
+							<!-- Actual maze lines -->
+							<line x1="40"  y1="160" x2="90"  y2= "160" id="${module.i}-003X" class="ThreeDer-maze-lines ${String(module.Maze[0][0][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="40"  y1="110" x2="90"  y2= "110" id="${module.i}-013X" class="ThreeDer-maze-lines ${String(module.Maze[0][1][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="40"  y1="60"  x2="90"  y2= "60"  id="${module.i}-023X" class="ThreeDer-maze-lines ${String(module.Maze[0][2][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="40"  y1="10"  x2="90"  y2= "10"  id="${module.i}-033X" class="ThreeDer-maze-lines ${String(module.Maze[0][3][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="90"  y1="160" x2="140" y2= "160" id="${module.i}-103X" class="ThreeDer-maze-lines ${String(module.Maze[1][0][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="90"  y1="110" x2="140" y2= "110" id="${module.i}-113X" class="ThreeDer-maze-lines ${String(module.Maze[1][1][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="90"  y1="60"  x2="140" y2= "60"  id="${module.i}-123X" class="ThreeDer-maze-lines ${String(module.Maze[1][2][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="90"  y1="10"  x2="140" y2= "10"  id="${module.i}-133X" class="ThreeDer-maze-lines ${String(module.Maze[1][3][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="140" y1="160" x2="190" y2= "160" id="${module.i}-203X" class="ThreeDer-maze-lines ${String(module.Maze[2][0][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="140" y1="110" x2="190" y2= "110" id="${module.i}-213X" class="ThreeDer-maze-lines ${String(module.Maze[2][1][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="140" y1="60"  x2="190" y2= "60"  id="${module.i}-223X" class="ThreeDer-maze-lines ${String(module.Maze[2][2][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="140" y1="10"  x2="190" y2= "10"  id="${module.i}-233X" class="ThreeDer-maze-lines ${String(module.Maze[2][3][3])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="40"  y1="160" x2="40"  y2= "110" id="${module.i}-003Y" class="ThreeDer-maze-lines ${String(module.Maze[0][0][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="40"  y1="110" x2="40"  y2= "60"  id="${module.i}-013Y" class="ThreeDer-maze-lines ${String(module.Maze[0][1][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="40"  y1="60"  x2="40"  y2= "10"  id="${module.i}-023Y" class="ThreeDer-maze-lines ${String(module.Maze[0][2][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="90"  y1="160" x2="90"  y2= "110" id="${module.i}-103Y" class="ThreeDer-maze-lines ${String(module.Maze[1][0][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="90"  y1="110" x2="90"  y2= "60"  id="${module.i}-113Y" class="ThreeDer-maze-lines ${String(module.Maze[1][1][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="90"  y1="60"  x2="90"  y2= "10"  id="${module.i}-123Y" class="ThreeDer-maze-lines ${String(module.Maze[1][2][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="140" y1="160" x2="140" y2= "110" id="${module.i}-203Y" class="ThreeDer-maze-lines ${String(module.Maze[2][0][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="140" y1="110" x2="140" y2= "60"  id="${module.i}-213Y" class="ThreeDer-maze-lines ${String(module.Maze[2][1][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="140" y1="60"  x2="140" y2= "10"  id="${module.i}-223Y" class="ThreeDer-maze-lines ${String(module.Maze[2][2][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="190" y1="160" x2="190" y2= "110" id="${module.i}-303Y" class="ThreeDer-maze-lines ${String(module.Maze[3][0][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="190" y1="110" x2="190" y2= "60"  id="${module.i}-313Y" class="ThreeDer-maze-lines ${String(module.Maze[3][1][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+							<line x1="190" y1="60"  x2="190" y2= "10"  id="${module.i}-323Y" class="ThreeDer-maze-lines ${String(module.Maze[3][2][3])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#626262"/>
+
+							<line x1="30"  y1="170" x2="40"  y2= "160" id="${module.i}-002Z" class="ThreeDer-maze-lines ${String(module.Maze[0][0][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="30"  y1="120" x2="40"  y2= "110" id="${module.i}-012Z" class="ThreeDer-maze-lines ${String(module.Maze[0][1][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="30"  y1="70"  x2="40"  y2= "60"  id="${module.i}-022Z" class="ThreeDer-maze-lines ${String(module.Maze[0][2][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="30"  y1="20"  x2="40"  y2= "10"  id="${module.i}-032Z" class="ThreeDer-maze-lines ${String(module.Maze[0][3][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="80"  y1="170" x2="90"  y2= "160" id="${module.i}-102Z" class="ThreeDer-maze-lines ${String(module.Maze[1][0][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="80"  y1="120" x2="90"  y2= "110" id="${module.i}-112Z" class="ThreeDer-maze-lines ${String(module.Maze[1][1][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="80"  y1="70"  x2="90"  y2= "60"  id="${module.i}-122Z" class="ThreeDer-maze-lines ${String(module.Maze[1][2][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="80"  y1="20"  x2="90"  y2= "10"  id="${module.i}-132Z" class="ThreeDer-maze-lines ${String(module.Maze[1][3][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="130" y1="170" x2="140" y2= "160" id="${module.i}-202Z" class="ThreeDer-maze-lines ${String(module.Maze[2][0][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="130" y1="120" x2="140" y2= "110" id="${module.i}-212Z" class="ThreeDer-maze-lines ${String(module.Maze[2][1][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="130" y1="70"  x2="140" y2= "60"  id="${module.i}-222Z" class="ThreeDer-maze-lines ${String(module.Maze[2][2][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="130" y1="20"  x2="140" y2= "10"  id="${module.i}-232Z" class="ThreeDer-maze-lines ${String(module.Maze[2][3][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="180" y1="170" x2="190" y2= "160" id="${module.i}-302Z" class="ThreeDer-maze-lines ${String(module.Maze[3][0][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="180" y1="120" x2="190" y2= "110" id="${module.i}-312Z" class="ThreeDer-maze-lines ${String(module.Maze[3][1][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="180" y1="70"  x2="190" y2= "60"  id="${module.i}-322Z" class="ThreeDer-maze-lines ${String(module.Maze[3][2][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+							<line x1="180" y1="20"  x2="190" y2= "10"  id="${module.i}-332Z" class="ThreeDer-maze-lines ${String(module.Maze[3][3][2])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#737373"/>
+
+							<line x1="30"  y1="170" x2="80"  y2= "170" id="${module.i}-002X" class="ThreeDer-maze-lines ${String(module.Maze[0][0][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="30"  y1="170" x2="30"  y2= "120" id="${module.i}-002Y" class="ThreeDer-maze-lines ${String(module.Maze[0][0][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="30"  y1="120" x2="80"  y2= "120" id="${module.i}-012X" class="ThreeDer-maze-lines ${String(module.Maze[0][1][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="30"  y1="120" x2="30"  y2= "70"  id="${module.i}-012Y" class="ThreeDer-maze-lines ${String(module.Maze[0][1][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="30"  y1="70"  x2="80"  y2= "70"  id="${module.i}-022X" class="ThreeDer-maze-lines ${String(module.Maze[0][2][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="30"  y1="70"  x2="30"  y2= "20"  id="${module.i}-022Y" class="ThreeDer-maze-lines ${String(module.Maze[0][2][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="30"  y1="20"  x2="80"  y2= "20"  id="${module.i}-032X" class="ThreeDer-maze-lines ${String(module.Maze[0][3][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="80"  y1="170" x2="130" y2= "170" id="${module.i}-102X" class="ThreeDer-maze-lines ${String(module.Maze[1][0][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="80"  y1="170" x2="80"  y2= "120" id="${module.i}-102Y" class="ThreeDer-maze-lines ${String(module.Maze[1][0][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="80"  y1="120" x2="130" y2= "120" id="${module.i}-112X" class="ThreeDer-maze-lines ${String(module.Maze[1][1][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="80"  y1="120" x2="80"  y2= "70"  id="${module.i}-112Y" class="ThreeDer-maze-lines ${String(module.Maze[1][1][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="80"  y1="70"  x2="130" y2= "70"  id="${module.i}-122X" class="ThreeDer-maze-lines ${String(module.Maze[1][2][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="80"  y1="70"  x2="80"  y2= "20"  id="${module.i}-122Y" class="ThreeDer-maze-lines ${String(module.Maze[1][2][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="80"  y1="20"  x2="130" y2= "20"  id="${module.i}-132X" class="ThreeDer-maze-lines ${String(module.Maze[1][3][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="130" y1="170" x2="180" y2= "170" id="${module.i}-202X" class="ThreeDer-maze-lines ${String(module.Maze[2][0][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="130" y1="170" x2="130" y2= "120" id="${module.i}-202Y" class="ThreeDer-maze-lines ${String(module.Maze[2][0][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="130" y1="120" x2="180" y2= "120" id="${module.i}-212X" class="ThreeDer-maze-lines ${String(module.Maze[2][1][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="130" y1="120" x2="130" y2= "70"  id="${module.i}-212Y" class="ThreeDer-maze-lines ${String(module.Maze[2][1][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="130" y1="70"  x2="180" y2= "70"  id="${module.i}-222X" class="ThreeDer-maze-lines ${String(module.Maze[2][2][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="130" y1="70"  x2="130" y2= "20"  id="${module.i}-222Y" class="ThreeDer-maze-lines ${String(module.Maze[2][2][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="130" y1="20"  x2="180" y2= "20"  id="${module.i}-232X" class="ThreeDer-maze-lines ${String(module.Maze[2][3][2])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="180" y1="170" x2="180" y2= "120" id="${module.i}-302Y" class="ThreeDer-maze-lines ${String(module.Maze[3][0][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="180" y1="120" x2="180" y2= "70"  id="${module.i}-312Y" class="ThreeDer-maze-lines ${String(module.Maze[3][1][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+							<line x1="180" y1="70"  x2="180" y2= "20"  id="${module.i}-322Y" class="ThreeDer-maze-lines ${String(module.Maze[3][2][2])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#848484"/>
+
+							<line x1="20"  y1="180" x2="30"  y2= "170" id="${module.i}-001Z" class="ThreeDer-maze-lines ${String(module.Maze[0][0][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="20"  y1="130" x2="30"  y2= "120" id="${module.i}-011Z" class="ThreeDer-maze-lines ${String(module.Maze[0][1][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="20"  y1="80"  x2="30"  y2= "70"  id="${module.i}-021Z" class="ThreeDer-maze-lines ${String(module.Maze[0][2][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="20"  y1="30"  x2="30"  y2= "20"  id="${module.i}-031Z" class="ThreeDer-maze-lines ${String(module.Maze[0][3][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="70"  y1="180" x2="80"  y2= "170" id="${module.i}-101Z" class="ThreeDer-maze-lines ${String(module.Maze[1][0][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="70"  y1="130" x2="80"  y2= "120" id="${module.i}-111Z" class="ThreeDer-maze-lines ${String(module.Maze[1][1][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="70"  y1="80"  x2="80"  y2= "70"  id="${module.i}-121Z" class="ThreeDer-maze-lines ${String(module.Maze[1][2][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="70"  y1="30"  x2="80"  y2= "20"  id="${module.i}-131Z" class="ThreeDer-maze-lines ${String(module.Maze[1][3][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="120" y1="180" x2="130" y2= "170" id="${module.i}-201Z" class="ThreeDer-maze-lines ${String(module.Maze[2][0][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="120" y1="130" x2="130" y2= "120" id="${module.i}-211Z" class="ThreeDer-maze-lines ${String(module.Maze[2][1][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="120" y1="80"  x2="130" y2= "70"  id="${module.i}-221Z" class="ThreeDer-maze-lines ${String(module.Maze[2][2][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="120" y1="30"  x2="130" y2= "20"  id="${module.i}-231Z" class="ThreeDer-maze-lines ${String(module.Maze[2][3][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="170" y1="180" x2="180" y2= "170" id="${module.i}-301Z" class="ThreeDer-maze-lines ${String(module.Maze[3][0][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="170" y1="130" x2="180" y2= "120" id="${module.i}-311Z" class="ThreeDer-maze-lines ${String(module.Maze[3][1][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="170" y1="80"  x2="180" y2= "70"  id="${module.i}-321Z" class="ThreeDer-maze-lines ${String(module.Maze[3][2][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+							<line x1="170" y1="30"  x2="180" y2= "20"  id="${module.i}-331Z" class="ThreeDer-maze-lines ${String(module.Maze[3][3][1])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#959595"/>
+
+							<line x1="20"  y1="180" x2="70"  y2= "180" id="${module.i}-001X" class="ThreeDer-maze-lines ${String(module.Maze[0][0][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="20"  y1="180" x2="20"  y2= "130" id="${module.i}-001Y" class="ThreeDer-maze-lines ${String(module.Maze[0][0][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="20"  y1="130" x2="70"  y2= "130" id="${module.i}-011X" class="ThreeDer-maze-lines ${String(module.Maze[0][1][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="20"  y1="130" x2="20"  y2= "80"  id="${module.i}-011Y" class="ThreeDer-maze-lines ${String(module.Maze[0][1][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="20"  y1="80"  x2="70"  y2= "80"  id="${module.i}-021X" class="ThreeDer-maze-lines ${String(module.Maze[0][2][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="20"  y1="80"  x2="20"  y2= "30"  id="${module.i}-021Y" class="ThreeDer-maze-lines ${String(module.Maze[0][2][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="20"  y1="30"  x2="70"  y2= "30"  id="${module.i}-031X" class="ThreeDer-maze-lines ${String(module.Maze[0][3][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="70"  y1="180" x2="120" y2= "180" id="${module.i}-101X" class="ThreeDer-maze-lines ${String(module.Maze[1][0][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="70"  y1="180" x2="70"  y2= "130" id="${module.i}-101Y" class="ThreeDer-maze-lines ${String(module.Maze[1][0][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="70"  y1="130" x2="120" y2= "130" id="${module.i}-111X" class="ThreeDer-maze-lines ${String(module.Maze[1][1][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="70"  y1="130" x2="70"  y2= "80"  id="${module.i}-111Y" class="ThreeDer-maze-lines ${String(module.Maze[1][1][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="70"  y1="80"  x2="120" y2= "80"  id="${module.i}-121X" class="ThreeDer-maze-lines ${String(module.Maze[1][2][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="70"  y1="80"  x2="70"  y2= "30"  id="${module.i}-121Y" class="ThreeDer-maze-lines ${String(module.Maze[1][2][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="70"  y1="30"  x2="120" y2= "30"  id="${module.i}-131X" class="ThreeDer-maze-lines ${String(module.Maze[1][3][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="120" y1="180" x2="170" y2= "180" id="${module.i}-201X" class="ThreeDer-maze-lines ${String(module.Maze[2][0][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="120" y1="180" x2="120" y2= "130" id="${module.i}-201Y" class="ThreeDer-maze-lines ${String(module.Maze[2][0][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="120" y1="130" x2="170" y2= "130" id="${module.i}-211X" class="ThreeDer-maze-lines ${String(module.Maze[2][1][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="120" y1="130" x2="120" y2= "80"  id="${module.i}-211Y" class="ThreeDer-maze-lines ${String(module.Maze[2][1][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="120" y1="80"  x2="170" y2= "80"  id="${module.i}-221X" class="ThreeDer-maze-lines ${String(module.Maze[2][2][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="120" y1="80"  x2="120" y2= "30"  id="${module.i}-221Y" class="ThreeDer-maze-lines ${String(module.Maze[2][2][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="120" y1="30"  x2="170" y2= "30"  id="${module.i}-231X" class="ThreeDer-maze-lines ${String(module.Maze[2][3][1])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="170" y1="180" x2="170" y2= "130" id="${module.i}-301Y" class="ThreeDer-maze-lines ${String(module.Maze[3][0][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="170" y1="130" x2="170" y2= "80"  id="${module.i}-311Y" class="ThreeDer-maze-lines ${String(module.Maze[3][1][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+							<line x1="170" y1="80"  x2="170" y2= "30"  id="${module.i}-321Y" class="ThreeDer-maze-lines ${String(module.Maze[3][2][1])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#A6A6A6"/>
+
+							<line x1="10"  y1="190" x2="20"  y2= "180" id="${module.i}-000Z" class="ThreeDer-maze-lines ${String(module.Maze[0][0][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="10"  y1="140" x2="20"  y2= "130" id="${module.i}-010Z" class="ThreeDer-maze-lines ${String(module.Maze[0][1][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="10"  y1="90"  x2="20"  y2= "80"  id="${module.i}-020Z" class="ThreeDer-maze-lines ${String(module.Maze[0][2][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="10"  y1="40"  x2="20"  y2= "30"  id="${module.i}-030Z" class="ThreeDer-maze-lines ${String(module.Maze[0][3][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="60"  y1="190" x2="70"  y2= "180" id="${module.i}-100Z" class="ThreeDer-maze-lines ${String(module.Maze[1][0][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="60"  y1="140" x2="70"  y2= "130" id="${module.i}-110Z" class="ThreeDer-maze-lines ${String(module.Maze[1][1][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="60"  y1="90"  x2="70"  y2= "80"  id="${module.i}-120Z" class="ThreeDer-maze-lines ${String(module.Maze[1][2][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="60"  y1="40"  x2="70"  y2= "30"  id="${module.i}-130Z" class="ThreeDer-maze-lines ${String(module.Maze[1][3][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="110" y1="190" x2="120" y2= "180" id="${module.i}-200Z" class="ThreeDer-maze-lines ${String(module.Maze[2][0][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="110" y1="140" x2="120" y2= "130" id="${module.i}-210Z" class="ThreeDer-maze-lines ${String(module.Maze[2][1][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="110" y1="90"  x2="120" y2= "80"  id="${module.i}-220Z" class="ThreeDer-maze-lines ${String(module.Maze[2][2][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="110" y1="40"  x2="120" y2= "30"  id="${module.i}-230Z" class="ThreeDer-maze-lines ${String(module.Maze[2][3][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="160" y1="190" x2="170" y2= "180" id="${module.i}-300Z" class="ThreeDer-maze-lines ${String(module.Maze[3][0][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="160" y1="140" x2="170" y2= "130" id="${module.i}-310Z" class="ThreeDer-maze-lines ${String(module.Maze[3][1][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="160" y1="90"  x2="170" y2= "80"  id="${module.i}-320Z" class="ThreeDer-maze-lines ${String(module.Maze[3][2][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+							<line x1="160" y1="40"  x2="170" y2= "30"  id="${module.i}-330Z" class="ThreeDer-maze-lines ${String(module.Maze[3][3][0])[2] == 1 ? "ThreeDer-hidden" : ""}" stroke="#B7B7B7"/>
+
+							<line x1="10"  y1="190" x2="60"  y2= "190" id="${module.i}-000X" class="ThreeDer-maze-lines ${String(module.Maze[0][0][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="10"  y1="190" x2="10"  y2= "140" id="${module.i}-000Y" class="ThreeDer-maze-lines ${String(module.Maze[0][0][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="10"  y1="140" x2="60"  y2= "140" id="${module.i}-010X" class="ThreeDer-maze-lines ${String(module.Maze[0][1][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="10"  y1="140" x2="10"  y2= "90"  id="${module.i}-010Y" class="ThreeDer-maze-lines ${String(module.Maze[0][1][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="10"  y1="90"  x2="60"  y2= "90"  id="${module.i}-020X" class="ThreeDer-maze-lines ${String(module.Maze[0][2][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="10"  y1="90"  x2="10"  y2= "40"  id="${module.i}-020Y" class="ThreeDer-maze-lines ${String(module.Maze[0][2][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="10"  y1="40"  x2="60"  y2= "40"  id="${module.i}-030X" class="ThreeDer-maze-lines ${String(module.Maze[0][3][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="60"  y1="190" x2="110" y2= "190" id="${module.i}-100X" class="ThreeDer-maze-lines ${String(module.Maze[1][0][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="60"  y1="190" x2="60"  y2= "140" id="${module.i}-100Y" class="ThreeDer-maze-lines ${String(module.Maze[1][0][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="60"  y1="140" x2="110" y2= "140" id="${module.i}-110X" class="ThreeDer-maze-lines ${String(module.Maze[1][1][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="60"  y1="140" x2="60"  y2= "90"  id="${module.i}-110Y" class="ThreeDer-maze-lines ${String(module.Maze[1][1][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="60"  y1="90"  x2="110" y2= "90"  id="${module.i}-120X" class="ThreeDer-maze-lines ${String(module.Maze[1][2][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="60"  y1="90"  x2="60"  y2= "40"  id="${module.i}-120Y" class="ThreeDer-maze-lines ${String(module.Maze[1][2][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="60"  y1="40"  x2="110" y2= "40"  id="${module.i}-130X" class="ThreeDer-maze-lines ${String(module.Maze[1][3][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="110" y1="190" x2="160" y2= "190" id="${module.i}-200X" class="ThreeDer-maze-lines ${String(module.Maze[2][0][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="110" y1="190" x2="110" y2= "140" id="${module.i}-200Y" class="ThreeDer-maze-lines ${String(module.Maze[2][0][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="110" y1="140" x2="160" y2= "140" id="${module.i}-210X" class="ThreeDer-maze-lines ${String(module.Maze[2][1][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="110" y1="140" x2="110" y2= "90"  id="${module.i}-210Y" class="ThreeDer-maze-lines ${String(module.Maze[2][1][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="110" y1="90"  x2="160" y2= "90"  id="${module.i}-220X" class="ThreeDer-maze-lines ${String(module.Maze[2][2][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="110" y1="90"  x2="110" y2= "40"  id="${module.i}-220Y" class="ThreeDer-maze-lines ${String(module.Maze[2][2][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="110" y1="40"  x2="160" y2= "40"  id="${module.i}-230X" class="ThreeDer-maze-lines ${String(module.Maze[2][3][0])[0] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="160" y1="190" x2="160" y2= "140" id="${module.i}-300Y" class="ThreeDer-maze-lines ${String(module.Maze[3][0][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="160" y1="140" x2="160" y2= "90"  id="${module.i}-310Y" class="ThreeDer-maze-lines ${String(module.Maze[3][1][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+							<line x1="160" y1="90"  x2="160" y2= "40"  id="${module.i}-320Y" class="ThreeDer-maze-lines ${String(module.Maze[3][2][0])[1] == 1 ? "ThreeDer-hidden" : ""}" stroke="#C8C8C8"/>
+
+							<!-- Incorrect walls -->
+
+							<!-- Cell labels -->
+							<text x="7" y="194"  class="ThreeDer-bold-text" id='${module.i}-000'>${module.Maze[0][0][0].charAt(3)}</text>
+							<text x="7" y="144"  class="ThreeDer-bold-text" id='${module.i}-010'>${module.Maze[0][1][0].charAt(3)}</text>
+							<text x="7" y="94"   class="ThreeDer-bold-text" id='${module.i}-020'>${module.Maze[0][2][0].charAt(3)}</text>
+							<text x="7" y="44"   class="ThreeDer-bold-text" id='${module.i}-030'>${module.Maze[0][3][0].charAt(3)}</text>
+
+							<text x="17" y="184" class="ThreeDer-bold-text" id='${module.i}-001'>${module.Maze[0][0][1].charAt(3)}</text>
+							<text x="17" y="134" class="ThreeDer-bold-text" id='${module.i}-011'>${module.Maze[0][1][1].charAt(3)}</text>
+							<text x="17" y="84"  class="ThreeDer-bold-text" id='${module.i}-021'>${module.Maze[0][2][1].charAt(3)}</text>
+							<text x="17" y="34"  class="ThreeDer-bold-text" id='${module.i}-031'>${module.Maze[0][3][1].charAt(3)}</text>
+
+							<text x="27" y="174" class="ThreeDer-bold-text" id='${module.i}-002'>${module.Maze[0][0][2].charAt(3)}</text>
+							<text x="27" y="124" class="ThreeDer-bold-text" id='${module.i}-012'>${module.Maze[0][1][2].charAt(3)}</text>
+							<text x="27" y="74"  class="ThreeDer-bold-text" id='${module.i}-022'>${module.Maze[0][2][2].charAt(3)}</text>
+							<text x="27" y="24"  class="ThreeDer-bold-text" id='${module.i}-032'>${module.Maze[0][3][2].charAt(3)}</text>
+
+							<text x="37" y="164" class="ThreeDer-bold-text" id='${module.i}-003'>${module.Maze[0][0][3].charAt(3)}</text>
+							<text x="37" y="114" class="ThreeDer-bold-text" id='${module.i}-013'>${module.Maze[0][1][3].charAt(3)}</text>
+							<text x="37" y="64"  class="ThreeDer-bold-text" id='${module.i}-023'>${module.Maze[0][2][3].charAt(3)}</text>
+							<text x="37" y="14"  class="ThreeDer-bold-text" id='${module.i}-033'>${module.Maze[0][3][3].charAt(3)}</text>
+
+							<text x="57" y="194" class="ThreeDer-bold-text" id='${module.i}-100'>${module.Maze[1][0][0].charAt(3)}</text>
+							<text x="57" y="144" class="ThreeDer-bold-text" id='${module.i}-110'>${module.Maze[1][1][0].charAt(3)}</text>
+							<text x="57" y="94"  class="ThreeDer-bold-text" id='${module.i}-120'>${module.Maze[1][2][0].charAt(3)}</text>
+							<text x="57" y="44"  class="ThreeDer-bold-text" id='${module.i}-130'>${module.Maze[1][3][0].charAt(3)}</text>
+
+							<text x="67" y="184" class="ThreeDer-bold-text" id='${module.i}-101'>${module.Maze[1][0][1].charAt(3)}</text>
+							<text x="67" y="134" class="ThreeDer-bold-text" id='${module.i}-111'>${module.Maze[1][1][1].charAt(3)}</text>
+							<text x="67" y="84"  class="ThreeDer-bold-text" id='${module.i}-121'>${module.Maze[1][2][1].charAt(3)}</text>
+							<text x="67" y="34"  class="ThreeDer-bold-text" id='${module.i}-131'>${module.Maze[1][3][1].charAt(3)}</text>
+
+							<text x="77" y="174" class="ThreeDer-bold-text" id='${module.i}-102'>${module.Maze[1][0][2].charAt(3)}</text>
+							<text x="77" y="124" class="ThreeDer-bold-text" id='${module.i}-112'>${module.Maze[1][1][2].charAt(3)}</text>
+							<text x="77" y="74"  class="ThreeDer-bold-text" id='${module.i}-122'>${module.Maze[1][2][2].charAt(3)}</text>
+							<text x="77" y="24"  class="ThreeDer-bold-text" id='${module.i}-132'>${module.Maze[1][3][2].charAt(3)}</text>
+
+							<text x="87" y="164" class="ThreeDer-bold-text" id='${module.i}-103'>${module.Maze[1][0][3].charAt(3)}</text>
+							<text x="87" y="114" class="ThreeDer-bold-text" id='${module.i}-113'>${module.Maze[1][1][3].charAt(3)}</text>
+							<text x="87" y="64"  class="ThreeDer-bold-text" id='${module.i}-123'>${module.Maze[1][2][3].charAt(3)}</text>
+							<text x="87" y="14"  class="ThreeDer-bold-text" id='${module.i}-133'>${module.Maze[1][3][3].charAt(3)}</text>
+
+							<text x="107" y="194"class="ThreeDer-bold-text" id='${module.i}-200'>${module.Maze[2][0][0].charAt(3)}</text>
+							<text x="107" y="144"class="ThreeDer-bold-text" id='${module.i}-210'>${module.Maze[2][1][0].charAt(3)}</text>
+							<text x="107" y="94" class="ThreeDer-bold-text" id='${module.i}-220'>${module.Maze[2][2][0].charAt(3)}</text>
+							<text x="107" y="44" class="ThreeDer-bold-text" id='${module.i}-230'>${module.Maze[2][3][0].charAt(3)}</text>
+
+							<text x="117" y="184"class="ThreeDer-bold-text" id='${module.i}-201'>${module.Maze[2][0][1].charAt(3)}</text>
+							<text x="117" y="134"class="ThreeDer-bold-text" id='${module.i}-211'>${module.Maze[2][1][1].charAt(3)}</text>
+							<text x="117" y="84" class="ThreeDer-bold-text" id='${module.i}-221'>${module.Maze[2][2][1].charAt(3)}</text>
+							<text x="117" y="34" class="ThreeDer-bold-text" id='${module.i}-231'>${module.Maze[2][3][1].charAt(3)}</text>
+
+							<text x="127" y="174"class="ThreeDer-bold-text" id='${module.i}-202'>${module.Maze[2][0][2].charAt(3)}</text>
+							<text x="127" y="124"class="ThreeDer-bold-text" id='${module.i}-212'>${module.Maze[2][1][2].charAt(3)}</text>
+							<text x="127" y="74" class="ThreeDer-bold-text" id='${module.i}-222'>${module.Maze[2][2][2].charAt(3)}</text>
+							<text x="127" y="24" class="ThreeDer-bold-text" id='${module.i}-232'>${module.Maze[2][3][2].charAt(3)}</text>
+
+							<text x="137" y="164"class="ThreeDer-bold-text" id='${module.i}-203'>${module.Maze[2][0][3].charAt(3)}</text>
+							<text x="137" y="114"class="ThreeDer-bold-text" id='${module.i}-213'>${module.Maze[2][1][3].charAt(3)}</text>
+							<text x="137" y="64" class="ThreeDer-bold-text" id='${module.i}-223'>${module.Maze[2][2][3].charAt(3)}</text>
+							<text x="137" y="14" class="ThreeDer-bold-text" id='${module.i}-233'>${module.Maze[2][3][3].charAt(3)}</text>
+
+							<text x="157" y="194"class="ThreeDer-bold-text" id='${module.i}-300'>${module.Maze[3][0][0].charAt(3)}</text>
+							<text x="157" y="144"class="ThreeDer-bold-text" id='${module.i}-310'>${module.Maze[3][1][0].charAt(3)}</text>
+							<text x="157" y="94" class="ThreeDer-bold-text" id='${module.i}-320'>${module.Maze[3][2][0].charAt(3)}</text>
+							<text x="157" y="44" class="ThreeDer-bold-text" id='${module.i}-330'>${module.Maze[3][3][0].charAt(3)}</text>
+
+							<text x="167" y="184"class="ThreeDer-bold-text" id='${module.i}-301'>${module.Maze[3][0][1].charAt(3)}</text>
+							<text x="167" y="134"class="ThreeDer-bold-text" id='${module.i}-311'>${module.Maze[3][1][1].charAt(3)}</text>
+							<text x="167" y="84" class="ThreeDer-bold-text" id='${module.i}-321'>${module.Maze[3][2][1].charAt(3)}</text>
+							<text x="167" y="34" class="ThreeDer-bold-text" id='${module.i}-331'>${module.Maze[3][3][1].charAt(3)}</text>
+
+							<text x="177" y="174"class="ThreeDer-bold-text" id='${module.i}-302'>${module.Maze[3][0][2].charAt(3)}</text>
+							<text x="177" y="124"class="ThreeDer-bold-text" id='${module.i}-312'>${module.Maze[3][1][2].charAt(3)}</text>
+							<text x="177" y="74" class="ThreeDer-bold-text" id='${module.i}-322'>${module.Maze[3][2][2].charAt(3)}</text>
+							<text x="177" y="24" class="ThreeDer-bold-text" id='${module.i}-332'>${module.Maze[3][3][2].charAt(3)}</text>
+
+							<text x="187" y="164"class="ThreeDer-bold-text" id='${module.i}-303'>${module.Maze[3][0][3].charAt(3)}</text>
+							<text x="187" y="114"class="ThreeDer-bold-text" id='${module.i}-313'>${module.Maze[3][1][3].charAt(3)}</text>
+							<text x="187" y="64" class="ThreeDer-bold-text" id='${module.i}-323'>${module.Maze[3][2][3].charAt(3)}</text>
+							<text x="187" y="14" class="ThreeDer-bold-text" id='${module.i}-333'>${module.Maze[3][3][3].charAt(3)}</text>
+						</svg>
+					`;
+					let incorrectWalls = "";
+					for(let j = 0; j < 4; j++)
+					{
+						for(let k = 0; k < 4; k++)
+						{
+							for(let l = 0; l < 4; l++)
+							{
+								incorrectWalls += `
+									<line x1="${(10 * (l + 1)) + (50 * j)}" y1="${(-10 * (l - 4)) + (50 * k)}" x2="${(10 * (l + 2)) + (50 * j)}"     y2="${(-10 * (l - 4)) + (50 * k)}"     id="${module.i}-${j}${k}${l}pX" class="ThreeDer-hidden ThreeDer-maze-lines" stroke="red"/>
+									<line x1="${(10 * (l + 1)) + (50 * j)}" y1="${(-10 * (l - 4)) + (50 * k)}" x2="${(10 * (l)) + (50 * j)}"         y2="${(-10 * (l - 4)) + (50 * k)}"     id="${module.i}-${j}${k}${l}nX" class="ThreeDer-hidden ThreeDer-maze-lines" stroke="red"/>
+									<line x1="${(10 * (l + 1)) + (50 * j)}" y1="${(-10 * (l - 4)) + (50 * k)}" x2="${(10 * (l + 1)) + (50 * j)}"     y2="${(-10 * (l - 3)) + (50 * k)}"     id="${module.i}-${j}${k}${l}pY" class="ThreeDer-hidden ThreeDer-maze-lines" stroke="red"/>
+									<line x1="${(10 * (l + 1)) + (50 * j)}" y1="${(-10 * (l - 4)) + (50 * k)}" x2="${(10 * (l + 1)) + (50 * j)}"     y2="${(-10 * (l - 5)) + (50 * k)}"     id="${module.i}-${j}${k}${l}nY" class="ThreeDer-hidden ThreeDer-maze-lines" stroke="red"/>
+									<line x1="${(10 * (l + 1)) + (50 * j)}" y1="${(-10 * (l - 4)) + (50 * k)}" x2="${(10 * (l + 1)) + (50 * j) + 4}" y2="${(-10 * (l - 4)) + (50 * k) - 4}" id="${module.i}-${j}${k}${l}pZ" class="ThreeDer-hidden ThreeDer-maze-lines" stroke="red"/>
+									<line x1="${(10 * (l + 1)) + (50 * j)}" y1="${(-10 * (l - 4)) + (50 * k)}" x2="${(10 * (l + 1)) + (50 * j - 4)}" y2="${(-10 * (l - 4)) + (50 * k) + 4}" id="${module.i}-${j}${k}${l}nZ" class="ThreeDer-hidden ThreeDer-maze-lines" stroke="red"/>
+								`
+							}
+						}
+					}
+					module.mazeSVG = module.mazeSVG.replace("<!-- Incorrect walls -->", "<!-- Incorrect walls -->" + incorrectWalls);
+				}
+			},
+			{
+				regex: /Using maze with markings(?:.+)/,
+				handler: function(matches, module) {
+					module.push(matches.input);
+					module.SVG = {nobullet: true, obj: module.mazeSVG};
+					module.push(module.SVG);
+					return true;
+				}
+			},
+			{
+				regex: /(Incorrectly|Correctly) moved into the (North|East|South|West|Up|Down) wall of \((\d), (\d), (\d)\)/,
+				handler: function(matches, module) {
+					let dir = matches[2];
+					let j = +matches[3];
+					let k = +matches[4];
+					let l = +matches[5];
+					let deltaX = {North: 4,  East: 10, South: -4, West: -10, Up: 0,   Down: 0};
+					let deltaY = {North: -4, East: 0,  South: 4,  West: 0,   Up: -10, Down: 10};
+					module.SVG.obj = module.SVG.obj.replace("<!-- Incorrect walls -->", `<!-- Incorrect walls --> <line x1="${10 + (10 * l) + (50 * j)}" y1="${190 - (10 * l) - (50 * k)}" x2="${10 + (10 * l) + (50 * j) + deltaX[dir]}" y2="${190 - (10 * l) - (50 * k) + deltaY[dir]}"     id="${module.i}-${j}${k}${l}pX" class="ThreeDer-maze-lines" stroke="${matches[1] == "Incorrectly" ? "red" : "lime"}"/>`);
+				}
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		displayName: "3D Maze",
 		moduleID: "spwiz3DMaze",
 		loggingTag: "3D Maze",
@@ -9442,16 +9787,16 @@ let parseData = [
 							<circle class="outer" cx="125" cy="125" r="100" fill="#${getColourFrag()}${getColourFrag()}${getColourFrag()}10" stroke="#000" stroke-width="4"/>
 							<path fill="none" stroke="#000" opacity="30%" stroke-dasharray="1.015 2" d="m54.3 54.3 141.4 141.4m-141.4 0L195.7 54.3M125 25v200M25 125h200m-75.5 0a24.5 24.5 0 0 1-24.5 24.5 24.5 24.5 0 0 1-24.5-24.5 24.5 24.5 0 0 1 24.5-24.5 24.5 24.5 0 0 1 24.5 24.5Zm24.5 0a49 49 0 0 1-49 49 49 49 0 0 1-49-49 49 49 0 0 1 49-49 49 49 0 0 1 49 49Zm24.5 0a73.5 73.5 0 0 1-73.5 73.5A73.5 73.5 0 0 1 51.5 125 73.5 73.5 0 0 1 125 51.5a73.5 73.5 0 0 1 73.5 73.5Z"/>
 							<g stroke="#000" class="spikes-data">
-								<path fill="${colours[colourSequence[00][0]]}" d="M122 13.5v11.3h6.4V13.5l-3.2-10.7z"></path>
-								<path fill="${colours[colourSequence[01][0]]}" d="m201.9 43.9-8 8 4.5 4.5 8-8 5.2-9.8z"></path>
-								<path fill="${colours[colourSequence[02][0]]}" d="M236.8 121.8h-11.3v6.4h11.3l10.6-3.2z"/>
-								<path fill="${colours[colourSequence[03][0]]}" d="m206.4 201.6-8-8-4.5 4.5 8 8 9.8 5.3z"/>
-								<path fill="${colours[colourSequence[04][0]]}" d="M128.4 236.5v-11.3h-6.3v11.3l3.1 10.7z"/>
-								<path fill="${colours[colourSequence[05][0]]}" d="m48.6 206.1 8-8-4.5-4.4-8 8-5.3 9.7z"/>
-								<path fill="${colours[colourSequence[06][0]]}" d="M13.7 128.2H25v-6.3H13.7L3 125z"></path>
-								<path fill="${colours[colourSequence[07][0]]}" d="m44.1 48.4 8 8 4.5-4.5-8-8-9.8-5.3z"></path>
-								<path fill="${colours[colourSequence[08][0]]}" d="M122 45v6.6c1.1 1 5.5 1 6.4 0V45l-3.2-9.3z"></path>
-								<path fill="${colours[colourSequence[09][0]]}" d="m179.6 66.2-4.7 4.7c0 1.4 3.1 4.5 4.5 4.5l4.7-4.7 4.3-8.8z"></path>
+								<path fill="${colours[colourSequence[0][0]]}" d="M122 13.5v11.3h6.4V13.5l-3.2-10.7z"></path>
+								<path fill="${colours[colourSequence[1][0]]}" d="m201.9 43.9-8 8 4.5 4.5 8-8 5.2-9.8z"></path>
+								<path fill="${colours[colourSequence[2][0]]}" d="M236.8 121.8h-11.3v6.4h11.3l10.6-3.2z"/>
+								<path fill="${colours[colourSequence[3][0]]}" d="m206.4 201.6-8-8-4.5 4.5 8 8 9.8 5.3z"/>
+								<path fill="${colours[colourSequence[4][0]]}" d="M128.4 236.5v-11.3h-6.3v11.3l3.1 10.7z"/>
+								<path fill="${colours[colourSequence[5][0]]}" d="m48.6 206.1 8-8-4.5-4.4-8 8-5.3 9.7z"/>
+								<path fill="${colours[colourSequence[6][0]]}" d="M13.7 128.2H25v-6.3H13.7L3 125z"></path>
+								<path fill="${colours[colourSequence[7][0]]}" d="m44.1 48.4 8 8 4.5-4.5-8-8-9.8-5.3z"></path>
+								<path fill="${colours[colourSequence[8][0]]}" d="M122 45v6.6c1.1 1 5.5 1 6.4 0V45l-3.2-9.3z"></path>
+								<path fill="${colours[colourSequence[9][0]]}" d="m179.6 66.2-4.7 4.7c0 1.4 3.1 4.5 4.5 4.5l4.7-4.7 4.3-8.8z"></path>
 								<path fill="${colours[colourSequence[10][0]]}" d="M205.2 121.8h-6.6c-1 1-1 5.5 0 6.4h6.6l9.3-3.2z"></path>
 								<path fill="${colours[colourSequence[11][0]]}" d="m184 179.3-4.6-4.6c-1.4 0-4.6 3-4.5 4.5l4.7 4.6 8.8 4.3z"></path>
 								<path fill="${colours[colourSequence[12][0]]}" d="M128.4 205v-6.6c-1-1-5.4-1-6.3 0v6.6l3.1 9.3z"></path>
