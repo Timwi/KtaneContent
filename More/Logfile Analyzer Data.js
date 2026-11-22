@@ -2189,9 +2189,11 @@ let parseData = [
 			{
 				regex: /The grid has the buttons:/,
 				handler: function (match, module) {
-					if(!module.attemptNum){ module.attemptNum = 0; }
+					if (!module.pressedButtons) module.pressedButtons = [];
+					if (!module.stagePressedButtons) module.stagePressedButtons = [];
+					if (!module.attemptNum) module.attemptNum = 0;
 					module.attemptNum++;
-					module.currentDropdown = [`Attempt ${module.attemptNum}`, []];
+					module.currentDropdown = [`Attempt ${module.attemptNum} (stage ${((module.pressedButtons.length/4)|0) + 1})`, []];
 
 					var stageDataLines = readTaggedLines(14);
 					var pages = [];
@@ -2297,13 +2299,114 @@ let parseData = [
 					module.currentDropdown[1].push("The module shows the following:");
 					makeCycleableDisplays(pages, module.currentDropdown[1], true);
 					module.currentDropdown[1].push(stageDataLines[5], stageDataLines[7], stageDataLines[8], stageDataLines[10], stageDataLines[12], stageDataLines[13]);
+
+					let buttons = stageDataLines.slice(0, 4).join('').trim().split(' ');
+					let rawReqs = [
+						stageDataLines[8].replace(/^The first set of desired properties are /, '').trim().split(', '),
+						stageDataLines[13].replace(/^The second set of desired properties are /, '').trim().split(', ')
+					];
+					let reqs = rawReqs
+						.map(req => req
+							.map(str => {
+								let m1 = /^([BGYR])([12345])$/.exec(str);
+								if (m1)
+									return { color: m1[1], cycle: m1[2]-1, isColor: true };
+								let m2 = /^([12345])([12345])$/.exec(str);
+								if (m2)
+									return { cycle1: m2[1]-1, cycle2: m2[2]-1, isColor: false };
+								return null;
+							}));
+					for (let i = 0; i < reqs[1].length; i++)
+						if (reqs[1][i] === null)
+						{
+							let obj = { color: reqs[0][i].color, cycle: (reqs[0][i].cycle + 1) % 5, isColor: true };
+							reqs[1][i] = obj;
+							rawReqs[1][i] = `${obj.color}${obj.cycle + 1}`;
+						}
+
+					// Determine all possible valid button presses
+					let validButtons = [];
+					let total = 1;
+					for (let btn = 0; btn < 4; btn++)
+					{
+						let arr = buttons.map((_, c) => c).filter(btnIx => {
+							if (module.pressedButtons.includes(btnIx))
+								return false;
+							for (let req of reqs)
+							{
+								if (req[btn].isColor && buttons[btnIx][req[btn].cycle] !== req[btn].color)
+									return false;
+								if (!req[btn].isColor && buttons[btnIx][req[btn].cycle1] !== buttons[btnIx][req[btn].cycle2])
+									return false;
+							}
+							return true;
+						});
+						validButtons.push(arr);
+						total *= arr.length;
+					}
+					// Find a combination of button presses that has no repeats
+					let validCombination = Array(total).fill(null)
+						.map((_, i) =>
+						{
+							let j = i;
+							let btn1 = validButtons[0][j % validButtons[0].length];
+							j = (j / validButtons[0].length) | 0;
+							let btn2 = validButtons[1][j % validButtons[1].length];
+							j = (j / validButtons[1].length) | 0;
+							let btn3 = validButtons[2][j % validButtons[2].length];
+							j = (j / validButtons[2].length) | 0;
+							let btn4 = validButtons[3][j];
+							return [btn1, btn2, btn3, btn4];
+						})
+						.filter(btns => new Set(btns).size === 4)[0]
+						.map(ix => `${String.fromCharCode(65 + (ix % 4))}${((ix / 4)|0) + 1}`)
+						.join(', ');
+					module.currentDropdown[1].push(`Possible solution: ${validCombination}`);
+					module.mostRecentReqs = rawReqs;
 					return true;
 				}
 			},
 			{
-				regex: /Button .+|Error: .+/,
+				regex: /Button (\d+) pressed, its properties are: (.+), (.+)/,
+				handler: function (match, module) {
+					let wrong = false;
+					for (let prop = 0; prop < 2; prop++)
+					{
+						let m = /^([A-Z])([A-Z])$/.exec(match[prop + 2]);
+						if (m && m[1] !== m[2])
+							wrong = true;
+						else if (!m && match[prop + 2] !== module.mostRecentReqs[prop][module.stagePressedButtons.length])
+							wrong = true;
+					}
+					if (wrong)
+						module.stagePressedButtons = [];
+					else
+					{
+						module.stagePressedButtons.push(match[1] - 1);
+						if (module.stagePressedButtons.length === 4)
+						{
+							module.pressedButtons.push(...module.stagePressedButtons);
+							module.stagePressedButtons = [];
+						}
+					}
+					module.currentDropdown[1].push(`${match[0]} (${wrong ? "incorrect" : "correct"})`);
+					return true;
+				}
+			},
+			{
+				regex: /Error: .+|Manual reset initiated/,
 				handler: function (match, module){
 					module.currentDropdown[1].push(match[0]);
+					module.stagePressedButtons = [];
+					return true;
+				}
+			},
+			{
+				regex: /Resetting to stage 1/,
+				handler: function (match, module){
+					module.currentDropdown[1].push(match[0]);
+					module.stagePressedButtons = [];
+					module.pressedButtons = [];
 					return true;
 				}
 			}
@@ -7147,11 +7250,11 @@ let parseData = [
 					module.drawGrid = function(){
 						// Do not LFA for older logs as it'll break them
 						if (!module.immovableObject) { module.stop = "stop"; return true; }
-						
+
 						// Markers are global so they need to have unique IDs for each instance of the module
 						linen--;
 						let moduleId = readLine().match(/\d+/)[0]
-						
+
 						let svg = '<svg viewbox="0.2 0.2 9.2 9.2" class="fist-plate">';
 						svg += `<defs> <marker id="fistPlateArrow${moduleId}" markerHeight="1" markerWidth="1" orient="auto" overflow="visible" viewBox="0 0 1 1"> <path d="m2.9 0-4.3 2.5v-5Z"></path> </marker> </defs>`;
 						const redirectionData = {
@@ -7209,7 +7312,7 @@ let parseData = [
 							svg += `<path class="movement" d="M${xPos} ${yPos}${movementDirections[direction]}${numberOfVoids + 0.6}" marker-end="url(#fistPlateArrow${moduleId})"></path>`;
 							previousCoordinate = coordinate; // Save the coordinate where the Object was before
 						}
-						
+
 						// Draw board exit arrow
 						if (module.exitBoard){
 							let numberOfVoids = parseInt(module.exitBoard.slice(0,1));
@@ -7224,14 +7327,14 @@ let parseData = [
 							}
 							svg += `<path class="movement" d="M${xPos} ${yPos}${movementDirections[direction]}${numberOfVoids + 0.6}" marker-end="url(#fistPlateArrow${moduleId})"></path>`;
 						}
-						
+
 						// ImmovbleObject
 						svg += `<circle cx="${".ABCDEFGH".indexOf(module.immovableObject.slice(0,1)) + 0.5}" cy="${parseInt(module.immovableObject.slice(1,2)) + 0.5}" r="0.3"></circle>`;
-						
+
 						svg += '</svg>'
 						module.push({label: "Grid with movements:", obj: svg});
 					}
-					
+
 					module.movements = [];
 					module.push(matches.input);
 					return true;
@@ -9282,6 +9385,120 @@ let parseData = [
 		moduleID: "giantsDrink",
 		loggingTag: "The Giant's Drink",
 		displayName: "The Giant’s Drink"
+	},
+	{
+		moduleID: "GlassCactus",
+		loggingTag: "Glass Cactus",
+		displayName: "Glass Cactus",
+		matches: [
+			{
+				regex: /Using Rule Seed/,
+				handler: function (matches, module) {
+					module.solution = [];
+					module.push(matches.input);
+					return true;
+				}
+			},
+			{
+				regex: /(Red|Green|Blue|Yellow) spike in the sequence is in (North|South|East|West|North-East|North-West|South-East|South-West) (outer|outermost|middle-outer|middle-inner|inner|innermost) circle/,
+				handler: function (matches, module) {
+					const cols = {
+						"North": 0,
+						"South": 4,
+						"East": 2,
+						"West": 6,
+						"North-East": 1,
+						"North-West": 7,
+						"South-East": 3,
+						"South-West": 5
+					};
+					const rows = {
+						"outer": 0,
+						"outermost": 0,
+						"middle-outer": 1,
+						"middle-inner": 2,
+						"inner": 3,
+						"innermost": 3
+					};
+					module.solution.push( { "col": cols[matches[2]], "row": rows[matches[3]] } );
+					return true;
+				}
+			},
+			{
+				regex: /The Glass Cactus' spikes, starting at the outermost North, going clockwise then inner, is: ((Blue *|Red *|Green *|Yellow *){32})/,
+				handler: function (matches, module) {
+					var colours = {
+						"R": "#ff4444",
+						"G": "#44ff44",
+						"B": "#4444ff",
+						"Y": "#ffff44"
+					}
+					function getColourFrag(){ return ["00", "11", "22", "33", "44", "55", "66", "77", "88", "99", "AA", "BB", "CC", "DD", "EE", "FF"][Math.floor(Math.random() * 16)]; }
+					
+					var colourSequence = matches[1].split(" ");
+					
+					let svg =
+						`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 270 270" class="glass-cactus">
+							<circle class="outer" cx="125" cy="125" r="100" fill="#${getColourFrag()}${getColourFrag()}${getColourFrag()}10" stroke="#000" stroke-width="4"/>
+							<path fill="none" stroke="#000" opacity="30%" stroke-dasharray="1.015 2" d="m54.3 54.3 141.4 141.4m-141.4 0L195.7 54.3M125 25v200M25 125h200m-75.5 0a24.5 24.5 0 0 1-24.5 24.5 24.5 24.5 0 0 1-24.5-24.5 24.5 24.5 0 0 1 24.5-24.5 24.5 24.5 0 0 1 24.5 24.5Zm24.5 0a49 49 0 0 1-49 49 49 49 0 0 1-49-49 49 49 0 0 1 49-49 49 49 0 0 1 49 49Zm24.5 0a73.5 73.5 0 0 1-73.5 73.5A73.5 73.5 0 0 1 51.5 125 73.5 73.5 0 0 1 125 51.5a73.5 73.5 0 0 1 73.5 73.5Z"/>
+							<g stroke="#000" class="spikes-data">
+								<path fill="${colours[colourSequence[00][0]]}" d="M122 13.5v11.3h6.4V13.5l-3.2-10.7z"></path>
+								<path fill="${colours[colourSequence[01][0]]}" d="m201.9 43.9-8 8 4.5 4.5 8-8 5.2-9.8z"></path>
+								<path fill="${colours[colourSequence[02][0]]}" d="M236.8 121.8h-11.3v6.4h11.3l10.6-3.2z"/>
+								<path fill="${colours[colourSequence[03][0]]}" d="m206.4 201.6-8-8-4.5 4.5 8 8 9.8 5.3z"/>
+								<path fill="${colours[colourSequence[04][0]]}" d="M128.4 236.5v-11.3h-6.3v11.3l3.1 10.7z"/>
+								<path fill="${colours[colourSequence[05][0]]}" d="m48.6 206.1 8-8-4.5-4.4-8 8-5.3 9.7z"/>
+								<path fill="${colours[colourSequence[06][0]]}" d="M13.7 128.2H25v-6.3H13.7L3 125z"></path>
+								<path fill="${colours[colourSequence[07][0]]}" d="m44.1 48.4 8 8 4.5-4.5-8-8-9.8-5.3z"></path>
+								<path fill="${colours[colourSequence[08][0]]}" d="M122 45v6.6c1.1 1 5.5 1 6.4 0V45l-3.2-9.3z"></path>
+								<path fill="${colours[colourSequence[09][0]]}" d="m179.6 66.2-4.7 4.7c0 1.4 3.1 4.5 4.5 4.5l4.7-4.7 4.3-8.8z"></path>
+								<path fill="${colours[colourSequence[10][0]]}" d="M205.2 121.8h-6.6c-1 1-1 5.5 0 6.4h6.6l9.3-3.2z"></path>
+								<path fill="${colours[colourSequence[11][0]]}" d="m184 179.3-4.6-4.6c-1.4 0-4.6 3-4.5 4.5l4.7 4.6 8.8 4.3z"></path>
+								<path fill="${colours[colourSequence[12][0]]}" d="M128.4 205v-6.6c-1-1-5.4-1-6.3 0v6.6l3.1 9.3z"></path>
+								<path fill="${colours[colourSequence[13][0]]}" d="m71 183.8 4.6-4.7c0-1.4-3.1-4.5-4.5-4.4l-4.7 4.6-4.3 8.8z"></path>
+								<path fill="${colours[colourSequence[14][0]]}" d="M45.2 128.2h6.6c1-1 1-5.5 0-6.4h-6.6L36 125z"></path>
+								<path fill="${colours[colourSequence[15][0]]}" d="m66.4 70.7 4.7 4.6c1.4 0 4.6-3 4.5-4.4l-4.7-4.7-8.8-4.3z"></path>
+								<path fill="${colours[colourSequence[16][0]]}" d="M122 72v4.1c0 2.5 6.4 2.6 6.4 0V72l-3.2-8.2z"></path>
+								<path fill="${colours[colourSequence[17][0]]}" d="m160.5 85.3-3 2.9c-1.7 1.8 2.7 6.3 4.5 4.5l3-3 3.5-8z"></path>
+								<path fill="${colours[colourSequence[18][0]]}" d="M178.2 121.8h-4c-2.6 0-2.7 6.4 0 6.4h4l8.3-3.2z"></path>
+								<path fill="${colours[colourSequence[19][0]]}" d="m165 160.2-3-2.9c-1.7-1.8-6.3 2.7-4.4 4.5l2.9 3 8 3.5z"></path>
+								<path fill="${colours[colourSequence[20][0]]}" d="M128.4 178v-4c0-2.5-6.3-2.6-6.3 0v4.1l3.1 8.2z"></path>
+								<path fill="${colours[colourSequence[21][0]]}" d="m90 164.7 3-2.9c1.7-1.7-2.7-6.3-4.6-4.5l-2.9 3-3.5 8z"></path>
+								<path fill="${colours[colourSequence[22][0]]}" d="M72.2 128.2h4.2c2.5 0 2.5-6.4 0-6.4h-4.2L64 125z"></path>
+								<path fill="${colours[colourSequence[23][0]]}" d="m85.5 89.8 3 2.9c1.7 1.8 6.3-2.7 4.4-4.5l-2.9-3-8-3.5z"></path>
+								<path fill="${colours[colourSequence[24][0]]}" d="M122 98.2v2.5c0 4.6 6.4 4.4 6.4 0v-2.5l-3.2-5.5z"></path>
+								<path fill="${colours[colourSequence[25][0]]}" d="m142 103.8-1.8 1.8c-3.2 3.2 1.4 7.6 4.5 4.4a23 23 0 0 1 1.7-1.7l1.7-6.2z"></path>
+								<path fill="${colours[colourSequence[26][0]]}" d="M152 121.8h-2.4c-4.6 0-4.4 6.4 0 6.4h2.4l5.6-3.2z"></path>
+								<path fill="${colours[colourSequence[27][0]]}" d="m146.4 141.7-1.7-1.7c-3.2-3.3-7.6 1.4-4.5 4.5a23 23 0 0 1 1.7 1.7l6.2 1.7z"></path>
+								<path fill="${colours[colourSequence[28][0]]}" d="M128.4 151.8v-2.5c0-4.5-6.4-4.4-6.3 0v2.5l3.1 5.5z"></path>
+								<path fill="${colours[colourSequence[29][0]]}" d="M108.6 146.2s0-.2 1.7-1.7c3.2-3.3-1.4-7.7-4.5-4.5a23 23 0 0 1-1.7 1.7l-1.7 6.2z"></path>
+								<path fill="${colours[colourSequence[30][0]]}" d="M98.5 128.2h2.4c4.6 0 4.4-6.4 0-6.4h-2.4l-5.6 3.2z"></path>
+								<path fill="${colours[colourSequence[31][0]]}" d="m104 108.3 1.8 1.7c3.2 3.3 7.6-1.3 4.5-4.4a23 23 0 0 1-1.7-1.8l-6.2-1.7z"></path>
+							</g>`;
+					
+					const distances = [112, 81, 54, 26];
+					const radii = [15, 13, 11, 10];
+					
+					for (var i = 0; i < 5; i ++){
+						var radius = radii[module.solution[i]["row"]];
+						var dist = distances[module.solution[i]["row"]];
+						var angle = module.solution[i]["col"];
+						angle = (12-angle)%8; // convert to trig: counterclock, starting right/east
+						angle = angle * Math.PI / 4; // convert [0-7] to radian
+						var y = 125 + dist * Math.cos(angle);
+						var x = 125 + dist * Math.sin(angle);
+						var colour = colours[colourSequence[module.solution[i]["row"] * 8 + module.solution[i]["col"]][0]];
+						svg += `<circle cx="${x}" cy="${y}" r="${radius}" fill="none" stroke="#000"></circle>`;
+						svg += `<text x="${x-1.5*radius*Math.sin(angle)}" y="${y-1.5*radius*Math.cos(angle)}">${i+1}</text>`
+					}
+					svg += "</svg>"
+					module.push(matches.input); // ""Colourblind Support""
+					module.push({label: "One possible valid sequence of spikes on the Module is:", obj: svg});
+					return true;
+				}
+			},
+			{ regex: /.+/ }
+		]
 	},
 	{
 		moduleID: "graffitiNumbers",
@@ -20242,6 +20459,34 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "Symbstructions",
+		loggingTag: "Symbstructions",
+		matches: [
+			{
+				regex: /^Creating puzzle \((.+), (\d+)\)$/,
+				handler: (matches, module) => {
+					const puzzleType = matches[1],
+						puzzleId = matches[2],
+						puzzleTag = `<${puzzleType} #${puzzleId}> `,
+						puzzleLines = lines
+							.slice(linen)
+							.filter(line => line.startsWith(puzzleTag))
+							.map(line => line.replace(puzzleTag, ""));
+
+					const list = $("<ul>");
+					for (const line of puzzleLines) $("<li>").text(line).appendTo(list);
+
+					module.push({
+						label: `${puzzleType} #${puzzleId}`,
+						obj: list,
+						expandable: true,
+						expanded: true,
+					});
+				},
+			},
+		],
+	},
+	{
 		displayName: "Synesthesia",
 		moduleID: "synesthesia",
 		loggingTag: "Synesthesia",
@@ -25267,14 +25512,14 @@ let parseData = [
 				regex: /Line: ([A-E][1-5]-[A-E][1-5])/,
 				handler: function (matches, module) {
 					module.lines.push(matches[1]);
-					
+
 					// Check if this is the last line to create the SVG
 					if (/^\[Untangle /.test(readLine()) == false){
 						// Linear Gradients (defined later) must have a unique ID to exist, so we'll use moduleId;
 						linen -= 2;
 						let moduleId = readLine().match(/\d+/)[0];
-						
-						let colours = {};						
+
+						let colours = {};
 						function getColourFrag(){
 							return ["00", "11", "22", "33", "44", "55", "66", "77", "88", "99", "AA", "BB", "CC", "DD", "EE", "FF"][Math.floor(Math.random() * 16)];
 						}
@@ -25299,7 +25544,7 @@ let parseData = [
 							svg += `<linearGradient id="untangle${moduleId}_${l}" x1="${x1 <= x2 ? 0 : 100}%" x2="${x1 < x2 ? 100 : 0}%" y1="${y1 <= y2 ? 0 : 100}%" y2="${y1 < y2 ? 100 : 0}%"> <stop offset="5%" stop-color="${colours[coord1]}"/> <stop offset="95%" stop-color="${colours[coord2]}"/> </linearGradient>`;
 							// Linear Gradients use the area to shade, so the line can't be perfectly horizontal nor vertical, so offset by 0.001
 							svg += `<path render-order="-1" d="M${x1+0.001} ${y1+0.001} ${x2} ${y2}" stroke="url(#untangle${moduleId}_${l})" stroke-width="0.06"></path>`;
-							
+
 						}
 						// Draw the pegs OVER the lines (SVG draw order is purely based on order in the file)
 						for (var i = 0; i < 5; i ++){

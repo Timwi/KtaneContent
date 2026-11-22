@@ -34,7 +34,7 @@ function setDefaultRules(){
     directionOrder = [FistPlate.Up, FistPlate.Down, FistPlate.Left, FistPlate.Right];
 	redirectStationSpaces = [0,3,2,2,2,2,3,2,3,2,2,2,3,2,2,1,2,2,2,3,2,5,2,3,2,1,3,2,1];
 	cellsWithStations = [0, 3, 5, 7, 9, 11, 14, 16, 19, 21, 23, 25, 28, 30, 32, 33, 35, 37, 39, 42, 44, 49, 51, 54, 56, 57, 60, 62, 63];
-	objectStartingCell = 27;
+	objectStartingCell = 20;
 	forceStartingCell = 59;
     showRules();
 }
