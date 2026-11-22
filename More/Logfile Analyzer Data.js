@@ -6711,10 +6711,10 @@ let parseData = [
 								module.modInfo.LCount -= match[1]
 							}
 
-							//increment L count
-							match = line.match(/You paint another L on your forehead\. There are now (\d+) Ls on your forehead./)
+							//Change L count
+							match = line.match(/(?:You paint another L on your forehead\. )?There are now (\d+) Ls on your forehead\./)
 							if(match) {
-								module.modInfo.LCount++
+								module.modInfo.LCount = Number(match[1])
 							}
 
 							//increment L count
@@ -6768,20 +6768,12 @@ let parseData = [
 							}
 							
 							//Paint bottom of the chair
-							match = line.match(/The bottom of the (.+) is now (.+)-colored\./)
+							match = line.match(/(?:The .+ rule activated! )?The bottom of the (.+) is now ([^-]+)(-colored)?\./)
 							if(match) {
 								const index = module.getChairIndex(match[1]);
 								const chair = getChair(index);
 								chair.bottomColor = match[2];
 							}
-
-							match = line.match(/(?:The .+ rule activated! )?The bottom of the (.+) is now (.+)\./)
-							if(match) {
-								const index = module.getChairIndex(match[1]);
-								const chair = getChair(index);
-								chair.bottomColor = match[2];
-							}
-
 
 							//paint the seat of the chair
 							match = line.match(/The seat of the (.+) is now (.+?)(?:-.+)?\./)
