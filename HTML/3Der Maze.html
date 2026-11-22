@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>3Der Maze — Keep Talking and Nobody Explodes Module</title>
+    <link rel="stylesheet" type="text/css" href="css/font.css">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <style>
+        .base-lines{
+            stroke: whitesmoke;
+            fill: none;
+            stroke-width: 1;
+        }
+        .dark .base-lines{
+            stroke: #292929;
+        }
+        .bold-text{
+            font-family: Special Elite;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .dark .bold-text{
+            fill: white;
+        }
+        .axis-labels{
+            font-family: Special Elite;
+            font-size: 10px;
+            fill: dimgray;
+        }
+        .dark .axis-labels{
+            fill: #A0A0A0;
+        }
+        .map-and-compass{
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: start;
+        }
+        .maze-lines{
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+        }
+        .hidden{
+            display: none;
+        }
+        #Maze0, #Maze2, #Maze4, #Maze6, #Maze8{
+            grid-column: 2;
+        }
+        .page-footer::before { content: 'Page '; }
+        .page-footer::after { content: ' of 6'; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-01">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">3Der Maze</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/3Der Maze.svg" class="diagram">
+                <h2>On the Subject of 3Der Maze</h2>
+                <p class="flavour-text">You are in a maze of twisty passages, all alike. Exits are to the north, south, east, west, top, and bottom.</p>
+                <ul style="font-size: 15px;">
+                    <li>The defuser starts in a random position and orientation in one of the ten mazes below.</li>
+                    <li>Locate the defuser using a 3D view of the maze walls, which also shows the symbol inside the current space, and if there is a symbol in the space ahead.</li>
+                    <li>The maze map is confined to a 4*4*4 cube and <b>not</b> cyclic.</li>
+                    <li>One of the walls is the goal, the rest will cause strikes if moved into.</li>
+                    <li>To defuse the module, locate the goal wall, and move through it from either side.</li>
+                    <li>Using the methods below, calculate an x-coordinate (0–3), a y-coordinate (0–3), a z-coordinate (0-3), and a direction; the goal wall will be the first wall from these coordinates in the given direction.</li>
+                    <li>The buttons, in reading order, do the following: turn upwards, turn downwards, roll anti-clockwise, turn left, move forward, turn right, roll clockwise.</li>
+                    <li>Only the move forward button changes the location of the player.</li>
+                </ul>
+                <h4>x-coordinate:</h4>
+                <ul style="font-size: 15px;">
+                    <li>Start with the first numeric digit in the serial number.</li>
+                    <li>If greater than 3, subtract 4 until the number falls between 0-3 inclusive.</li>
+                </ul>
+                <h4>y-coordinate:</h4>
+                <ul style="font-size: 15px;">
+                    <li>Start with the last numeric digit in the serial number.</li>
+                    <li>If greater than 3, subtract 4 until the number falls between 0-3 inclusive.</li>
+                </ul>
+                <h4>z-coordinate:</h4>
+                <ul style="font-size: 15px;">
+                    <li>Start with the number of batteries.</li>
+                    <li>If greater than 3, subtract 4 until the number falls between 0-3 inclusive.</li>
+                </ul>
+                <h4>Direction:</h4>
+                <ul style="font-size: 15px;">
+                    <li>Each maze contains three star icons marked on the map.</li>
+                    <li>In each of these locations is a letter, which maps to the direction to the goal wall: “<b>N</b>” becomes North, “<b>S</b>” becomes South, “<b>E</b>” becomes East, “<b>W</b>” becomes West, “<b>U</b>” becomes Up, and “<b>D</b>” becomes Down.</li>
+                    <li>Beware of direction letters not in these marked locations, they carry incorrect decoy instructions!</li>
+                </ul>
+                <p class="comment">Disambiguation: The maps gets darker as they get further away from you.</p>
+            </div>
+            <div class="page-footer relative-footer">1</div>
+        </div>
+        <div class="page page-bg-02">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">3Der Maze</span>
+            </div>
+            <div class="page-content">
+                
+                <div class="map-and-compass">
+                    <span id="Maze0"></span>
+                    <span id="Compass"></span>
+                </div>
+                <span id="Maze1"></span>
+            </div>
+            <div class="page-footer relative-footer">2</div>
+        </div>
+        <div class="page page-bg-03">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">3Der Maze</span>
+            </div>
+            <div class="page-content">
+                <div class="map-and-compass">
+                    <span id="Maze2"></span>
+                    <span id="Compass"></span>
+                </div>
+                <span id="Maze3"></span>
+            </div>
+            <div class="page-footer relative-footer">3</div>
+        </div>
+        <div class="page page-bg-04">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">3Der Maze</span>
+            </div>
+            <div class="page-content">
+                <div class="map-and-compass">
+                    <span id="Maze4"></span>
+                    <span id="Compass"></span>
+                </div>
+                <span id="Maze5"></span>
+            </div>
+            <div class="page-footer relative-footer">4</div>
+        </div>
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">3Der Maze</span>
+            </div>
+            <div class="page-content">
+                <div class="map-and-compass">
+                    <span id="Maze6"></span>
+                    <span id="Compass"></span>
+                </div>
+                <span id="Maze7"></span>
+            </div>
+            <div class="page-footer relative-footer">5</div>
+        </div>
+        <div class="page page-bg-06">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">3Der Maze</span>
+            </div>
+            <div class="page-content">
+                <div class="map-and-compass">
+                    <span id="Maze8"></span>
+                    <span id="Compass"></span>
+                </div>
+                <span id="Maze9"></span>
+            </div>
+            <div class="page-footer relative-footer">6</div>
+        </div>
+    </div>
+    <script>
+        const compassSpans = document.querySelectorAll('span[id="Compass"]');
+        compassSpans.forEach(span => {
+            span.innerHTML = `
+            <svg width="100" height="100" viewBox="-25 -25 50 50" class="centered-img" style="grid-column: 3; justify-self: start;">
+                <path d="M 0 0 L 4 -4" class="maze-lines" stroke="#626262"/>
+                <path d="M 0 -20 L 0 20 M -20 0 L 20 0" class="maze-lines" stroke="#959595"/>
+                <path d="M -4 4 L 0 0" class="maze-lines" stroke="#C8C8C8"/>
+                <text x = -3 y = -17 class="bold-text">U</text>
+                <text x = -3 y = 24 class="bold-text">D</text>
+                <text x = 18 y = 3 class="bold-text">E</text>
+                <text x = -24 y = 3 class="bold-text">W</text>
+                <text x = 3 y = -3 class="bold-text">N</text>
+                <text x = -9 y = 9 class="bold-text">S</text>
+            </svg>
+        `});
+        for(let i = 0; i < 10; i++)
+        {
+            
+        }
+        class Vector3Int{
+            constructor(x = 0, y = 0, z = 0){
+                this.x = Math.trunc(x);
+                this.y = Math.trunc(y);
+                this.z = Math.trunc(z);
+            }
+            addOther(other){
+                return new Vector3Int(this.x + other.x, this.y + other.y, this.z + other.z);
+            }
+            get opposite(){
+                return new Vector3Int(this.x * -1, this.y * -1, this.z * -1);
+            }
+        }
+        const Directions = [
+            new Vector3Int(1, 0, 0),
+            new Vector3Int(-1, 0, 0),
+            new Vector3Int(0, 1, 0),
+            new Vector3Int(0, -1, 0),
+            new Vector3Int(0, 0, 1),
+            new Vector3Int(0, 0, -1),
+        ];
+        class Wall{
+            Exists = true;
+            stateLocked = false;
+        }
+        class Cell{
+            Letter = -1;
+            visited = false;
+            Walls = [new Wall(), new Wall(), new Wall(), new Wall(), new Wall(), new Wall()];
+            get lockedWalls(){
+                let i = 0;
+                this.Walls.forEach(wall => {
+                    if(wall.stateLocked){
+                        i++;
+                    }
+                });
+                return i;
+            }
+            RemoveWall(index)
+            {
+                this.Walls[index].Exists = false;
+            }
+            Coords;
+            constructor(coordinate)
+            {
+                this.Coords = coordinate;
+            }
+        }
+        
+        const combinations = ["ABC", "ABH", "ABK", "ACH", "ACK", "AHK", "BCH", "BCK", "BHK", "CHK"];
+
+        function setDefaultRules(rnd)
+        {
+            setRules(rnd);
+        }
+
+        function setRules(rnd)
+        {
+            Mazes = Array.from({length: 10}, () =>
+            Array.from({length: 4}, (_, x) =>
+            Array.from({length: 4}, (_, y) =>
+            Array.from({length: 4}, (_, z) => new Cell(new Vector3Int(x, y, z))))));
+            for(let i = 0; i < 10; i++)
+            {
+                let currentMaze = document.getElementById(`Maze${i}`);
+                currentMaze.innerHTML = `
+                    <svg width="470" height="450" viewBox="-3 1 203 207" class="centered-img" style="${i % 2 == 0 ? `margin-bottom: 25px;` : ""}">
+
+                        <!-- Faint maze lines -->
+                        <rect x="10" y="40" width="150" height="150"class="base-lines"/>
+                        <rect x="10" y="90" width="150" height="50" class="base-lines"/>
+                        <rect x="60" y="40" width="50" height="150" class="base-lines"/>
+                        
+                        <rect x="20" y="30" width="150" height="150"class="base-lines"/>
+                        <rect x="20" y="80" width="150" height="50" class="base-lines"/>
+                        <rect x="70" y="30" width="50" height="150" class="base-lines"/>
+
+                        <rect x="30" y="20" width="150" height="150"class="base-lines"/>
+                        <rect x="30" y="70" width="150" height="50" class="base-lines"/>
+                        <rect x="80" y="20" width="50" height="150" class="base-lines"/>
+
+                        <rect x="40" y="10" width="150" height="150"class="base-lines"/>
+                        <rect x="40" y="60" width="150" height="50" class="base-lines"/>
+                        <rect x="90" y="10" width="50" height="150" class="base-lines"/>
+
+                        <path d="M 10 190 L 40 160 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m 20 180 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30
+                        m 20 180 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m 20 180 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30 m -30 -20 l 30 -30" class="base-lines"/>
+
+                        <!-- Axis labels -->
+                        <text x="0" y="44" class="axis-labels">3</text>
+                        <text x="0" y="94" class="axis-labels">2</text>
+                        <text x="0" y="144" class="axis-labels">1</text>
+                        <text x="0" y="194" class="axis-labels">0</text>
+
+                        <text x="198" y="164" class="axis-labels">3</text>
+                        <text x="188" y="174" class="axis-labels">2</text>
+                        <text x="178" y="184" class="axis-labels">1</text>
+                        <text x="168" y="194" class="axis-labels">0</text>
+
+                        <text x="7" y="203" class="axis-labels">0</text>
+                        <text x="57" y="203" class="axis-labels">1</text>
+                        <text x="107" y="203" class="axis-labels">2</text>
+                        <text x="157" y="203" class="axis-labels">3</text>
+
+                        <text x="82" y="207" class="bold-text">x</text>
+                        <text x="-5" y="118" class="bold-text">y</text>
+                        <text x="185" y="185" class="bold-text">z</text>
+                        
+                        <!-- Actual maze lines -->
+                        <line x1="40"  y1="160" x2="90"  y2= "160" id="${i}-003X" class="maze-lines" stroke="#626262"/>
+                        <line x1="40"  y1="160" x2="40"  y2= "110" id="${i}-003Y" class="maze-lines" stroke="#626262"/>
+                        <line x1="40"  y1="110" x2="90"  y2= "110" id="${i}-013X" class="maze-lines" stroke="#626262"/>
+                        <line x1="40"  y1="110" x2="40"  y2= "60"  id="${i}-013Y" class="maze-lines" stroke="#626262"/>
+                        <line x1="40"  y1="60"  x2="90"  y2= "60"  id="${i}-023X" class="maze-lines" stroke="#626262"/>
+                        <line x1="40"  y1="60"  x2="40"  y2= "10"  id="${i}-023Y" class="maze-lines" stroke="#626262"/>
+                        <line x1="40"  y1="10"  x2="90"  y2= "10"  id="${i}-033X" class="maze-lines" stroke="#626262"/>
+                        <line x1="90"  y1="160" x2="140" y2= "160" id="${i}-103X" class="maze-lines" stroke="#626262"/>
+                        <line x1="90"  y1="160" x2="90"  y2= "110" id="${i}-103Y" class="maze-lines" stroke="#626262"/>
+                        <line x1="90"  y1="110" x2="140" y2= "110" id="${i}-113X" class="maze-lines" stroke="#626262"/>
+                        <line x1="90"  y1="110" x2="90"  y2= "60"  id="${i}-113Y" class="maze-lines" stroke="#626262"/>
+                        <line x1="90"  y1="60"  x2="140" y2= "60"  id="${i}-123X" class="maze-lines" stroke="#626262"/>
+                        <line x1="90"  y1="60"  x2="90"  y2= "10"  id="${i}-123Y" class="maze-lines" stroke="#626262"/>
+                        <line x1="90"  y1="10"  x2="140" y2= "10"  id="${i}-133X" class="maze-lines" stroke="#626262"/>
+                        <line x1="140" y1="160" x2="190" y2= "160" id="${i}-203X" class="maze-lines" stroke="#626262"/>
+                        <line x1="140" y1="160" x2="140" y2= "110" id="${i}-203Y" class="maze-lines" stroke="#626262"/>
+                        <line x1="140" y1="110" x2="190" y2= "110" id="${i}-213X" class="maze-lines" stroke="#626262"/>
+                        <line x1="140" y1="110" x2="140" y2= "60"  id="${i}-213Y" class="maze-lines" stroke="#626262"/>
+                        <line x1="140" y1="60"  x2="190" y2= "60"  id="${i}-223X" class="maze-lines" stroke="#626262"/>
+                        <line x1="140" y1="60"  x2="140" y2= "10"  id="${i}-223Y" class="maze-lines" stroke="#626262"/>
+                        <line x1="140" y1="10"  x2="190" y2= "10"  id="${i}-233X" class="maze-lines" stroke="#626262"/>
+                        <line x1="190" y1="160" x2="190" y2= "110" id="${i}-303Y" class="maze-lines" stroke="#626262"/>
+                        <line x1="190" y1="110" x2="190" y2= "60"  id="${i}-313Y" class="maze-lines" stroke="#626262"/>
+                        <line x1="190" y1="60"  x2="190" y2= "10"  id="${i}-323Y" class="maze-lines" stroke="#626262"/>
+
+                        <line x1="30"  y1="170" x2="40"  y2= "160" id="${i}-002Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="30"  y1="120" x2="40"  y2= "110" id="${i}-012Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="30"  y1="70"  x2="40"  y2= "60"  id="${i}-022Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="30"  y1="20"  x2="40"  y2= "10"  id="${i}-032Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="80"  y1="170" x2="90"  y2= "160" id="${i}-102Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="80"  y1="120" x2="90"  y2= "110" id="${i}-112Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="80"  y1="70"  x2="90"  y2= "60"  id="${i}-122Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="80"  y1="20"  x2="90"  y2= "10"  id="${i}-132Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="130" y1="170" x2="140" y2= "160" id="${i}-202Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="130" y1="120" x2="140" y2= "110" id="${i}-212Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="130" y1="70"  x2="140" y2= "60"  id="${i}-222Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="130" y1="20"  x2="140" y2= "10"  id="${i}-232Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="180" y1="170" x2="190" y2= "160" id="${i}-302Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="180" y1="120" x2="190" y2= "110" id="${i}-312Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="180" y1="70"  x2="190" y2= "60"  id="${i}-322Z" class="maze-lines" stroke="#737373"/>
+                        <line x1="180" y1="20"  x2="190" y2= "10"  id="${i}-332Z" class="maze-lines" stroke="#737373"/>
+
+                        <line x1="30"  y1="170" x2="80"  y2= "170" id="${i}-002X" class="maze-lines" stroke="#848484"/>
+                        <line x1="30"  y1="170" x2="30"  y2= "120" id="${i}-002Y" class="maze-lines" stroke="#848484"/>
+                        <line x1="30"  y1="120" x2="80"  y2= "120" id="${i}-012X" class="maze-lines" stroke="#848484"/>
+                        <line x1="30"  y1="120" x2="30"  y2= "70"  id="${i}-012Y" class="maze-lines" stroke="#848484"/>
+                        <line x1="30"  y1="70"  x2="80"  y2= "70"  id="${i}-022X" class="maze-lines" stroke="#848484"/>
+                        <line x1="30"  y1="70"  x2="30"  y2= "20"  id="${i}-022Y" class="maze-lines" stroke="#848484"/>
+                        <line x1="30"  y1="20"  x2="80"  y2= "20"  id="${i}-032X" class="maze-lines" stroke="#848484"/>
+                        <line x1="80"  y1="170" x2="130" y2= "170" id="${i}-102X" class="maze-lines" stroke="#848484"/>
+                        <line x1="80"  y1="170" x2="80"  y2= "120" id="${i}-102Y" class="maze-lines" stroke="#848484"/>
+                        <line x1="80"  y1="120" x2="130" y2= "120" id="${i}-112X" class="maze-lines" stroke="#848484"/>
+                        <line x1="80"  y1="120" x2="80"  y2= "70"  id="${i}-112Y" class="maze-lines" stroke="#848484"/>
+                        <line x1="80"  y1="70"  x2="130" y2= "70"  id="${i}-122X" class="maze-lines" stroke="#848484"/>
+                        <line x1="80"  y1="70"  x2="80"  y2= "20"  id="${i}-122Y" class="maze-lines" stroke="#848484"/>
+                        <line x1="80"  y1="20"  x2="130" y2= "20"  id="${i}-132X" class="maze-lines" stroke="#848484"/>
+                        <line x1="130" y1="170" x2="180" y2= "170" id="${i}-202X" class="maze-lines" stroke="#848484"/>
+                        <line x1="130" y1="170" x2="130" y2= "120" id="${i}-202Y" class="maze-lines" stroke="#848484"/>
+                        <line x1="130" y1="120" x2="180" y2= "120" id="${i}-212X" class="maze-lines" stroke="#848484"/>
+                        <line x1="130" y1="120" x2="130" y2= "70"  id="${i}-212Y" class="maze-lines" stroke="#848484"/>
+                        <line x1="130" y1="70"  x2="180" y2= "70"  id="${i}-222X" class="maze-lines" stroke="#848484"/>
+                        <line x1="130" y1="70"  x2="130" y2= "20"  id="${i}-222Y" class="maze-lines" stroke="#848484"/>
+                        <line x1="130" y1="20"  x2="180" y2= "20"  id="${i}-232X" class="maze-lines" stroke="#848484"/>
+                        <line x1="180" y1="170" x2="180" y2= "120" id="${i}-302Y" class="maze-lines" stroke="#848484"/>
+                        <line x1="180" y1="120" x2="180" y2= "70"  id="${i}-312Y" class="maze-lines" stroke="#848484"/>
+                        <line x1="180" y1="70"  x2="180" y2= "20"  id="${i}-322Y" class="maze-lines" stroke="#848484"/>
+
+                        <line x1="20"  y1="180" x2="30"  y2= "170" id="${i}-001Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="20"  y1="130" x2="30"  y2= "120" id="${i}-011Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="20"  y1="80"  x2="30"  y2= "70"  id="${i}-021Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="20"  y1="30"  x2="30"  y2= "20"  id="${i}-031Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="70"  y1="180" x2="80"  y2= "170" id="${i}-101Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="70"  y1="130" x2="80"  y2= "120" id="${i}-111Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="70"  y1="80"  x2="80"  y2= "70"  id="${i}-121Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="70"  y1="30"  x2="80"  y2= "20"  id="${i}-131Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="120" y1="180" x2="130" y2= "170" id="${i}-201Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="120" y1="130" x2="130" y2= "120" id="${i}-211Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="120" y1="80"  x2="130" y2= "70"  id="${i}-221Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="120" y1="30"  x2="130" y2= "20"  id="${i}-231Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="170" y1="180" x2="180" y2= "170" id="${i}-301Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="170" y1="130" x2="180" y2= "120" id="${i}-311Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="170" y1="80"  x2="180" y2= "70"  id="${i}-321Z" class="maze-lines" stroke="#959595"/>
+                        <line x1="170" y1="30"  x2="180" y2= "20"  id="${i}-331Z" class="maze-lines" stroke="#959595"/>
+
+                        <line x1="20"  y1="180" x2="70"  y2= "180" id="${i}-001X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="20"  y1="180" x2="20"  y2= "130" id="${i}-001Y" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="20"  y1="130" x2="70"  y2= "130" id="${i}-011X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="20"  y1="130" x2="20"  y2= "80"  id="${i}-011Y" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="20"  y1="80"  x2="70"  y2= "80"  id="${i}-021X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="20"  y1="80"  x2="20"  y2= "30"  id="${i}-021Y" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="20"  y1="30"  x2="70"  y2= "30"  id="${i}-031X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="70"  y1="180" x2="120" y2= "180" id="${i}-101X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="70"  y1="180" x2="70"  y2= "130" id="${i}-101Y" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="70"  y1="130" x2="120" y2= "130" id="${i}-111X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="70"  y1="130" x2="70"  y2= "80"  id="${i}-111Y" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="70"  y1="80"  x2="120" y2= "80"  id="${i}-121X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="70"  y1="80"  x2="70"  y2= "30"  id="${i}-121Y" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="70"  y1="30"  x2="120" y2= "30"  id="${i}-131X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="120" y1="180" x2="170" y2= "180" id="${i}-201X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="120" y1="180" x2="120" y2= "130" id="${i}-201Y" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="120" y1="130" x2="170" y2= "130" id="${i}-211X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="120" y1="130" x2="120" y2= "80"  id="${i}-211Y" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="120" y1="80"  x2="170" y2= "80"  id="${i}-221X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="120" y1="80"  x2="120" y2= "30"  id="${i}-221Y" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="120" y1="30"  x2="170" y2= "30"  id="${i}-231X" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="170" y1="180" x2="170" y2= "130" id="${i}-301Y" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="170" y1="130" x2="170" y2= "80"  id="${i}-311Y" class="maze-lines" stroke="#A6A6A6"/>
+                        <line x1="170" y1="80"  x2="170" y2= "30"  id="${i}-321Y" class="maze-lines" stroke="#A6A6A6"/>
+
+                        <line x1="10"  y1="190" x2="20"  y2= "180" id="${i}-000Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="10"  y1="140" x2="20"  y2= "130" id="${i}-010Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="10"  y1="90"  x2="20"  y2= "80"  id="${i}-020Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="10"  y1="40"  x2="20"  y2= "30"  id="${i}-030Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="60"  y1="190" x2="70"  y2= "180" id="${i}-100Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="60"  y1="140" x2="70"  y2= "130" id="${i}-110Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="60"  y1="90"  x2="70"  y2= "80"  id="${i}-120Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="60"  y1="40"  x2="70"  y2= "30"  id="${i}-130Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="110" y1="190" x2="120" y2= "180" id="${i}-200Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="110" y1="140" x2="120" y2= "130" id="${i}-210Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="110" y1="90"  x2="120" y2= "80"  id="${i}-220Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="110" y1="40"  x2="120" y2= "30"  id="${i}-230Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="160" y1="190" x2="170" y2= "180" id="${i}-300Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="160" y1="140" x2="170" y2= "130" id="${i}-310Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="160" y1="90"  x2="170" y2= "80"  id="${i}-320Z" class="maze-lines" stroke="#B7B7B7"/>
+                        <line x1="160" y1="40"  x2="170" y2= "30"  id="${i}-330Z" class="maze-lines" stroke="#B7B7B7"/>
+
+                        <line x1="10"  y1="190" x2="60"  y2= "190" id="${i}-000X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="10"  y1="190" x2="10"  y2= "140" id="${i}-000Y" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="10"  y1="140" x2="60"  y2= "140" id="${i}-010X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="10"  y1="140" x2="10"  y2= "90"  id="${i}-010Y" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="10"  y1="90"  x2="60"  y2= "90"  id="${i}-020X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="10"  y1="90"  x2="10"  y2= "40"  id="${i}-020Y" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="10"  y1="40"  x2="60"  y2= "40"  id="${i}-030X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="60"  y1="190" x2="110" y2= "190" id="${i}-100X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="60"  y1="190" x2="60"  y2= "140" id="${i}-100Y" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="60"  y1="140" x2="110" y2= "140" id="${i}-110X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="60"  y1="140" x2="60"  y2= "90"  id="${i}-110Y" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="60"  y1="90"  x2="110" y2= "90"  id="${i}-120X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="60"  y1="90"  x2="60"  y2= "40"  id="${i}-120Y" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="60"  y1="40"  x2="110" y2= "40"  id="${i}-130X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="110" y1="190" x2="160" y2= "190" id="${i}-200X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="110" y1="190" x2="110" y2= "140" id="${i}-200Y" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="110" y1="140" x2="160" y2= "140" id="${i}-210X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="110" y1="140" x2="110" y2= "90"  id="${i}-210Y" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="110" y1="90"  x2="160" y2= "90"  id="${i}-220X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="110" y1="90"  x2="110" y2= "40"  id="${i}-220Y" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="110" y1="40"  x2="160" y2= "40"  id="${i}-230X" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="160" y1="190" x2="160" y2= "140" id="${i}-300Y" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="160" y1="140" x2="160" y2= "90"  id="${i}-310Y" class="maze-lines" stroke="#C8C8C8"/>
+                        <line x1="160" y1="90"  x2="160" y2= "40"  id="${i}-320Y" class="maze-lines" stroke="#C8C8C8"/>
+
+                        <!-- Cell labels -->
+                        <text x="7" y="194"  class="bold-text" id='${i}-000'>X</text>
+                        <text x="7" y="144"  class="bold-text" id='${i}-010'>X</text>
+                        <text x="7" y="94"   class="bold-text" id='${i}-020'>X</text>
+                        <text x="7" y="44"   class="bold-text" id='${i}-030'>X</text>
+
+                        <text x="17" y="184" class="bold-text" id='${i}-001'>X</text>
+                        <text x="17" y="134" class="bold-text" id='${i}-011'>X</text>
+                        <text x="17" y="84"  class="bold-text" id='${i}-021'>X</text>
+                        <text x="17" y="34"  class="bold-text" id='${i}-031'>X</text>
+
+                        <text x="27" y="174" class="bold-text" id='${i}-002'>X</text>
+                        <text x="27" y="124" class="bold-text" id='${i}-012'>X</text>
+                        <text x="27" y="74"  class="bold-text" id='${i}-022'>X</text>
+                        <text x="27" y="24"  class="bold-text" id='${i}-032'>X</text>
+
+                        <text x="37" y="164" class="bold-text" id='${i}-003'>X</text>
+                        <text x="37" y="114" class="bold-text" id='${i}-013'>X</text>
+                        <text x="37" y="64"  class="bold-text" id='${i}-023'>X</text>
+                        <text x="37" y="14"  class="bold-text" id='${i}-033'>X</text>
+
+                        <text x="57" y="194" class="bold-text" id='${i}-100'>X</text>
+                        <text x="57" y="144" class="bold-text" id='${i}-110'>X</text>
+                        <text x="57" y="94"  class="bold-text" id='${i}-120'>X</text>
+                        <text x="57" y="44"  class="bold-text" id='${i}-130'>X</text>
+
+                        <text x="67" y="184" class="bold-text" id='${i}-101'>X</text>
+                        <text x="67" y="134" class="bold-text" id='${i}-111'>X</text>
+                        <text x="67" y="84"  class="bold-text" id='${i}-121'>X</text>
+                        <text x="67" y="34"  class="bold-text" id='${i}-131'>X</text>
+
+                        <text x="77" y="174" class="bold-text" id='${i}-102'>X</text>
+                        <text x="77" y="124" class="bold-text" id='${i}-112'>X</text>
+                        <text x="77" y="74"  class="bold-text" id='${i}-122'>X</text>
+                        <text x="77" y="24"  class="bold-text" id='${i}-132'>X</text>
+
+                        <text x="87" y="164" class="bold-text" id='${i}-103'>X</text>
+                        <text x="87" y="114" class="bold-text" id='${i}-113'>X</text>
+                        <text x="87" y="64"  class="bold-text" id='${i}-123'>X</text>
+                        <text x="87" y="14"  class="bold-text" id='${i}-133'>X</text>
+
+                        <text x="107" y="194"class="bold-text" id='${i}-200'>X</text>
+                        <text x="107" y="144"class="bold-text" id='${i}-210'>X</text>
+                        <text x="107" y="94" class="bold-text" id='${i}-220'>X</text>
+                        <text x="107" y="44" class="bold-text" id='${i}-230'>X</text>
+
+                        <text x="117" y="184"class="bold-text" id='${i}-201'>X</text>
+                        <text x="117" y="134"class="bold-text" id='${i}-211'>X</text>
+                        <text x="117" y="84" class="bold-text" id='${i}-221'>X</text>
+                        <text x="117" y="34" class="bold-text" id='${i}-231'>X</text>
+
+                        <text x="127" y="174"class="bold-text" id='${i}-202'>X</text>
+                        <text x="127" y="124"class="bold-text" id='${i}-212'>X</text>
+                        <text x="127" y="74" class="bold-text" id='${i}-222'>X</text>
+                        <text x="127" y="24" class="bold-text" id='${i}-232'>X</text>
+
+                        <text x="137" y="164"class="bold-text" id='${i}-203'>X</text>
+                        <text x="137" y="114"class="bold-text" id='${i}-213'>X</text>
+                        <text x="137" y="64" class="bold-text" id='${i}-223'>X</text>
+                        <text x="137" y="14" class="bold-text" id='${i}-233'>X</text>
+
+                        <text x="157" y="194"class="bold-text" id='${i}-300'>X</text>
+                        <text x="157" y="144"class="bold-text" id='${i}-310'>X</text>
+                        <text x="157" y="94" class="bold-text" id='${i}-320'>X</text>
+                        <text x="157" y="44" class="bold-text" id='${i}-330'>X</text>
+
+                        <text x="167" y="184"class="bold-text" id='${i}-301'>X</text>
+                        <text x="167" y="134"class="bold-text" id='${i}-311'>X</text>
+                        <text x="167" y="84" class="bold-text" id='${i}-321'>X</text>
+                        <text x="167" y="34" class="bold-text" id='${i}-331'>X</text>
+
+                        <text x="177" y="174"class="bold-text" id='${i}-302'>X</text>
+                        <text x="177" y="124"class="bold-text" id='${i}-312'>X</text>
+                        <text x="177" y="74" class="bold-text" id='${i}-322'>X</text>
+                        <text x="177" y="24" class="bold-text" id='${i}-332'>X</text>
+
+                        <text x="187" y="164"class="bold-text" id='${i}-303'>X</text>
+                        <text x="187" y="114"class="bold-text" id='${i}-313'>X</text>
+                        <text x="187" y="64" class="bold-text" id='${i}-323'>X</text>
+                        <text x="187" y="14" class="bold-text" id='${i}-333'>X</text>
+                    </svg>
+                `;
+                let highlightpaths;
+                for(let a = 10; a < 161; a += 50)
+                {
+                    for(let b = 40; b < 191; b += 50)
+                    {
+                        for (let c = 0; c < 31; c += 10)
+                        {
+                            highlightpaths += `<path class="highlightable" fill="transparent" stroke="none" d="M ${5 + a + c} ${7 + b - c} L ${-7 + a + c} ${7 + b - c} L ${-7 + a + c} ${-5 + b - c} L ${-4 + a + c} ${-8 + b - c} L ${8 + a + c} ${-8 + b - c} L ${8 + a + c} ${4 + b - c} Z L ${5 + a + c} ${-5 + b - c} M ${8 + a + c} ${-8 + b - c} L ${5 + a + c} ${-5 + b - c} L ${-7 + a + c} ${-5 + b - c}"/>`
+                        }
+                    }
+                }
+                currentMaze.querySelector('svg').insertAdjacentHTML('beforeend', highlightpaths);
+                switch(rnd.next(0, 3))
+                {
+                    case 0:
+                        console.log(`${i}. Recursive Backtracking`);
+                        RecursiveBacktracking(Mazes[i], rnd);
+                        break;
+                    case 1:
+                        console.log(`${i}. Growing Tree`);
+                        GrowingTree(Mazes[i], rnd);
+                        break;
+                    case 2:
+                        console.log(`${i}. WFC`);
+                        WFC(Mazes[i], rnd);
+                        break;
+                }
+                currentFreeMazeCells = Mazes[i].flat(3);
+                //Choose placement of maze identification letters
+                for(let j = 0; j < 3; j++)
+                {
+                    for(let k = 0; k < 5; k++)
+                    {
+                        selectedIndex = rnd.next(0, currentFreeMazeCells.length);
+                        currentFreeMazeCells[selectedIndex].Letter = j;
+                        currentFreeMazeCells.splice(selectedIndex, 1);
+                    }
+                }
+                //Choose placement of true direction letters
+                for(j = 0; j < 3; j++)
+                {
+                    selectedIndex = rnd.next(0, currentFreeMazeCells.length);
+                    currentFreeMazeCells[selectedIndex].Letter = 3;
+                    currentFreeMazeCells.splice(selectedIndex, 1);
+                }
+                Mazes[i].flat(3).forEach(cell => {
+                    if(cell.Letter == -1)
+                    {
+                        document.getElementById(`${i}-${cell.Coords.x}${cell.Coords.y}${cell.Coords.z}`).textContent = "";
+                    }
+                    else if(cell.Letter < 3)
+                    {
+                        document.getElementById(`${i}-${cell.Coords.x}${cell.Coords.y}${cell.Coords.z}`).textContent = `${combinations[i][cell.Letter]}`;
+                    }
+                    else
+                    {
+                        document.getElementById(`${i}-${cell.Coords.x}${cell.Coords.y}${cell.Coords.z}`).textContent = "✲";
+                    }
+                });
+            }
+            for(let i = 0; i < 10; i++)
+            {
+                Mazes[i].flat(3).forEach(cell => {
+                    for(let j = 0; j < 3; j++)
+                    {
+                        if(document.getElementById(`${i}-${cell.Coords.x}${cell.Coords.y}${cell.Coords.z}${["X", "Y", "Z"][j]}`) != null)
+                        {
+                            if(cell.Walls[j * 2].Exists)
+                            {
+                                document.getElementById(`${i}-${cell.Coords.x}${cell.Coords.y}${cell.Coords.z}${["X", "Y", "Z"][j]}`).classList.add('hidden');
+                            }
+                            else
+                            {
+                                document.getElementById(`${i}-${cell.Coords.x}${cell.Coords.y}${cell.Coords.z}${["X", "Y", "Z"][j]}`).classList.remove('hidden');
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        let UnvisitedList;
+        let lockedWallsCount;
+
+        function WFC(Maze, rnd){
+            //lockedWallsCount contains all cells that aren't fully collapsed, each cell at the index matching the number of locked walls it has
+            lockedWallsCount = [[], [], [], [], [], []];
+            lockedWallsCountEmpty = false;
+            //The highest indexed list in lockedWallsCount whose count isn't 0
+            let highestLocked;
+            Maze.flat(3).forEach(cell => {
+                lockedWallsCount[0].push(cell);
+            });
+
+            currentCell = Maze[rnd.next(0,4)][rnd.next(0,4)][rnd.next(0,4)];
+
+            //Generate the initial maze, which may have inaccessible areas
+            while(!lockedWallsCountEmpty)
+            {
+                currentCell.Walls = validWallConfiguration(currentCell, rnd);
+                lockedWallsCountRemove(currentCell);
+
+                Directions.forEach((direction, index) => {
+                    targetCellCoords = currentCell.Coords.addOther(direction);
+                    let OOB = [targetCellCoords.x, targetCellCoords.y, targetCellCoords.z].some(i => i < 0 || i > 3);
+                    if(!OOB)
+                    {
+                        targetCell = Maze[targetCellCoords.x][targetCellCoords.y][targetCellCoords.z];
+                        targetCell.Walls[index ^ 1] = currentCell.Walls[index];
+                        targetCell.Walls[index ^ 1].stateLocked = true;
+                        lockedWallsCountRemove(targetCell);
+                        if(targetCell.lockedWalls < 6)
+                        {
+                            lockedWallsCount[targetCell.lockedWalls].push(targetCell);
+                        }
+                    }
+                });
+                let highestLocked = 0;
+                for(let i = 0; i < 6; i++)
+                {
+                    if(lockedWallsCount[i].length > 0)
+                    {
+                        highestLocked = i;
+                    }
+                }
+                lockedWallsCountEmpty = true;
+                for(let i = 0; i < 6; i++)
+                {
+                    if(lockedWallsCount[i].length > 0)
+                    {
+                        lockedWallsCountEmpty = false;
+                        currentCell = lockedWallsCount[highestLocked][rnd.next(0, lockedWallsCount[highestLocked].length)];
+                        
+                    }
+                }
+            }
+            //Determine inaccessible cells(if any), make a random inaccessible cell accessible by knocking down a wall, and repeat until all 64 cells are accessible
+            while(lookForInaccessibleAreas(Maze, rnd))
+            {
+                //console.log(UnvisitedList.length + ": " + UnvisitedList.map(cell => `(${cell.Coords.x}${cell.Coords.y}${cell.Coords.z})`).join(", "));
+                randomIndex = rnd.next(0, UnvisitedList.length);
+                result = RandomConditionalNeighbourAndDirection(UnvisitedList[randomIndex], true, false, Maze, rnd);
+
+                while(result == null)
+                {
+                    UnvisitedList.splice(randomIndex, 1);
+                    randomIndex = rnd.next(0, UnvisitedList.length);
+                    result = RandomConditionalNeighbourAndDirection(UnvisitedList[randomIndex], true, false, Maze, rnd);
+                }
+                UnvisitedList[randomIndex].Walls[result[1]].Exists = false;
+                Maze[result[0].x][result[0].y][result[0].z].Walls[result[1] ^ 1].Exists = false;
+                //console.log(`Connected (${Object.values(UnvisitedList[randomIndex].Coords).join("")})(wall ${result[1]}) to (${Object.values(Maze[result[0].x][result[0].y][result[0].z].Coords).join("")})(wall ${result[1] ^ 1}).`)
+            }
+        }
+        function validWallConfiguration(inputCell, rnd)
+        {
+            let unlockedIndices = [];
+            let wallsToModify = structuredClone(inputCell.Walls);
+            let wallsLockedToExist = 0;
+            Directions.forEach(direction => {
+                targetDirection = inputCell.Coords.addOther(direction);
+                let OOB = [targetDirection.x, targetDirection.y, targetDirection.z].some(i => i < 0 || i > 3);
+                if(OOB)
+                {
+                    inputCell.Walls[Directions.indexOf(direction)].Exists = true;
+                    inputCell.Walls[Directions.indexOf(direction)].stateLocked = true;
+                }
+            });
+            for(let i = 0; i < 6; i++)
+            {
+                if(inputCell.Walls[i].stateLocked && inputCell.Walls[i].Exists)
+                {
+                    wallsLockedToExist++;
+                }
+                else if(!inputCell.Walls[i].stateLocked)
+                {
+                    unlockedIndices.push(i);
+                }
+                wallsToModify[i].stateLocked = true;
+            }
+            if(unlockedIndices.length == 0)
+            {
+                return wallsToModify;
+            }
+            if(wallsLockedToExist > 0 && wallsLockedToExist < 6 - unlockedIndices.length)
+            {
+                unlockedIndices.forEach(i => {
+                    wallsToModify[i].Exists = (rnd.next(0, 2) == 0)
+                });
+            }
+            else
+            {
+                let randomIndex;
+                if(wallsLockedToExist == 0)
+                {
+                    randomIndex = rnd.next(0, unlockedIndices.length);
+                    wallsToModify[unlockedIndices[randomIndex]].Exists = true;
+                    unlockedIndices.splice(randomIndex, 1);
+                }
+                if(wallsLockedToExist == 6 - unlockedIndices.length)
+                {
+                    randomIndex = rnd.next(0, unlockedIndices.length);
+                    wallsToModify[unlockedIndices[randomIndex]].Exists = false;
+                    unlockedIndices.splice(randomIndex, 1);
+                }
+                unlockedIndices.forEach(i => {
+                    wallsToModify[i].Exists = (rnd.next(0, 2) == 0);
+                });
+            }
+            return wallsToModify;
+        }
+
+        function lockedWallsCountRemove(cell)
+        {
+            for(let i = 0; i < 6; i++)
+            {
+                lockedWallsCount[i] = lockedWallsCount[i].filter(item => item !== cell);
+            }
+        }
+
+        function lookForInaccessibleAreas(Maze, rnd)
+        {
+            UnvisitedList = Maze.flat(3);
+            CellList = [];
+            Maze.flat(3).forEach(cell => {
+                cell.visited = false;
+            });
+            currentCell = Maze[rnd.next(0, 4)][rnd.next(0, 4)][rnd.next(0, 4)];
+            currentCell.visited = true;
+            UnvisitedList = UnvisitedList.filter(item => item !== currentCell);
+            result = randomConnectedUnvisitedNeighbourAndDirection(currentCell, false, Maze, rnd);
+            CellList.push(currentCell);
+            let cellNumber = 0;
+            while(CellList.length > 0)
+            {
+                while(result != null)
+                {
+                    //console.log(String(result[0].x) + String(result[0].y) + String(result[0].z));
+                    currentCell = Maze[result[0].x][result[0].y][result[0].z];
+                    currentCell.visited = true;
+                    UnvisitedList = UnvisitedList.filter(item => item !== currentCell);
+                    result = randomConnectedUnvisitedNeighbourAndDirection(currentCell, true, Maze, rnd);
+                    cellNumber++;
+                }
+                currentCell.visited = true;
+                UnvisitedList = UnvisitedList.filter(item => item !== currentCell);
+                while(result == null && CellList.length > 0)
+                {
+                    CellList = CellList.filter(item => item !== currentCell);
+                    if(CellList.length > 0)
+                    {
+                        currentCell = CellList[CellList.length - 1];
+                    }
+                    currentCell.visited = true;
+                    UnvisitedList = UnvisitedList.filter(item => item !== currentCell);
+                    result = randomConnectedUnvisitedNeighbourAndDirection(currentCell, false, Maze, rnd);
+                }
+            }
+            //console.log(UnvisitedList.length + ": " + UnvisitedList.map(cell => `(${cell.Coords.x}${cell.Coords.y}${cell.Coords.z})`).join(", "));
+            return cellNumber != 63;
+        }
+
+        function randomConnectedUnvisitedNeighbourAndDirection(inputCell, logAndAddToList, Maze, rnd)
+        {
+            let validOptions = [];
+            Directions.forEach(direction => {
+                let targetCoord = inputCell.Coords.addOther(direction);
+                let OOB = [targetCoord.x, targetCoord.y, targetCoord.z].some(i => i < 0 || i > 3);
+                if(!OOB)
+                {
+                    if(!inputCell.Walls[Directions.indexOf(direction)].Exists && !Maze[targetCoord.x][targetCoord.y][targetCoord.z].visited)
+                    {
+                        validOptions.push([new Vector3Int(targetCoord.x, targetCoord.y, targetCoord.z), Directions.indexOf(direction)]);
+                    }
+                }
+            });
+            if(validOptions.length > 0)
+            {
+                if(logAndAddToList)
+                {
+                    if(validOptions.length > 1)
+                    {
+                        CellList.push(inputCell);
+                    }
+                }
+                return(validOptions[rnd.next(0, validOptions.length)]);
+            }
+            return null;
+        }
+
+        function RandomConditionalNeighbourAndDirection(inputCell, visited_, logAndAddToList, Maze, rnd)
+        {
+            let Coords = inputCell.Coords;
+            let UnvisitedNeighbours = [];
+            Directions.forEach(direction => {
+                let target = Coords.addOther(direction);
+                if(![target.x, target.y, target.z].some(i => i < 0 || i > 3))
+                {
+                    if(Maze[target.x][target.y][target.z].visited == visited_)
+                    {
+                        UnvisitedNeighbours.push([new Vector3Int(target.x, target.y, target.z), Directions.indexOf(direction)]);
+                    }
+                }
+            });
+            if(UnvisitedNeighbours.length > 0)
+            {
+                selectedNeighbour = UnvisitedNeighbours[rnd.next(0, UnvisitedNeighbours.length)];
+                if(logAndAddToList)
+                {
+                    if(UnvisitedNeighbours.length > 1)
+                    {
+                        CellList.push(inputCell);
+                    }
+                }
+                return selectedNeighbour;
+            }
+            return null;
+        }
+        function GrowingTree(Maze, rnd)
+        {
+            CellList = [];
+            currentCell = Maze[rnd.next(0,4)][rnd.next(0,4)][rnd.next(0,4)];
+            currentCell.visited = true;
+            CellList.push(currentCell);
+            while(CellList.length > 0)
+            {
+                let i = rnd.next(0, CellList.length);
+                result = RandomConditionalNeighbourAndDirection(CellList[i], false, false, Maze, rnd);
+                if(result != null)
+                {
+                    currentCell = CellList[i];
+                    currentCell.visited = true;
+                    CellList.push(currentCell);
+                    currentCell.RemoveWall(result[1]);
+                    Maze[result[0].x][result[0].y][result[0].z].visited = true;
+                    CellList.push(Maze[result[0].x][result[0].y][result[0].z]);
+                    Maze[result[0].x][result[0].y][result[0].z].RemoveWall(result[1] ^ 1);
+                }
+                else
+                {
+                    CellList.splice(i, 1);
+                }
+            }
+        }
+
+        function RecursiveBacktracking(Maze, rnd)
+        {
+            CellList = [];
+            currentCell = Maze[rnd.next(0,4)][rnd.next(0,4)][rnd.next(0,4)];
+            currentCell.visited = true;
+            cellNumber = 0;
+            result = null;
+            while(cellNumber < 63)
+            {
+                while(result != null)
+                {
+                    result = RandomConditionalNeighbourAndDirection(currentCell, false, true, Maze, rnd)
+                    if(result != null)
+                    {
+                        currentCell.RemoveWall(result[1]);
+                        currentCell = Maze[result[0].x][result[0].y][result[0].z];
+                        CellList.push(currentCell);
+                        currentCell.visited = true;
+                        currentCell.RemoveWall(result[1] ^ 1);
+                        cellNumber++;
+                    }
+                }
+                while(result == null && cellNumber < 63)
+                {
+                    //console.log(`CellList is ${CellList.length} long, currentCell is ${Object.values(currentCell.Coords).join("")}.`);
+                    if(CellList.length > 0)
+                    {
+                        currentCell = CellList[CellList.length - 1];
+                    }
+                    result = RandomConditionalNeighbourAndDirection(currentCell, false, false, Maze, rnd);
+                    if(result == null)
+                    {
+                        CellList.splice(CellList.length - 1, 1);
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
