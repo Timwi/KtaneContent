@@ -6512,7 +6512,8 @@ let parseData = [
 			{
 				regex: /Displaying Stage (\d+)\. It says:/,
 				handler: function (matches, module) {
-					//todo add a line to when the woopie cushion is moved
+					//console.log(`Mod ID: ${lines[linen].match(/\[Duck Konundrum #(\d+)\]/)[1]} | Stage ${matches[1]}`)
+					//todo add a line to when the whoopee cushion is moved
 					if(!module.modInfo) {
 
 						module.hokeyPokeyParts = ["RFoot", "LFoot", "RHand", "LHand", "Butt"]
@@ -6592,6 +6593,8 @@ let parseData = [
 										return ["buttColor"]
 									case "your only painted body part":
 										return [["LFootColor", "RFootColor", "LHandColor", "RHandColor", "buttColor"].find(p => module.modInfo[p] != "None")];
+									case "your only unpainted body part":
+										return [["LFootColor", "RFootColor", "LHandColor", "RHandColor", "buttColor"].find(p => module.modInfo[p] == "None")];
 									case "all of your body parts that are touching the chair":
 										const actionBodyPart = {
 											"Sitting": ["buttColor"],
@@ -6599,6 +6602,8 @@ let parseData = [
 											"Standing": ["LFootColor", "RFootColor"]
 										}
 										return actionBodyPart[module.modInfo.currentAction]
+									default:
+										throw new Error(`"${line}" is an unknown body part`);
 								}
 							}
 
@@ -6674,15 +6679,15 @@ let parseData = [
 								changeObjectChair("Duck", index);
 							}
 
-							//Woopie Cushion is moved/placed
+							//Whoopee Cushion is moved/placed
 							match = line.match(/The whoopee cushion is now on (.+)\./)
 							if(match) {
 								if(match[1] == "the armchair") {
-									changeObjectChair("Woopie Cushion", 0);
+									changeObjectChair("Whoopee Cushion", 0);
 								}
 								else {
 									const index = module.getChairIndex(match[1])
-									changeObjectChair("Woopie Cushion", index);
+									changeObjectChair("Whoopee Cushion", index);
 								}
 							}
 
@@ -6843,7 +6848,7 @@ let parseData = [
 									.appendTo(chairDiv)
 
 								//Label
-								const strArr = ['You','Duck','Woopie Cushion'];
+								const strArr = ['You','Duck','Whoopee Cushion'];
 								const label = strArr.filter(x => chair.inChair.includes(x)).join("/")
 								$('<label>')
 									.text(label)
@@ -6942,15 +6947,15 @@ let parseData = [
 					
 
 					//keep reading lines until hitting the ==
-					const lines = []
+					const linesToLog = []
 					let line;
 					do 
 					{
 						line = readTaggedLine()
-						lines.push(line);
+						linesToLog.push(line);
 					} while (line !== "===============================================");
 
-					lines.pop();
+					linesToLog.pop();
 
 					
 
@@ -6980,24 +6985,24 @@ let parseData = [
 					let messages = [];
 
 					//if there isn't any information beside the instructions, parse the instructions
-					if(lines.length == 1) {
-						module.modifyModInfo(lines[0])
+					if(linesToLog.length == 1) {
+						module.modifyModInfo(linesToLog[0])
 					}
 					else {
-						for(let i = 1; i < lines.length; i++) {
-							module.modifyModInfo(lines[i])
-							messages.push(lines[i]);
+						for(let i = 1; i < linesToLog.length; i++) {
+							module.modifyModInfo(linesToLog[i])
+							messages.push(linesToLog[i]);
 						}
 					}
 
 					//Do the hokey pokey (Do this outside the thing to loop since we want this to happen regardless if there's messages)
-					if(lines[0].includes("Do the Hokey Pokey very, very slowly")) {
+					if(linesToLog[0].includes("Do the Hokey Pokey very, very slowly")) {
 						module.modInfo.hokeyPokeyPart = module.hokeyPokeyParts[0];
 						module.modInfo.hokeyPokeyStep = 1;
 					}
 					
 					//create a page object
-					module.pages.push(module.getStagePage(`Stage ${matches[1]}: ${lines[0]}`, module.modInfo, messages))
+					module.pages.push(module.getStagePage(`Stage ${matches[1]}: ${linesToLog[0]}`, module.modInfo, messages))
 
 					//if this is the first time, push the slide show.
 					if(module.pages.length == 1) {
