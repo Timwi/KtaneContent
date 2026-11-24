@@ -6512,10 +6512,7 @@ let parseData = [
 			{
 				regex: /Displaying Stage (\d+)\. It says:/,
 				handler: function (matches, module) {
-					//console.log(`Mod ID: ${lines[linen].match(/\[Duck Konundrum #(\d+)\]/)[1]} | Stage ${matches[1]}`)
-					//todo add a line to when the whoopee cushion is moved
 					if(!module.modInfo) {
-
 						module.hokeyPokeyParts = ["RFoot", "LFoot", "RHand", "LHand", "Butt"]
 
 						function getDefaultChair (isArmChair) {
@@ -6813,7 +6810,6 @@ let parseData = [
 
 						module.getStagePage = (label, modInfo, messages) => {
 							const pageDiv = $('<div>').addClass("duck-konundrum")
-							//todo convert this to be in the style file
 							const chairPositions = {
 								"TL": `left: 95px; top: -5.4583px;`,
 								"TR": `left: 345px; top: -5.4583px;`,
@@ -6894,7 +6890,6 @@ let parseData = [
 							//Duck table
 							const duckTable = $('<table>')
 								.addClass("color-table name")
-								// .attr(`style`, `left: -30px; top: 630px`)
 								.appendTo(vStackArr[0])
 							getTR("Duck's Name", "none", modInfo.duckName ?? "N/A").appendTo(duckTable);
 							getTR("Duck's Feet", modInfo.duckFeetColor).appendTo(duckTable)
@@ -6910,19 +6905,15 @@ let parseData = [
 							//Current action
 							$('<label>')
 									.text(`Current action: ${modInfo.currentAction}`)
-									// .attr("style", "position: absolute; left: 222px; top: 629px;")
 									.appendTo(vStackArr[1])
 
 							//hokey pokey table
 							const hokeyTable = $('<table>')
 								.addClass("hokey")
-								// .attr("style", "left: 216px; top: 650px;")
 								.appendTo(vStackArr[1])
 							getTR("Hokey Pokey Step", "none", modInfo.hokeyPokeyStep ?? "N/A").appendTo(hokeyTable);
 							getTR("Hokey Pokey Part", "none", modInfo.hokeyPokeyPart ?? "N/A").appendTo(hokeyTable);
 
-
-						
 							// body table
 							const bodyTable = $('<table>')
 								.addClass("color-table you-table")
@@ -6934,17 +6925,9 @@ let parseData = [
 							getTR("LHand", modInfo.LHandColor).appendTo(bodyTable);
 							getTR("Butt", modInfo.buttColor).appendTo(bodyTable);
 
-							
-
-							
-
-							
-
 							return { label, obj: pageDiv, messages };
 						}						
 					}
-
-					
 
 					//keep reading lines until hitting the ==
 					const linesToLog = []
@@ -6956,8 +6939,6 @@ let parseData = [
 					} while (line !== "===============================================");
 
 					linesToLog.pop();
-
-					
 
 					//if the hokey pokey was started, move onto the next step
 					if(module.modInfo.hokeyPokeyPart !== null) {
