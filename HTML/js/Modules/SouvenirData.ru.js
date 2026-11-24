@@ -6,6 +6,7 @@ let SouvenirModuleData = [
 	{ original: "0",	name: "0",	id: "0",	questions: ["Какое число было изначально показано?"] },
 	{ original: "The 1, 2, 3 Game",	name: "The 1, 2, 3 Game",	id: "TheOneTwoThreeGame",	questions: ["Какая была иконка и имя опонента?"] },
 	{ original: "21",	name: "21",	id: "TwennyWan",	questions: ["Какое число было показано?"] },
+	{ original: "3Der Maze",	name: "3Der Maze",	id: "3DerMaze",	questions: ["What were the markings?", "What was the direction?"] },
 	{ original: "3D Tap Code",	name: "3D Tap Code",	id: "3DTapCodeModule",	questions: ["Какое слово было получено?"] },
 	{ original: "3 LEDs",	name: "3 LEDs",	id: "threeLEDsModule",	questions: ["Какое было исходное состояние у светодиодов?"] },
 	{ original: "3N+1",	name: "3N+1",	id: "threeNPlusOne",	questions: ["Какое число было изначально показано?"] },

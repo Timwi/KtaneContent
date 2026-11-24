@@ -9,6 +9,7 @@ let SouvenirModuleData = [
 	{ original: "The 1, 2, 3 Game",	name: "Das1-2-3-Spiel",	id: "TheOneTwoThreeGame",	questions: ["Was war der Name und Avatar des Gegners?"] },
 	{ original: "21",	name: "21",	id: "TwennyWan",	questions: ["Welche Zahl war auf dem Display?"] },
 	{ original: "XY-Ray",	name: "2D-Röntgen",	id: "xyRay",	questions: ["Welche Formen wurden gescannt?"] },
+	{ original: "3Der Maze",	name: "3Der-Labyrinth",	id: "3DerMaze",	questions: ["Was waren die Markierungen?", "Was war die Zielrichtung?"] },
 	{ original: "3D Tap Code",	name: "3D-Klopfzeichen",	id: "3DTapCodeModule",	questions: ["Welches Wort wurde übermittelt?"] },
 	{ original: "3D Maze",	name: "3D-Labyrinth",	id: "spwiz3DMaze",	questions: ["Was waren die Markierungen?", "Was war die Himmelsrichtung?"] },
 	{ original: "3D Tunnels",	name: "3D-Tunnel",	id: "3dTunnels",	questions: ["Welche Symbole waren die Ziele?"] },

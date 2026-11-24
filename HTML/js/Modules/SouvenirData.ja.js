@@ -8,6 +8,7 @@ let SouvenirModuleData = [
 	{ original: "100 Levels of Defusal",	name: "解除レベル100",	id: "100LevelsOfDefusal",	questions: ["表示された文字は？"] },
 	{ original: "The 1, 2, 3 Game",	name: "123ゲーム",	id: "TheOneTwoThreeGame",	questions: ["対戦相手のアバターと名前は？"] },
 	{ original: "21",	name: "21",	id: "TwennyWan",	questions: ["表示された数字は？"] },
+	{ original: "3Der Maze",	name: "3Der Maze",	id: "3DerMaze",	questions: ["What were the markings?", "What was the direction?"] },
 	{ original: "3D Maze",	name: "3D迷路",	id: "spwiz3DMaze",	questions: ["迷路の文字は？", "ゴールの方向はどこ？"] },
 	{ original: "3D Tap Code",	name: "3Dタップ・コード",	id: "3DTapCodeModule",	questions: ["受信した単語は？"] },
 	{ original: "3D Tunnels",	name: "3Dトンネル",	id: "3dTunnels",	questions: ["ゴールの目印は？"] },

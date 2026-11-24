@@ -8,6 +8,7 @@ let SouvenirModuleData = [
 	{ name: "100 Levels of Defusal",	id: "100LevelsOfDefusal",	questions: ["What were the displayed letters?"] },
 	{ name: "The 1, 2, 3 Game",	id: "TheOneTwoThreeGame",	questions: ["What was the opponent’s avatar and name?"] },
 	{ name: "21",	id: "TwennyWan",	questions: ["What was the displayed number?"] },
+	{ name: "3Der Maze",	id: "3DerMaze",	questions: ["What were the markings?", "What was the direction?"] },
 	{ name: "3D Maze",	id: "spwiz3DMaze",	questions: ["What were the markings?", "What was the cardinal direction?"] },
 	{ name: "3D Tap Code",	id: "3DTapCodeModule",	questions: ["What was the received word?"] },
 	{ name: "3D Tunnels",	id: "3dTunnels",	questions: ["What were the goal symbols?"] },
