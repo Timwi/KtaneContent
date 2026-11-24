@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1">
+    <title>Глючная кнопка — Keep Talking and Nobody Explodes Mod</title>
+    <link rel='stylesheet' type='text/css' href='css/font.css'>
+    <link rel='stylesheet' type='text/css' href='css/font-cyrillic.css'>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/ktane-utils.js"></script>
+    <script src="js/ruleseed.js"></script>
+    <script>
+        function setDefaultRules(rnd) { setRules(rnd); }
+
+        function setRules(rnd)
+        {
+            let tds = document.querySelectorAll('.bitseq');
+            let num0s = document.querySelectorAll('.num0s');
+
+            let bitLength = 16;
+            let results = [];
+            while (results.length < tds.length)
+            {
+                let all = Array(1 << bitLength).fill(null).map((_, c) => c)
+                    .filter(v =>
+                    {
+                        for (let cycle = 1; cycle < bitLength; cycle++)
+                        {
+                            let cycled = ((v << cycle) & ((1 << bitLength) - 1)) | (v >> (bitLength - cycle));
+                            let nb = countBits(cycled ^ v);
+                            if (nb === 0 || nb === 2)
+                                return false;
+                        }
+                        return true;
+                    });
+                results = [];
+                while (all.length > 0 && results.length < tds.length)
+                {
+                    let rndIx = rnd.next(0, all.length);
+                    let bits = all[rndIx];
+                    for (let cycle = 0; cycle < bitLength; cycle++)
+                    {
+                        let compare = ((bits << cycle) & ((1 << bitLength) - 1)) | (bits >> (bitLength - cycle));
+                        all = all.filter(v => { let nb = countBits(compare ^ v); return nb != 0 && nb != 2; });
+                    }
+                    results.push(bits);
+                }
+            }
+
+            for (let i = 0; i < tds.length; i++)
+            {
+                let bits = results[i].toString(2).padStart(bitLength, '0');
+                let zeroes = (bits.match(/0/g) || []).length;
+                let ones = (bits.match(/1/g) || []).length;
+                let zeroesSuffix = zeroes === 1 ? "ь" : (zeroes === 2 || zeroes === 3 || zeroes === 4 ? "я" : "ей");
+                let onesSuffix = ones === 1 ? "а" : (ones === 2 || ones === 3 || ones === 4 ? "ы" : "");
+                tds[i].innerText = bits;
+                num0s[i].innerText = `(содержит ${zeroes} нул${zeroesSuffix} и ${ones} единиц${onesSuffix})`;
+            }
+        }
+
+        function countBits(v)
+        {
+            let n = 0;
+            while (v > 0)
+            {
+                n++;
+                v &= (v - 1);
+            }
+            return n;
+        }
+    </script>
+    <style>
+        td, th {
+            padding: .3em 1em .2em;
+        }
+        .bitseq {
+            font-size: 14pt;
+        }
+        .num0s {
+            font-size: 10pt;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="page page-bg-05">
+            <div class="page-header">
+                <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
+                <span class="page-header-section-title">Глючная кнопка</span>
+            </div>
+            <div class="page-content">
+                <img src="img/Component/The Glitched Button.svg" class="diagram">
+                <h2>О Глючной кнопке</h2>
+                <p class="flavour-text">То самое ощущение, когда ударился локтем о смешную косточку, попивая Спрайт из McDonald's — сжатое в одну кнопку.</p>
+                <p>Модуль содержит глючную кнопку и экран, показывающий циклическую последовательность из нулей и единиц.</p>
+                <p>Отображённую последовательность можно найти в таблице ниже. Однако один из битов был инвертирован.</p>
+                <p>Задержите кнопку, когда на экране выделен инвертированный бит. Отпустите кнопку, когда на экране выделен бит на <var>n</var>-й позиции,
+                    где <var>n</var> — номер последовательности в таблице ниже.</p>
+                <table>
+                    <tr> <th>1</th><td class="bitseq">0101111000010100</td><td class="num0s">(содержит 9 нулей и 7 единиц)</td></tr>
+                    <tr> <th>2</th><td class="bitseq">0011010111101001</td><td class="num0s">(содержит 7 нулей и 9 единиц)</td></tr>
+                    <tr> <th>3</th><td class="bitseq">1111001110110000</td><td class="num0s">(содержит 7 нулей и 9 единиц)</td></tr>
+                    <tr> <th>4</th><td class="bitseq">0100000001101100</td><td class="num0s">(содержит 11 нулей и 5 единиц)</td></tr>
+                    <tr> <th>5</th><td class="bitseq">1110100001000001</td><td class="num0s">(содержит 10 нулей и 6 единиц)</td></tr>
+                    <tr> <th>6</th><td class="bitseq">0101111100110010</td><td class="num0s">(содержит 7 нулей и 9 единиц)</td></tr>
+                    <tr> <th>7</th><td class="bitseq">1100000101111010</td><td class="num0s">(содержит 8 нулей и 8 единиц)</td></tr>
+                    <tr> <th>8</th><td class="bitseq">1001101110110111</td><td class="num0s">(содержит 5 нулей и 11 единиц)</td></tr>
+                    <tr> <th>9</th><td class="bitseq">1101010111000111</td><td class="num0s">(содержит 6 нулей и 10 единиц)</td></tr>
+                    <tr><th>10</th><td class="bitseq">0101101001000111</td><td class="num0s">(содержит 8 нулей и 8 единиц)</td></tr>
+                    <tr><th>11</th><td class="bitseq">1101101010000000</td><td class="num0s">(содержит 10 нулей и 6 единиц)</td></tr>
+                    <tr><th>12</th><td class="bitseq">1000110001110000</td><td class="num0s">(содержит 10 нулей и 6 единиц)</td></tr>
+                    <tr><th>13</th><td class="bitseq">1010011010000111</td><td class="num0s">(содержит 8 нулей и 8 единиц)</td></tr>
+                    <tr><th>14</th><td class="bitseq">1100010010111101</td><td class="num0s">(содержит 7 нулей и 9 единиц)</td></tr>
+                    <tr><th>15</th><td class="bitseq">1010110011001111</td><td class="num0s">(содержит 6 нулей и 10 единиц)</td></tr>
+                    <tr><th>16</th><td class="bitseq">1111101110111101</td><td class="num0s">(содержит 3 нуля и 13 единиц)</td></tr>
+                </table>
+            </div>
+            <div class="page-footer relative-footer">Стр. 1 из 1</div>
+        </div>
+    </div>
+</body>
+</html>
