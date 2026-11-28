@@ -3443,6 +3443,85 @@ let parseData = [
 		]
 	},
 	{
+		moduleID: "busyBeaver",
+		loggingTag: "Busy Beaver",
+		matches: [
+			{
+				regex: /The following will be shown on this module: (.+)/,
+				handler: function (matches, module) {
+					switch (matches[1])
+					{
+						case "modifier letters": module.push("Using legacy mode."); break;
+						case "initial tape + modifier letters (higher chance of identical letters)": module.push("Using modern mode."); break;
+						default: module.push(`Error: invalid initial module type detected: ${matches[1]}`); return false;
+					}
+					return true;
+				}
+			},
+			{
+				regex: /-----------INITIAL STATE-----------/,
+				handler: function (matches, module) {
+					module.currentDropdown = ["Initial state", []];
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /.+ Tape: (\d+)/,
+				handler: function (matches, module) {
+					module.currentDropdown[1].push("Current tape:");
+					module.currentDropdown[1].push(`${matches[1]}`);
+					return true;
+				}
+			},
+			{
+				regex: /.+ Pointer Index: (\d)/,
+				handler: function (matches, module) {
+					module.currentDropdown[1].push("\u2007".repeat(matches[1]) + "^");
+					return true;
+				}
+			},
+			{
+				regex: /-+STAGE (\d+)-+/,
+				handler: function (matches, module) {
+					module.currentDropdown = [`Stage ${matches[1]}`, []];
+					module.push(module.currentDropdown);
+					return true;
+				}
+			},
+			{
+				regex: /Characters displayed in this stage: "([A-Z]{2})"/,
+				handler: function (matches, module) {
+					module.currentDropdown[1].push(`Displaying: ${matches[1]}`);
+					return true;
+				}
+			},
+			{
+				regex: /The (left|right) character's condition returned (True|False)/,
+				handler: function (matches, module) {
+					let str = "Output ";
+					switch (matches[1])
+					{
+						case "left": str = str + "1 is "; break;
+						case "right": str = str + "2 is "; break;
+					}
+					switch (matches[2])
+					{
+						case "True": str = str + "true."; break;
+						case "False": str = str + "false."; break;
+					}
+					module.currentDropdown[1].push(str);
+					return true;
+				}
+			},
+			{
+				regex: /--+/,
+				handler: function(matches, module) { return true; }
+			},
+			{ regex: /.+/ }
+		]
+	},
+	{
 		moduleID: 'buttonageModule',
 		loggingTag: 'Buttonage',
 		matches: [
