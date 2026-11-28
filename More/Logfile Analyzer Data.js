@@ -2381,7 +2381,7 @@ let parseData = [
 
 					module.push(module.currentDropdown);
 					module.currentDropdown[1].push("The module shows the following:");
-					makeCycleableDisplays(pages, module.currentDropdown[1], true);
+					makeCycleableDisplays({pages, module: module.currentDropdown[1], loopDisplays: true});
 					module.currentDropdown[1].push(stageDataLines[5], stageDataLines[7], stageDataLines[8], stageDataLines[10], stageDataLines[12], stageDataLines[13]);
 
 					let buttons = stageDataLines.slice(0, 4).join('').trim().split(' ');
@@ -6595,46 +6595,504 @@ let parseData = [
 		matches: [
 			{
 				regex: /Displaying Stage (\d+)\. It says:/,
-				handler: function(matches, module) {
-					module.currentDropdown = [`Stage ${matches[1]}`, []]
-					module.push(module.currentDropdown)
-					return true;
-				}
-			},
-			{
-				regex: /===============================================/,
-				handler: function(matches, module) {
-					return true;
-				}
-			},
-			{
-				regex: /The question was.+/,
-				handler: function(matches, module) {
-					if(module.questionNum === undefined) {
-						module.questionNum = 0;
-					}
-					module.questionNum++;
-					console.log(module.questionNum)
-					module.currentDropdown = [`Question ${module.questionNum}`, []]
-					// module.currentDropdown = [`Question ${module.questionNum}`, [matches.input]]
+				handler: function (matches, module) {
+					if(!module.modInfo) {
+						module.hokeyPokeyParts = ["RFoot", "LFoot", "RHand", "LHand", "Butt"]
 
+						function getDefaultChair (isArmChair) {
+							return {
+								isArmChair,
+								inChair: [],
+								seatColor: "None",
+								bottomColor: "None",
+								number: null,
+								numberColor: "None"
+							}
+						}
+
+						function getDefaultCan (size) {
+							return {
+								size,
+								can: "None",
+								content: "None"
+							}
+						}
+
+						function modulo(n, max) { return ((n % max) + max) % max; }
+
+						module.getChairIndex = (line) => {
+							const match = line.match(/chair (\d+) chair(?:s)* (.+) from the armchair/);
+							return !match ? -1 : 
+								match[2] == "clockwise" ? Number(match[1]) : 
+								module.chairPositions.length - Number(match[1])
+						} 
+
+						module.pages = []
+
+						module.modInfo = {
+							armChair: getDefaultChair(true),
+							TRChair: getDefaultChair(false),
+							RChair: getDefaultChair(false),
+							BRChair: getDefaultChair(false),
+							BLChair: getDefaultChair(false),
+							LChair: getDefaultChair(false),
+							smallCan: getDefaultCan("small"),
+							medCan: getDefaultCan("med"),
+							largeCan: getDefaultCan("large"),
+							LFootColor: "None",
+							RFootColor: "None",
+							LHandColor: "None",
+							RHandColor: "None",
+							buttColor: "None",
+							duckName: null,
+							duckFeetColor: "None",
+							LCount: 0,
+							LColor: "None",
+							currentAction: "Sitting",
+							hokeyPokeyPart: null,
+							hokeyPokeyStep: null,
+						}
+
+						module.chairPositions = ["armChair", "TRChair", "RChair", "BRChair", "BLChair", "LChair"];
+
+						module.modifyModInfo = (line) => {
+							function getBodyParts(line) {
+								switch(line) {
+									case "your right hand":
+										return ["RHandColor"];
+									case "your left hand":
+										return ["LHandColor"];
+									case "both of your hands":
+										return ["LHandColor", "RHandColor"]
+									case "your left foot":
+										return ["LFootColor"]
+									case "your right foot":
+										return ["RFootColor"]
+									case "both of your feet":
+										return ["LFootColor", "RFootColor"]
+									case "your butt cheeks":
+										return ["buttColor"]
+									case "your only painted body part":
+										return [["LFootColor", "RFootColor", "LHandColor", "RHandColor", "buttColor"].find(p => module.modInfo[p] != "None")];
+									case "your only unpainted body part":
+										return [["LFootColor", "RFootColor", "LHandColor", "RHandColor", "buttColor"].find(p => module.modInfo[p] == "None")];
+									case "all of your body parts that are touching the chair":
+										const actionBodyPart = {
+											"Sitting": ["buttColor"],
+											"Handstanding": ["LHandColor", "RHandColor"],
+											"Standing": ["LFootColor", "RFootColor"]
+										}
+										return actionBodyPart[module.modInfo.currentAction]
+									default:
+										throw new Error(`"${line}" is an unknown body part`);
+								}
+							}
+
+							function getChair(index) {
+								index = index % module.chairPositions.length;
+								return module.modInfo[module.chairPositions[index]];
+							}
+
+							function changeObjectChair(object, index) {
+								//remove the object from another chairs
+								module.chairPositions.forEach(position => {
+									const chair = module.modInfo[position];
+									chair.inChair = chair.inChair.filter(obj => obj !== object);
+								});
+								
+								//Add the object to the selected chair
+								const selectedChair = getChair(index)
+								selectedChair.inChair.push(object);
+							}
+
+							//You sit a chair
+							let match = line.match(/You should sit on the (armchair|chair (\d) chair(?:s)? clockwise from the armchair)\./)
+							let youChairIndex;
+							if(match) {
+								youChairIndex = match[1] == "armchair" ? 0 : module.getChairIndex(match[1])
+								changeObjectChair("You", youChairIndex);
+							}
+
+							//The duck sits in a chair
+							match = line.match(/The duck should sit on the (armchair|same chair as you|chair (\d) chair(?:s)? (.+) from (the armchair|you))\./)
+							if(match) {
+								let duckChairIndex;
+				
+								//same chair as you
+								if(match[1] == "same chair as you") {
+									duckChairIndex = youChairIndex;
+								}
+
+								else if (match[1] == "armchair") {
+									duckChairIndex = 0;
+								}
+
+								else {
+									let amount = match[2]
+
+									//convet counter-clock into clock 
+									if(match[3].includes("counter")) {
+										amount = modulo(module.chairPositions.length - amount, module.chairPositions.length)
+									}
+
+									//if from you, apply you offset
+									if(match[4] == "you") {
+										amount = (amount + youChairIndex) % module.chairPositions.length
+									}
+
+									duckChairIndex = amount;
+								}
+
+								changeObjectChair("Duck", duckChairIndex);
+							}
+
+							//you move chairs
+							match = line.match(/You are now in the (.+)/)
+							if(match) {
+								const index = module.getChairIndex(match[1])
+								changeObjectChair("You", index);
+							}
+
+							//the duck moves chairs
+							match = line.match(/The duck is now in the (.+)./)
+							if(match) {
+								const index = module.getChairIndex(match[1])
+								changeObjectChair("Duck", index);
+							}
+
+							//Whoopee Cushion is moved/placed
+							match = line.match(/The whoopee cushion is now on (.+)\./)
+							if(match) {
+								if(match[1] == "the armchair") {
+									changeObjectChair("Whoopee Cushion", 0);
+								}
+								else {
+									const index = module.getChairIndex(match[1])
+									changeObjectChair("Whoopee Cushion", index);
+								}
+							}
+
+							const canSizeObj = {
+									"smallest": module.modInfo.smallCan,
+									"medium-sized": module.modInfo.medCan,
+									"largest": module.modInfo.largeCan
+							}
+
+							//Paint body parts
+							match = line.match(/Now (.+) (?:is|are) (.+)-colored\./)
+							if(match) {
+								const bodyParts = getBodyParts(match[1]);
+								bodyParts.forEach(part => module.modInfo[part] = match[2])
+							}
+
+							//Paint L color
+							match = line.match(/From now on, every time .+ paint an L on your forehead with (.+)\.\"/)
+							if(match) {
+								module.modInfo.LColor = match[1]
+							}
+
+							//Wash the Ls
+							match = line.match(/"Wash (.+) of the Ls off of your forehead\./)
+							if(match) {
+								module.modInfo.LCount -= match[1]
+							}
+
+							//Change L count
+							match = line.match(/(?:You paint another L on your forehead\. )?There are now (\d+) Ls on your forehead\./)
+							if(match) {
+								module.modInfo.LCount = Number(match[1])
+							}
+
+							//increment L count
+							match = line.match(/"Paint (.+) Ls on your forehead, in the color that you're supposed to be painting them with\."/)
+							if(match) {
+								module.modInfo.LCount += Number(match[1])
+							}
+
+							//Wash the body parts
+							match = line.match(/Now (.+) (?:is|are) unpainted\./);
+							if(match) {
+								const bodyParts = getBodyParts(match[1]);
+								bodyParts.forEach(part => module.modInfo[part] = "None")
+							}
+							
+							//Paint the watering can
+							match = line.match(/The (.+) watering can is now (.+)-colored\./)
+							if(match) {
+								const can = canSizeObj[match[1]]
+								can.can = match[2]
+							}
+
+							//Unpaint the watering can
+							match = line.match(/The (.+) watering can is now unpainted\./)
+							if(match) {
+								const can = canSizeObj[match[1]]
+								can.can = "None"
+							}
+
+							//Fill the watering can with paint
+							match = line.match(/(?:The .+ rule activated! )?The (.+) watering can is now filled with (.+) paint/)
+							if(match) {
+								const can = canSizeObj[match[1]]
+								can.content = match[2] == "no" ? "None" : match[2]
+							}
+
+							//Dump watering cans
+							match = line.match(/The (.+) watering can now has nothing inside\./)
+							if(match) {
+								const can = canSizeObj[match[1]]
+								can.content = "None"
+							}
+
+							//Paint a number on chair
+							match = line.match(/The back of the (.+) now has a (.+)-colored (\d+) on it\./)
+							if(match) {
+								const index = module.getChairIndex(match[1])
+								const chair = getChair(index)
+								chair.numberColor = match[2]
+								chair.number = match[3];
+							}
+							
+							//Paint bottom of the chair
+							match = line.match(/(?:The .+ rule activated! )?The bottom of the (.+) is now ([^-]+)(-colored)?\./)
+							if(match) {
+								const index = module.getChairIndex(match[1]);
+								const chair = getChair(index);
+								chair.bottomColor = match[2];
+							}
+
+							//paint the seat of the chair
+							match = line.match(/The seat of the (.+) is now (.+?)(?:-.+)?\./)
+							if(match) {
+								const index = module.getChairIndex(match[1]);
+								const chair = getChair(index);
+								chair.seatColor = match[2];
+							}
+
+							//sit, stand, handstand on chair
+							match = line.match(/"(.+) on your chair\."/)
+							if(match) {
+								switch(match[1]) {
+									case "Sit":
+										module.modInfo.currentAction = "Sitting"
+										break;
+									case "Stand":
+										module.modInfo.currentAction = "Standing"
+										break;
+									case "Do a handstand":
+										module.modInfo.currentAction = "Handstanding"
+										break;
+								}
+							}
+
+							//duck name
+							match = line.match(/The duck's name is (.+)\./)
+							if(match) {
+								module.modInfo.duckName = match[1]
+							}
+						} 
+
+						module.getStagePage = (label, modInfo, messages) => {
+							const pageDiv = $('<div>').addClass("duck-konundrum")
+							const chairPositions = {
+								"TL": `left: 95px; top: -5.4583px;`,
+								"TR": `left: 345px; top: -5.4583px;`,
+								"R": `left: 470px; top: 208px;`,
+								"BR": `left: 345px; top: 411.458px;`,
+								"BL": `left: 95px; top: 411.458px;`,
+								"L": `left: -30px; top: 208px;`
+							}
+							function getTR(leftLabel, backgroundColor, rightLabel) {
+								const capitalizedBG = backgroundColor.toUpperCase()[0] + backgroundColor.toLowerCase().slice(1)
+								let tr = $('<tr>');
+								$('<th>')
+									.text(leftLabel)
+									.appendTo(tr);
+									
+								const actualRightLabel = rightLabel != undefined ? rightLabel : capitalizedBG
+								$('<th>')
+									.text(actualRightLabel)
+									.addClass(backgroundColor)
+									.appendTo(tr);
+								return tr
+							}
+							function createChair(chairPosition, chair) {
+								const chairDiv = $('<div>')
+									.addClass("chair-group vstack")
+									.attr(`style`, chairPosition)
+									.appendTo(pageDiv)
+
+								// image
+								$('<div>')
+									.addClass(`chair ${chair.isArmChair ? "armchair" : "plainchair"}`)
+									.appendTo(chairDiv)
+
+								//Label
+								const strArr = ['You','Duck','Whoopee Cushion'];
+								const label = strArr.filter(x => chair.inChair.includes(x)).join("/")
+								$('<label>')
+									.text(label)
+									.appendTo(chairDiv)
+									
+								// table
+								const table = $('<table>').appendTo(chairDiv)
+								getTR("Seat", chair.seatColor).appendTo(table);
+								getTR("Bottom", chair.bottomColor).appendTo(table);
+								getTR("Number", "none", chair.number).appendTo(table);
+								getTR("Number Color", chair.numberColor).appendTo(table);
+							}
+							function createCan(can) {
+								//watering can image
+								$('<img>').attr('src', "../HTML/img/DuckKonundrum/WateringCan.svg")
+									.addClass(`${can.size}can controls`)
+									.appendTo(pageDiv)
+
+								// table
+								const table = $('<table>')
+									.addClass(`controls color-table can-table ${can.size}`)
+									.appendTo(pageDiv)
+
+								getTR("Can", can.can).appendTo(table);
+								getTR("Contents", can.content).appendTo(table);
+							}
+
+							createChair(chairPositions["TL"], modInfo.armChair)
+							createChair(chairPositions["TR"], modInfo.TRChair)
+							createChair(chairPositions["R"],  modInfo.RChair)
+							createChair(chairPositions["BR"], modInfo.BRChair)
+							createChair(chairPositions["BL"], modInfo.BLChair)
+							createChair(chairPositions["L"],  modInfo.LChair)
+
+							createCan(modInfo.smallCan)
+							createCan(modInfo.medCan)
+							createCan(modInfo.largeCan)
+
+							const hStack = $('<div>').addClass("hstack").appendTo(pageDiv)
+
+							const vStackArr = Array.from({ length: 3 }, (_) => $('<div>').addClass("vstack").appendTo(hStack));
+
+							//Duck table
+							const duckTable = $('<table>')
+								.addClass("color-table name")
+								.appendTo(vStackArr[0])
+							getTR("Duck's Name", "none", modInfo.duckName ?? "N/A").appendTo(duckTable);
+							getTR("Duck's Feet", modInfo.duckFeetColor).appendTo(duckTable)
+
+							// L Table
+							const LTable = $('<table>')
+								.addClass("color-table forehead")
+								.appendTo(vStackArr[0])
+							getTR("Forehead Ls", "none", modInfo.LCount).appendTo(LTable);
+							getTR("L Color", modInfo.LColor).appendTo(LTable);
+
+
+							//Current action
+							$('<label>')
+									.text(`Current action: ${modInfo.currentAction}`)
+									.appendTo(vStackArr[1])
+
+							//hokey pokey table
+							const hokeyTable = $('<table>')
+								.addClass("hokey")
+								.appendTo(vStackArr[1])
+							getTR("Hokey Pokey Step", "none", modInfo.hokeyPokeyStep ?? "N/A").appendTo(hokeyTable);
+							getTR("Hokey Pokey Part", "none", modInfo.hokeyPokeyPart ?? "N/A").appendTo(hokeyTable);
+
+							// body table
+							const bodyTable = $('<table>')
+								.addClass("color-table you-table")
+								// .attr("style", "left: 525px; top: 630px;")
+								.appendTo(vStackArr[2])
+							getTR("RFoot", modInfo.RFootColor).appendTo(bodyTable);
+							getTR("LFoot", modInfo.LFootColor).appendTo(bodyTable);
+							getTR("RHand", modInfo.RHandColor).appendTo(bodyTable);
+							getTR("LHand", modInfo.LHandColor).appendTo(bodyTable);
+							getTR("Butt", modInfo.buttColor).appendTo(bodyTable);
+
+							return { label, obj: pageDiv, messages };
+						}						
+					}
+
+					//keep reading lines until hitting the ==
+					const linesToLog = []
+					let line;
+					do 
+					{
+						line = readTaggedLine()
+						linesToLog.push(line);
+					} while (line !== "===============================================");
+
+					linesToLog.pop();
+
+					//if the hokey pokey was started, move onto the next step
+					if(module.modInfo.hokeyPokeyPart !== null) {
+						let steps = module.modInfo.hokeyPokeyStep;
+						const part = module.modInfo.hokeyPokeyPart;
+
+						//increment the steps
+						steps++;
+						//if the steps go above 4, go to the next part
+						if(steps >= 5) {
+							module.modInfo.hokeyPokeyStep = 1;
+							module.modInfo.hokeyPokeyPart = module.hokeyPokeyParts[module.hokeyPokeyParts.indexOf(part) + 1];
+						}
+						else {
+							module.modInfo.hokeyPokeyStep = steps;
+						}
+
+						//if we ran out of parts, stop doing the hokey pokey
+						if(module.modInfo.hokeyPokeyPart === undefined) {
+							module.modInfo.hokeyPokeyStep = null;
+							module.modInfo.hokeyPokeyPart = null;
+						}
+					}
+
+					let messages = [];
+
+					//if there isn't any information beside the instructions, parse the instructions
+					if(linesToLog.length == 1) {
+						module.modifyModInfo(linesToLog[0])
+					}
+					else {
+						for(let i = 1; i < linesToLog.length; i++) {
+							module.modifyModInfo(linesToLog[i])
+							messages.push(linesToLog[i]);
+						}
+					}
+
+					//Do the hokey pokey (Do this outside the thing to loop since we want this to happen regardless if there's messages)
+					if(linesToLog[0].includes("Do the Hokey Pokey very, very slowly")) {
+						module.modInfo.hokeyPokeyPart = module.hokeyPokeyParts[0];
+						module.modInfo.hokeyPokeyStep = 1;
+					}
+					
+					//create a page object
+					module.pages.push(module.getStagePage(`Stage ${matches[1]}: ${linesToLog[0]}`, module.modInfo, messages))
+
+					//if this is the first time, push the slide show.
+					if(module.pages.length == 1) {
+						makeCycleableDisplays({pages: module.pages, module, loopDisplays: true, fontSize: "14px"});
+					}
+
+					return true;
+				}
+			},
+			{
+				regex: /The question was \'(.+)\'\. The correct answer is (.+)\./,
+				handler: function (matches, module) {
+					module.currentDropdown = [matches[1], [`Correct Answers: ${matches[2]}`]]
 					module.push(module.currentDropdown)
 					return true;
 				}
 			},
 			{
-				regex: /Module solved! Poggers!/,
-				handler: function(matches, module) {
-					module.push(matches.input)
+				regex: /You pressed .+\. That was(?: not)* correct\./,
+				handler: function (matches, module) {
+					module.currentDropdown[1].push(matches.input)
 					return true;
 				}
 			},
-			{
-				regex: /.+/,
-				handler: function(matches, module) {
-					module.currentDropdown[1].push(matches.input);
-				}
-			}
+			{ regex: /.+/ }
 		]
 	},
 	{
@@ -17798,7 +18256,7 @@ let parseData = [
 					module.pages.push({ obj: makeSVG(grid), label: label});
 					if(module.pages.length != 4) return true;
 
-					makeCycleableDisplays(module.pages, module, false);
+					makeCycleableDisplays({page: module.pages, module});
 					return true;
 				}
 			},
@@ -26652,7 +27110,7 @@ let parseData = [
 					let globalPath = module.readLine();
 					let localPaths = readLines(2).map(l => l.match(/Local path for .+ solved modules: (.+)/)[1]);
 					module.keyDropdown[1].push([match[0], [globalPath, ["Local Paths", [`Even solved modules: ${localPaths[0]}`, `Odd solved modules: ${localPaths[1]}`]]]]);
-					module.cycleableDisplay = makeCycleableDisplays(module.pages, module.keyDropdown[1]);
+					module.cycleableDisplay = makeCycleableDisplays({pages: module.pages, module: module.keyDropdown[1]});
 					return true;
 				}
 			},
